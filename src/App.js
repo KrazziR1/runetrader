@@ -55,12 +55,12 @@ const STYLES = `
   .section-title { font-family: 'Cinzel', serif; font-size: 14px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
   .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-family: "Inter", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; }
   .sort-btn:hover { color: var(--gold); }
   .sort-btn.active { color: var(--gold); }
   .sort-arrow { font-size: 9px; opacity: 0.7; }
-  .flip-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; }
+  .flip-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; }
   .flip-row:last-child { border-bottom: none; }
   .flip-row:hover { background: var(--bg4); }
   .item-name { font-weight: 500; font-size: 13px; color: var(--text); }
@@ -294,7 +294,9 @@ const STYLES = `
     .alert-form-row { grid-template-columns: 1fr 1fr; }
     .table-header, .flip-row { grid-template-columns: 2fr 1fr 1fr 1fr; }
     .table-header > *:nth-child(5), .table-header > *:nth-child(6),
-    .flip-row > *:nth-child(5), .flip-row > *:nth-child(6) { display: none; }
+    .table-header > *:nth-child(7), .table-header > *:nth-child(8),
+    .flip-row > *:nth-child(5), .flip-row > *:nth-child(6),
+    .flip-row > *:nth-child(7), .flip-row > *:nth-child(8) { display: none; }
     .log-header, .log-row { grid-template-columns: 2fr 1fr 1fr 1fr 40px; }
     .log-header > *:nth-child(4), .log-header > *:nth-child(5),
     .log-row > *:nth-child(4), .log-row > *:nth-child(5) { display: none; }
@@ -324,10 +326,16 @@ function formatTime(d) {
   return Math.floor(diff / 3600) + "h ago";
 }
 
-function getScore(margin, volume, roi) {
-  const v = Math.min(volume / 500, 1) * 50;
-  const m = Math.min(margin / 10000, 1) * 30;
-  const roiScore = roi > 200 ? Math.max(0, 20 - (roi - 200) / 50) : (Math.min(roi, 50) / 50) * 20;
+function getScore(margin, volume, roi, speed, risk) {
+  // Weight shifts based on user preferences
+  // Fast = volume matters most, Slow = margin matters most
+  const vWeight = speed === "Fast" ? 60 : speed === "Slow" ? 25 : 45;
+  const mWeight = speed === "Slow" ? 45 : speed === "Fast" ? 20 : 35;
+  const roiWeight = 100 - vWeight - mWeight;
+
+  const v = Math.min(volume / 500, 1) * vWeight;
+  const m = Math.min(margin / 10000, 1) * mWeight;
+  const roiScore = roi > 200 ? Math.max(0, roiWeight - (roi - 200) / 50) : (Math.min(roi, 50) / 50) * roiWeight;
   return Math.round(v + m + roiScore);
 }
 
@@ -637,6 +645,19 @@ export default function RuneTrader() {
   const [autocomplete, setAutocomplete] = useState([]);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
 
+  // ── Favourites ──
+  const [favourites, setFavourites] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("runetrader_favs") || "[]"); } catch { return []; }
+  });
+
+  function toggleFavourite(itemId) {
+    setFavourites(prev => {
+      const next = prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId];
+      localStorage.setItem("runetrader_favs", JSON.stringify(next));
+      return next;
+    });
+  }
+
   // ── Alerts ──
   const [alerts, setAlerts] = useState([]);
   const [alertForm, setAlertForm] = useState({ item: "", price: "", type: "above" });
@@ -716,7 +737,7 @@ export default function RuneTrader() {
         const margin = high - low - TAX;
         const roi = parseFloat(((margin / low) * 100).toFixed(1));
         const volume = volumeMap[id] || 0;
-        const score = getScore(margin, volume, roi);
+        const score = getScore(margin, volume, roi, null, null);
         const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high, low, margin, roi, volume, score };
         if (!isValidFlip(flip)) continue;
         flips.push(flip);
@@ -832,22 +853,42 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
   }
 
   // ── Filtered items ──
-  const filtered = items.filter(item => {
+  // Recompute scores based on current prefs so sorting reflects user preferences
+  const scoredItems = items.map(item => ({
+    ...item,
+    prefScore: getScore(item.margin, item.volume, item.roi, prefs.speed, prefs.risk),
+  }));
+
+  const filtered = scoredItems.filter(item => {
     if (search.trim()) return item.name.toLowerCase().includes(search.toLowerCase());
     const budgetGp = budget ? parseInt(budget.replace(/[^0-9]/g, "")) * (budget.toLowerCase().includes("m") ? 1_000_000 : budget.toLowerCase().includes("k") ? 1_000 : 1) : null;
     const { adjLow, adjHigh } = applyOffset(item.low, item.high, prefs.speed);
     const adjMargin = item.margin - (adjLow - item.low) - (item.high - adjHigh);
+    // Soft risk filter: Low risk hides very illiquid items, but nothing is hard-capped by ROI
+    const passesRisk = !prefs.risk ||
+      (prefs.risk === "Low" && item.volume >= 200) ||
+      (prefs.risk === "Med" && item.volume >= 50) ||
+      prefs.risk === "High";
+    // Soft speed filter: Fast hides very slow items, Slow allows everything
+    const passesSpeed = !prefs.speed ||
+      (prefs.speed === "Fast" && item.volume >= 300) ||
+      (prefs.speed === "Med" && item.volume >= 30) ||
+      prefs.speed === "Slow";
     return (!budgetGp || item.low <= budgetGp) &&
       (filter === "all" || (filter === "f2p" && item.category === "F2P") || (filter === "members" && item.category === "Members") || (filter === "highvol" && item.volume > 500)) &&
-      (!prefs.risk || (prefs.risk === "Low" && item.volume >= 500 && item.roi <= 30) || (prefs.risk === "Med" && item.volume >= 100 && item.roi <= 100) || (prefs.risk === "High" && item.roi <= 200)) &&
-      (!prefs.speed || (prefs.speed === "Fast" && item.volume >= 500) || (prefs.speed === "Med" && item.volume >= 100) || prefs.speed === "Slow") &&
-      adjMargin > 0;
+      passesRisk && passesSpeed &&
+      adjMargin > 0 &&
+      item.high >= item.low &&
+      (filter !== "favourites" || favourites.includes(item.id));
   }).sort((a, b) => {
     if (sortCol === "name") return sortDir === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+    if (sortCol === "volume") return sortDir === "asc" ? a.volume - b.volume : b.volume - a.volume;
+    if (sortCol === "buylimit") return sortDir === "asc" ? a.buyLimit - b.buyLimit : b.buyLimit - a.buyLimit;
     if (sortCol === "margin") {
       const adj = i => { const { adjLow, adjHigh } = applyOffset(i.low, i.high, prefs.speed); return i.margin - (adjLow - i.low) - (i.high - adjHigh); };
       return sortDir === "asc" ? adj(a) - adj(b) : adj(b) - adj(a);
     }
+    if (sortCol === "score") return sortDir === "asc" ? a.prefScore - b.prefScore : b.prefScore - a.prefScore;
     return sortDir === "asc" ? a[sortCol] - b[sortCol] : b[sortCol] - a[sortCol];
   });
 
@@ -1126,9 +1167,9 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                   <div className="pref-card">
                     <span className="pref-label">Market Right Now</span>
                     <span className="stat-value" style={{ fontSize: "20px", color: "var(--gold)", fontFamily: "Cinzel, serif" }}>
-                      {loading ? "—" : items.filter(i => i.roi <= 200).length.toLocaleString()} <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400 }}>valid flips</span>
+                      {loading ? "—" : items.length.toLocaleString()} <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400 }}>valid flips</span>
                     </span>
-                    <span className="pref-sub">{(() => { const best = [...items].filter(i => i.roi <= 200).sort((a, b) => b.margin - a.margin)[0]; return loading ? "—" : `Best: ${best?.name || "—"} · ${formatGP(best?.margin)} gp`; })()}</span>
+                    <span className="pref-sub">{(() => { const best = [...items].sort((a, b) => b.margin - a.margin)[0]; return loading ? "—" : `Best: ${best?.name || "—"} · ${formatGP(best?.margin)} gp`; })()}</span>
                   </div>
                 </div>
 
@@ -1136,9 +1177,9 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
 
                 <div className="filter-bar">
                   <span className="filter-label">Filter:</span>
-                  {["all", "f2p", "members", "highvol"].map(f => (
+                  {["all", "f2p", "members", "highvol", "favourites"].map(f => (
                     <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : "High Volume"}
+                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `⭐ Favourites${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                     </button>
                   ))}
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
@@ -1148,7 +1189,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                   <div className="section-title">Top Flips</div>
                   <div className="flips-table">
                     <div className="table-header">
-                      {[["name", "Item"], ["low", "Buy Price"], ["high", "Sell Price"], ["margin", "Margin"], ["roi", "ROI"], ["score", "Score"]].map(([col, label]) => (
+                      {[["name", "Item"], ["low", "Buy Price"], ["high", "Sell Price"], ["margin", "Margin"], ["roi", "ROI"], ["volume", "Vol/Day"], ["buylimit", "Limit"], ["score", "Score"]].map(([col, label]) => (
                         <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
                           {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
                         </button>
@@ -1156,7 +1197,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                     </div>
                     {loading ? (
                       Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="flip-row">{Array.from({ length: 6 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
+                        <div key={i} className="flip-row">{Array.from({ length: 8 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
                       ))
                     ) : filtered.length === 0 ? (
                       <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
@@ -1166,12 +1207,17 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                         const adjMargin = item.margin - (adjLow - item.low) - (item.high - adjHigh);
                         return (
                           <div key={item.id} className="flip-row" onClick={() => setSelectedItem({ ...item, adjLow, adjHigh, adjMargin })}>
-                            <div><div className="item-name">{item.name}</div><div className="item-category">{item.category} · Limit: {item.buyLimit?.toLocaleString() || "?"}</div></div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={favourites.includes(item.id) ? "Remove favourite" : "Add to favourites"}>⭐</button>
+                              <div><div className="item-name">{item.name}</div><div className="item-category">{item.category} · Limit: {item.buyLimit?.toLocaleString() || "?"}</div></div>
+                            </div>
                             <span className="price">{formatGP(adjLow)}</span>
                             <span className="price">{formatGP(adjHigh)}</span>
                             <span className={`margin ${adjMargin < 0 ? "neg" : ""}`}>{formatGP(adjMargin)}</span>
-                            <span className="roi">{item.roi}%</span>
-                            <span className={`score-badge ${item.score >= 70 ? "score-high" : item.score >= 40 ? "score-med" : "score-low"}`}>{item.score}</span>
+                            <span className="roi" style={{ color: item.roi >= 20 ? "var(--green)" : item.roi >= 8 ? "var(--gold)" : "var(--text-dim)" }}>{item.roi}%</span>
+                            <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>{item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}</span>
+                            <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
+                            <span className={`score-badge ${item.prefScore >= 70 ? "score-high" : item.prefScore >= 40 ? "score-med" : "score-low"}`}>{item.prefScore}</span>
                           </div>
                         );
                       })
