@@ -248,6 +248,34 @@ const STYLES = `
   .profit-chart-title { font-family: "Cinzel", serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
   .profit-canvas-wrap { width: 100%; height: 160px; position: relative; }
 
+  /* SMART ALERTS */
+  .smart-alerts-wrap { display: flex; flex-direction: column; gap: 12px; }
+  .smart-alert-toggles { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .smart-alert-toggle-title { font-family: "Cinzel", serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .smart-alert-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .smart-alert-toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .smart-alert-toggle-info { display: flex; flex-direction: column; gap: 3px; }
+  .smart-alert-toggle-name { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .smart-alert-toggle-desc { font-size: 11px; color: var(--text-dim); }
+  .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--bg4); border: 1px solid var(--border); border-radius: 22px; transition: 0.2s; }
+  .toggle-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background: var(--text-dim); border-radius: 50%; transition: 0.2s; }
+  .toggle-switch input:checked + .toggle-slider { background: rgba(201,168,76,0.2); border-color: var(--gold-dim); }
+  .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); background: var(--gold); }
+  .smart-events-list { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .smart-event-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; }
+  .smart-event-row:last-child { border-bottom: none; }
+  .smart-event-icon { font-size: 18px; }
+  .smart-event-name { font-weight: 600; color: var(--text); font-size: 13px; }
+  .smart-event-msg { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  .smart-event-time { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+  .smart-badge-spike { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(46,204,113,0.15); color: var(--green); border: 1px solid var(--green-dim); }
+  .smart-badge-surge { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(52,152,219,0.15); color: var(--blue); border: 1px solid rgba(52,152,219,0.4); }
+  .smart-badge-dump { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(231,76,60,0.15); color: var(--red); border: 1px solid var(--red-dim); }
+  .smart-badge-crash { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid var(--gold-dim); }
+  .smart-empty { padding: 40px 20px; text-align: center; color: var(--text-dim); font-size: 13px; }
+
   /* PRICE ALERTS */
   .alerts-wrap { display: flex; flex-direction: column; gap: 20px; }
   .alert-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
@@ -1305,6 +1333,98 @@ export default function RuneTrader() {
   const [alertAutocomplete, setAlertAutocomplete] = useState([]);
   const [showAlertAutocomplete, setShowAlertAutocomplete] = useState(false);
 
+  // ── Smart Alerts ──
+  const [smartAlertSettings, setSmartAlertSettings] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("runetrader_smart_alerts") || '{"marginSpike":true,"volumeSurge":true,"dumpDetected":true,"priceCrash":true}'); }
+    catch { return { marginSpike: true, volumeSurge: true, dumpDetected: true, priceCrash: true }; }
+  });
+  const [smartEvents, setSmartEvents] = useState([]);
+  const prevItemsRef = useRef({});
+  const smartCooldownRef = useRef({}); // key: `${itemId}_${type}` → timestamp
+
+  function saveSmartAlertSettings(key, val) {
+    const updated = { ...smartAlertSettings, [key]: val };
+    setSmartAlertSettings(updated);
+    localStorage.setItem("runetrader_smart_alerts", JSON.stringify(updated));
+  }
+
+  function runSmartAlerts(newItems) {
+    const prev = prevItemsRef.current;
+    if (!Object.keys(prev).length) {
+      // First load — just store baseline, don't fire
+      const baseline = {};
+      newItems.forEach(i => { baseline[i.id] = { margin: i.margin, volume: i.volume, high: i.high, low: i.low }; });
+      prevItemsRef.current = baseline;
+      return;
+    }
+    const now = Date.now();
+    const COOLDOWN_MS = 30 * 60 * 1000; // 30 min per item per type
+    const newEvents = [];
+
+    newItems.forEach(item => {
+      const p = prev[item.id];
+      if (!p) return;
+
+      function canFire(type) {
+        const key = `${item.id}_${type}`;
+        if (smartCooldownRef.current[key] && now - smartCooldownRef.current[key] < COOLDOWN_MS) return false;
+        return true;
+      }
+      function fire(type, icon, badge, message, oldVal, newVal) {
+        const key = `${item.id}_${type}`;
+        smartCooldownRef.current[key] = now;
+        const event = { id: `${item.id}_${type}_${now}`, itemId: item.id, itemName: item.name, type, icon, badge, message, oldVal, newVal, time: new Date() };
+        newEvents.push(event);
+        // Push notification if enabled
+        if (notifPermission === "granted") {
+          try {
+            new Notification(`RuneTrader: ${item.name}`, { body: message, icon: "/icons/icon-192.png" });
+          } catch {}
+        }
+        // Save to Supabase if logged in
+        if (user) {
+          supabase.from("smart_alert_events").insert({
+            user_id: user.id, item_id: item.id, item_name: item.name,
+            alert_type: type, message, old_value: oldVal, new_value: newVal,
+          }).then(() => {});
+        }
+      }
+
+      // Margin Spike: margin up >50% vs previous
+      if (smartAlertSettings.marginSpike && canFire("marginSpike") && p.margin > 100) {
+        const pct = ((item.margin - p.margin) / Math.abs(p.margin)) * 100;
+        if (pct >= 50) fire("marginSpike", "📈", "spike", `Margin spiked +${Math.round(pct)}% to ${formatGP(item.margin)} gp`, p.margin, item.margin);
+      }
+
+      // Volume Surge: volume >3x previous
+      if (smartAlertSettings.volumeSurge && canFire("volumeSurge") && p.volume > 10) {
+        if (item.volume >= p.volume * 3 && item.volume > 50) fire("volumeSurge", "🔥", "surge", `Volume surged to ${item.volume.toLocaleString()}/day (was ${p.volume.toLocaleString()})`, p.volume, item.volume);
+      }
+
+      // Dump Detected: sell price dropped >10%
+      if (smartAlertSettings.dumpDetected && canFire("dumpDetected") && p.high > 100) {
+        const drop = ((p.high - item.high) / p.high) * 100;
+        if (drop >= 10) fire("dumpDetected", "⚠️", "dump", `Sell price dropped ${Math.round(drop)}% to ${formatGP(item.high)} gp`, p.high, item.high);
+      }
+
+      // Price Crash: both buy and sell dropped >15%
+      if (smartAlertSettings.priceCrash && canFire("priceCrash") && p.high > 100 && p.low > 100) {
+        const highDrop = ((p.high - item.high) / p.high) * 100;
+        const lowDrop = ((p.low - item.low) / p.low) * 100;
+        if (highDrop >= 15 && lowDrop >= 15) fire("priceCrash", "💥", "crash", `Price crashed! Buy ${formatGP(item.low)} (↓${Math.round(lowDrop)}%), Sell ${formatGP(item.high)} (↓${Math.round(highDrop)}%)`, p.high, item.high);
+      }
+    });
+
+    if (newEvents.length > 0) {
+      setSmartEvents(prev => [...newEvents, ...prev].slice(0, 100)); // keep last 100
+    }
+
+    // Update baseline
+    const updated = {};
+    newItems.forEach(i => { updated[i.id] = { margin: i.margin, volume: i.volume, high: i.high, low: i.low }; });
+    prevItemsRef.current = updated;
+  }
+
   // ── Push notifications ──
   const [notifPermission, setNotifPermission] = useState(() =>
     typeof Notification !== "undefined" ? Notification.permission : "default"
@@ -1443,6 +1563,7 @@ export default function RuneTrader() {
       flips.sort((a, b) => b.score - a.score);
       setItems(flips);
       itemsRef.current = flips;
+      runSmartAlerts(flips);
       setLastUpdate(new Date());
       if (isManualRefresh) showToast("Prices refreshed!", "success");
     } catch { setError("Failed to load GE data. Check your connection."); }
@@ -1836,9 +1957,9 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                     {openFlips.length}
                   </span>
                 )}
-                {t === "alerts" && alerts.filter(a => a.triggered).length > 0 && (
+                {t === "alerts" && (alerts.filter(a => a.triggered).length + smartEvents.length) > 0 && (
                   <span style={{ marginLeft: "6px", background: "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
-                    {alerts.filter(a => a.triggered).length}
+                    {alerts.filter(a => a.triggered).length + smartEvents.length}
                   </span>
                 )}
               </button>
@@ -2015,7 +2136,63 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                   </div>
                 )}
 
-                <div className="alert-info">ℹ️ Prices are checked every 5 minutes. Triggered alerts won't fire again — delete and re-add to reset.</div>
+                {/* ── SMART ALERTS ── */}
+                <div className="smart-alerts-wrap">
+                  <div className="smart-alert-toggles">
+                    <div className="smart-alert-toggle-title">⚡ Smart Market Alerts</div>
+                    <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
+                      Automatically fires when market conditions shift. Monitors all items every 5 minutes.
+                    </div>
+                    {[
+                      { key: "marginSpike", icon: "📈", label: "Margin Spike", desc: "Margin jumps 50%+ vs last poll — sudden profit opportunity" },
+                      { key: "volumeSurge", icon: "🔥", label: "Volume Surge", desc: "Daily volume triples — item getting heavily traded" },
+                      { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops 10%+ — someone offloading stock" },
+                      { key: "priceCrash", icon: "💥", label: "Price Crash", desc: "Both buy & sell drop 15%+ — avoid or buy the dip" },
+                    ].map(({ key, icon, label, desc }) => (
+                      <div key={key} className="smart-alert-toggle-row">
+                        <div className="smart-alert-toggle-info">
+                          <div className="smart-alert-toggle-name">{icon} {label}</div>
+                          <div className="smart-alert-toggle-desc">{desc}</div>
+                        </div>
+                        <label className="toggle-switch">
+                          <input type="checkbox" checked={smartAlertSettings[key]} onChange={e => saveSmartAlertSettings(key, e.target.checked)} />
+                          <span className="toggle-slider"></span>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span>Recent Smart Alerts</span>
+                      {smartEvents.length > 0 && (
+                        <button className="clear-btn" onClick={() => setSmartEvents([])}>Clear</button>
+                      )}
+                    </div>
+                    <div className="smart-events-list">
+                      {smartEvents.length === 0 ? (
+                        <div className="smart-empty">
+                          No smart alerts yet — they'll appear here when market conditions shift.
+                        </div>
+                      ) : smartEvents.map(e => (
+                        <div key={e.id} className="smart-event-row">
+                          <span className="smart-event-icon">{e.icon}</span>
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span className="smart-event-name">{e.itemName}</span>
+                              <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
+                            </div>
+                            <div className="smart-event-msg">{e.message}</div>
+                          </div>
+                          <span className="smart-event-time">{formatTime(e.time)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── PRICE ALERTS ── */}
+                <div className="alert-info">ℹ️ Price alerts check every 5 minutes. Triggered alerts won't fire again — delete and re-add to reset.</div>
                 <div className="alert-form">
                   <div className="alert-form-title">🔔 Set a Price Alert</div>
                   <div className="alert-form-row">
@@ -2050,7 +2227,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                 </div>
 
                 <div>
-                  <div className="section-title">Active Alerts</div>
+                  <div className="section-title">Active Price Alerts</div>
                   <div className="alerts-list">
                     <div className="alert-header-row"><span>Item</span><span>Condition</span><span>Target</span><span>Current</span><span></span></div>
                     {alerts.length === 0 ? (
