@@ -326,17 +326,34 @@ function formatTime(d) {
   return Math.floor(diff / 3600) + "h ago";
 }
 
-function getScore(margin, volume, roi, speed, risk) {
+function getScore(margin, volume, roi, speed, risk, buyLimit) {
   // Weight shifts based on user preferences
-  // Fast = volume matters most, Slow = margin matters most
   const vWeight = speed === "Fast" ? 60 : speed === "Slow" ? 25 : 45;
   const mWeight = speed === "Slow" ? 45 : speed === "Fast" ? 20 : 35;
   const roiWeight = 100 - vWeight - mWeight;
 
+  // Volume score - capped at 500/day for full points
   const v = Math.min(volume / 500, 1) * vWeight;
+
+  // Margin score
   const m = Math.min(margin / 10000, 1) * mWeight;
-  const roiScore = roi > 200 ? Math.max(0, roiWeight - (roi - 200) / 50) : (Math.min(roi, 50) / 50) * roiWeight;
-  return Math.round(v + m + roiScore);
+
+  // ROI score: sweet spot is 5-80%. Above 100% = diminishing, above 300% = penalty (likely stale/manipulated)
+  let roiScore;
+  if (roi <= 0) roiScore = 0;
+  else if (roi <= 80) roiScore = (roi / 80) * roiWeight;
+  else if (roi <= 300) roiScore = roiWeight * (1 - ((roi - 80) / 220) * 0.5); // fades to 50% of max
+  else roiScore = Math.max(0, roiWeight * 0.5 - (roi - 300) / 100); // actively penalises 300%+
+
+  // Liquidity penalty: if volume < buyLimit, you likely can't fill a full limit order per day
+  // This catches illiquid items with inflated ROI that look good on paper
+  const liquidityRatio = buyLimit > 0 ? volume / buyLimit : 1;
+  const liquidityMultiplier = liquidityRatio >= 2 ? 1        // healthy: 2x+ volume vs limit
+    : liquidityRatio >= 1 ? 0.85                              // borderline: 1-2x
+    : liquidityRatio >= 0.5 ? 0.65                            // poor: can't fill a full order/day
+    : 0.4;                                                     // very illiquid
+
+  return Math.round((v + m + roiScore) * liquidityMultiplier);
 }
 
 function isValidFlip(item) {
@@ -619,7 +636,14 @@ export default function RuneTrader() {
   // ── Prefs ──
   const [budget, setBudget] = useState("");
   const [prefs, setPrefs] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}"); } catch { return {}; } });
-  function savePref(key, val) { const u = { ...prefs, [key]: val }; setPrefs(u); localStorage.setItem("runetrader_prefs", JSON.stringify(u)); }
+  function savePref(key, val) {
+    const u = { ...prefs, [key]: val };
+    setPrefs(u);
+    localStorage.setItem("runetrader_prefs", JSON.stringify(u));
+    // Re-sort by score when preferences change so the updated ranking is immediately visible
+    setSortCol("score");
+    setSortDir("desc");
+  }
 
   // ── UI state ──
   const [filter, setFilter] = useState("all");
@@ -737,7 +761,7 @@ export default function RuneTrader() {
         const margin = high - low - TAX;
         const roi = parseFloat(((margin / low) * 100).toFixed(1));
         const volume = volumeMap[id] || 0;
-        const score = getScore(margin, volume, roi, null, null);
+        const score = getScore(margin, volume, roi, null, null, meta.limit || 0);
         const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high, low, margin, roi, volume, score };
         if (!isValidFlip(flip)) continue;
         flips.push(flip);
@@ -856,7 +880,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
   // Recompute scores based on current prefs so sorting reflects user preferences
   const scoredItems = items.map(item => ({
     ...item,
-    prefScore: getScore(item.margin, item.volume, item.roi, prefs.speed, prefs.risk),
+    prefScore: getScore(item.margin, item.volume, item.roi, prefs.speed, prefs.risk, item.buyLimit),
   }));
 
   const filtered = scoredItems.filter(item => {
@@ -1215,7 +1239,10 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                             <span className="price">{formatGP(adjHigh)}</span>
                             <span className={`margin ${adjMargin < 0 ? "neg" : ""}`}>{formatGP(adjMargin)}</span>
                             <span className="roi" style={{ color: item.roi >= 20 ? "var(--green)" : item.roi >= 8 ? "var(--gold)" : "var(--text-dim)" }}>{item.roi}%</span>
-                            <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>{item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}</span>
+                            <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }} title={item.buyLimit > 0 ? `${(item.volume/Math.max(item.buyLimit,1)).toFixed(1)}x daily vol vs limit` : "No buy limit data"}>
+                              {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
+                              {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit — hard to fill">⚠</span>}
+                            </span>
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
                             <span className={`score-badge ${item.prefScore >= 70 ? "score-high" : item.prefScore >= 40 ? "score-med" : "score-low"}`}>{item.prefScore}</span>
                           </div>
