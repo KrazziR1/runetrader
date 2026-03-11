@@ -373,6 +373,48 @@ const STYLES = `
     border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--red);
     display: flex; align-items: center; gap: 8px;
   }
+
+  /* ONBOARDING TOUR */
+  .tour-overlay {
+    position: fixed; inset: 0; z-index: 300;
+    pointer-events: none;
+  }
+  .tour-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300;
+    pointer-events: all;
+  }
+  .tour-highlight {
+    position: fixed; z-index: 301; border-radius: 10px;
+    box-shadow: 0 0 0 3px var(--gold), 0 0 0 6px rgba(201,168,76,0.2), 0 0 40px rgba(201,168,76,0.15);
+    pointer-events: none; transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+    animation: tourPulse 2s ease-in-out infinite;
+  }
+  @keyframes tourPulse { 0%,100%{box-shadow:0 0 0 3px var(--gold),0 0 0 6px rgba(201,168,76,0.2),0 0 40px rgba(201,168,76,0.15)} 50%{box-shadow:0 0 0 3px var(--gold-light),0 0 0 10px rgba(201,168,76,0.15),0 0 60px rgba(201,168,76,0.25)} }
+  .tour-tooltip {
+    position: fixed; z-index: 302; pointer-events: all;
+    background: var(--bg2); border: 1px solid var(--gold-dim);
+    border-radius: 14px; padding: 20px 22px; width: 300px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    animation: tooltipIn 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  @keyframes tooltipIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .tour-step-label { font-size: 10px; color: var(--gold-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .tour-title { font-family: "Cinzel", serif; font-size: 15px; color: var(--gold); margin-bottom: 8px; }
+  .tour-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 16px; }
+  .tour-actions { display: flex; align-items: center; justify-content: space-between; }
+  .tour-dots { display: flex; gap: 5px; }
+  .tour-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
+  .tour-dot.active { background: var(--gold); }
+  .tour-btn-row { display: flex; gap: 8px; }
+  .tour-skip { background: none; border: none; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: "Inter", sans-serif; padding: 0; transition: color 0.2s; }
+  .tour-skip:hover { color: var(--text); }
+  .tour-next {
+    padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+    color: #000; font-size: 13px; font-weight: 600; font-family: "Inter", sans-serif;
+    transition: opacity 0.2s;
+  }
+  .tour-next:hover { opacity: 0.85; }
 `;
 
 function formatGP(n) {
@@ -419,6 +461,44 @@ const QUICK_PROMPTS = [
   "High volume items?",
   "Explain margins to me",
   "What's trending now?",
+];
+
+const TOUR_STEPS = [
+  {
+    id: "flips-table",
+    title: "Live Flip Scanner",
+    desc: "Every tradeable OSRS item, ranked by score. Score factors in margin, volume, and ROI — higher is safer and more profitable. Click any item to see its price history chart.",
+    target: ".flips-table",
+    placement: "top",
+  },
+  {
+    id: "prefs-bar",
+    title: "Set Your Preferences",
+    desc: "Enter your cash stack to filter flips you can actually afford. Set your risk tolerance and flip speed to personalise the list for your playstyle.",
+    target: ".prefs-bar",
+    placement: "bottom",
+  },
+  {
+    id: "ai-advisor",
+    title: "AI Flip Advisor",
+    desc: "Ask the AI anything — best flips for your budget, what's trending, or whether a specific item is worth flipping right now. It has access to live GE data.",
+    target: ".right-panel",
+    placement: "left",
+  },
+  {
+    id: "tracker-tab",
+    title: "Track Your Flips",
+    desc: "Log every flip you make to track your total profit, best items, and average returns. Your history syncs across all your devices automatically.",
+    target: ".nav-tabs",
+    placement: "bottom",
+  },
+  {
+    id: "done",
+    title: "You're Ready to Flip! ⚔️",
+    desc: "That's everything. Start by setting your cash stack, then check the top flips list. Good luck on the Grand Exchange!",
+    target: null,
+    placement: "center",
+  },
 ];
 
 const TIME_RANGES = [
@@ -624,13 +704,33 @@ export default function RuneTrader() {
   const [showApp, setShowApp] = useState(false);
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [tourStep, setTourStep] = useState(-1); // -1 = not showing
+  const [tourRects, setTourRects] = useState({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (event === "SIGNED_IN") {
+        // Check if this is a new user (created within last 10 seconds = just signed up)
+        const createdAt = session?.user?.created_at;
+        const isNewUser = createdAt && (Date.now() - new Date(createdAt).getTime()) < 10000;
+        if (isNewUser) {
+          setTimeout(() => {
+            const target = TOUR_STEPS[0].target;
+            if (target) {
+              const el = document.querySelector(target);
+              if (el) {
+                const r = el.getBoundingClientRect();
+                setTourRects({ top: r.top, left: r.left, width: r.width, height: r.height });
+              }
+            }
+            setTourStep(0);
+          }, 800);
+        }
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -640,6 +740,21 @@ export default function RuneTrader() {
     setUser(null);
     setFlipsLog([]);
   }
+  function startTourStep(step) {
+    if (step >= TOUR_STEPS.length || step < 0) { setTourStep(-1); return; }
+    const target = TOUR_STEPS[step].target;
+    if (target) {
+      const el = document.querySelector(target);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        setTourRects({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+      }
+    }
+    setTourStep(step);
+  }
+
+  function endTour() { setTourStep(-1); }
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -1003,6 +1118,67 @@ STRICT recommendation rules — never break these:
       <style>{STYLES}</style>
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onAuth={u => setUser(u)} />}
       {selectedItem && <ItemChart item={selectedItem} onClose={() => setSelectedItem(null)} onAskAI={(msg) => { setInput(msg); sendMessage(msg); }} />}
+      {tourStep >= 0 && (() => {
+        const step = TOUR_STEPS[tourStep];
+        const isCenter = step.placement === "center" || !step.target;
+        const pad = 8;
+        const hl = tourRects;
+
+        // Tooltip position
+        let ttStyle = {};
+        if (isCenter) {
+          ttStyle = { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
+        } else if (step.placement === "left") {
+          ttStyle = { top: Math.max(8, (hl.top + hl.height / 2) - 100), right: window.innerWidth - hl.left + 16 };
+        } else if (step.placement === "bottom") {
+          ttStyle = { top: hl.top + hl.height + 16, left: Math.min(hl.left, window.innerWidth - 320) };
+        } else {
+          // top
+          ttStyle = { bottom: window.innerHeight - hl.top + 16, left: Math.min(hl.left, window.innerWidth - 320) };
+        }
+
+        return (
+          <>
+            <div className="tour-backdrop" onClick={endTour} />
+            {!isCenter && (
+              <div className="tour-highlight" style={{
+                top: hl.top - pad, left: hl.left - pad,
+                width: hl.width + pad * 2, height: hl.height + pad * 2,
+              }} />
+            )}
+            <div className="tour-tooltip" style={ttStyle}>
+              <div className="tour-step-label">Step {tourStep + 1} of {TOUR_STEPS.length}</div>
+              <div className="tour-title">{step.title}</div>
+              <div className="tour-desc">{step.desc}</div>
+              <div className="tour-actions">
+                <div className="tour-dots">
+                  {TOUR_STEPS.map((_, i) => (
+                    <div key={i} className={"tour-dot" + (i === tourStep ? " active" : "")} />
+                  ))}
+                </div>
+                <div className="tour-btn-row">
+                  <button className="tour-skip" onClick={endTour}>Skip tour</button>
+                  <button className="tour-next" onClick={() => {
+                    const next = tourStep + 1;
+                    if (next >= TOUR_STEPS.length) { endTour(); return; }
+                    const nextTarget = TOUR_STEPS[next].target;
+                    if (nextTarget) {
+                      const el = document.querySelector(nextTarget);
+                      if (el) {
+                        const r = el.getBoundingClientRect();
+                        setTourRects({ top: r.top, left: r.left, width: r.width, height: r.height });
+                      }
+                    }
+                    setTourStep(next);
+                  }}>
+                    {tourStep === TOUR_STEPS.length - 1 ? "Let's go!" : "Next →"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
       <div className="app">
         {/* HEADER */}
         <header className="header">
