@@ -953,7 +953,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
           </div>
         </header>
 
-        <div className="main" style={{ height: "calc(100vh - 98px)", minHeight: 0 }}>
+        <div className="main">
           <div className="left-panel">
 
             {/* ── TRACKER TAB ── */}
@@ -1183,7 +1183,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
           </div>
 
           {/* ── AI CHAT PANEL ── */}
-          <div className="right-panel" style={{ height: "100%", maxHeight: "100%" }}>
+          <div className="right-panel">
             <div className="chat-header">
               <div className="chat-header-icon">⚔️</div>
               <div className="chat-header-text"><h3>AI Advisor</h3><p>Live GE data · Powered by Claude</p></div>
