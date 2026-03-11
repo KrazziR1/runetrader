@@ -638,6 +638,7 @@ export default function RuneTrader() {
   async function handleSignOut() {
     await supabase.auth.signOut();
     setUser(null);
+    setFlipsLog([]);
   }
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
