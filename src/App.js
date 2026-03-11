@@ -12,8 +12,8 @@ const STYLES = `
     --border: #2a3340; --text: #e8e8e8; --text-dim: #7a8a9a;
     --green: #2ecc71; --green-dim: #1a7a44; --red: #e74c3c; --red-dim: #7a1f1a; --blue: #3498db;
   }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
-  .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+  .app { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 
   /* HEADER */
   .header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 64px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
