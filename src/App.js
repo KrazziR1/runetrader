@@ -76,12 +76,15 @@ const STYLES = `
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
   /* AI CHAT */
-  .chat-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-  .chat-header-icon { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .chat-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .chat-header-icon { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
   .chat-header-text h3 { font-size: 14px; font-weight: 600; color: var(--text); }
   .chat-header-text p { font-size: 11px; color: var(--text-dim); }
-  .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-height: 0; scroll-behavior: smooth; }
-  .msg { display: flex; flex-direction: column; gap: 4px; max-width: 90%; }
+
+  /* Floating input layout */
+  .chat-body { flex: 1; position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 16px 16px 80px 16px; display: flex; flex-direction: column; gap: 12px; min-height: 0; scroll-behavior: smooth; }
+  .msg { display: flex; flex-direction: column; gap: 4px; max-width: 92%; }
   .msg.user { align-self: flex-end; }
   .msg.assistant { align-self: flex-start; }
   .msg-bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; }
@@ -94,17 +97,22 @@ const STYLES = `
   .typing-dot:nth-child(2) { animation-delay: 0.2s; }
   .typing-dot:nth-child(3) { animation-delay: 0.4s; }
   @keyframes typing { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
-  .chat-input-area { padding: 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
-  .quick-prompts { display: flex; gap: 6px; flex-wrap: wrap; }
-  .quick-prompt { padding: 5px 10px; border-radius: 20px; font-size: 11px; cursor: pointer; background: var(--bg3); border: 1px solid var(--border); color: var(--text-dim); transition: all 0.2s; font-family: 'Inter', sans-serif; }
-  .quick-prompt:hover { border-color: var(--gold-dim); color: var(--gold); }
-  .chat-input-row { display: flex; gap: 8px; }
-  .chat-input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; outline: none; resize: none; transition: border-color 0.2s; height: 40px; }
-  .chat-input:focus { border-color: var(--gold-dim); }
+
+  /* Floating input bar */
+  .chat-float-input { position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 10; display: flex; flex-direction: column; gap: 6px; }
+  .chat-input-row { display: flex; gap: 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 6px 6px 6px 14px; align-items: center; box-shadow: 0 4px 24px rgba(0,0,0,0.5); transition: border-color 0.2s; }
+  .chat-input-row:focus-within { border-color: var(--gold-dim); }
+  .chat-input { flex: 1; background: transparent; border: none; color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; outline: none; resize: none; height: 24px; max-height: 80px; line-height: 1.5; padding: 0; overflow-y: hidden; }
   .chat-input::placeholder { color: var(--text-dim); }
-  .send-btn { width: 40px; height: 40px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; flex-shrink: 0; }
+  .send-btn { width: 34px; height: 34px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; flex-shrink: 0; }
   .send-btn:hover { opacity: 0.85; }
-  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* Collapsed quick prompts */
+  .quick-prompts-row { display: flex; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  .quick-prompts-row::-webkit-scrollbar { display: none; }
+  .quick-prompt { padding: 4px 10px; border-radius: 20px; font-size: 11px; cursor: pointer; background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); transition: all 0.2s; font-family: 'Inter', sans-serif; white-space: nowrap; flex-shrink: 0; }
+  .quick-prompt:hover { border-color: var(--gold-dim); color: var(--gold); background: var(--bg3); }
 
   /* CHART MODAL */
   .modal-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; animation: fadeIn 0.2s ease; }
@@ -1179,21 +1187,31 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
               <div className="chat-header-icon">⚔️</div>
               <div className="chat-header-text"><h3>AI Advisor</h3><p>Live GE data · Powered by Claude</p></div>
             </div>
-            <div className="chat-messages">
-              {messages.map((msg, i) => (
-                <div key={i} className={`msg ${msg.role}`}>
-                  <div className="msg-bubble" style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
-                  <span className="msg-time">{formatTime(msg.time)}</span>
+            <div className="chat-body">
+              <div className="chat-messages">
+                {messages.map((msg, i) => (
+                  <div key={i} className={`msg ${msg.role}`}>
+                    <div className="msg-bubble" style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
+                    <span className="msg-time">{formatTime(msg.time)}</span>
+                  </div>
+                ))}
+                {aiLoading && <div className="msg assistant"><div className="msg-bubble"><div className="typing"><div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" /></div></div></div>}
+                <div ref={messagesEndRef} />
+              </div>
+              <div className="chat-float-input">
+                <div className="quick-prompts-row">
+                  {QUICK_PROMPTS.map(p => <button key={p} className="quick-prompt" onClick={() => sendMessage(p)}>{p}</button>)}
                 </div>
-              ))}
-              {aiLoading && <div className="msg assistant"><div className="msg-bubble"><div className="typing"><div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" /></div></div></div>}
-              <div ref={messagesEndRef} />
-            </div>
-            <div className="chat-input-area">
-              <div className="quick-prompts">{QUICK_PROMPTS.map(p => <button key={p} className="quick-prompt" onClick={() => sendMessage(p)}>{p}</button>)}</div>
-              <div className="chat-input-row">
-                <textarea className="chat-input" placeholder="Ask anything about flipping..." value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (input.trim()) sendMessage(input.trim()); } }} />
-                <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>➤</button>
+                <div className="chat-input-row">
+                  <textarea className="chat-input" placeholder="Ask anything about flipping..." value={input}
+                    onChange={e => {
+                      setInput(e.target.value);
+                      e.target.style.height = "24px";
+                      e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px";
+                    }}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (input.trim()) sendMessage(input.trim()); } }} />
+                  <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>➤</button>
+                </div>
               </div>
             </div>
           </div>
