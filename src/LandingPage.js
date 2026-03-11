@@ -317,7 +317,7 @@ export default function LandingPage({ onEnterApp }) {
   }, []);
 
   return (
-    <>
+    <div style={{ minHeight: '100vh', overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
       <style>{STYLES}</style>
 
       {/* NAV */}
@@ -548,6 +548,6 @@ export default function LandingPage({ onEnterApp }) {
           <a href="/#" className="footer-link">Privacy</a>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
