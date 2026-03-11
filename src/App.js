@@ -381,7 +381,6 @@ function formatGP(n) {
 }
 
 function applyOffset(low, high, speed) {
-  // Adjust prices to improve fill rate based on speed preference
   const factor = speed === "Fast" ? 0.012 : speed === "Med" ? 0.006 : 0;
   const adjLow = Math.round(low * (1 + factor));
   const adjHigh = Math.round(high * (1 - factor));
@@ -397,14 +396,11 @@ function formatTime(d) {
 }
 
 function getScore(margin, volume, roi, price) {
-  // Volume is king - low volume flips are unreliable
   const v = Math.min(volume / 500, 1) * 50;
-  // Margin score - sweet spot is 500gp to 50k
   const m = Math.min(margin / 10000, 1) * 30;
-  // ROI sweet spot is 5-50%. Above 200% is almost always bad/stale data - penalise hard
   let roiScore;
   if (roi > 200) {
-    roiScore = Math.max(0, 20 - (roi - 200) / 50); // rapidly drops toward 0
+    roiScore = Math.max(0, 20 - (roi - 200) / 50);
   } else {
     const cappedRoi = Math.min(roi, 50);
     roiScore = (cappedRoi / 50) * 20;
@@ -424,7 +420,6 @@ const QUICK_PROMPTS = [
   "Explain margins to me",
   "What's trending now?",
 ];
-
 
 const TIME_RANGES = [
   { label: "24H", seconds: 86400 },
@@ -503,7 +498,6 @@ function ItemChart({ item, onClose, onAskAI }) {
     function xPos(t) { return pad.left + ((t - minT) / (maxT - minT)) * (W - pad.left - pad.right); }
     function yPos(p) { return pad.top + (1 - (p - minP) / (maxP - minP)) * (H - pad.top - pad.bottom); }
 
-    // Grid lines
     ctx.strokeStyle = "rgba(42,51,64,0.8)";
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
@@ -514,7 +508,6 @@ function ItemChart({ item, onClose, onAskAI }) {
       ctx.fillText(formatGP(Math.round(price)), pad.left - 8, y + 4);
     }
 
-    // High price line + fill
     const highPoints = chartData.filter(d => d.avgHighPrice);
     if (highPoints.length > 1) {
       ctx.beginPath();
@@ -533,7 +526,6 @@ function ItemChart({ item, onClose, onAskAI }) {
       ctx.strokeStyle = "#c9a84c"; ctx.lineWidth = 2; ctx.stroke();
     }
 
-    // Low price line
     const lowPoints = chartData.filter(d => d.avgLowPrice);
     if (lowPoints.length > 1) {
       ctx.beginPath();
@@ -543,7 +535,6 @@ function ItemChart({ item, onClose, onAskAI }) {
       ctx.setLineDash([]);
     }
 
-    // X axis labels
     ctx.fillStyle = "#4a5a6a"; ctx.font = "11px Inter"; ctx.textAlign = "center";
     const labelCount = 5;
     for (let i = 0; i <= labelCount; i++) {
@@ -752,10 +743,7 @@ export default function RuneTrader() {
         if (!meta) continue;
         const { high, low } = prices;
         if (!high || !low) continue;
-        // GE tax: 2% of sell price, capped at 5,000,000gp
-        // Items below 50gp have no tax obligation (rounds down to 0)
-        // Tax-exempt items: Old school bond (13190, 13191, 13192)
-        const TAX_EXEMPT_IDS = [13190, 13191, 13192]; // bonds
+        const TAX_EXEMPT_IDS = [13190, 13191, 13192];
         const isTaxExempt = TAX_EXEMPT_IDS.includes(id);
         const rawTax = Math.floor(high * 0.02);
         const TAX = isTaxExempt ? 0 : (high < 50 ? 0 : Math.min(rawTax, 5_000_000));
@@ -789,13 +777,11 @@ export default function RuneTrader() {
     setInput("");
     setAiLoading(true);
 
-    // Top 50 scored items - filter out junk data (ROI > 200% or volume < 5)
     const reliableItems = itemsRef.current.filter(i => i.roi <= 200 && i.volume >= 5);
     const topFlips = reliableItems.slice(0, 50).map(i =>
       `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, volume ${i.volume.toLocaleString()}/day, score ${i.score}`
     ).join("\n");
 
-    // Also find any items the user specifically mentioned by name
     const mentionedItems = itemsRef.current.filter(i =>
       text.toLowerCase().includes(i.name.toLowerCase())
     ).map(i =>
@@ -867,17 +853,14 @@ STRICT recommendation rules — never break these:
     const budgetGp = budget ? parseInt(budget.replace(/[^0-9]/g, "")) * (budget.toLowerCase().includes("m") ? 1_000_000 : budget.toLowerCase().includes("k") ? 1_000 : 1) : null;
     const matchBudget = !budgetGp || item.low <= budgetGp;
     const matchFilter = filter === "all" || (filter === "f2p" && item.category === "F2P") || (filter === "members" && item.category === "Members") || (filter === "highvol" && item.volume > 500);
-    // Risk tolerance filtering
     const matchRisk = !prefs.risk ||
       (prefs.risk === "Low" && item.volume >= 500 && item.roi <= 30) ||
       (prefs.risk === "Med" && item.volume >= 100 && item.roi <= 100) ||
       (prefs.risk === "High" && item.roi <= 200);
-    // Flip speed filtering
     const matchSpeed = !prefs.speed ||
       (prefs.speed === "Fast" && item.volume >= 500) ||
       (prefs.speed === "Med" && item.volume >= 100) ||
       (prefs.speed === "Slow");
-    // Also filter out items where the adjusted margin would be negative
     const {adjLow, adjHigh} = applyOffset(item.low, item.high, prefs.speed);
     const adjMargin = item.margin - (adjLow - item.low) - (item.high - adjHigh);
     const matchPositiveMargin = search.trim() || adjMargin > 0;
@@ -893,6 +876,7 @@ STRICT recommendation rules — never break these:
     return sortDir === "asc" ? a[key] - b[key] : b[key] - a[key];
   });
 
+  // ─── UPDATED logFlip with full error logging ───────────────────────────────
   async function logFlip() {
     const buy = parseInt(logForm.buyPrice.replace(/,/g, ""));
     const sell = parseInt(logForm.sellPrice.replace(/,/g, ""));
@@ -902,13 +886,39 @@ STRICT recommendation rules — never break these:
     const profitEach = sell - buy - tax;
     const totalProfit = profitEach * qty;
     const roi = parseFloat(((profitEach / buy) * 100).toFixed(1));
+    const itemName = logForm.item;
     setLogForm({ item: "", buyPrice: "", sellPrice: "", qty: "1" });
+
     if (user) {
-      const { data, error } = await supabase.from("flips").insert({
-        user_id: user.id, item: logForm.item, buy_price: buy, sell_price: sell,
-        qty, tax, profit_each: profitEach, total_profit: totalProfit, roi
-      }).select().single();
-      if (!error && data) {
+      console.log("👤 Logged in as:", user.email, "| ID:", user.id);
+
+      const payload = {
+        user_id: user.id,
+        item: itemName,
+        buy_price: buy,
+        sell_price: sell,
+        qty,
+        tax,
+        profit_each: profitEach,
+        total_profit: totalProfit,
+        roi,
+      };
+      console.log("📦 Sending to Supabase:", payload);
+
+      const { data, error } = await supabase
+        .from("flips")
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("❌ Supabase insert FAILED");
+        console.error("   Message:", error.message);
+        console.error("   Code:", error.code);
+        console.error("   Details:", error.details);
+        console.error("   Hint:", error.hint);
+      } else {
+        console.log("✅ Flip saved to Supabase successfully!", data);
         const entry = {
           id: data.id, item: data.item, buyPrice: data.buy_price, sellPrice: data.sell_price,
           qty: data.qty, tax: data.tax, profitEach: data.profit_each,
@@ -917,8 +927,9 @@ STRICT recommendation rules — never break these:
         setFlipsLog(prev => [entry, ...prev]);
       }
     } else {
+      console.log("ℹ️ Not logged in — saving to localStorage only");
       const entry = {
-        id: Date.now(), item: logForm.item, buyPrice: buy, sellPrice: sell,
+        id: Date.now(), item: itemName, buyPrice: buy, sellPrice: sell,
         qty, tax, profitEach, totalProfit, roi, date: new Date().toISOString(),
       };
       const updated = [entry, ...flipsLog];
@@ -926,6 +937,7 @@ STRICT recommendation rules — never break these:
       localStorage.setItem("runetrader_flips", JSON.stringify(updated));
     }
   }
+  // ──────────────────────────────────────────────────────────────────────────
 
   async function deleteFlip(id) {
     if (user) {
@@ -1127,7 +1139,6 @@ STRICT recommendation rules — never break these:
             <>
             {/* STATS */}
             <div className="prefs-bar">
-              {/* Cash Stack */}
               <div className="pref-card">
                 <span className="pref-label">Cash Stack</span>
                 <input className="pref-input" placeholder="e.g. 50000000"
@@ -1137,7 +1148,6 @@ STRICT recommendation rules — never break these:
                 <span className="pref-sub">Filters flips by buy price</span>
               </div>
 
-              {/* Risk Tolerance */}
               <div className="pref-card">
                 <span className="pref-label">Risk Tolerance</span>
                 <div className="toggle-group">
@@ -1159,7 +1169,6 @@ STRICT recommendation rules — never break these:
                 </span>
               </div>
 
-              {/* Flip Speed */}
               <div className="pref-card">
                 <span className="pref-label">Flip Speed</span>
                 <div className="toggle-group">
@@ -1181,7 +1190,6 @@ STRICT recommendation rules — never break these:
                 </span>
               </div>
 
-              {/* Live Stats */}
               <div className="pref-card">
                 <span className="pref-label">Market Right Now</span>
                 <span className="stat-value" style={{fontSize:"20px", color:"var(--gold)", fontFamily:"Cinzel, serif"}}>
