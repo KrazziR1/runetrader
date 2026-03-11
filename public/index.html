@@ -2,33 +2,53 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0a0c0f" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 
-    <!-- Primary Meta -->
-    <title>RuneTrader.gg — AI-Powered OSRS Flipping Tool</title>
-    <meta name="description" content="The smartest OSRS Grand Exchange flipping tool. Live prices, AI advisor, and real-time margin tracking. Flip smarter, stack more gold." />
-    <meta name="keywords" content="OSRS flipping, Grand Exchange, OSRS margins, GE tracker, OSRS money making, runescape flipping" />
+    <!-- ── Primary meta ── -->
+    <title>RuneTrader.gg — OSRS GE Flip Tracker</title>
+    <meta name="description" content="Find the best OSRS Grand Exchange flips with live prices, AI advisor, and portfolio tracking." />
+    <meta name="theme-color" content="#c9a84c" />
 
-    <!-- Open Graph (Discord, Reddit, Facebook previews) -->
+    <!-- ── PWA manifest ── -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- ── Favicon ── -->
+    <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/favicon-32.png" />
+
+    <!-- ── Apple PWA tags — these are what make it feel native on iOS ── -->
+    <!-- Tells iOS Safari this can be added to home screen as a full-screen app -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <!-- Hides the Safari status bar style — black-translucent lets content go edge to edge -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Name shown under the icon on the home screen -->
+    <meta name="apple-mobile-web-app-title" content="RuneTrader" />
+    <!-- The icon iOS uses when someone taps "Add to Home Screen" -->
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+
+    <!-- ── Splash screens for iPhone (optional but polished) ── -->
+    <!-- iOS shows a splash screen while the app loads. background matches our dark theme. -->
+    <meta name="msapplication-TileColor" content="#0a0c0f" />
+
+    <!-- ── Open Graph (for sharing links) ── -->
+    <meta property="og:title" content="RuneTrader.gg — OSRS GE Flip Tracker" />
+    <meta property="og:description" content="Find the best OSRS Grand Exchange flips with live prices and AI advice." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.runetrader.gg" />
-    <meta property="og:title" content="RuneTrader.gg — AI-Powered OSRS Flipping Tool" />
-    <meta property="og:description" content="Live GE prices, AI flip advisor, and real-time margin tracking. The smartest way to flip on the Grand Exchange." />
-    <meta property="og:image" content="https://www.runetrader.gg/og-image.png" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="RuneTrader.gg — AI-Powered OSRS Flipping Tool" />
-    <meta name="twitter:description" content="Live GE prices, AI flip advisor, and real-time margin tracking." />
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/favicon.svg" />
-    <link rel="alternate icon" href="%PUBLIC_URL%/favicon.ico" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/favicon.svg" />
+    <meta property="og:url" content="https://runetrader.gg" />
   </head>
   <body>
     <noscript>You need to enable JavaScript to run RuneTrader.</noscript>
     <div id="root"></div>
+
+    <!-- ── Register service worker ── -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').then(
+            function (reg) { console.log('[RuneTrader] SW registered:', reg.scope); },
+            function (err) { console.warn('[RuneTrader] SW failed:', err); }
+          );
+        });
+      }
+    </script>
   </body>
 </html>
