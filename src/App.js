@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import { supabase } from "./supabaseClient";
@@ -31,7 +31,7 @@ const STYLES = `
   .nav-tab.active { background: var(--bg3); color: var(--gold); border: 1px solid var(--border); }
 
   /* LAYOUT */
-  .main { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 64px); }
+  .main { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 64px - 34px); }
   .left-panel { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
   .right-panel { width: 380px; border-left: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg2); }
 
@@ -257,6 +257,20 @@ const STYLES = `
   .tour-skip:hover { color: var(--text); }
   .tour-next { padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 600; font-family: "Inter", sans-serif; transition: opacity 0.2s; }
   .tour-next:hover { opacity: 0.85; }
+
+  /* TOAST */
+  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 400; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; font-family: "Inter", sans-serif; box-shadow: 0 8px 32px rgba(0,0,0,0.5); pointer-events: all; animation: toastIn 0.3s cubic-bezier(0.4,0,0.2,1); max-width: 320px; }
+  @keyframes toastIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .toast.success { background: #0f1218; border: 1px solid var(--green-dim); color: var(--green); }
+  .toast.error { background: #0f1218; border: 1px solid var(--red-dim); color: var(--red); }
+  .toast.info { background: #0f1218; border: 1px solid var(--gold-dim); color: var(--gold); }
+
+  /* ALPHA BANNER */
+  .alpha-banner { background: linear-gradient(90deg, rgba(201,168,76,0.08), rgba(201,168,76,0.04)); border-bottom: 1px solid rgba(201,168,76,0.2); padding: 7px 32px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 12px; color: var(--text-dim); }
+  .alpha-badge { background: rgba(201,168,76,0.15); border: 1px solid var(--gold-dim); color: var(--gold); border-radius: 20px; padding: 2px 10px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+  .feedback-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px; padding: 3px 12px; font-size: 11px; cursor: pointer; font-family: "Inter", sans-serif; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+  .feedback-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
 
   /* MOBILE */
   @media (max-width: 768px) {
@@ -533,6 +547,13 @@ export default function RuneTrader() {
   const [showAuth, setShowAuth] = useState(false);
   const [tourStep, setTourStep] = useState(-1);
   const [tourRects, setTourRects] = useState({});
+  const [toasts, setToasts] = useState([]);
+
+  function showToast(msg, type = "success", duration = 3000) {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
@@ -727,12 +748,18 @@ export default function RuneTrader() {
     setShowAutocomplete(false);
     if (user) {
       const { data, error } = await supabase.from("flips").insert({ user_id: user.id, item: itemName, buy_price: buy, sell_price: sell, qty, tax, profit_each: profitEach, total_profit: totalProfit, roi }).select().single();
-      if (!error && data) setFlipsLog(prev => [mapFlipRow(data), ...prev]);
+      if (!error && data) {
+        setFlipsLog(prev => [mapFlipRow(data), ...prev]);
+        showToast("Flip logged successfully!", "success");
+      } else if (error) {
+        showToast("Failed to save flip. Try again.", "error");
+      }
     } else {
       const entry = { id: Date.now(), item: itemName, buyPrice: buy, sellPrice: sell, qty, tax, profitEach, totalProfit, roi, date: new Date().toISOString() };
       const updated = [entry, ...flipsLog];
       setFlipsLog(updated);
       localStorage.setItem("runetrader_flips", JSON.stringify(updated));
+      showToast("Flip logged! Sign in to sync across devices.", "info");
     }
   }
 
@@ -827,6 +854,15 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
     <>
       <style>{STYLES}</style>
 
+      {/* TOAST NOTIFICATIONS */}
+      <div className="toast-container">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast ${t.type}`}>
+            {t.type === "success" ? "✅" : t.type === "error" ? "❌" : "⚡"} {t.msg}
+          </div>
+        ))}
+      </div>
+
       {/* AUTH MODAL */}
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onAuth={u => setUser(u)} />}
 
@@ -864,6 +900,13 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
       })()}
 
       <div className="app">
+        {/* ALPHA BANNER */}
+        <div className="alpha-banner">
+          <span className="alpha-badge">Alpha</span>
+          <span>RuneTrader is in early access — features are actively being built.</span>
+          <a className="feedback-btn" href="mailto:feedback@runetrader.gg">💬 Send Feedback</a>
+        </div>
+
         {/* HEADER */}
         <header className="header">
           <div className="logo">
