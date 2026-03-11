@@ -78,6 +78,13 @@ const STYLES = `
   .skeleton { background: linear-gradient(90deg, var(--bg4) 25%, var(--bg3) 50%, var(--bg4) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; height: 14px; }
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
+  /* REFRESH BUTTON */
+  .refresh-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
+  .refresh-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .refresh-spin { display: inline-block; animation: spin 0.8s linear infinite; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
   /* AI CHAT */
   .chat-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .chat-header-icon { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
@@ -111,7 +118,7 @@ const STYLES = `
   .send-btn:hover { opacity: 0.85; }
   .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-  /* Quick prompts — wrap so chips never clip */
+  /* Quick prompts */
   .quick-prompts-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
   .quick-prompt { padding: 4px 10px; border-radius: 20px; font-size: 11px; cursor: pointer; background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); transition: all 0.2s; font-family: 'Inter', sans-serif; white-space: nowrap; }
   .quick-prompt:hover { border-color: var(--gold-dim); color: var(--gold); background: var(--bg3); }
@@ -172,6 +179,9 @@ const STYLES = `
   .tracker-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: "Inter", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
   .tracker-input:focus { border-color: var(--gold-dim); }
   .tracker-input::placeholder { color: var(--text-dim); }
+  .tracker-input.optional-field { border-style: dashed; }
+  .tracker-input.optional-field:focus { border-style: solid; border-color: var(--gold-dim); }
+  .optional-hint { font-size: 10px; color: var(--text-dim); opacity: 0.7; font-style: italic; }
   .log-btn { padding: 9px 20px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 600; font-family: "Inter", sans-serif; white-space: nowrap; transition: opacity 0.2s; height: 38px; }
   .log-btn:hover { opacity: 0.85; }
   .log-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -183,10 +193,11 @@ const STYLES = `
 
   /* FLIPS LOG */
   .flips-log { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .log-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 40px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-  .log-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 40px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; }
+  .log-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .log-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; }
   .log-row:last-child { border-bottom: none; }
   .log-row:hover { background: var(--bg4); }
+  .log-row.open-flip { border-left: 3px solid var(--gold-dim); background: rgba(201,168,76,0.03); }
   .log-item-name { font-weight: 500; color: var(--text); }
   .log-date { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
   .delete-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
@@ -202,6 +213,35 @@ const STYLES = `
   .tracker-empty .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
   .tracker-empty p { font-size: 14px; margin-bottom: 4px; }
   .tracker-empty small { font-size: 12px; opacity: 0.6; }
+
+  /* OPEN FLIP BADGE + CLOSE BUTTON */
+  .open-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid var(--gold-dim); letter-spacing: 0.5px; text-transform: uppercase; }
+  .close-flip-btn { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--gold-dim); background: rgba(201,168,76,0.08); color: var(--gold); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; white-space: nowrap; }
+  .close-flip-btn:hover { background: rgba(201,168,76,0.18); }
+
+  /* CLOSE FLIP MODAL */
+  .close-flip-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .close-flip-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 440px; padding: 28px; display: flex; flex-direction: column; gap: 18px; }
+  .close-flip-title { font-family: "Cinzel", serif; font-size: 16px; color: var(--gold); }
+  .close-flip-subtitle { font-size: 13px; color: var(--text-dim); margin-top: -8px; }
+  .close-flip-options { display: flex; flex-direction: column; gap: 10px; }
+  .close-flip-option-btn { padding: 14px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; font-family: "Inter", sans-serif; transition: all 0.2s; text-align: left; display: flex; flex-direction: column; gap: 3px; }
+  .close-flip-option-btn:hover { border-color: var(--gold-dim); background: var(--bg4); }
+  .close-flip-option-btn.sold:hover { border-color: var(--green-dim); }
+  .close-flip-option-btn .opt-title { font-weight: 600; font-size: 13px; }
+  .close-flip-option-btn .opt-sub { font-size: 11px; color: var(--text-dim); }
+  .close-flip-sold-form { display: flex; flex-direction: column; gap: 14px; }
+  .close-flip-field { display: flex; flex-direction: column; gap: 6px; }
+  .close-flip-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .close-flip-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: "Inter", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
+  .close-flip-input:focus { border-color: var(--gold-dim); }
+  .close-flip-preview { background: var(--bg4); border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+  .close-flip-btns { display: flex; gap: 10px; justify-content: flex-end; }
+  .close-flip-cancel { padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: "Inter", sans-serif; }
+  .close-flip-confirm { padding: 9px 18px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 600; cursor: pointer; font-family: "Inter", sans-serif; }
+  .close-flip-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+  .back-link { background: none; border: none; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: "Inter", sans-serif; padding: 0; text-decoration: underline; }
+  .back-link:hover { color: var(--text); }
 
   /* PROFIT CHART */
   .profit-chart-wrap { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
@@ -289,7 +329,7 @@ const STYLES = `
   .unrealised-pnl { font-size: 11px; }
   .unrealised-pnl.pos { color: var(--green); }
   .unrealised-pnl.neg { color: var(--red); }
-
+  .from-tracker-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 20px; font-size: 10px; background: rgba(201,168,76,0.1); color: var(--gold-dim); border: 1px solid rgba(201,168,76,0.2); margin-top: 3px; }
 
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg2); }
@@ -353,7 +393,7 @@ const STYLES = `
     .flip-row > *:nth-child(5), .flip-row > *:nth-child(6),
     .flip-row > *:nth-child(7), .flip-row > *:nth-child(8),
     .flip-row > *:nth-child(9) { display: none; }
-    .log-header, .log-row { grid-template-columns: 2fr 1fr 1fr 1fr 40px; }
+    .log-header, .log-row { grid-template-columns: 2fr 1fr 1fr 1fr 80px; }
     .log-header > *:nth-child(4), .log-header > *:nth-child(5),
     .log-row > *:nth-child(4), .log-row > *:nth-child(5) { display: none; }
     .modal-stats { grid-template-columns: repeat(2, 1fr); }
@@ -457,7 +497,7 @@ const TOUR_STEPS = [
 
 // ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
 
-function ItemChart({ item, onClose, onAskAI, onFlipThis }) {
+function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing }) {
   const [range, setRange] = useState("7D");
   const [chartData, setChartData] = useState(null);
   const [chartLoading, setChartLoading] = useState(true);
@@ -472,13 +512,22 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis }) {
     setChartLoading(true);
     try {
       const rangeObj = TIME_RANGES.find(r => r.label === range);
-      const endpoint = range === "24H" ? "5m" : range === "3D" ? "1h" : "6h";
+      // Fix: use correct timestep for each range
+      let endpoint;
+      if (range === "24H") endpoint = "5m";
+      else if (range === "3D") endpoint = "1h";
+      else if (range === "7D") endpoint = "6h";
+      else if (range === "1M") endpoint = "6h";
+      else if (range === "6M") endpoint = "24h";
+      else if (range === "1Y") endpoint = "24h";
+      else endpoint = "24h"; // All
+
       const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/timeseries?timestep=${endpoint}&id=${item.id}`, { headers: { "User-Agent": "RuneTrader/1.0" } });
       const data = await res.json();
       if (!data.data || data.data.length === 0) { setChartLoading(false); return; }
       const now = Date.now() / 1000;
       const filtered = data.data.filter(d => now - d.timestamp <= rangeObj.seconds);
-      setChartData(filtered.length > 0 ? filtered : data.data.slice(-50));
+      setChartData(filtered.length > 0 ? filtered : data.data.slice(-200));
     } catch { } finally { setChartLoading(false); }
   }
 
@@ -540,7 +589,18 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis }) {
             <div className="modal-title">{item.name}</div>
             <div className="modal-meta">{item.category} · Buy limit: {item.buyLimit?.toLocaleString() || "Unknown"} · Score: {item.score}/100</div>
           </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <button
+              className="refresh-btn"
+              onClick={onRefresh}
+              disabled={refreshing}
+              title="Refresh prices"
+            >
+              <span className={refreshing ? "refresh-spin" : ""}>↻</span>
+              {refreshing ? "Refreshing..." : "Refresh"}
+            </button>
+            <button className="modal-close" onClick={onClose}>✕</button>
+          </div>
         </div>
         <div className="modal-stats">
           {[
@@ -592,7 +652,10 @@ function ProfitChart({ flipsLog }) {
     ctx.scale(dpr, dpr);
     const W = rect.width, H = rect.height, pad = { top: 10, right: 10, bottom: 30, left: 60 };
     ctx.clearRect(0, 0, W, H);
-    const sorted = [...flipsLog].sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+    // Only include closed flips in profit chart
+    const closedFlips = flipsLog.filter(f => f.status !== "open");
+    if (closedFlips.length < 2) return;
+    const sorted = [...closedFlips].sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
     let cum = 0;
     const points = sorted.map(f => { cum += f.totalProfit; return cum; });
     const minV = Math.min(0, ...points), maxV = Math.max(0, ...points);
@@ -626,7 +689,8 @@ function ProfitChart({ flipsLog }) {
     ctx.strokeStyle = isPositive ? "#2ecc71" : "#e74c3c"; ctx.lineWidth = 2; ctx.stroke();
   }, [flipsLog]);
 
-  if (flipsLog.length < 2) return null;
+  const closedCount = flipsLog.filter(f => f.status !== "open").length;
+  if (closedCount < 2) return null;
   return (
     <div className="profit-chart-wrap">
       <div className="profit-chart-title">📈 Cumulative Profit</div>
@@ -637,12 +701,98 @@ function ProfitChart({ flipsLog }) {
   );
 }
 
+// ─── CLOSE FLIP MODAL ────────────────────────────────────────────────────────
+
+function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }) {
+  const [step, setStep] = useState("choose"); // "choose" | "sold"
+  const [sellPrice, setSellPrice] = useState("");
+
+  const liveItem = items.find(i => i.name.toLowerCase() === flip.item.toLowerCase());
+  const defaultSell = liveItem ? String(liveItem.high) : "";
+
+  useEffect(() => {
+    if (step === "sold" && !sellPrice) setSellPrice(defaultSell);
+  }, [step]); // eslint-disable-line
+
+  const sellNum = parseInt(sellPrice.replace(/,/g, ""));
+  const previewProfit = !isNaN(sellNum) ? (() => {
+    const tax = Math.min(Math.floor(sellNum * 0.02), 5_000_000);
+    return (sellNum - flip.buyPrice - tax) * (flip.qty || 1);
+  })() : null;
+
+  return (
+    <div className="close-flip-modal" onClick={e => e.target === e.currentTarget && onDismiss()}>
+      <div className="close-flip-inner">
+        <div>
+          <div className="close-flip-title">Close: {flip.item}</div>
+          <div className="close-flip-subtitle">
+            Bought {(flip.qty || 1).toLocaleString()}x at {formatGP(flip.buyPrice)} gp each
+          </div>
+        </div>
+
+        {step === "choose" && (
+          <div className="close-flip-options">
+            <button className="close-flip-option-btn sold" onClick={() => setStep("sold")}>
+              <span className="opt-title">✅ Sold</span>
+              <span className="opt-sub">I sold this item — enter my sell price and log the profit</span>
+            </button>
+            <button className="close-flip-option-btn" onClick={() => onCancelled(flip)}>
+              <span className="opt-title">❌ Cancelled</span>
+              <span className="opt-sub">Order didn't fill or I changed my mind — remove from open flips</span>
+            </button>
+          </div>
+        )}
+
+        {step === "sold" && (
+          <div className="close-flip-sold-form">
+            <button className="back-link" onClick={() => setStep("choose")}>← Back</button>
+            <div className="close-flip-field">
+              <label className="close-flip-label">Sell Price (gp)</label>
+              <input
+                className="close-flip-input"
+                value={sellPrice}
+                onChange={e => setSellPrice(e.target.value)}
+                placeholder="Enter your actual sell price"
+                autoFocus
+              />
+            </div>
+            {previewProfit !== null && (
+              <div className="close-flip-preview">
+                <span style={{ color: "var(--text-dim)" }}>Estimated profit: </span>
+                <span style={{ fontWeight: 700, color: previewProfit >= 0 ? "var(--green)" : "var(--red)" }}>
+                  {previewProfit >= 0 ? "+" : ""}{formatGP(previewProfit)} gp
+                </span>
+              </div>
+            )}
+            <div className="close-flip-btns">
+              <button className="close-flip-cancel" onClick={onDismiss} disabled={loading}>Cancel</button>
+              <button
+                className="close-flip-confirm"
+                disabled={!sellPrice || isNaN(sellNum) || loading}
+                onClick={() => onSold(flip, sellPrice)}
+              >
+                {loading ? "Saving..." : "Confirm & Log Profit"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {step === "choose" && (
+          <div className="close-flip-btns">
+            <button className="close-flip-cancel" onClick={onDismiss}>Dismiss</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── PORTFOLIO PAGE ───────────────────────────────────────────────────────────
 
 const PORT_RANGES = ["24H", "3D", "7D", "1M", "3M", "All"];
 
 function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignIn, showToast, supabase: sb }) {
-  const [positions, setPositions] = useState([]);
+  const [manualPositions, setManualPositions] = useState([]);
   const [posLoading, setPosLoading] = useState(false);
   const [snapshots, setSnapshots] = useState([]);
   const [range, setRange] = useState("1M");
@@ -657,7 +807,7 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
 
   useEffect(() => {
     if (!user) return;
-    loadPositions();
+    loadManualPositions();
     loadSnapshots();
     setTimeout(() => { flipsLoadedRef.current = true; }, 1000);
   }, [user]); // eslint-disable-line
@@ -667,10 +817,10 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
     upsertSnapshot();
   }, [flipsLog, user]); // eslint-disable-line
 
-  async function loadPositions() {
+  async function loadManualPositions() {
     setPosLoading(true);
     const { data } = await sb.from("positions").select("*").order("date_opened", { ascending: false });
-    setPositions(data || []);
+    setManualPositions(data || []);
     setPosLoading(false);
   }
 
@@ -680,9 +830,10 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
   }
 
   async function upsertSnapshot() {
-    const totalProfit = flipsLog.reduce((s, f) => s + (f.totalProfit || 0), 0);
+    const closedFlips = flipsLog.filter(f => f.status !== "open");
+    const totalProfit = closedFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
     const today = new Date().toISOString().slice(0, 10);
-    await sb.from("portfolio_snapshots").upsert({ user_id: user.id, snapshot_date: today, total_profit: totalProfit, total_flips: flipsLog.length }, { onConflict: "user_id,snapshot_date" });
+    await sb.from("portfolio_snapshots").upsert({ user_id: user.id, snapshot_date: today, total_profit: totalProfit, total_flips: closedFlips.length }, { onConflict: "user_id,snapshot_date" });
     loadSnapshots();
   }
 
@@ -693,12 +844,12 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
     const itemMatch = items.find(i => i.name.toLowerCase() === openForm.item.toLowerCase());
     const { data, error } = await sb.from("positions").insert({ user_id: user.id, item_id: itemMatch?.id || 0, item_name: openForm.item, buy_price: buy, qty }).select().single();
     if (error) { showToast("Failed to open position.", "error"); return; }
-    setPositions(prev => [data, ...prev]);
+    setManualPositions(prev => [data, ...prev]);
     setOpenForm({ item: "", buyPrice: "", qty: "1" });
     showToast("Position opened!", "success");
   }
 
-  async function closePosition(pos, sellPrice) {
+  async function closeManualPosition(pos, sellPrice) {
     const sell = parseInt(sellPrice.replace(/,/g, ""));
     if (isNaN(sell)) return;
     setClosingLoading(true);
@@ -706,11 +857,11 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
     const profitEach = sell - pos.buy_price - tax;
     const totalProfit = profitEach * pos.qty;
     const roi = parseFloat(((profitEach / pos.buy_price) * 100).toFixed(1));
-    const { data: flipData, error: flipErr } = await sb.from("flips").insert({ user_id: user.id, item: pos.item_name, buy_price: pos.buy_price, sell_price: sell, qty: pos.qty, tax, profit_each: profitEach, total_profit: totalProfit, roi }).select().single();
+    const { data: flipData, error: flipErr } = await sb.from("flips").insert({ user_id: user.id, item: pos.item_name, buy_price: pos.buy_price, sell_price: sell, qty: pos.qty, tax, profit_each: profitEach, total_profit: totalProfit, roi, status: "closed" }).select().single();
     if (flipErr) { showToast("Failed to log flip.", "error"); setClosingLoading(false); return; }
     if (flipData && mapFlipRow) setFlipsLog(prev => [mapFlipRow(flipData), ...prev]);
     await sb.from("positions").delete().eq("id", pos.id);
-    setPositions(prev => prev.filter(p => p.id !== pos.id));
+    setManualPositions(prev => prev.filter(p => p.id !== pos.id));
     setClosingPos(null);
     setCloseSellPrice("");
     setClosingLoading(false);
@@ -821,7 +972,11 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
     );
   }
 
-  const totalOpenValue = positions.reduce((s, p) => s + p.buy_price * p.qty, 0);
+  // Combine: open flips from tracker + manual positions
+  const trackerOpenFlips = flipsLog.filter(f => f.status === "open");
+  const totalOpenValue =
+    trackerOpenFlips.reduce((s, f) => s + (f.buyPrice || 0) * (f.qty || 1), 0) +
+    manualPositions.reduce((s, p) => s + p.buy_price * p.qty, 0);
 
   return (
     <div className="portfolio-wrap">
@@ -865,6 +1020,9 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
 
       <div className="open-pos-form">
         <div className="open-pos-title">📂 Open a Position</div>
+        <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
+          Tip: Open flips logged in the Tracker automatically appear below.
+        </div>
         <div className="open-pos-row">
           <div className="tracker-field">
             <label className="tracker-label">Item Name</label>
@@ -899,47 +1057,90 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
       </div>
 
       <div>
-        <div className="section-title">Open Positions{totalOpenValue > 0 && <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, marginLeft: "8px" }}>· {formatGP(totalOpenValue)} gp invested</span>}</div>
+        <div className="section-title">
+          Open Positions
+          {totalOpenValue > 0 && <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, marginLeft: "8px" }}>· {formatGP(totalOpenValue)} gp invested</span>}
+        </div>
         <div className="positions-table">
           <div className="positions-header">
             <span>Item</span><span>Buy Price</span><span>Qty</span><span>Total Cost</span><span>Live Price</span><span>Action</span>
           </div>
           {posLoading ? (
             <div style={{ textAlign: "center", color: "var(--text-dim)", padding: "40px" }}>Loading positions...</div>
-          ) : positions.length === 0 ? (
-            <div className="tracker-empty"><div className="icon">📂</div><p>No open positions</p><small>Open a position above when you buy at the GE</small></div>
-          ) : positions.map(pos => {
-            const liveItem = items.find(i => i.name.toLowerCase() === pos.item_name.toLowerCase());
-            const livePrice = liveItem?.high;
-            const tax = livePrice ? Math.min(Math.floor(livePrice * 0.02), 5_000_000) : 0;
-            const unrealisedEach = livePrice ? livePrice - pos.buy_price - tax : null;
-            const unrealised = unrealisedEach !== null ? unrealisedEach * pos.qty : null;
-            return (
-              <div key={pos.id} className="position-row">
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <img src={itemIconUrl(pos.item_name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                  <div>
-                    <div className="log-item-name">{pos.item_name}</div>
-                    <div className="log-date">{new Date(pos.date_opened).toLocaleDateString([], { month: "short", day: "numeric" })}</div>
-                  </div>
-                </div>
-                <span>{formatGP(pos.buy_price)}</span>
-                <span>{pos.qty.toLocaleString()}</span>
-                <span style={{ color: "var(--text-dim)" }}>{formatGP(pos.buy_price * pos.qty)}</span>
-                <div>
-                  <div>{livePrice ? formatGP(livePrice) : "—"}</div>
-                  {unrealised !== null && (
-                    <div className={"unrealised-pnl " + (unrealised >= 0 ? "pos" : "neg")}>
-                      {unrealised >= 0 ? "+" : ""}{formatGP(unrealised)} gp
+          ) : trackerOpenFlips.length === 0 && manualPositions.length === 0 ? (
+            <div className="tracker-empty">
+              <div className="icon">📂</div>
+              <p>No open positions</p>
+              <small>Log a buy in the Tracker (without a sell price) or open a position above</small>
+            </div>
+          ) : (
+            <>
+              {/* Tracker open flips */}
+              {trackerOpenFlips.map(flip => {
+                const liveItem = items.find(i => i.name.toLowerCase() === flip.item.toLowerCase());
+                const livePrice = liveItem?.high;
+                const tax = livePrice ? Math.min(Math.floor(livePrice * 0.02), 5_000_000) : 0;
+                const unrealisedEach = livePrice ? livePrice - flip.buyPrice - tax : null;
+                const unrealised = unrealisedEach !== null ? unrealisedEach * (flip.qty || 1) : null;
+                return (
+                  <div key={`tracker-${flip.id}`} className="position-row">
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <img src={itemIconUrl(flip.item)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
+                      <div>
+                        <div className="log-item-name">{flip.item}</div>
+                        <div className="from-tracker-badge">⚔️ From Tracker</div>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <button className="close-pos-btn" onClick={() => { setClosingPos(pos); setCloseSellPrice(livePrice ? String(livePrice) : ""); }}>
-                  Close Position
-                </button>
-              </div>
-            );
-          })}
+                    <span>{formatGP(flip.buyPrice)}</span>
+                    <span>{(flip.qty || 1).toLocaleString()}</span>
+                    <span style={{ color: "var(--text-dim)" }}>{formatGP(flip.buyPrice * (flip.qty || 1))}</span>
+                    <div>
+                      <div>{livePrice ? formatGP(livePrice) : "—"}</div>
+                      {unrealised !== null && (
+                        <div className={"unrealised-pnl " + (unrealised >= 0 ? "pos" : "neg")}>
+                          {unrealised >= 0 ? "+" : ""}{formatGP(unrealised)} gp
+                        </div>
+                      )}
+                    </div>
+                    <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Close in Tracker</span>
+                  </div>
+                );
+              })}
+              {/* Manual positions */}
+              {manualPositions.map(pos => {
+                const liveItem = items.find(i => i.name.toLowerCase() === pos.item_name.toLowerCase());
+                const livePrice = liveItem?.high;
+                const tax = livePrice ? Math.min(Math.floor(livePrice * 0.02), 5_000_000) : 0;
+                const unrealisedEach = livePrice ? livePrice - pos.buy_price - tax : null;
+                const unrealised = unrealisedEach !== null ? unrealisedEach * pos.qty : null;
+                return (
+                  <div key={pos.id} className="position-row">
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <img src={itemIconUrl(pos.item_name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
+                      <div>
+                        <div className="log-item-name">{pos.item_name}</div>
+                        <div className="log-date">{new Date(pos.date_opened).toLocaleDateString([], { month: "short", day: "numeric" })}</div>
+                      </div>
+                    </div>
+                    <span>{formatGP(pos.buy_price)}</span>
+                    <span>{pos.qty.toLocaleString()}</span>
+                    <span style={{ color: "var(--text-dim)" }}>{formatGP(pos.buy_price * pos.qty)}</span>
+                    <div>
+                      <div>{livePrice ? formatGP(livePrice) : "—"}</div>
+                      {unrealised !== null && (
+                        <div className={"unrealised-pnl " + (unrealised >= 0 ? "pos" : "neg")}>
+                          {unrealised >= 0 ? "+" : ""}{formatGP(unrealised)} gp
+                        </div>
+                      )}
+                    </div>
+                    <button className="close-pos-btn" onClick={() => { setClosingPos(pos); setCloseSellPrice(livePrice ? String(livePrice) : ""); }}>
+                      Close Position
+                    </button>
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       </div>
 
@@ -969,7 +1170,7 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
             })()}
             <div className="close-pos-btns">
               <button className="close-pos-cancel" onClick={() => setClosingPos(null)} disabled={closingLoading}>Cancel</button>
-              <button className="close-pos-confirm" disabled={!closeSellPrice || closingLoading} onClick={() => closePosition(closingPos, closeSellPrice)}>
+              <button className="close-pos-confirm" disabled={!closeSellPrice || closingLoading} onClick={() => closeManualPosition(closingPos, closeSellPrice)}>
                 {closingLoading ? "Saving..." : "Confirm & Log Flip"}
               </button>
             </div>
@@ -998,13 +1199,6 @@ export default function RuneTrader() {
   const [tourRects, setTourRects] = useState({});
   const [toasts, setToasts] = useState([]);
 
-  // ── FIX: control body scroll based on whether landing page or app is showing ──
-  useEffect(() => {
-    document.body.style.overflow = showApp ? 'hidden' : 'auto';
-    return () => { document.body.style.overflow = 'auto'; };
-  }, [showApp]);
-
-  // Fix: unlock body scroll on landing page, lock it inside the app
   useEffect(() => {
     document.body.style.overflow = showApp ? 'hidden' : 'auto';
     return () => { document.body.style.overflow = 'auto'; };
@@ -1049,6 +1243,7 @@ export default function RuneTrader() {
   // ── Market data ──
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [allItemsMap, setAllItemsMap] = useState({});
@@ -1087,6 +1282,10 @@ export default function RuneTrader() {
   const [logForm, setLogForm] = useState({ item: "", buyPrice: "", sellPrice: "", qty: "1" });
   const [autocomplete, setAutocomplete] = useState([]);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
+
+  // ── Close flip modal ──
+  const [closingFlip, setClosingFlip] = useState(null);
+  const [closeFlipLoading, setCloseFlipLoading] = useState(false);
 
   // ── Favourites ──
   const [favourites, setFavourites] = useState(() => {
@@ -1178,7 +1377,7 @@ export default function RuneTrader() {
     if (localFlips.length > 0) {
       const existingKeys = new Set((dbData || []).map(r => `${r.item}|${r.buy_price}|${r.sell_price}|${(r.date || "").slice(0, 16)}`));
       const toInsert = localFlips.filter(f => !existingKeys.has(`${f.item}|${f.buyPrice}|${f.sellPrice}|${(f.date || "").slice(0, 16)}`))
-        .map(f => ({ user_id: user.id, item: f.item, buy_price: f.buyPrice, sell_price: f.sellPrice, qty: f.qty, tax: f.tax, profit_each: f.profitEach, total_profit: f.totalProfit, roi: f.roi, date: f.date || new Date().toISOString() }));
+        .map(f => ({ user_id: user.id, item: f.item, buy_price: f.buyPrice, sell_price: f.sellPrice || null, qty: f.qty, tax: f.tax, profit_each: f.profitEach, total_profit: f.totalProfit, roi: f.roi, date: f.date || new Date().toISOString(), status: f.status || "closed" }));
       if (toInsert.length > 0) await supabase.from("flips").insert(toInsert);
       localStorage.removeItem("runetrader_flips");
       const { data: merged } = await supabase.from("flips").select("*").order("date", { ascending: false });
@@ -1190,37 +1389,29 @@ export default function RuneTrader() {
   }
 
   function mapFlipRow(r) {
-    return { id: r.id, item: r.item, buyPrice: r.buy_price, sellPrice: r.sell_price, qty: r.qty, tax: r.tax, profitEach: r.profit_each, totalProfit: r.total_profit, roi: r.roi, date: r.date || new Date().toISOString() };
+    return {
+      id: r.id,
+      item: r.item,
+      buyPrice: r.buy_price,
+      sellPrice: r.sell_price,
+      qty: r.qty,
+      tax: r.tax,
+      profitEach: r.profit_each,
+      totalProfit: r.total_profit,
+      roi: r.roi,
+      date: r.date || new Date().toISOString(),
+      status: r.status || "closed",
+    };
   }
 
   // ── Fetch market prices ──
   useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 5 * 60 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
 
-  // ── Sign out ──
-  async function handleSignOut() {
-    await supabase.auth.signOut();
-    setUser(null);
-    setFlipsLog([]);
-    setAlerts([]);
-    localStorage.removeItem("runetrader_alerts");
-    setActiveTab("flips");
-  }
-
-  // ── Check alerts against live prices ──
-  useEffect(() => {
-    if (!items.length || !alerts.length) return;
-    setAlerts(prev => prev.map(alert => {
-      const liveItem = items.find(i => i.name.toLowerCase() === alert.item.toLowerCase());
-      if (!liveItem) return alert;
-      const currentPrice = liveItem.high;
-      const triggered = alert.type === "above" ? currentPrice >= alert.price : currentPrice <= alert.price;
-      return { ...alert, currentPrice, triggered };
-    }));
-  }, [items]); // eslint-disable-line
-
-  async function fetchPrices() {
+  async function fetchPrices(isManualRefresh = false) {
     try {
-      setLoading(true); setError(null);
+      if (isManualRefresh) setRefreshing(true);
+      else setLoading(true);
+      setError(null);
       const [latestRes, mappingRes, volumeRes] = await Promise.all([
         fetch("https://prices.runescape.wiki/api/v1/osrs/latest", { headers: { "User-Agent": "RuneTrader/1.0" } }),
         fetch("https://prices.runescape.wiki/api/v1/osrs/mapping", { headers: { "User-Agent": "RuneTrader/1.0" } }),
@@ -1256,9 +1447,32 @@ export default function RuneTrader() {
       setItems(flips);
       itemsRef.current = flips;
       setLastUpdate(new Date());
+      if (isManualRefresh) showToast("Prices refreshed!", "success");
     } catch { setError("Failed to load GE data. Check your connection."); }
-    finally { setLoading(false); }
+    finally { setLoading(false); setRefreshing(false); }
   }
+
+  // ── Sign out ──
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    setUser(null);
+    setFlipsLog([]);
+    setAlerts([]);
+    localStorage.removeItem("runetrader_alerts");
+    setActiveTab("flips");
+  }
+
+  // ── Check alerts against live prices ──
+  useEffect(() => {
+    if (!items.length || !alerts.length) return;
+    setAlerts(prev => prev.map(alert => {
+      const liveItem = items.find(i => i.name.toLowerCase() === alert.item.toLowerCase());
+      if (!liveItem) return alert;
+      const currentPrice = liveItem.high;
+      const triggered = alert.type === "above" ? currentPrice >= alert.price : currentPrice <= alert.price;
+      return { ...alert, currentPrice, triggered };
+    }));
+  }, [items]); // eslint-disable-line
 
   // ── Autocomplete helpers ──
   const allNames = Object.values(allItemsMap);
@@ -1273,34 +1487,112 @@ export default function RuneTrader() {
     setShowAc(false);
   }
 
-  // ── Log a flip ──
+  // ── Log a flip (buy-only or full) ──
   async function logFlip() {
     const buy = parseInt(logForm.buyPrice.replace(/,/g, ""));
-    const sell = parseInt(logForm.sellPrice.replace(/,/g, ""));
     const qty = parseInt(logForm.qty) || 1;
-    if (!logForm.item || isNaN(buy) || isNaN(sell)) return;
-    const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
-    const profitEach = sell - buy - tax;
-    const totalProfit = profitEach * qty;
-    const roi = parseFloat(((profitEach / buy) * 100).toFixed(1));
+    if (!logForm.item || isNaN(buy)) return;
+
+    const hasSell = logForm.sellPrice.trim() !== "";
+    const sell = hasSell ? parseInt(logForm.sellPrice.replace(/,/g, "")) : null;
+    const isOpen = !hasSell || isNaN(sell);
+
+    let tax = 0, profitEach = 0, totalProfit = 0, roi = 0;
+    if (!isOpen) {
+      tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
+      profitEach = sell - buy - tax;
+      totalProfit = profitEach * qty;
+      roi = parseFloat(((profitEach / buy) * 100).toFixed(1));
+    }
+
     const itemName = logForm.item;
     setLogForm({ item: "", buyPrice: "", sellPrice: "", qty: "1" });
     setShowAutocomplete(false);
+
     if (user) {
-      const { data, error } = await supabase.from("flips").insert({ user_id: user.id, item: itemName, buy_price: buy, sell_price: sell, qty, tax, profit_each: profitEach, total_profit: totalProfit, roi }).select().single();
+      const { data, error } = await supabase.from("flips").insert({
+        user_id: user.id,
+        item: itemName,
+        buy_price: buy,
+        sell_price: isOpen ? null : sell,
+        qty,
+        tax: isOpen ? 0 : tax,
+        profit_each: isOpen ? null : profitEach,
+        total_profit: isOpen ? null : totalProfit,
+        roi: isOpen ? null : roi,
+        status: isOpen ? "open" : "closed",
+      }).select().single();
       if (!error && data) {
         setFlipsLog(prev => [mapFlipRow(data), ...prev]);
-        showToast("Flip logged successfully!", "success");
+        showToast(isOpen ? `${itemName} logged as open flip!` : "Flip logged successfully!", isOpen ? "info" : "success");
       } else if (error) {
         showToast("Failed to save flip. Try again.", "error");
       }
     } else {
-      const entry = { id: Date.now(), item: itemName, buyPrice: buy, sellPrice: sell, qty, tax, profitEach, totalProfit, roi, date: new Date().toISOString() };
+      const entry = {
+        id: Date.now(),
+        item: itemName,
+        buyPrice: buy,
+        sellPrice: isOpen ? null : sell,
+        qty,
+        tax: isOpen ? 0 : tax,
+        profitEach: isOpen ? null : profitEach,
+        totalProfit: isOpen ? null : totalProfit,
+        roi: isOpen ? null : roi,
+        date: new Date().toISOString(),
+        status: isOpen ? "open" : "closed",
+      };
       const updated = [entry, ...flipsLog];
       setFlipsLog(updated);
       localStorage.setItem("runetrader_flips", JSON.stringify(updated));
-      showToast("Flip logged! Sign in to sync across devices.", "info");
+      showToast(isOpen ? `${itemName} logged as open flip! Sign in to sync.` : "Flip logged! Sign in to sync across devices.", "info");
     }
+  }
+
+  // ── Close an open flip ──
+  async function handleCloseFlipSold(flip, sellPriceStr) {
+    const sell = parseInt(sellPriceStr.replace(/,/g, ""));
+    if (isNaN(sell)) return;
+    setCloseFlipLoading(true);
+    const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
+    const profitEach = sell - flip.buyPrice - tax;
+    const totalProfit = profitEach * (flip.qty || 1);
+    const roi = parseFloat(((profitEach / flip.buyPrice) * 100).toFixed(1));
+
+    if (user) {
+      const { data, error } = await supabase.from("flips").update({
+        sell_price: sell,
+        tax,
+        profit_each: profitEach,
+        total_profit: totalProfit,
+        roi,
+        status: "closed",
+      }).eq("id", flip.id).select().single();
+      if (!error && data) {
+        setFlipsLog(prev => prev.map(f => f.id === flip.id ? mapFlipRow(data) : f));
+        showToast(`Sold! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
+      } else {
+        showToast("Failed to update flip.", "error");
+      }
+    } else {
+      const updated = flipsLog.map(f => f.id === flip.id ? { ...f, sellPrice: sell, tax, profitEach, totalProfit, roi, status: "closed" } : f);
+      setFlipsLog(updated);
+      localStorage.setItem("runetrader_flips", JSON.stringify(updated));
+      showToast(`Sold! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
+    }
+    setClosingFlip(null);
+    setCloseFlipLoading(false);
+  }
+
+  async function handleCloseFlipCancelled(flip) {
+    if (user) {
+      await supabase.from("flips").delete().eq("id", flip.id);
+    } else {
+      localStorage.setItem("runetrader_flips", JSON.stringify(flipsLog.filter(f => f.id !== flip.id)));
+    }
+    setFlipsLog(prev => prev.filter(f => f.id !== flip.id));
+    setClosingFlip(null);
+    showToast(`${flip.item} removed from open flips.`, "info");
   }
 
   // ── "Flip This" from item modal ──
@@ -1410,11 +1702,13 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
     return sortDir === "asc" ? a[sortCol] - b[sortCol] : b[sortCol] - a[sortCol];
   });
 
-  // ── Tracker stats ──
-  const totalProfit = flipsLog.reduce((s, f) => s + (f.totalProfit || 0), 0);
-  const totalFlips = flipsLog.length;
+  // ── Tracker stats (closed flips only) ──
+  const closedFlips = flipsLog.filter(f => f.status !== "open");
+  const openFlips = flipsLog.filter(f => f.status === "open");
+  const totalProfit = closedFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
+  const totalFlips = closedFlips.length;
   const avgProfit = totalFlips ? Math.round(totalProfit / totalFlips) : 0;
-  const bestItem = flipsLog.length ? flipsLog.reduce((best, f) => (f.totalProfit || 0) > (best.totalProfit || 0) ? f : best, flipsLog[0]) : null;
+  const bestItem = closedFlips.length ? closedFlips.reduce((best, f) => (f.totalProfit || 0) > (best.totalProfit || 0) ? f : best, closedFlips[0]) : null;
 
   if (!showApp) return <LandingPage onEnterApp={() => setShowApp(true)} />;
 
@@ -1435,7 +1729,28 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onAuth={u => setUser(u)} />}
 
       {/* ITEM CHART MODAL */}
-      {selectedItem && <ItemChart item={selectedItem} onClose={() => setSelectedItem(null)} onAskAI={msg => { setInput(msg); sendMessage(msg); }} onFlipThis={flipThisItem} />}
+      {selectedItem && (
+        <ItemChart
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onAskAI={msg => { setInput(msg); sendMessage(msg); }}
+          onFlipThis={flipThisItem}
+          onRefresh={() => fetchPrices(true)}
+          refreshing={refreshing}
+        />
+      )}
+
+      {/* CLOSE FLIP MODAL */}
+      {closingFlip && (
+        <CloseFlipModal
+          flip={closingFlip}
+          items={items}
+          onSold={handleCloseFlipSold}
+          onCancelled={handleCloseFlipCancelled}
+          onDismiss={() => setClosingFlip(null)}
+          loading={closeFlipLoading}
+        />
+      )}
 
       {/* ONBOARDING TOUR */}
       {tourStep >= 0 && (() => {
@@ -1519,6 +1834,11 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
             {["flips", "tracker", "alerts", ...(user ? ["portfolio"] : [])].map(t => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
+                {t === "tracker" && openFlips.length > 0 && (
+                  <span style={{ marginLeft: "6px", background: "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
+                    {openFlips.length}
+                  </span>
+                )}
                 {t === "alerts" && alerts.filter(a => a.triggered).length > 0 && (
                   <span style={{ marginLeft: "6px", background: "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
                     {alerts.filter(a => a.triggered).length}
@@ -1550,9 +1870,9 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
               <div className="tracker-wrap">
                 <div className="tracker-summary">
                   {[
-                    { label: "Total Profit", value: formatGP(totalProfit), color: totalProfit >= 0 ? "var(--green)" : "var(--red)", sub: "All logged flips" },
-                    { label: "Flips Logged", value: totalFlips.toLocaleString(), color: "var(--gold)", sub: "Transactions" },
-                    { label: "Avg Profit/Flip", value: formatGP(avgProfit), color: "var(--text)", sub: "Per transaction" },
+                    { label: "Total Profit", value: formatGP(totalProfit), color: totalProfit >= 0 ? "var(--green)" : "var(--red)", sub: "Closed flips only" },
+                    { label: "Flips Logged", value: totalFlips.toLocaleString(), color: "var(--gold)", sub: `${openFlips.length} open` },
+                    { label: "Avg Profit/Flip", value: formatGP(avgProfit), color: "var(--text)", sub: "Per closed flip" },
                     { label: "Best Item", value: bestItem?.item || "—", color: "var(--gold)", sub: bestItem ? formatGP(bestItem.totalProfit) + " profit" : "Log a flip first" },
                   ].map((s, i) => (
                     <div key={i} className="stat-card">
@@ -1592,15 +1912,31 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                       <input className="tracker-input" placeholder="e.g. 1500000" value={logForm.buyPrice} onChange={e => setLogForm(f => ({ ...f, buyPrice: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") logFlip(); }} />
                     </div>
                     <div className="tracker-field">
-                      <label className="tracker-label">Sell Price (gp)</label>
-                      <input className="tracker-input" placeholder="e.g. 1650000" value={logForm.sellPrice} onChange={e => setLogForm(f => ({ ...f, sellPrice: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") logFlip(); }} />
+                      <label className="tracker-label">
+                        Sell Price (gp)
+                        <span style={{ color: "var(--gold-dim)", marginLeft: "4px", fontStyle: "italic", textTransform: "none", letterSpacing: 0 }}>optional</span>
+                      </label>
+                      <input
+                        className="tracker-input optional-field"
+                        placeholder="Leave blank = open flip"
+                        value={logForm.sellPrice}
+                        onChange={e => setLogForm(f => ({ ...f, sellPrice: e.target.value }))}
+                        onKeyDown={e => { if (e.key === "Enter") logFlip(); }}
+                      />
                     </div>
                     <div className="tracker-field">
                       <label className="tracker-label">Quantity</label>
                       <input className="tracker-input" placeholder="1" value={logForm.qty} onChange={e => setLogForm(f => ({ ...f, qty: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") logFlip(); }} />
                     </div>
-                    <button className="log-btn" disabled={!logForm.item || !logForm.buyPrice || !logForm.sellPrice} onClick={logFlip}>+ Log</button>
+                    <button className="log-btn" disabled={!logForm.item || !logForm.buyPrice} onClick={logFlip}>
+                      {logForm.sellPrice.trim() ? "+ Log" : "+ Open"}
+                    </button>
                   </div>
+                  {!logForm.sellPrice.trim() && logForm.buyPrice && (
+                    <div style={{ fontSize: "11px", color: "var(--gold-dim)", display: "flex", alignItems: "center", gap: "4px" }}>
+                      ℹ️ No sell price — will be logged as an <strong>open flip</strong>. Close it later when you sell.
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -1609,22 +1945,42 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                     {flipsLog.length > 0 && <button className="clear-btn" onClick={clearAllFlips}>Clear All</button>}
                   </div>
                   <div className="flips-log">
-                    <div className="log-header"><span>Item</span><span>Buy</span><span>Sell</span><span>Qty</span><span>Tax</span><span>Profit</span><span></span></div>
+                    <div className="log-header">
+                      <span>Item</span><span>Buy</span><span>Sell</span><span>Qty</span><span>Tax</span><span>Profit</span><span>Action</span>
+                    </div>
                     {flipsLoading ? <div style={{ textAlign: "center", color: "var(--text-dim)", padding: "40px" }}>Loading flips...</div>
                       : flipsLog.length === 0 ? (
                         <div className="tracker-empty"><div className="icon">📋</div><p>No flips logged yet</p><small>Fill in the form above to start tracking your profits</small></div>
                       ) : flipsLog.map(f => (
-                        <div key={f.id} className="log-row">
-                          <div><div className="log-item-name">{f.item}</div><div className="log-date">{new Date(f.date || Date.now()).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div></div>
-                          <span>{formatGP(f.buyPrice)}</span>
-                          <span>{formatGP(f.sellPrice)}</span>
-                          <span>{(f.qty || 1).toLocaleString()}</span>
-                          <span style={{ color: "var(--text-dim)" }}>{formatGP((f.tax || 0) * (f.qty || 1))}</span>
+                        <div key={f.id} className={`log-row${f.status === "open" ? " open-flip" : ""}`}>
                           <div>
-                            <div className={f.totalProfit >= 0 ? "profit-pos" : "profit-neg"}>{f.totalProfit >= 0 ? "+" : ""}{formatGP(f.totalProfit)}</div>
-                            <div className={f.roi >= 5 ? "roi-pos" : f.roi < 0 ? "roi-neg" : "roi-neu"}>{f.roi > 0 ? "+" : ""}{f.roi}% ROI</div>
+                            <div className="log-item-name">{f.item}</div>
+                            <div className="log-date">{new Date(f.date || Date.now()).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
                           </div>
-                          <button className="delete-btn" onClick={() => deleteFlip(f.id)}>✕</button>
+                          <span>{formatGP(f.buyPrice)}</span>
+                          <span style={{ color: f.status === "open" ? "var(--text-dim)" : "var(--text)" }}>
+                            {f.status === "open" ? "—" : formatGP(f.sellPrice)}
+                          </span>
+                          <span>{(f.qty || 1).toLocaleString()}</span>
+                          <span style={{ color: "var(--text-dim)" }}>
+                            {f.status === "open" ? "—" : formatGP((f.tax || 0) * (f.qty || 1))}
+                          </span>
+                          <div>
+                            {f.status === "open" ? (
+                              <span className="open-badge">OPEN</span>
+                            ) : (
+                              <>
+                                <div className={f.totalProfit >= 0 ? "profit-pos" : "profit-neg"}>{f.totalProfit >= 0 ? "+" : ""}{formatGP(f.totalProfit)}</div>
+                                <div className={f.roi >= 5 ? "roi-pos" : f.roi < 0 ? "roi-neg" : "roi-neu"}>{f.roi > 0 ? "+" : ""}{f.roi}% ROI</div>
+                              </>
+                            )}
+                          </div>
+                          <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                            {f.status === "open" && (
+                              <button className="close-flip-btn" onClick={() => setClosingFlip(f)}>Close</button>
+                            )}
+                            <button className="delete-btn" onClick={() => deleteFlip(f.id)}>✕</button>
+                          </div>
                         </div>
                       ))}
                   </div>
@@ -1772,6 +2128,15 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                     </button>
                   ))}
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
+                  <button
+                    className="refresh-btn"
+                    onClick={() => fetchPrices(true)}
+                    disabled={refreshing || loading}
+                    title="Refresh all prices"
+                  >
+                    <span className={refreshing ? "refresh-spin" : ""}>↻</span>
+                    {refreshing ? "Refreshing..." : "Refresh"}
+                  </button>
                 </div>
 
                 <div>
