@@ -55,12 +55,12 @@ const STYLES = `
   .section-title { font-family: 'Cinzel', serif; font-size: 14px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
   .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-family: "Inter", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; }
   .sort-btn:hover { color: var(--gold); }
   .sort-btn.active { color: var(--gold); }
   .sort-arrow { font-size: 9px; opacity: 0.7; }
-  .flip-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; }
+  .flip-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; }
   .flip-row:last-child { border-bottom: none; }
   .flip-row:hover { background: var(--bg4); }
   .item-name { font-weight: 500; font-size: 13px; color: var(--text); }
@@ -109,10 +109,9 @@ const STYLES = `
   .send-btn:hover { opacity: 0.85; }
   .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-  /* Collapsed quick prompts */
-  .quick-prompts-row { display: flex; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none; }
-  .quick-prompts-row::-webkit-scrollbar { display: none; }
-  .quick-prompt { padding: 4px 10px; border-radius: 20px; font-size: 11px; cursor: pointer; background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); transition: all 0.2s; font-family: 'Inter', sans-serif; white-space: nowrap; flex-shrink: 0; }
+  /* Quick prompts — wrap so chips never clip */
+  .quick-prompts-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .quick-prompt { padding: 4px 10px; border-radius: 20px; font-size: 11px; cursor: pointer; background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); transition: all 0.2s; font-family: 'Inter', sans-serif; white-space: nowrap; }
   .quick-prompt:hover { border-color: var(--gold-dim); color: var(--gold); background: var(--bg3); }
 
   /* CHART MODAL */
@@ -236,7 +235,51 @@ const STYLES = `
   .alerts-empty .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
   .alert-info { background: rgba(52,152,219,0.08); border: 1px solid rgba(52,152,219,0.2); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
 
-  /* SCROLLBAR */
+  /* PORTFOLIO */
+  .portfolio-wrap { display: flex; flex-direction: column; gap: 24px; }
+  .perf-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .perf-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+  .perf-card-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .perf-card-value { font-size: 20px; font-weight: 700; font-family: "Cinzel", serif; }
+  .perf-card-sub { font-size: 11px; color: var(--text-dim); }
+  .portfolio-chart-wrap { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .portfolio-chart-title { font-family: "Cinzel", serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  .portfolio-canvas-wrap { width: 100%; height: 200px; position: relative; }
+  .portfolio-range-tabs { display: flex; gap: 4px; }
+  .portfolio-range-tab { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
+  .portfolio-range-tab:hover { color: var(--text); }
+  .portfolio-range-tab.active { background: var(--bg4); color: var(--gold); border-color: var(--gold-dim); }
+  .positions-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .positions-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 120px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .position-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 120px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; }
+  .position-row:last-child { border-bottom: none; }
+  .position-row:hover { background: var(--bg4); }
+  .close-pos-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--green-dim); background: rgba(46,204,113,0.08); color: var(--green); font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
+  .close-pos-btn:hover { background: rgba(46,204,113,0.18); }
+  .open-pos-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .open-pos-title { font-family: "Cinzel", serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .open-pos-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end; }
+  .portfolio-login-prompt { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 80px 20px; text-align: center; color: var(--text-dim); }
+  .portfolio-login-prompt .icon { font-size: 48px; opacity: 0.4; }
+  .portfolio-login-prompt p { font-size: 15px; }
+  .portfolio-login-prompt small { font-size: 13px; opacity: 0.7; }
+  .portfolio-signin-btn { padding: 10px 28px; border-radius: 8px; border: 1px solid var(--gold-dim); background: rgba(201,168,76,0.1); color: var(--gold); font-size: 14px; font-weight: 600; cursor: pointer; font-family: "Inter", sans-serif; transition: all 0.2s; }
+  .portfolio-signin-btn:hover { background: rgba(201,168,76,0.2); }
+  .close-pos-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .close-pos-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 420px; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
+  .close-pos-title { font-family: "Cinzel", serif; font-size: 16px; color: var(--gold); }
+  .close-pos-field { display: flex; flex-direction: column; gap: 6px; }
+  .close-pos-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .close-pos-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: "Inter", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
+  .close-pos-input:focus { border-color: var(--gold-dim); }
+  .close-pos-btns { display: flex; gap: 10px; justify-content: flex-end; }
+  .close-pos-cancel { padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: "Inter", sans-serif; }
+  .close-pos-confirm { padding: 9px 18px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 600; cursor: pointer; font-family: "Inter", sans-serif; }
+  .unrealised-pnl { font-size: 11px; }
+  .unrealised-pnl.pos { color: var(--green); }
+  .unrealised-pnl.neg { color: var(--red); }
+
+
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: var(--bg2); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -295,8 +338,10 @@ const STYLES = `
     .table-header, .flip-row { grid-template-columns: 2fr 1fr 1fr 1fr; }
     .table-header > *:nth-child(5), .table-header > *:nth-child(6),
     .table-header > *:nth-child(7), .table-header > *:nth-child(8),
+    .table-header > *:nth-child(9),
     .flip-row > *:nth-child(5), .flip-row > *:nth-child(6),
-    .flip-row > *:nth-child(7), .flip-row > *:nth-child(8) { display: none; }
+    .flip-row > *:nth-child(7), .flip-row > *:nth-child(8),
+    .flip-row > *:nth-child(9) { display: none; }
     .log-header, .log-row { grid-template-columns: 2fr 1fr 1fr 1fr 40px; }
     .log-header > *:nth-child(4), .log-header > *:nth-child(5),
     .log-row > *:nth-child(4), .log-row > *:nth-child(5) { display: none; }
@@ -324,6 +369,16 @@ function formatTime(d) {
   if (diff < 60) return "just now";
   if (diff < 3600) return Math.floor(diff / 60) + "m ago";
   return Math.floor(diff / 3600) + "h ago";
+}
+
+function timeAgo(unixSec) {
+  if (!unixSec) return "—";
+  const diff = Math.floor(Date.now() / 1000 - unixSec);
+  if (diff < 0) return "just now";
+  if (diff < 60) return diff + "s ago";
+  if (diff < 3600) return Math.floor(diff / 60) + "m ago";
+  if (diff < 86400) return Math.floor(diff / 3600) + "h ago";
+  return Math.floor(diff / 86400) + "d ago";
 }
 
 function getScore(margin, volume, roi, speed, risk, buyLimit) {
@@ -565,7 +620,350 @@ function ProfitChart({ flipsLog }) {
   );
 }
 
+// ─── PORTFOLIO PAGE ───────────────────────────────────────────────────────────
+
+const PORT_RANGES = ["24H", "3D", "7D", "1M", "3M", "All"];
+
+function PortfolioPage({ user, flipsLog, items, onSignIn, showToast, supabase: sb }) {
+  const [positions, setPositions] = useState([]);
+  const [posLoading, setPosLoading] = useState(false);
+  const [snapshots, setSnapshots] = useState([]);
+  const [range, setRange] = useState("1M");
+  const [openForm, setOpenForm] = useState({ item: "", buyPrice: "", qty: "1" });
+  const [openAc, setOpenAc] = useState([]);
+  const [showOpenAc, setShowOpenAc] = useState(false);
+  const [closingPos, setClosingPos] = useState(null);
+  const [closeSellPrice, setCloseSellPrice] = useState("");
+  const chartRef = useRef(null);
+
+  // Load positions & snapshots
+  useEffect(() => {
+    if (!user) return;
+    loadPositions();
+    loadSnapshots();
+  }, [user]); // eslint-disable-line
+
+  // Upsert today's snapshot whenever flipsLog changes
+  useEffect(() => {
+    if (!user || !flipsLog.length) return;
+    upsertSnapshot();
+  }, [flipsLog, user]); // eslint-disable-line
+
+  async function loadPositions() {
+    setPosLoading(true);
+    const { data } = await sb.from("positions").select("*").order("date_opened", { ascending: false });
+    setPositions(data || []);
+    setPosLoading(false);
+  }
+
+  async function loadSnapshots() {
+    const { data } = await sb.from("portfolio_snapshots").select("*").order("snapshot_date", { ascending: true });
+    setSnapshots(data || []);
+  }
+
+  async function upsertSnapshot() {
+    const totalProfit = flipsLog.reduce((s, f) => s + (f.totalProfit || 0), 0);
+    const today = new Date().toISOString().slice(0, 10);
+    await sb.from("portfolio_snapshots").upsert({ user_id: user.id, snapshot_date: today, total_profit: totalProfit, total_flips: flipsLog.length }, { onConflict: "user_id,snapshot_date" });
+    loadSnapshots();
+  }
+
+  async function openPosition() {
+    const buy = parseInt(openForm.buyPrice.replace(/,/g, ""));
+    const qty = parseInt(openForm.qty) || 1;
+    if (!openForm.item || isNaN(buy)) return;
+    const itemMatch = items.find(i => i.name.toLowerCase() === openForm.item.toLowerCase());
+    const { data, error } = await sb.from("positions").insert({ user_id: user.id, item_id: itemMatch?.id || 0, item_name: openForm.item, buy_price: buy, qty }).select().single();
+    if (error) { showToast("Failed to open position.", "error"); return; }
+    setPositions(prev => [data, ...prev]);
+    setOpenForm({ item: "", buyPrice: "", qty: "1" });
+    showToast("Position opened!", "success");
+  }
+
+  async function closePosition(pos, sellPrice) {
+    const sell = parseInt(sellPrice.replace(/,/g, ""));
+    if (isNaN(sell)) return;
+    const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
+    const profitEach = sell - pos.buy_price - tax;
+    const totalProfit = profitEach * pos.qty;
+    const roi = parseFloat(((profitEach / pos.buy_price) * 100).toFixed(1));
+    const { error: flipErr } = await sb.from("flips").insert({ user_id: user.id, item: pos.item_name, buy_price: pos.buy_price, sell_price: sell, qty: pos.qty, tax, profit_each: profitEach, total_profit: totalProfit, roi });
+    if (flipErr) { showToast("Failed to log flip.", "error"); return; }
+    await sb.from("positions").delete().eq("id", pos.id);
+    setPositions(prev => prev.filter(p => p.id !== pos.id));
+    setClosingPos(null);
+    setCloseSellPrice("");
+    showToast(`Closed! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
+  }
+
+  // Draw portfolio chart
+  useEffect(() => {
+    if (!chartRef.current || snapshots.length < 2) return;
+    const canvas = chartRef.current;
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+    const W = rect.width, H = rect.height, pad = { top: 10, right: 10, bottom: 30, left: 70 };
+
+    // Filter by range
+    const now = new Date();
+    const cutoff = new Date(now);
+    if (range === "24H") cutoff.setDate(now.getDate() - 1);
+    else if (range === "3D") cutoff.setDate(now.getDate() - 3);
+    else if (range === "7D") cutoff.setDate(now.getDate() - 7);
+    else if (range === "1M") cutoff.setMonth(now.getMonth() - 1);
+    else if (range === "3M") cutoff.setMonth(now.getMonth() - 3);
+    else cutoff.setFullYear(2000);
+
+    const filtered = snapshots.filter(s => new Date(s.snapshot_date) >= cutoff);
+    if (filtered.length < 2) { ctx.clearRect(0, 0, W, H); return; }
+
+    const profits = filtered.map(s => s.total_profit);
+    const times = filtered.map(s => new Date(s.snapshot_date).getTime());
+    const minV = Math.min(0, ...profits), maxV = Math.max(0, ...profits);
+    const minT = times[0], maxT = times[times.length - 1];
+    const range2 = maxV - minV || 1;
+    const xPos = t => pad.left + ((t - minT) / (maxT - minT)) * (W - pad.left - pad.right);
+    const yPos = v => pad.top + (1 - (v - minV) / range2) * (H - pad.top - pad.bottom);
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = "rgba(42,51,64,0.6)"; ctx.lineWidth = 1;
+    [0, 0.5, 1].forEach(t => {
+      const y = pad.top + t * (H - pad.top - pad.bottom);
+      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+      const val = maxV - t * range2;
+      ctx.fillStyle = "#4a5a6a"; ctx.font = "10px Inter"; ctx.textAlign = "right";
+      ctx.fillText((val >= 0 ? "+" : "") + formatGP(Math.round(val)), pad.left - 4, y + 4);
+    });
+
+    const isPos = profits[profits.length - 1] >= profits[0];
+    ctx.beginPath(); ctx.moveTo(xPos(times[0]), yPos(profits[0]));
+    profits.forEach((p, i) => ctx.lineTo(xPos(times[i]), yPos(p)));
+    const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+    grad.addColorStop(0, isPos ? "rgba(46,204,113,0.2)" : "rgba(231,76,60,0.2)");
+    grad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.lineTo(xPos(times[times.length - 1]), H - pad.bottom);
+    ctx.lineTo(xPos(times[0]), H - pad.bottom);
+    ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(xPos(times[0]), yPos(profits[0]));
+    profits.forEach((p, i) => ctx.lineTo(xPos(times[i]), yPos(p)));
+    ctx.strokeStyle = isPos ? "#2ecc71" : "#e74c3c"; ctx.lineWidth = 2.5; ctx.stroke();
+
+    // X-axis labels
+    ctx.fillStyle = "#4a5a6a"; ctx.font = "10px Inter"; ctx.textAlign = "center";
+    [0, 0.5, 1].forEach(t => {
+      const ts = minT + t * (maxT - minT);
+      ctx.fillText(new Date(ts).toLocaleDateString([], { month: "short", day: "numeric" }), xPos(ts), H - pad.bottom + 14);
+    });
+  }, [snapshots, range]);
+
+  // % change helpers
+  function getPerfVs(daysAgo) {
+    if (snapshots.length < 2) return null;
+    const now = new Date();
+    const cutoff = new Date(now);
+    cutoff.setDate(now.getDate() - daysAgo);
+    const past = [...snapshots].reverse().find(s => new Date(s.snapshot_date) <= cutoff);
+    const current = snapshots[snapshots.length - 1];
+    if (!past || past.id === current.id) return null;
+    const diff = current.total_profit - past.total_profit;
+    const pct = past.total_profit !== 0 ? ((diff / Math.abs(past.total_profit)) * 100).toFixed(1) : null;
+    return { diff, pct };
+  }
+
+  const perfCards = [
+    { label: "1D Change", data: getPerfVs(1) },
+    { label: "1W Change", data: getPerfVs(7) },
+    { label: "1M Change", data: getPerfVs(30) },
+    { label: "3M Change", data: getPerfVs(90) },
+  ];
+
+  const allNames = Object.values(items).map(i => i.name);
+  function handleOpenInput(val) {
+    setOpenForm(f => ({ ...f, item: val }));
+    if (val.length < 2) { setShowOpenAc(false); return; }
+    const matches = allNames.filter(n => n.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
+    setOpenAc(matches); setShowOpenAc(matches.length > 0);
+  }
+
+  if (!user) {
+    return (
+      <div className="portfolio-login-prompt">
+        <div className="icon">📊</div>
+        <p>Portfolio tracking requires an account</p>
+        <small>Sign in to open positions, track holdings, and view your performance over time.</small>
+        <button className="portfolio-signin-btn" onClick={onSignIn}>Sign In / Create Account</button>
+      </div>
+    );
+  }
+
+  const totalOpenValue = positions.reduce((s, p) => s + p.buy_price * p.qty, 0);
+
+  return (
+    <div className="portfolio-wrap">
+
+      {/* % Change cards */}
+      <div className="perf-cards">
+        {perfCards.map(({ label, data }) => (
+          <div key={label} className="perf-card">
+            <span className="perf-card-label">{label}</span>
+            {data ? (
+              <>
+                <span className="perf-card-value" style={{ color: data.diff >= 0 ? "var(--green)" : "var(--red)" }}>
+                  {data.diff >= 0 ? "+" : ""}{formatGP(data.diff)} gp
+                </span>
+                {data.pct !== null && <span className="perf-card-sub" style={{ color: data.diff >= 0 ? "var(--green)" : "var(--red)" }}>{data.diff >= 0 ? "+" : ""}{data.pct}%</span>}
+              </>
+            ) : (
+              <span className="perf-card-value" style={{ color: "var(--text-dim)", fontSize: "14px" }}>Not enough data</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Portfolio profit chart */}
+      <div className="portfolio-chart-wrap">
+        <div className="portfolio-chart-title">
+          <span>📈 Portfolio Performance</span>
+          <div className="portfolio-range-tabs">
+            {PORT_RANGES.map(r => (
+              <button key={r} className={"portfolio-range-tab" + (range === r ? " active" : "")} onClick={() => setRange(r)}>{r}</button>
+            ))}
+          </div>
+        </div>
+        {snapshots.length < 2 ? (
+          <div style={{ textAlign: "center", color: "var(--text-dim)", padding: "60px 0", fontSize: "13px" }}>
+            Log more flips to see your portfolio chart
+          </div>
+        ) : (
+          <div className="portfolio-canvas-wrap">
+            <canvas ref={chartRef} style={{ width: "100%", height: "100%" }} />
+          </div>
+        )}
+      </div>
+
+      {/* Open position form */}
+      <div className="open-pos-form">
+        <div className="open-pos-title">📂 Open a Position</div>
+        <div className="open-pos-row">
+          <div className="tracker-field">
+            <label className="tracker-label">Item Name</label>
+            <input className="tracker-input" placeholder="e.g. Abyssal whip" value={openForm.item}
+              onChange={e => handleOpenInput(e.target.value)}
+              onBlur={() => setTimeout(() => setShowOpenAc(false), 150)}
+              autoComplete="off" />
+            {showOpenAc && (
+              <div className="autocomplete-list">
+                {openAc.map(name => {
+                  const liveItem = items.find(i => i.name === name);
+                  return (
+                    <div key={name} className="autocomplete-item" onMouseDown={() => {
+                      setOpenForm(f => ({ ...f, item: name, buyPrice: liveItem ? String(liveItem.low) : f.buyPrice }));
+                      setShowOpenAc(false);
+                    }}>{name}</div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          <div className="tracker-field">
+            <label className="tracker-label">Buy Price (gp)</label>
+            <input className="tracker-input" placeholder="e.g. 1500000" value={openForm.buyPrice} onChange={e => setOpenForm(f => ({ ...f, buyPrice: e.target.value }))} />
+          </div>
+          <div className="tracker-field">
+            <label className="tracker-label">Quantity</label>
+            <input className="tracker-input" placeholder="1" value={openForm.qty} onChange={e => setOpenForm(f => ({ ...f, qty: e.target.value }))} />
+          </div>
+          <button className="log-btn" disabled={!openForm.item || !openForm.buyPrice} onClick={openPosition}>+ Open</button>
+        </div>
+      </div>
+
+      {/* Holdings table */}
+      <div>
+        <div className="section-title">Open Positions{totalOpenValue > 0 && <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, marginLeft: "8px" }}>· {formatGP(totalOpenValue)} gp invested</span>}</div>
+        <div className="positions-table">
+          <div className="positions-header">
+            <span>Item</span><span>Buy Price</span><span>Qty</span><span>Total Cost</span><span>Live Price</span><span>Action</span>
+          </div>
+          {posLoading ? (
+            <div style={{ textAlign: "center", color: "var(--text-dim)", padding: "40px" }}>Loading positions...</div>
+          ) : positions.length === 0 ? (
+            <div className="tracker-empty"><div className="icon">📂</div><p>No open positions</p><small>Open a position above when you buy at the GE</small></div>
+          ) : positions.map(pos => {
+            const liveItem = items.find(i => i.name.toLowerCase() === pos.item_name.toLowerCase());
+            const livePrice = liveItem?.high;
+            const tax = livePrice ? Math.min(Math.floor(livePrice * 0.02), 5_000_000) : 0;
+            const unrealisedEach = livePrice ? livePrice - pos.buy_price - tax : null;
+            const unrealised = unrealisedEach !== null ? unrealisedEach * pos.qty : null;
+            return (
+              <div key={pos.id} className="position-row">
+                <div>
+                  <div className="log-item-name">{pos.item_name}</div>
+                  <div className="log-date">{new Date(pos.date_opened).toLocaleDateString([], { month: "short", day: "numeric" })}</div>
+                </div>
+                <span>{formatGP(pos.buy_price)}</span>
+                <span>{pos.qty.toLocaleString()}</span>
+                <span style={{ color: "var(--text-dim)" }}>{formatGP(pos.buy_price * pos.qty)}</span>
+                <div>
+                  <div>{livePrice ? formatGP(livePrice) : "—"}</div>
+                  {unrealised !== null && (
+                    <div className={"unrealised-pnl " + (unrealised >= 0 ? "pos" : "neg")}>
+                      {unrealised >= 0 ? "+" : ""}{formatGP(unrealised)} gp
+                    </div>
+                  )}
+                </div>
+                <button className="close-pos-btn" onClick={() => { setClosingPos(pos); setCloseSellPrice(livePrice ? String(livePrice) : ""); }}>
+                  Close Position
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Close position modal */}
+      {closingPos && (
+        <div className="close-pos-modal" onClick={e => e.target === e.currentTarget && setClosingPos(null)}>
+          <div className="close-pos-inner">
+            <div className="close-pos-title">Close: {closingPos.item_name}</div>
+            <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>
+              Bought {closingPos.qty.toLocaleString()}x at {formatGP(closingPos.buy_price)} gp each
+            </div>
+            <div className="close-pos-field">
+              <label className="close-pos-label">Sell Price (gp)</label>
+              <input className="close-pos-input" value={closeSellPrice} onChange={e => setCloseSellPrice(e.target.value)} placeholder="Enter your actual sell price" autoFocus />
+            </div>
+            {closeSellPrice && !isNaN(parseInt(closeSellPrice.replace(/,/g, ""))) && (() => {
+              const sell = parseInt(closeSellPrice.replace(/,/g, ""));
+              const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
+              const profit = (sell - closingPos.buy_price - tax) * closingPos.qty;
+              return (
+                <div style={{ background: "var(--bg4)", borderRadius: "8px", padding: "12px 14px", fontSize: "13px" }}>
+                  <span style={{ color: "var(--text-dim)" }}>Estimated profit: </span>
+                  <span style={{ fontWeight: 700, color: profit >= 0 ? "var(--green)" : "var(--red)" }}>
+                    {profit >= 0 ? "+" : ""}{formatGP(profit)} gp
+                  </span>
+                </div>
+              );
+            })()}
+            <div className="close-pos-btns">
+              <button className="close-pos-cancel" onClick={() => setClosingPos(null)}>Cancel</button>
+              <button className="close-pos-confirm" disabled={!closeSellPrice} onClick={() => closePosition(closingPos, closeSellPrice)}>
+                Confirm &amp; Log Flip
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
 // ─── WELCOME MESSAGE ─────────────────────────────────────────────────────────
+
 
 const WELCOME_MSG = {
   role: "assistant",
@@ -754,7 +1152,7 @@ export default function RuneTrader() {
         const id = parseInt(idStr);
         const meta = mappingMap[id];
         if (!meta) continue;
-        const { high, low } = prices;
+        const { high, low, highTime, lowTime } = prices;
         if (!high || !low) continue;
         const rawTax = Math.floor(high * 0.02);
         const TAX = TAX_EXEMPT_IDS.includes(id) ? 0 : (high < 50 ? 0 : Math.min(rawTax, 5_000_000));
@@ -762,7 +1160,8 @@ export default function RuneTrader() {
         const roi = parseFloat(((margin / low) * 100).toFixed(1));
         const volume = volumeMap[id] || 0;
         const score = getScore(margin, volume, roi, null, null, meta.limit || 0);
-        const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high, low, margin, roi, volume, score };
+        const lastTradeTime = Math.max(highTime || 0, lowTime || 0);
+        const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high, low, margin, roi, volume, score, lastTradeTime };
         if (!isValidFlip(flip)) continue;
         flips.push(flip);
       }
@@ -992,7 +1391,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {["flips", "tracker", "alerts"].map(t => (
+            {["flips", "tracker", "alerts", ...(user ? ["portfolio"] : [])].map(t => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
                 {t === "alerts" && alerts.filter(a => a.triggered).length > 0 && (
@@ -1165,6 +1564,18 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
               </div>
             )}
 
+            {/* ── PORTFOLIO TAB ── */}
+            {activeTab === "portfolio" && (
+              <PortfolioPage
+                user={user}
+                flipsLog={flipsLog}
+                items={items}
+                onSignIn={() => setShowAuth(true)}
+                showToast={showToast}
+                supabase={supabase}
+              />
+            )}
+
             {/* ── FLIPS TAB ── */}
             {activeTab === "flips" && (
               <>
@@ -1213,7 +1624,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                   <div className="section-title">Top Flips</div>
                   <div className="flips-table">
                     <div className="table-header">
-                      {[["name", "Item"], ["low", "Buy Price"], ["high", "Sell Price"], ["margin", "Margin"], ["roi", "ROI"], ["volume", "Vol/Day"], ["buylimit", "Limit"], ["score", "Score"]].map(([col, label]) => (
+                      {[["name", "Item"], ["low", "Buy Price"], ["high", "Sell Price"], ["margin", "Margin"], ["roi", "ROI"], ["volume", "Vol/Day"], ["buylimit", "Limit"], ["lastTradeTime", "Last Trade"], ["score", "Score"]].map(([col, label]) => (
                         <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
                           {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
                         </button>
@@ -1221,7 +1632,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                     </div>
                     {loading ? (
                       Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="flip-row">{Array.from({ length: 8 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
+                        <div key={i} className="flip-row">{Array.from({ length: 9 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
                       ))
                     ) : filtered.length === 0 ? (
                       <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
@@ -1229,6 +1640,8 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                       filtered.slice(0, search.trim() ? 200 : 100).map(item => {
                         const { adjLow, adjHigh } = applyOffset(item.low, item.high, prefs.speed);
                         const adjMargin = item.margin - (adjLow - item.low) - (item.high - adjHigh);
+                        const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
+                        const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
                         return (
                           <div key={item.id} className="flip-row" onClick={() => setSelectedItem({ ...item, adjLow, adjHigh, adjMargin })}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -1244,6 +1657,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                               {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit — hard to fill">⚠</span>}
                             </span>
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
+                            <span style={{ fontSize: "11px", color: tradeColor }}>{timeAgo(item.lastTradeTime)}</span>
                             <span className={`score-badge ${item.prefScore >= 70 ? "score-high" : item.prefScore >= 40 ? "score-med" : "score-low"}`}>{item.prefScore}</span>
                           </div>
                         );
