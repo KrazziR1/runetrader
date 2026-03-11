@@ -39,7 +39,7 @@ const STYLES = `
     backdrop-filter: blur(8px);
   }
   .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-  .nav-logo-icon { width: 36px; height: 36px; }
+  .nav-logo-icon { width: 36px; height: 36px; border-radius: 8px; }
   .nav-logo-text { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); letter-spacing: 2px; }
   .nav-logo-tld { color: var(--text-dim); font-size: 14px; }
   .nav-links { display: flex; align-items: center; gap: 32px; }
@@ -323,10 +323,40 @@ export default function LandingPage({ onEnterApp }) {
       {/* NAV */}
       <nav style={{ background: scrolled ? "rgba(6,8,11,0.95)" : undefined }}>
         <a href="/#" className="nav-logo">
-          <svg className="nav-logo-icon" viewBox="0 0 36 36" fill="none">
-            <polygon points="18,3 33,30 3,30" fill="none" stroke="#c9a84c" strokeWidth="2"/>
-            <polygon points="18,10 28,28 8,28" fill="rgba(201,168,76,0.1)" stroke="#c9a84c" strokeWidth="1"/>
-            <circle cx="18" cy="22" r="3" fill="#c9a84c"/>
+          <svg className="nav-logo-icon" viewBox="0 0 120 120" fill="none">
+            <defs>
+              <linearGradient id="nav_bg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#080c1c"/>
+                <stop offset="55%" stopColor="#050810"/>
+                <stop offset="100%" stopColor="#020308"/>
+              </linearGradient>
+              <linearGradient id="nav_ring" x1="10" y1="10" x2="110" y2="110" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#f0d898"/>
+                <stop offset="50%" stopColor="#c8a96e"/>
+                <stop offset="100%" stopColor="#8a6030"/>
+              </linearGradient>
+              <linearGradient id="nav_arrow" x1="28" y1="80" x2="84" y2="36" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#c8a96e"/>
+                <stop offset="55%" stopColor="#e8d898"/>
+                <stop offset="100%" stopColor="#60b8ff"/>
+              </linearGradient>
+              <radialGradient id="nav_tipglow" cx="80" cy="43" r="26" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#60b8ff55"/>
+                <stop offset="100%" stopColor="transparent"/>
+              </radialGradient>
+            </defs>
+            <rect width="120" height="120" rx="26" fill="url(#nav_bg)"/>
+            <circle cx="60" cy="60" r="40" stroke="url(#nav_ring)" strokeWidth="2.5"/>
+            <circle cx="60" cy="60" r="33" stroke="#c8a96e" strokeWidth="0.75" opacity="0.15"/>
+            <line x1="60" y1="17" x2="60" y2="24" stroke="#f0d898" strokeWidth="2.5" strokeLinecap="round"/>
+            <line x1="98" y1="60" x2="103" y2="60" stroke="#c8a96e" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+            <line x1="17" y1="60" x2="22" y2="60" stroke="#c8a96e" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+            <line x1="60" y1="97" x2="60" y2="103" stroke="#c8a96e" strokeWidth="1.5" strokeLinecap="round" opacity="0.35"/>
+            <ellipse cx="80" cy="43" rx="22" ry="18" fill="url(#nav_tipglow)"/>
+            <path d="M32 78 L45 63 L55 71 L80 43" stroke="url(#nav_arrow)" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M73 40 L80 43 L77 51" stroke="#a0d8ff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="80" cy="43" r="5.5" fill="#80ccff" opacity="0.98"/>
+            <circle cx="80" cy="43" r="9.5" fill="#4da6ff" opacity="0.28"/>
           </svg>
           <span className="nav-logo-text">RuneTrader<span className="nav-logo-tld">.gg</span></span>
         </a>
