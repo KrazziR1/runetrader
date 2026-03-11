@@ -484,7 +484,6 @@ const TIME_RANGES = [
   { label: "24H", seconds: 86400 }, { label: "3D", seconds: 259200 },
   { label: "7D", seconds: 604800 }, { label: "1M", seconds: 2592000 },
   { label: "6M", seconds: 15552000 }, { label: "1Y", seconds: 31536000 },
-  { label: "All", seconds: 99999999 },
 ];
 
 const TOUR_STEPS = [
@@ -518,9 +517,7 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing }
       else if (range === "3D") endpoint = "1h";
       else if (range === "7D") endpoint = "6h";
       else if (range === "1M") endpoint = "6h";
-      else if (range === "6M") endpoint = "24h";
-      else if (range === "1Y") endpoint = "24h";
-      else endpoint = "24h"; // All
+      else endpoint = "24h"; // 6M, 1Y
 
       const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/timeseries?timestep=${endpoint}&id=${item.id}`, { headers: { "User-Agent": "RuneTrader/1.0" } });
       const data = await res.json();
@@ -2166,7 +2163,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={favourites.includes(item.id) ? "Remove favourite" : "Add to favourites"}>⭐</button>
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                              <div><div className="item-name">{item.name}</div><div className="item-category">{item.category} · Limit: {item.buyLimit?.toLocaleString() || "?"}</div></div>
+                              <div><div className="item-name">{item.name}</div></div>
                             </div>
                             <span className="price">{formatGP(adjLow)}</span>
                             <span className="price">{formatGP(adjHigh)}</span>
