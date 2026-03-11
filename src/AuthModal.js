@@ -86,7 +86,7 @@ export default function AuthModal({ onClose, onAuth }) {
   const strength = getPasswordStrength(password);
   const strengthLabel = ["", "Weak", "Medium", "Strong"][strength];
 
-  function reset() { setEmail(""); setPassword(""); setUsername(""); setError(""); setShowSuccess(false); setEmailConfirmRequired(false); }
+  function reset() { setEmail(""); setPassword(""); setUsername(""); setError(""); setShowSuccess(false); }
   function switchTab(t) { setTab(t); reset(); }
 
   async function handleSubmit() {
