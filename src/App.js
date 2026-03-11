@@ -393,49 +393,29 @@ function timeAgo(unixSec) {
 }
 
 function getScore(margin, volume, roi, speed, risk, buyLimit) {
-  // ── Speed weights: how much each dimension matters based on flip speed ──
-  // Fast = volume dominates (you need items that fill quickly)
-  // Slow = margin dominates (you're patient, you want big payoff)
-  // Med  = balanced
   const vWeight   = speed === "Fast" ? 55 : speed === "Slow" ? 15 : 35;
   const mWeight   = speed === "Slow" ? 50 : speed === "Fast" ? 15 : 30;
-  const roiWeight = 100 - vWeight - mWeight; // Fast=30, Med=35, Slow=35
-
-  // ── Volume score ──
-  // Fast: full points at 500+/day. Slow: anything above 50 is fine.
+  const roiWeight = 100 - vWeight - mWeight;
   const volCap = speed === "Fast" ? 500 : speed === "Slow" ? 100 : 300;
   const v = Math.min(volume / volCap, 1) * vWeight;
-
-  // ── Margin score ──
-  // Low risk: rewards modest margins (safe, predictable). High risk: rewards big margins.
   const marginCap = risk === "Low" ? 5000 : risk === "High" ? 50000 : 15000;
   const m = Math.min(margin / marginCap, 1) * mWeight;
-
-  // ── ROI score ──
-  // Low risk: sweet spot is 3–20%. Higher ROI is suspicious (illiquid/manipulated), penalised hard.
-  // Med risk: sweet spot is 5–60%. Above 100% fades.
-  // High risk: rewards high ROI up to 150%, then fades gracefully.
   let roiScore = 0;
   if (roi > 0) {
     if (risk === "Low") {
-      if (roi <= 20)       roiScore = (roi / 20) * roiWeight;           // peak at 20%
-      else if (roi <= 60)  roiScore = roiWeight * (1 - ((roi - 20) / 40) * 0.6); // fades to 40%
-      else                 roiScore = Math.max(0, roiWeight * 0.4 - (roi - 60) / 20); // hard penalise
+      if (roi <= 20)       roiScore = (roi / 20) * roiWeight;
+      else if (roi <= 60)  roiScore = roiWeight * (1 - ((roi - 20) / 40) * 0.6);
+      else                 roiScore = Math.max(0, roiWeight * 0.4 - (roi - 60) / 20);
     } else if (risk === "High") {
-      if (roi <= 150)      roiScore = (roi / 150) * roiWeight;          // full points at 150%
-      else if (roi <= 400) roiScore = roiWeight * (1 - ((roi - 150) / 250) * 0.5); // gently fades
+      if (roi <= 150)      roiScore = (roi / 150) * roiWeight;
+      else if (roi <= 400) roiScore = roiWeight * (1 - ((roi - 150) / 250) * 0.5);
       else                 roiScore = Math.max(0, roiWeight * 0.5 - (roi - 400) / 100);
     } else {
-      // Med (default)
       if (roi <= 60)       roiScore = (roi / 60) * roiWeight;
       else if (roi <= 200) roiScore = roiWeight * (1 - ((roi - 60) / 140) * 0.5);
       else                 roiScore = Math.max(0, roiWeight * 0.5 - (roi - 200) / 100);
     }
   }
-
-  // ── Liquidity multiplier ──
-  // Low risk: brutal penalty for items where vol < buyLimit (can't fill orders reliably)
-  // High risk: softer penalty (you know what you're doing)
   const liquidityRatio = buyLimit > 0 ? volume / buyLimit : 1;
   let liquidityMultiplier;
   if (risk === "Low") {
@@ -445,12 +425,10 @@ function getScore(margin, volume, roi, speed, risk, buyLimit) {
   } else {
     liquidityMultiplier = liquidityRatio >= 2 ? 1 : liquidityRatio >= 1 ? 0.85 : liquidityRatio >= 0.5 ? 0.65 : 0.4;
   }
-
   return Math.round((v + m + roiScore) * liquidityMultiplier);
 }
 
 function itemIconUrl(name) {
-  // OSRS Wiki item sprites — underscore-encode spaces, encode special chars
   return `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}_detail.png`;
 }
 
@@ -621,7 +599,6 @@ function ProfitChart({ flipsLog }) {
     const range = maxV - minV || 1;
     const xPos = i => pad.left + (i / (points.length - 1)) * (W - pad.left - pad.right);
     const yPos = v => pad.top + (1 - (v - minV) / range) * (H - pad.top - pad.bottom);
-    // Grid
     ctx.strokeStyle = "rgba(42,51,64,0.6)"; ctx.lineWidth = 1;
     [0, 0.5, 1].forEach(t => {
       const y = pad.top + t * (H - pad.top - pad.bottom);
@@ -630,14 +607,12 @@ function ProfitChart({ flipsLog }) {
       ctx.fillStyle = "#4a5a6a"; ctx.font = "10px Inter"; ctx.textAlign = "right";
       ctx.fillText((val >= 0 ? "+" : "") + formatGP(Math.round(val)), pad.left - 4, y + 4);
     });
-    // Zero line
     if (minV < 0 && maxV > 0) {
       const y = yPos(0);
       ctx.strokeStyle = "rgba(122,138,154,0.4)"; ctx.setLineDash([4, 4]);
       ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
       ctx.setLineDash([]);
     }
-    // Fill
     const isPositive = points[points.length - 1] >= 0;
     ctx.beginPath(); ctx.moveTo(xPos(0), yPos(points[0]));
     points.forEach((p, i) => ctx.lineTo(xPos(i), yPos(p)));
@@ -646,7 +621,6 @@ function ProfitChart({ flipsLog }) {
     grad.addColorStop(1, "rgba(0,0,0,0)");
     ctx.lineTo(xPos(points.length - 1), H - pad.bottom); ctx.lineTo(xPos(0), H - pad.bottom);
     ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
-    // Line
     ctx.beginPath(); ctx.moveTo(xPos(0), yPos(points[0]));
     points.forEach((p, i) => ctx.lineTo(xPos(i), yPos(p)));
     ctx.strokeStyle = isPositive ? "#2ecc71" : "#e74c3c"; ctx.lineWidth = 2; ctx.stroke();
@@ -681,17 +655,13 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
   const chartRef = useRef(null);
   const flipsLoadedRef = useRef(false);
 
-  // Load positions & snapshots
   useEffect(() => {
     if (!user) return;
     loadPositions();
     loadSnapshots();
-    // Mark initial flips as already loaded so the snapshot upsert
-    // doesn't fire on first mount (only on genuine new flip logs)
     setTimeout(() => { flipsLoadedRef.current = true; }, 1000);
   }, [user]); // eslint-disable-line
 
-  // Upsert today's snapshot only when user actively logs a flip (not on initial load)
   useEffect(() => {
     if (!user || !flipsLog.length || !flipsLoadedRef.current) return;
     upsertSnapshot();
@@ -738,7 +708,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
     const roi = parseFloat(((profitEach / pos.buy_price) * 100).toFixed(1));
     const { data: flipData, error: flipErr } = await sb.from("flips").insert({ user_id: user.id, item: pos.item_name, buy_price: pos.buy_price, sell_price: sell, qty: pos.qty, tax, profit_each: profitEach, total_profit: totalProfit, roi }).select().single();
     if (flipErr) { showToast("Failed to log flip.", "error"); setClosingLoading(false); return; }
-    // Update parent flipsLog so Tracker tab and snapshots stay in sync
     if (flipData && mapFlipRow) setFlipsLog(prev => [mapFlipRow(flipData), ...prev]);
     await sb.from("positions").delete().eq("id", pos.id);
     setPositions(prev => prev.filter(p => p.id !== pos.id));
@@ -748,11 +717,9 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
     showToast(`Closed! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
   }
 
-  // Draw portfolio chart — use ResizeObserver so canvas has real dimensions
   useEffect(() => {
     if (!chartRef.current || snapshots.length < 2) return;
     const canvas = chartRef.current;
-
     function draw() {
       const ctx = canvas.getContext("2d");
       const dpr = window.devicePixelRatio || 1;
@@ -761,8 +728,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
       canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
       ctx.scale(dpr, dpr);
       const W = rect.width, H = rect.height, pad = { top: 10, right: 10, bottom: 30, left: 70 };
-
-      // Filter by range
       const now = new Date();
       const cutoff = new Date(now);
       if (range === "24H") cutoff.setDate(now.getDate() - 1);
@@ -771,7 +736,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
       else if (range === "1M") cutoff.setMonth(now.getMonth() - 1);
       else if (range === "3M") cutoff.setMonth(now.getMonth() - 3);
       else cutoff.setFullYear(2000);
-
       const filtered = snapshots.filter(s => new Date(s.snapshot_date) >= cutoff);
       ctx.clearRect(0, 0, W, H);
       if (filtered.length < 2) {
@@ -779,7 +743,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
         ctx.fillText("Not enough data for this range", W / 2, H / 2);
         return;
       }
-
       const profits = filtered.map(s => s.total_profit);
       const times = filtered.map(s => new Date(s.snapshot_date).getTime());
       const minV = Math.min(0, ...profits), maxV = Math.max(0, ...profits);
@@ -787,7 +750,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
       const range2 = maxV - minV || 1;
       const xPos = t => pad.left + ((t - minT) / Math.max(maxT - minT, 1)) * (W - pad.left - pad.right);
       const yPos = v => pad.top + (1 - (v - minV) / range2) * (H - pad.top - pad.bottom);
-
       ctx.strokeStyle = "rgba(42,51,64,0.6)"; ctx.lineWidth = 1;
       [0, 0.5, 1].forEach(t => {
         const y = pad.top + t * (H - pad.top - pad.bottom);
@@ -796,7 +758,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
         ctx.fillStyle = "#4a5a6a"; ctx.font = "10px Inter"; ctx.textAlign = "right";
         ctx.fillText((val >= 0 ? "+" : "") + formatGP(Math.round(val)), pad.left - 4, y + 4);
       });
-
       const isPos = profits[profits.length - 1] >= profits[0];
       ctx.beginPath(); ctx.moveTo(xPos(times[0]), yPos(profits[0]));
       profits.forEach((p, i) => ctx.lineTo(xPos(times[i]), yPos(p)));
@@ -809,21 +770,18 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
       ctx.beginPath(); ctx.moveTo(xPos(times[0]), yPos(profits[0]));
       profits.forEach((p, i) => ctx.lineTo(xPos(times[i]), yPos(p)));
       ctx.strokeStyle = isPos ? "#2ecc71" : "#e74c3c"; ctx.lineWidth = 2.5; ctx.stroke();
-
       ctx.fillStyle = "#4a5a6a"; ctx.font = "10px Inter"; ctx.textAlign = "center";
       [0, 0.5, 1].forEach(t => {
         const ts = minT + t * (maxT - minT);
         ctx.fillText(new Date(ts).toLocaleDateString([], { month: "short", day: "numeric" }), xPos(ts), H - pad.bottom + 14);
       });
     }
-
     const ro = new ResizeObserver(() => draw());
     ro.observe(canvas);
     draw();
     return () => ro.disconnect();
   }, [snapshots, range]);
 
-  // % change helpers
   function getPerfVs(daysAgo) {
     if (snapshots.length < 2) return null;
     const now = new Date();
@@ -867,8 +825,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
 
   return (
     <div className="portfolio-wrap">
-
-      {/* % Change cards */}
       <div className="perf-cards">
         {perfCards.map(({ label, data }) => (
           <div key={label} className="perf-card">
@@ -887,7 +843,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
         ))}
       </div>
 
-      {/* Portfolio profit chart */}
       <div className="portfolio-chart-wrap">
         <div className="portfolio-chart-title">
           <span>📈 Portfolio Performance</span>
@@ -908,7 +863,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
         )}
       </div>
 
-      {/* Open position form */}
       <div className="open-pos-form">
         <div className="open-pos-title">📂 Open a Position</div>
         <div className="open-pos-row">
@@ -944,7 +898,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
         </div>
       </div>
 
-      {/* Holdings table */}
       <div>
         <div className="section-title">Open Positions{totalOpenValue > 0 && <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, marginLeft: "8px" }}>· {formatGP(totalOpenValue)} gp invested</span>}</div>
         <div className="positions-table">
@@ -990,7 +943,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
         </div>
       </div>
 
-      {/* Close position modal */}
       {closingPos && (
         <div className="close-pos-modal" onClick={e => e.target === e.currentTarget && setClosingPos(null)}>
           <div className="close-pos-inner">
@@ -1024,13 +976,11 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
           </div>
         </div>
       )}
-
     </div>
   );
 }
 
 // ─── WELCOME MESSAGE ─────────────────────────────────────────────────────────
-
 
 const WELCOME_MSG = {
   role: "assistant",
@@ -1047,6 +997,18 @@ export default function RuneTrader() {
   const [tourStep, setTourStep] = useState(-1);
   const [tourRects, setTourRects] = useState({});
   const [toasts, setToasts] = useState([]);
+
+  // ── FIX: control body scroll based on whether landing page or app is showing ──
+  useEffect(() => {
+    document.body.style.overflow = showApp ? 'hidden' : 'auto';
+    return () => { document.body.style.overflow = 'auto'; };
+  }, [showApp]);
+
+  // Fix: unlock body scroll on landing page, lock it inside the app
+  useEffect(() => {
+    document.body.style.overflow = showApp ? 'hidden' : 'auto';
+    return () => { document.body.style.overflow = 'auto'; };
+  }, [showApp]);
 
   function showToast(msg, type = "success", duration = 3000) {
     const id = Date.now();
@@ -1084,15 +1046,12 @@ export default function RuneTrader() {
     setTourStep(next);
   }
 
-  // handleSignOut is defined after state declarations to avoid referencing
-  // setFlipsLog / setAlerts before they exist — called via ref below
-
   // ── Market data ──
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const [allItemsMap, setAllItemsMap] = useState({}); // id -> name, for autocomplete
+  const [allItemsMap, setAllItemsMap] = useState({});
 
   // ── Prefs ──
   const [prefs, setPrefs] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}"); } catch { return {}; } });
@@ -1101,7 +1060,6 @@ export default function RuneTrader() {
     const u = { ...prefs, [key]: val };
     setPrefs(u);
     localStorage.setItem("runetrader_prefs", JSON.stringify(u));
-    // Re-sort by score when preferences change so the updated ranking is immediately visible
     setSortCol("score");
     setSortDir("desc");
   }
@@ -1170,7 +1128,6 @@ export default function RuneTrader() {
           applicationServerKey: urlBase64ToUint8Array(process.env.REACT_APP_VAPID_PUBLIC_KEY),
         });
       }
-      // Save subscription to Supabase via our API
       await fetch("/api/push-subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1199,7 +1156,6 @@ export default function RuneTrader() {
     }
   }
 
-  // Helper: convert VAPID public key to Uint8Array (required by pushManager.subscribe)
   function urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -1240,7 +1196,7 @@ export default function RuneTrader() {
   // ── Fetch market prices ──
   useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 5 * 60 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
 
-  // ── Sign out — declared here so all state setters are in scope ──
+  // ── Sign out ──
   async function handleSignOut() {
     await supabase.auth.signOut();
     setUser(null);
@@ -1417,7 +1373,6 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
   }
 
   // ── Filtered items ──
-  // Recompute scores based on current prefs so sorting reflects user preferences
   const scoredItems = items.map(item => ({
     ...item,
     prefScore: getScore(item.margin, item.volume, item.roi, prefs.speed, prefs.risk, item.buyLimit),
@@ -1428,12 +1383,10 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
     const budgetGp = budget ? parseInt(budget.replace(/[^0-9]/g, "")) * (budget.toLowerCase().includes("m") ? 1_000_000 : budget.toLowerCase().includes("k") ? 1_000 : 1) : null;
     const { adjLow, adjHigh } = applyOffset(item.low, item.high, prefs.speed);
     const adjMargin = item.margin - (adjLow - item.low) - (item.high - adjHigh);
-    // Soft risk filter: Low risk hides very illiquid items, but nothing is hard-capped by ROI
     const passesRisk = !prefs.risk ||
       (prefs.risk === "Low" && item.volume >= 200) ||
       (prefs.risk === "Med" && item.volume >= 50) ||
       prefs.risk === "High";
-    // Soft speed filter: Fast hides very slow items, Slow allows everything
     const passesSpeed = !prefs.speed ||
       (prefs.speed === "Fast" && item.volume >= 300) ||
       (prefs.speed === "Med" && item.volume >= 30) ||
@@ -1682,8 +1635,6 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
             {/* ── ALERTS TAB ── */}
             {activeTab === "alerts" && (
               <div className="alerts-wrap">
-
-                {/* Push notification permission banner */}
                 {notifPermission !== "granted" && (
                   <div className="notif-banner">
                     <div className="notif-banner-left">
