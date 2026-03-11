@@ -683,7 +683,33 @@ export default function RuneTrader() {
   const [flipsLog, setFlipsLog] = useState(() => {
     try { return JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch { return []; }
   });
+  const [flipsLoading, setFlipsLoading] = useState(false);
   const [logForm, setLogForm] = useState({ item: "", buyPrice: "", sellPrice: "", qty: "1" });
+
+  useEffect(() => {
+    if (user) {
+      loadFlipsFromDB();
+    } else {
+      try { setFlipsLog(JSON.parse(localStorage.getItem("runetrader_flips") || "[]")); } catch { setFlipsLog([]); }
+    }
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function loadFlipsFromDB() {
+    setFlipsLoading(true);
+    const { data, error } = await supabase
+      .from("flips")
+      .select("*")
+      .order("date", { ascending: false });
+    if (!error && data) {
+      const mapped = data.map(r => ({
+        id: r.id, item: r.item, buyPrice: r.buy_price, sellPrice: r.sell_price,
+        qty: r.qty, tax: r.tax, profitEach: r.profit_each,
+        totalProfit: r.total_profit, roi: r.roi, date: r.date
+      }));
+      setFlipsLog(mapped);
+    }
+    setFlipsLoading(false);
+  }
   const messagesEndRef = useRef(null);
   const itemsRef = useRef([]);
 
@@ -867,7 +893,7 @@ STRICT recommendation rules — never break these:
     return sortDir === "asc" ? a[key] - b[key] : b[key] - a[key];
   });
 
-  function logFlip() {
+  async function logFlip() {
     const buy = parseInt(logForm.buyPrice.replace(/,/g, ""));
     const sell = parseInt(logForm.sellPrice.replace(/,/g, ""));
     const qty = parseInt(logForm.qty) || 1;
@@ -875,28 +901,51 @@ STRICT recommendation rules — never break these:
     const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
     const profitEach = sell - buy - tax;
     const totalProfit = profitEach * qty;
-    const roi = ((profitEach / buy) * 100).toFixed(1);
-    const entry = {
-      id: Date.now(), item: logForm.item, buyPrice: buy, sellPrice: sell,
-      qty, tax, profitEach, totalProfit, roi: parseFloat(roi),
-      date: new Date().toISOString(),
-    };
-    const updated = [entry, ...flipsLog];
-    setFlipsLog(updated);
-    localStorage.setItem("runetrader_flips", JSON.stringify(updated));
+    const roi = parseFloat(((profitEach / buy) * 100).toFixed(1));
     setLogForm({ item: "", buyPrice: "", sellPrice: "", qty: "1" });
+    if (user) {
+      const { data, error } = await supabase.from("flips").insert({
+        user_id: user.id, item: logForm.item, buy_price: buy, sell_price: sell,
+        qty, tax, profit_each: profitEach, total_profit: totalProfit, roi
+      }).select().single();
+      if (!error && data) {
+        const entry = {
+          id: data.id, item: data.item, buyPrice: data.buy_price, sellPrice: data.sell_price,
+          qty: data.qty, tax: data.tax, profitEach: data.profit_each,
+          totalProfit: data.total_profit, roi: data.roi, date: data.date
+        };
+        setFlipsLog(prev => [entry, ...prev]);
+      }
+    } else {
+      const entry = {
+        id: Date.now(), item: logForm.item, buyPrice: buy, sellPrice: sell,
+        qty, tax, profitEach, totalProfit, roi, date: new Date().toISOString(),
+      };
+      const updated = [entry, ...flipsLog];
+      setFlipsLog(updated);
+      localStorage.setItem("runetrader_flips", JSON.stringify(updated));
+    }
   }
 
-  function deleteFlip(id) {
-    const updated = flipsLog.filter(f => f.id !== id);
-    setFlipsLog(updated);
-    localStorage.setItem("runetrader_flips", JSON.stringify(updated));
+  async function deleteFlip(id) {
+    if (user) {
+      await supabase.from("flips").delete().eq("id", id);
+      setFlipsLog(prev => prev.filter(f => f.id !== id));
+    } else {
+      const updated = flipsLog.filter(f => f.id !== id);
+      setFlipsLog(updated);
+      localStorage.setItem("runetrader_flips", JSON.stringify(updated));
+    }
   }
 
-  function clearAllFlips() {
+  async function clearAllFlips() {
     if (window.confirm("Clear all logged flips? This cannot be undone.")) {
+      if (user) {
+        await supabase.from("flips").delete().eq("user_id", user.id);
+      } else {
+        localStorage.removeItem("runetrader_flips");
+      }
       setFlipsLog([]);
-      localStorage.removeItem("runetrader_flips");
     }
   }
 
@@ -1040,7 +1089,9 @@ STRICT recommendation rules — never break these:
                       <span>Profit</span>
                       <span></span>
                     </div>
-                    {flipsLog.length === 0 ? (
+                    {flipsLoading ? (
+                      <div style={{ textAlign: "center", color: "var(--text-dim)", padding: "40px" }}>Loading flips...</div>
+                    ) : flipsLog.length === 0 ? (
                       <div className="tracker-empty">
                         <div className="icon">📋</div>
                         <p>No flips logged yet</p>
