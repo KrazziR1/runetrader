@@ -442,13 +442,11 @@ function ItemChart({ item, onClose, onAskAI }) {
   const [chartLoading, setChartLoading] = useState(true);
   const canvasRef = useRef(null);
 
-  useEffect(() => {
-    fetchChartData(); // eslint-disable-line react-hooks/exhaustive-deps
-  }, [range, item.id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchChartData(); }, [range, item.id]);
 
-  useEffect(() => {
-    if (chartData) drawChart(); // eslint-disable-line react-hooks/exhaustive-deps
-  }, [chartData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (chartData) drawChart(); }, [chartData]);
 
   async function fetchChartData() {
     setChartLoading(true);
@@ -868,8 +866,6 @@ STRICT recommendation rules — never break these:
     }
     return sortDir === "asc" ? a[key] - b[key] : b[key] - a[key];
   });
-
-  const avgRoi = items.length ? (items.reduce((s, i) => s + i.roi, 0) / items.length).toFixed(1) : 0;
 
   function logFlip() {
     const buy = parseInt(logForm.buyPrice.replace(/,/g, ""));
