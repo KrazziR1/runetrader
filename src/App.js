@@ -679,26 +679,80 @@ export default function RuneTrader() {
 
   useEffect(() => {
     if (user) {
-      loadFlipsFromDB();
+      loadAndMergeFlips();
     } else {
       try { setFlipsLog(JSON.parse(localStorage.getItem("runetrader_flips") || "[]")); } catch { setFlipsLog([]); }
     }
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function loadFlipsFromDB() {
+  async function loadAndMergeFlips() {
     setFlipsLoading(true);
-    const { data, error } = await supabase
+
+    // 1. Grab any flips sitting in localStorage
+    let localFlips = [];
+    try { localFlips = JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch {}
+
+    // 2. Load existing flips from Supabase
+    const { data: dbData, error } = await supabase
       .from("flips")
       .select("*")
       .order("date", { ascending: false });
-    if (!error && data) {
-      const mapped = data.map(r => ({
+
+    if (error) { setFlipsLoading(false); return; }
+
+    // 3. If there are localStorage flips, migrate them into Supabase
+    if (localFlips.length > 0) {
+      const existingKeys = new Set(
+        (dbData || []).map(r => `${r.item}|${r.buy_price}|${r.sell_price}|${(r.date || "").slice(0, 16)}`)
+      );
+
+      const toInsert = localFlips
+        .filter(f => {
+          const key = `${f.item}|${f.buyPrice}|${f.sellPrice}|${(f.date || "").slice(0, 16)}`;
+          return !existingKeys.has(key);
+        })
+        .map(f => ({
+          user_id: user.id,
+          item: f.item,
+          buy_price: f.buyPrice,
+          sell_price: f.sellPrice,
+          qty: f.qty,
+          tax: f.tax,
+          profit_each: f.profitEach,
+          total_profit: f.totalProfit,
+          roi: f.roi,
+          date: f.date || new Date().toISOString(),
+        }));
+
+      if (toInsert.length > 0) {
+        await supabase.from("flips").insert(toInsert);
+      }
+
+      // 4. Clear localStorage now that everything is in Supabase
+      localStorage.removeItem("runetrader_flips");
+
+      // 5. Reload from Supabase to get full merged list with real IDs
+      const { data: merged } = await supabase
+        .from("flips")
+        .select("*")
+        .order("date", { ascending: false });
+
+      const mappedMerged = (merged || []).map(r => ({
+        id: r.id, item: r.item, buyPrice: r.buy_price, sellPrice: r.sell_price,
+        qty: r.qty, tax: r.tax, profitEach: r.profit_each,
+        totalProfit: r.total_profit, roi: r.roi, date: r.date
+      }));
+      setFlipsLog(mappedMerged);
+    } else {
+      // No localStorage flips — just use what is in Supabase
+      const mapped = (dbData || []).map(r => ({
         id: r.id, item: r.item, buyPrice: r.buy_price, sellPrice: r.sell_price,
         qty: r.qty, tax: r.tax, profitEach: r.profit_each,
         totalProfit: r.total_profit, roi: r.roi, date: r.date
       }));
       setFlipsLog(mapped);
     }
+
     setFlipsLoading(false);
   }
   const messagesEndRef = useRef(null);
