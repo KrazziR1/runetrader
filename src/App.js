@@ -384,31 +384,58 @@ function timeAgo(unixSec) {
 }
 
 function getScore(margin, volume, roi, speed, risk, buyLimit) {
-  // Weight shifts based on user preferences
-  const vWeight = speed === "Fast" ? 60 : speed === "Slow" ? 25 : 45;
-  const mWeight = speed === "Slow" ? 45 : speed === "Fast" ? 20 : 35;
-  const roiWeight = 100 - vWeight - mWeight;
+  // ── Speed weights: how much each dimension matters based on flip speed ──
+  // Fast = volume dominates (you need items that fill quickly)
+  // Slow = margin dominates (you're patient, you want big payoff)
+  // Med  = balanced
+  const vWeight   = speed === "Fast" ? 55 : speed === "Slow" ? 15 : 35;
+  const mWeight   = speed === "Slow" ? 50 : speed === "Fast" ? 15 : 30;
+  const roiWeight = 100 - vWeight - mWeight; // Fast=30, Med=35, Slow=35
 
-  // Volume score - capped at 500/day for full points
-  const v = Math.min(volume / 500, 1) * vWeight;
+  // ── Volume score ──
+  // Fast: full points at 500+/day. Slow: anything above 50 is fine.
+  const volCap = speed === "Fast" ? 500 : speed === "Slow" ? 100 : 300;
+  const v = Math.min(volume / volCap, 1) * vWeight;
 
-  // Margin score
-  const m = Math.min(margin / 10000, 1) * mWeight;
+  // ── Margin score ──
+  // Low risk: rewards modest margins (safe, predictable). High risk: rewards big margins.
+  const marginCap = risk === "Low" ? 5000 : risk === "High" ? 50000 : 15000;
+  const m = Math.min(margin / marginCap, 1) * mWeight;
 
-  // ROI score: sweet spot is 5-80%. Above 100% = diminishing, above 300% = penalty (likely stale/manipulated)
-  let roiScore;
-  if (roi <= 0) roiScore = 0;
-  else if (roi <= 80) roiScore = (roi / 80) * roiWeight;
-  else if (roi <= 300) roiScore = roiWeight * (1 - ((roi - 80) / 220) * 0.5); // fades to 50% of max
-  else roiScore = Math.max(0, roiWeight * 0.5 - (roi - 300) / 100); // actively penalises 300%+
+  // ── ROI score ──
+  // Low risk: sweet spot is 3–20%. Higher ROI is suspicious (illiquid/manipulated), penalised hard.
+  // Med risk: sweet spot is 5–60%. Above 100% fades.
+  // High risk: rewards high ROI up to 150%, then fades gracefully.
+  let roiScore = 0;
+  if (roi > 0) {
+    if (risk === "Low") {
+      if (roi <= 20)       roiScore = (roi / 20) * roiWeight;           // peak at 20%
+      else if (roi <= 60)  roiScore = roiWeight * (1 - ((roi - 20) / 40) * 0.6); // fades to 40%
+      else                 roiScore = Math.max(0, roiWeight * 0.4 - (roi - 60) / 20); // hard penalise
+    } else if (risk === "High") {
+      if (roi <= 150)      roiScore = (roi / 150) * roiWeight;          // full points at 150%
+      else if (roi <= 400) roiScore = roiWeight * (1 - ((roi - 150) / 250) * 0.5); // gently fades
+      else                 roiScore = Math.max(0, roiWeight * 0.5 - (roi - 400) / 100);
+    } else {
+      // Med (default)
+      if (roi <= 60)       roiScore = (roi / 60) * roiWeight;
+      else if (roi <= 200) roiScore = roiWeight * (1 - ((roi - 60) / 140) * 0.5);
+      else                 roiScore = Math.max(0, roiWeight * 0.5 - (roi - 200) / 100);
+    }
+  }
 
-  // Liquidity penalty: if volume < buyLimit, you likely can't fill a full limit order per day
-  // This catches illiquid items with inflated ROI that look good on paper
+  // ── Liquidity multiplier ──
+  // Low risk: brutal penalty for items where vol < buyLimit (can't fill orders reliably)
+  // High risk: softer penalty (you know what you're doing)
   const liquidityRatio = buyLimit > 0 ? volume / buyLimit : 1;
-  const liquidityMultiplier = liquidityRatio >= 2 ? 1        // healthy: 2x+ volume vs limit
-    : liquidityRatio >= 1 ? 0.85                              // borderline: 1-2x
-    : liquidityRatio >= 0.5 ? 0.65                            // poor: can't fill a full order/day
-    : 0.4;                                                     // very illiquid
+  let liquidityMultiplier;
+  if (risk === "Low") {
+    liquidityMultiplier = liquidityRatio >= 2 ? 1 : liquidityRatio >= 1 ? 0.7 : liquidityRatio >= 0.5 ? 0.4 : 0.15;
+  } else if (risk === "High") {
+    liquidityMultiplier = liquidityRatio >= 1 ? 1 : liquidityRatio >= 0.3 ? 0.85 : 0.6;
+  } else {
+    liquidityMultiplier = liquidityRatio >= 2 ? 1 : liquidityRatio >= 1 ? 0.85 : liquidityRatio >= 0.5 ? 0.65 : 0.4;
+  }
 
   return Math.round((v + m + roiScore) * liquidityMultiplier);
 }
