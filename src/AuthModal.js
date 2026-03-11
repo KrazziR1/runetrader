@@ -81,7 +81,7 @@ export default function AuthModal({ onClose, onAuth }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
-  const [emailConfirmRequired, setEmailConfirmRequired] = useState(false);
+  // emailConfirmRequired tracked via showSuccess state
 
   const strength = getPasswordStrength(password);
   const strengthLabel = ["", "Weak", "Medium", "Strong"][strength];
@@ -119,7 +119,6 @@ export default function AuthModal({ onClose, onAuth }) {
         onClose();
       } else {
         // Email confirmation is ON — show confirmation message
-        setEmailConfirmRequired(true);
         setShowSuccess(true);
       }
     } else {
