@@ -236,6 +236,15 @@ const STYLES = `
   .alerts-empty { padding: 60px 20px; text-align: center; color: var(--text-dim); }
   .alerts-empty .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
   .alert-info { background: rgba(52,152,219,0.08); border: 1px solid rgba(52,152,219,0.2); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
+  .notif-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.25); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; flex-wrap: wrap; }
+  .notif-banner-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+  .notif-banner-icon { font-size: 24px; flex-shrink: 0; }
+  .notif-banner-title { font-size: 13px; font-weight: 600; color: var(--gold); margin-bottom: 2px; }
+  .notif-banner-sub { font-size: 11px; color: var(--text-dim); }
+  .notif-enable-btn { padding: 8px 18px; border-radius: 8px; border: 1px solid var(--gold-dim); background: rgba(201,168,76,0.12); color: var(--gold); font-size: 13px; font-weight: 600; cursor: pointer; font-family: Inter, sans-serif; white-space: nowrap; flex-shrink: 0; transition: background 0.15s; }
+  .notif-enable-btn:hover:not(:disabled) { background: rgba(201,168,76,0.22); }
+  .notif-enable-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .notif-active-banner { display: flex; align-items: center; gap: 8px; background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--green); }
 
   /* PORTFOLIO */
   .portfolio-wrap { display: flex; flex-direction: column; gap: 24px; }
@@ -1142,6 +1151,62 @@ export default function RuneTrader() {
   const [alertAutocomplete, setAlertAutocomplete] = useState([]);
   const [showAlertAutocomplete, setShowAlertAutocomplete] = useState(false);
 
+  // ── Push notifications ──
+  const [notifPermission, setNotifPermission] = useState(() =>
+    typeof Notification !== "undefined" ? Notification.permission : "default"
+  );
+  const [notifLoading, setNotifLoading] = useState(false);
+
+  async function subscribeToPush() {
+    if (!user) { setShowAuth(true); return; }
+    setNotifLoading(true);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const existing = await reg.pushManager.getSubscription();
+      let sub = existing;
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(process.env.REACT_APP_VAPID_PUBLIC_KEY),
+        });
+      }
+      // Save subscription to Supabase via our API
+      await fetch("/api/push-subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: sub.toJSON(), user_id: user.id }),
+      });
+      setNotifPermission("granted");
+      showToast("Notifications enabled! You'll be alerted even when the app is closed.", "success", 5000);
+    } catch (err) {
+      console.error("Push subscribe error:", err);
+      showToast("Could not enable notifications. Please try again.", "error");
+    } finally {
+      setNotifLoading(false);
+    }
+  }
+
+  async function requestNotificationPermission() {
+    if (!("Notification" in window)) {
+      showToast("Your browser doesn't support notifications.", "error"); return;
+    }
+    const permission = await Notification.requestPermission();
+    setNotifPermission(permission);
+    if (permission === "granted") {
+      await subscribeToPush();
+    } else {
+      showToast("Notifications blocked. You can enable them in your browser settings.", "info", 5000);
+    }
+  }
+
+  // Helper: convert VAPID public key to Uint8Array (required by pushManager.subscribe)
+  function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+  }
+
   // ── Load flips on user change ──
   useEffect(() => {
     if (user) { loadAndMergeFlips(); }
@@ -1587,7 +1652,36 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
             {/* ── ALERTS TAB ── */}
             {activeTab === "alerts" && (
               <div className="alerts-wrap">
-                <div className="alert-info">ℹ️ Alerts are checked against live prices every 5 minutes while you have the page open.</div>
+
+                {/* Push notification permission banner */}
+                {notifPermission !== "granted" && (
+                  <div className="notif-banner">
+                    <div className="notif-banner-left">
+                      <span className="notif-banner-icon">🔔</span>
+                      <div>
+                        <div className="notif-banner-title">Get notified on your phone</div>
+                        <div className="notif-banner-sub">Alerts will fire even when the app is closed — on iPhone, Android, and desktop.</div>
+                      </div>
+                    </div>
+                    {!user ? (
+                      <button className="notif-enable-btn" onClick={() => setShowAuth(true)}>Sign in to enable</button>
+                    ) : notifPermission === "denied" ? (
+                      <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>Blocked in browser settings</span>
+                    ) : (
+                      <button className="notif-enable-btn" disabled={notifLoading} onClick={requestNotificationPermission}>
+                        {notifLoading ? "Enabling..." : "Enable notifications"}
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {notifPermission === "granted" && (
+                  <div className="notif-active-banner">
+                    <span>✅ Push notifications active — you'll be alerted even when RuneTrader is closed.</span>
+                  </div>
+                )}
+
+                <div className="alert-info">ℹ️ Prices are checked every 5 minutes. Triggered alerts won't fire again — delete and re-add to reset.</div>
                 <div className="alert-form">
                   <div className="alert-form-title">🔔 Set a Price Alert</div>
                   <div className="alert-form-row">
