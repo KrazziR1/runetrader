@@ -12,8 +12,8 @@ const STYLES = `
     --border: #2a3340; --text: #e8e8e8; --text-dim: #7a8a9a;
     --green: #2ecc71; --green-dim: #1a7a44; --red: #e74c3c; --red-dim: #7a1f1a; --blue: #3498db;
   }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; }
-  .app { display: flex; flex-direction: column; min-height: 100vh; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; }
+  .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
   /* HEADER */
   .header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 64px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
@@ -31,9 +31,10 @@ const STYLES = `
   .nav-tab.active { background: var(--bg3); color: var(--gold); border: 1px solid var(--border); }
 
   /* LAYOUT */
-  .main { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 64px - 34px); }
+  .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  .main { display: flex; flex: 1; min-height: 0; overflow: hidden; }
   .left-panel { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
-  .right-panel { width: 380px; border-left: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg2); overflow: hidden; min-height: 0; }
+  .right-panel { width: 380px; border-left: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg2); overflow: hidden; flex-shrink: 0; }
 
   /* STAT CARDS */
   .stat-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
