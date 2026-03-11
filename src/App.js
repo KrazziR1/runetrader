@@ -876,7 +876,6 @@ STRICT recommendation rules — never break these:
     return sortDir === "asc" ? a[key] - b[key] : b[key] - a[key];
   });
 
-  // ─── UPDATED logFlip with full error logging ───────────────────────────────
   async function logFlip() {
     const buy = parseInt(logForm.buyPrice.replace(/,/g, ""));
     const sell = parseInt(logForm.sellPrice.replace(/,/g, ""));
@@ -890,35 +889,13 @@ STRICT recommendation rules — never break these:
     setLogForm({ item: "", buyPrice: "", sellPrice: "", qty: "1" });
 
     if (user) {
-      console.log("👤 Logged in as:", user.email, "| ID:", user.id);
-
-      const payload = {
-        user_id: user.id,
-        item: itemName,
-        buy_price: buy,
-        sell_price: sell,
-        qty,
-        tax,
-        profit_each: profitEach,
-        total_profit: totalProfit,
-        roi,
-      };
-      console.log("📦 Sending to Supabase:", payload);
-
       const { data, error } = await supabase
         .from("flips")
-        .insert(payload)
+        .insert({ user_id: user.id, item: itemName, buy_price: buy, sell_price: sell, qty, tax, profit_each: profitEach, total_profit: totalProfit, roi })
         .select()
         .single();
 
-      if (error) {
-        console.error("❌ Supabase insert FAILED");
-        console.error("   Message:", error.message);
-        console.error("   Code:", error.code);
-        console.error("   Details:", error.details);
-        console.error("   Hint:", error.hint);
-      } else {
-        console.log("✅ Flip saved to Supabase successfully!", data);
+      if (!error && data) {
         const entry = {
           id: data.id, item: data.item, buyPrice: data.buy_price, sellPrice: data.sell_price,
           qty: data.qty, tax: data.tax, profitEach: data.profit_each,
@@ -927,7 +904,6 @@ STRICT recommendation rules — never break these:
         setFlipsLog(prev => [entry, ...prev]);
       }
     } else {
-      console.log("ℹ️ Not logged in — saving to localStorage only");
       const entry = {
         id: Date.now(), item: itemName, buyPrice: buy, sellPrice: sell,
         qty, tax, profitEach, totalProfit, roi, date: new Date().toISOString(),
@@ -937,7 +913,6 @@ STRICT recommendation rules — never break these:
       localStorage.setItem("runetrader_flips", JSON.stringify(updated));
     }
   }
-  // ──────────────────────────────────────────────────────────────────────────
 
   async function deleteFlip(id) {
     if (user) {
