@@ -276,7 +276,23 @@ const STYLES = `
   .smart-badge-crash { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid var(--gold-dim); }
   .smart-empty { padding: 40px 20px; text-align: center; color: var(--text-dim); font-size: 13px; }
 
-  /* PRICE ALERTS */
+  /* THRESHOLD POPOVER */
+  .threshold-popover-wrap { position: relative; display: inline-flex; }
+  .threshold-gear-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+  .threshold-gear-btn:hover, .threshold-gear-btn.active { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.08); }
+  .threshold-popover { position: absolute; right: 0; top: 32px; z-index: 200; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; width: 260px; box-shadow: 0 8px 32px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 12px; }
+  .threshold-popover-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); }
+  .threshold-popover-label { font-size: 12px; color: var(--text); margin-bottom: 6px; }
+  .threshold-row { display: flex; align-items: center; gap: 8px; }
+  .threshold-slider { flex: 1; accent-color: var(--gold); cursor: pointer; height: 4px; }
+  .threshold-number { width: 52px; background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; color: var(--text); font-size: 12px; font-family: "Inter", sans-serif; text-align: center; outline: none; transition: border-color 0.2s; }
+  .threshold-number:focus { border-color: var(--gold-dim); }
+  .threshold-unit { font-size: 11px; color: var(--text-dim); width: 16px; flex-shrink: 0; }
+  .threshold-default { font-size: 10px; color: var(--text-dim); }
+  .threshold-reset { background: none; border: none; color: var(--gold-dim); font-size: 11px; cursor: pointer; font-family: "Inter", sans-serif; padding: 0; text-decoration: underline; }
+  .threshold-reset:hover { color: var(--gold); }
+
+
   .alerts-wrap { display: flex; flex-direction: column; gap: 20px; }
   .alert-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
   .alert-form-title { font-family: "Cinzel", serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
@@ -1333,6 +1349,67 @@ export default function RuneTrader() {
   const [alertAutocomplete, setAlertAutocomplete] = useState([]);
   const [showAlertAutocomplete, setShowAlertAutocomplete] = useState(false);
 
+  const THRESHOLD_DEFAULTS = { marginSpike: 50, volumeSurge: 3, dumpDetected: 10, priceCrash: 15 };
+
+  const [thresholds, setThresholds] = useState(() => {
+    try { return { ...THRESHOLD_DEFAULTS, ...JSON.parse(localStorage.getItem("runetrader_thresholds") || "{}") }; }
+    catch { return { ...THRESHOLD_DEFAULTS }; }
+  });
+  const [openPopover, setOpenPopover] = useState(null); // key of open popover
+
+  function saveThreshold(key, val) {
+    const parsed = parseFloat(val);
+    if (isNaN(parsed) || parsed <= 0) return;
+    const updated = { ...thresholds, [key]: parsed };
+    setThresholds(updated);
+    localStorage.setItem("runetrader_thresholds", JSON.stringify(updated));
+  }
+
+  function resetThreshold(key) {
+    saveThreshold(key, THRESHOLD_DEFAULTS[key]);
+  }
+
+  // Close popover on outside click
+  useEffect(() => {
+    if (!openPopover) return;
+    function handler(e) {
+      if (!e.target.closest(".threshold-popover-wrap")) setOpenPopover(null);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [openPopover]);
+
+  function ThresholdPopover({ alertKey, label, unit, min, max, step }) {
+    const val = thresholds[alertKey];
+    const isDefault = val === THRESHOLD_DEFAULTS[alertKey];
+    return (
+      <div className="threshold-popover-wrap">
+        <button className={`threshold-gear-btn${openPopover === alertKey ? " active" : ""}`}
+          onClick={e => { e.stopPropagation(); setOpenPopover(openPopover === alertKey ? null : alertKey); }}
+          title="Adjust threshold">⚙️</button>
+        {openPopover === alertKey && (
+          <div className="threshold-popover" onClick={e => e.stopPropagation()}>
+            <div className="threshold-popover-title">Threshold — {label}</div>
+            <div className="threshold-popover-label">
+              Trigger when: {alertKey === "volumeSurge" ? `volume is ${val}x previous` : `change is ≥ ${val}${unit}`}
+            </div>
+            <div className="threshold-row">
+              <input type="range" className="threshold-slider" min={min} max={max} step={step} value={val}
+                onChange={e => saveThreshold(alertKey, e.target.value)} />
+              <input type="number" className="threshold-number" min={min} max={max} step={step} value={val}
+                onChange={e => saveThreshold(alertKey, e.target.value)} />
+              <span className="threshold-unit">{unit}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span className="threshold-default">Default: {THRESHOLD_DEFAULTS[alertKey]}{unit}</span>
+              {!isDefault && <button className="threshold-reset" onClick={() => resetThreshold(alertKey)}>Reset</button>}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // ── Smart Alerts ──
   const [smartAlertSettings, setSmartAlertSettings] = useState(() => {
     try { return JSON.parse(localStorage.getItem("runetrader_smart_alerts") || '{"marginSpike":true,"volumeSurge":true,"dumpDetected":true,"priceCrash":true}'); }
@@ -1390,28 +1467,28 @@ export default function RuneTrader() {
         }
       }
 
-      // Margin Spike: margin up >50% vs previous
+      // Margin Spike: margin up >threshold% vs previous
       if (smartAlertSettings.marginSpike && canFire("marginSpike") && p.margin > 100) {
         const pct = ((item.margin - p.margin) / Math.abs(p.margin)) * 100;
-        if (pct >= 50) fire("marginSpike", "📈", "spike", `Margin spiked +${Math.round(pct)}% to ${formatGP(item.margin)} gp`, p.margin, item.margin);
+        if (pct >= thresholds.marginSpike) fire("marginSpike", "📈", "spike", `Margin spiked +${Math.round(pct)}% to ${formatGP(item.margin)} gp`, p.margin, item.margin);
       }
 
-      // Volume Surge: volume >3x previous
+      // Volume Surge: volume >threshold x previous
       if (smartAlertSettings.volumeSurge && canFire("volumeSurge") && p.volume > 10) {
-        if (item.volume >= p.volume * 3 && item.volume > 50) fire("volumeSurge", "🔥", "surge", `Volume surged to ${item.volume.toLocaleString()}/day (was ${p.volume.toLocaleString()})`, p.volume, item.volume);
+        if (item.volume >= p.volume * thresholds.volumeSurge && item.volume > 50) fire("volumeSurge", "🔥", "surge", `Volume surged to ${item.volume.toLocaleString()}/day (was ${p.volume.toLocaleString()})`, p.volume, item.volume);
       }
 
-      // Dump Detected: sell price dropped >10%
+      // Dump Detected: sell price dropped >threshold%
       if (smartAlertSettings.dumpDetected && canFire("dumpDetected") && p.high > 100) {
         const drop = ((p.high - item.high) / p.high) * 100;
-        if (drop >= 10) fire("dumpDetected", "⚠️", "dump", `Sell price dropped ${Math.round(drop)}% to ${formatGP(item.high)} gp`, p.high, item.high);
+        if (drop >= thresholds.dumpDetected) fire("dumpDetected", "⚠️", "dump", `Sell price dropped ${Math.round(drop)}% to ${formatGP(item.high)} gp`, p.high, item.high);
       }
 
-      // Price Crash: both buy and sell dropped >15%
+      // Price Crash: both buy and sell dropped >threshold%
       if (smartAlertSettings.priceCrash && canFire("priceCrash") && p.high > 100 && p.low > 100) {
         const highDrop = ((p.high - item.high) / p.high) * 100;
         const lowDrop = ((p.low - item.low) / p.low) * 100;
-        if (highDrop >= 15 && lowDrop >= 15) fire("priceCrash", "💥", "crash", `Price crashed! Buy ${formatGP(item.low)} (↓${Math.round(lowDrop)}%), Sell ${formatGP(item.high)} (↓${Math.round(highDrop)}%)`, p.high, item.high);
+        if (highDrop >= thresholds.priceCrash && lowDrop >= thresholds.priceCrash) fire("priceCrash", "💥", "crash", `Price crashed! Buy ${formatGP(item.low)} (↓${Math.round(lowDrop)}%), Sell ${formatGP(item.high)} (↓${Math.round(highDrop)}%)`, p.high, item.high);
       }
     });
 
@@ -2106,7 +2183,6 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
               </div>
             )}
 
-            {/* ── ALERTS TAB ── */}
             {activeTab === "alerts" && (
               <div className="alerts-wrap">
                 {notifPermission !== "granted" && (
@@ -2136,62 +2212,35 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                   </div>
                 )}
 
-                {/* ── SMART ALERTS ── */}
-                <div className="smart-alerts-wrap">
-                  <div className="smart-alert-toggles">
-                    <div className="smart-alert-toggle-title">⚡ Smart Market Alerts</div>
-                    <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
-                      Automatically fires when market conditions shift. Monitors all items every 5 minutes.
-                    </div>
-                    {[
-                      { key: "marginSpike", icon: "📈", label: "Margin Spike", desc: "Margin jumps 50%+ vs last poll — sudden profit opportunity" },
-                      { key: "volumeSurge", icon: "🔥", label: "Volume Surge", desc: "Daily volume triples — item getting heavily traded" },
-                      { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops 10%+ — someone offloading stock" },
-                      { key: "priceCrash", icon: "💥", label: "Price Crash", desc: "Both buy & sell drop 15%+ — avoid or buy the dip" },
-                    ].map(({ key, icon, label, desc }) => (
-                      <div key={key} className="smart-alert-toggle-row">
-                        <div className="smart-alert-toggle-info">
-                          <div className="smart-alert-toggle-name">{icon} {label}</div>
-                          <div className="smart-alert-toggle-desc">{desc}</div>
-                        </div>
+                {/* ── SMART ALERT TOGGLES ── */}
+                <div className="smart-alert-toggles">
+                  <div className="smart-alert-toggle-title">⚡ Smart Market Alerts</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
+                    Automatically fires when market conditions shift. Monitors all items every 5 minutes.
+                  </div>
+                  {[
+                    { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps 50%+ vs last poll — sudden profit opportunity", unit: "%",  min: 5,   max: 200, step: 5   },
+                    { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Daily volume triples — item getting heavily traded",           unit: "x",  min: 1.5, max: 10,  step: 0.5 },
+                    { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops 10%+ — someone offloading stock",             unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy & sell drop 15%+ — avoid or buy the dip",             unit: "%",  min: 2,   max: 50,  step: 1   },
+                  ].map(({ key, icon, label, desc, unit, min, max, step }) => (
+                    <div key={key} className="smart-alert-toggle-row">
+                      <div className="smart-alert-toggle-info">
+                        <div className="smart-alert-toggle-name">{icon} {label}</div>
+                        <div className="smart-alert-toggle-desc">{desc}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} />
                         <label className="toggle-switch">
                           <input type="checkbox" checked={smartAlertSettings[key]} onChange={e => saveSmartAlertSettings(key, e.target.checked)} />
                           <span className="toggle-slider"></span>
                         </label>
                       </div>
-                    ))}
-                  </div>
-
-                  <div>
-                    <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span>Recent Smart Alerts</span>
-                      {smartEvents.length > 0 && (
-                        <button className="clear-btn" onClick={() => setSmartEvents([])}>Clear</button>
-                      )}
                     </div>
-                    <div className="smart-events-list">
-                      {smartEvents.length === 0 ? (
-                        <div className="smart-empty">
-                          No smart alerts yet — they'll appear here when market conditions shift.
-                        </div>
-                      ) : smartEvents.map(e => (
-                        <div key={e.id} className="smart-event-row">
-                          <span className="smart-event-icon">{e.icon}</span>
-                          <div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span className="smart-event-name">{e.itemName}</span>
-                              <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
-                            </div>
-                            <div className="smart-event-msg">{e.message}</div>
-                          </div>
-                          <span className="smart-event-time">{formatTime(e.time)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
-                {/* ── PRICE ALERTS ── */}
+                {/* ── PRICE ALERT FORM ── */}
                 <div className="alert-info">ℹ️ Price alerts check every 5 minutes. Triggered alerts won't fire again — delete and re-add to reset.</div>
                 <div className="alert-form">
                   <div className="alert-form-title">🔔 Set a Price Alert</div>
@@ -2226,6 +2275,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                   </div>
                 </div>
 
+                {/* ── ACTIVE PRICE ALERTS ── */}
                 <div>
                   <div className="section-title">Active Price Alerts</div>
                   <div className="alerts-list">
@@ -2241,6 +2291,50 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                         <button className="delete-btn" onClick={() => deleteAlert(a.id)}>✕</button>
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                {/* ── RECENT SMART ALERTS FEED (bottom, grows down) ── */}
+                <div>
+                  <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span>Recent Smart Alerts</span>
+                    {smartEvents.length > 0 && (
+                      <button className="clear-btn" onClick={() => setSmartEvents([])}>Clear</button>
+                    )}
+                  </div>
+                  <div className="smart-events-list">
+                    {smartEvents.length === 0 ? (
+                      <div className="smart-empty">
+                        No smart alerts yet — they'll appear here when market conditions shift.
+                      </div>
+                    ) : smartEvents.map(e => {
+                      const liveItem = items.find(i => i.id === e.itemId);
+                      return (
+                        <div key={e.id} className="smart-event-row"
+                          style={{ cursor: liveItem ? "pointer" : "default" }}
+                          onClick={() => { if (liveItem) setSelectedItem(liveItem); }}
+                          title={liveItem ? `View ${e.itemName} details` : ""}>
+                          <span className="smart-event-icon">{e.icon}</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)" }}>{e.itemName}</span>
+                              <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
+                              {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view →</span>}
+                            </div>
+                            <div className="smart-event-msg">{e.message}</div>
+                            {liveItem && (
+                              <div style={{ display: "flex", gap: "16px", marginTop: "4px", fontSize: "11px" }}>
+                                <span style={{ color: "var(--text-dim)" }}>Buy: <span style={{ color: "var(--text)" }}>{formatGP(liveItem.low)}</span></span>
+                                <span style={{ color: "var(--text-dim)" }}>Sell: <span style={{ color: "var(--text)" }}>{formatGP(liveItem.high)}</span></span>
+                                <span style={{ color: "var(--text-dim)" }}>Margin: <span style={{ color: liveItem.margin > 0 ? "var(--green)" : "var(--red)" }}>{formatGP(liveItem.margin)}</span></span>
+                                <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: "var(--gold)" }}>{liveItem.roi}%</span></span>
+                              </div>
+                            )}
+                          </div>
+                          <span className="smart-event-time">{formatTime(e.time)}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
