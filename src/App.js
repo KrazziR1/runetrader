@@ -63,6 +63,8 @@ const STYLES = `
   .flip-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; }
   .flip-row:last-child { border-bottom: none; }
   .flip-row:hover { background: var(--bg4); }
+  .item-icon { width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; image-rendering: pixelated; }
+  .item-icon-placeholder { width: 24px; height: 24px; flex-shrink: 0; }
   .item-name { font-weight: 500; font-size: 13px; color: var(--text); }
   .item-category { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
   .price { font-size: 13px; color: var(--text); }
@@ -84,7 +86,7 @@ const STYLES = `
 
   /* Floating input layout */
   .chat-body { flex: 1; position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-  .chat-messages { flex: 1; overflow-y: auto; padding: 16px 16px 80px 16px; display: flex; flex-direction: column; gap: 12px; min-height: 0; scroll-behavior: smooth; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 16px 16px 140px 16px; display: flex; flex-direction: column; gap: 12px; min-height: 0; scroll-behavior: smooth; }
   .msg { display: flex; flex-direction: column; gap: 4px; max-width: 92%; }
   .msg.user { align-self: flex-end; }
   .msg.assistant { align-self: flex-start; }
@@ -411,6 +413,11 @@ function getScore(margin, volume, roi, speed, risk, buyLimit) {
   return Math.round((v + m + roiScore) * liquidityMultiplier);
 }
 
+function itemIconUrl(name) {
+  // OSRS Wiki item sprites — underscore-encode spaces, encode special chars
+  return `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}_detail.png`;
+}
+
 function isValidFlip(item) {
   return item.high >= item.low && item.low >= 2;
 }
@@ -624,7 +631,7 @@ function ProfitChart({ flipsLog }) {
 
 const PORT_RANGES = ["24H", "3D", "7D", "1M", "3M", "All"];
 
-function PortfolioPage({ user, flipsLog, items, onSignIn, showToast, supabase: sb }) {
+function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignIn, showToast, supabase: sb }) {
   const [positions, setPositions] = useState([]);
   const [posLoading, setPosLoading] = useState(false);
   const [snapshots, setSnapshots] = useState([]);
@@ -634,18 +641,23 @@ function PortfolioPage({ user, flipsLog, items, onSignIn, showToast, supabase: s
   const [showOpenAc, setShowOpenAc] = useState(false);
   const [closingPos, setClosingPos] = useState(null);
   const [closeSellPrice, setCloseSellPrice] = useState("");
+  const [closingLoading, setClosingLoading] = useState(false);
   const chartRef = useRef(null);
+  const flipsLoadedRef = useRef(false);
 
   // Load positions & snapshots
   useEffect(() => {
     if (!user) return;
     loadPositions();
     loadSnapshots();
+    // Mark initial flips as already loaded so the snapshot upsert
+    // doesn't fire on first mount (only on genuine new flip logs)
+    setTimeout(() => { flipsLoadedRef.current = true; }, 1000);
   }, [user]); // eslint-disable-line
 
-  // Upsert today's snapshot whenever flipsLog changes
+  // Upsert today's snapshot only when user actively logs a flip (not on initial load)
   useEffect(() => {
-    if (!user || !flipsLog.length) return;
+    if (!user || !flipsLog.length || !flipsLoadedRef.current) return;
     upsertSnapshot();
   }, [flipsLog, user]); // eslint-disable-line
 
@@ -683,80 +695,96 @@ function PortfolioPage({ user, flipsLog, items, onSignIn, showToast, supabase: s
   async function closePosition(pos, sellPrice) {
     const sell = parseInt(sellPrice.replace(/,/g, ""));
     if (isNaN(sell)) return;
+    setClosingLoading(true);
     const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
     const profitEach = sell - pos.buy_price - tax;
     const totalProfit = profitEach * pos.qty;
     const roi = parseFloat(((profitEach / pos.buy_price) * 100).toFixed(1));
-    const { error: flipErr } = await sb.from("flips").insert({ user_id: user.id, item: pos.item_name, buy_price: pos.buy_price, sell_price: sell, qty: pos.qty, tax, profit_each: profitEach, total_profit: totalProfit, roi });
-    if (flipErr) { showToast("Failed to log flip.", "error"); return; }
+    const { data: flipData, error: flipErr } = await sb.from("flips").insert({ user_id: user.id, item: pos.item_name, buy_price: pos.buy_price, sell_price: sell, qty: pos.qty, tax, profit_each: profitEach, total_profit: totalProfit, roi }).select().single();
+    if (flipErr) { showToast("Failed to log flip.", "error"); setClosingLoading(false); return; }
+    // Update parent flipsLog so Tracker tab and snapshots stay in sync
+    if (flipData && mapFlipRow) setFlipsLog(prev => [mapFlipRow(flipData), ...prev]);
     await sb.from("positions").delete().eq("id", pos.id);
     setPositions(prev => prev.filter(p => p.id !== pos.id));
     setClosingPos(null);
     setCloseSellPrice("");
+    setClosingLoading(false);
     showToast(`Closed! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
   }
 
-  // Draw portfolio chart
+  // Draw portfolio chart — use ResizeObserver so canvas has real dimensions
   useEffect(() => {
     if (!chartRef.current || snapshots.length < 2) return;
     const canvas = chartRef.current;
-    const ctx = canvas.getContext("2d");
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-    const W = rect.width, H = rect.height, pad = { top: 10, right: 10, bottom: 30, left: 70 };
 
-    // Filter by range
-    const now = new Date();
-    const cutoff = new Date(now);
-    if (range === "24H") cutoff.setDate(now.getDate() - 1);
-    else if (range === "3D") cutoff.setDate(now.getDate() - 3);
-    else if (range === "7D") cutoff.setDate(now.getDate() - 7);
-    else if (range === "1M") cutoff.setMonth(now.getMonth() - 1);
-    else if (range === "3M") cutoff.setMonth(now.getMonth() - 3);
-    else cutoff.setFullYear(2000);
+    function draw() {
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      const W = rect.width, H = rect.height, pad = { top: 10, right: 10, bottom: 30, left: 70 };
 
-    const filtered = snapshots.filter(s => new Date(s.snapshot_date) >= cutoff);
-    if (filtered.length < 2) { ctx.clearRect(0, 0, W, H); return; }
+      // Filter by range
+      const now = new Date();
+      const cutoff = new Date(now);
+      if (range === "24H") cutoff.setDate(now.getDate() - 1);
+      else if (range === "3D") cutoff.setDate(now.getDate() - 3);
+      else if (range === "7D") cutoff.setDate(now.getDate() - 7);
+      else if (range === "1M") cutoff.setMonth(now.getMonth() - 1);
+      else if (range === "3M") cutoff.setMonth(now.getMonth() - 3);
+      else cutoff.setFullYear(2000);
 
-    const profits = filtered.map(s => s.total_profit);
-    const times = filtered.map(s => new Date(s.snapshot_date).getTime());
-    const minV = Math.min(0, ...profits), maxV = Math.max(0, ...profits);
-    const minT = times[0], maxT = times[times.length - 1];
-    const range2 = maxV - minV || 1;
-    const xPos = t => pad.left + ((t - minT) / (maxT - minT)) * (W - pad.left - pad.right);
-    const yPos = v => pad.top + (1 - (v - minV) / range2) * (H - pad.top - pad.bottom);
+      const filtered = snapshots.filter(s => new Date(s.snapshot_date) >= cutoff);
+      ctx.clearRect(0, 0, W, H);
+      if (filtered.length < 2) {
+        ctx.fillStyle = "#4a5a6a"; ctx.font = "12px Inter"; ctx.textAlign = "center";
+        ctx.fillText("Not enough data for this range", W / 2, H / 2);
+        return;
+      }
 
-    ctx.clearRect(0, 0, W, H);
-    ctx.strokeStyle = "rgba(42,51,64,0.6)"; ctx.lineWidth = 1;
-    [0, 0.5, 1].forEach(t => {
-      const y = pad.top + t * (H - pad.top - pad.bottom);
-      ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
-      const val = maxV - t * range2;
-      ctx.fillStyle = "#4a5a6a"; ctx.font = "10px Inter"; ctx.textAlign = "right";
-      ctx.fillText((val >= 0 ? "+" : "") + formatGP(Math.round(val)), pad.left - 4, y + 4);
-    });
+      const profits = filtered.map(s => s.total_profit);
+      const times = filtered.map(s => new Date(s.snapshot_date).getTime());
+      const minV = Math.min(0, ...profits), maxV = Math.max(0, ...profits);
+      const minT = times[0], maxT = times[times.length - 1];
+      const range2 = maxV - minV || 1;
+      const xPos = t => pad.left + ((t - minT) / Math.max(maxT - minT, 1)) * (W - pad.left - pad.right);
+      const yPos = v => pad.top + (1 - (v - minV) / range2) * (H - pad.top - pad.bottom);
 
-    const isPos = profits[profits.length - 1] >= profits[0];
-    ctx.beginPath(); ctx.moveTo(xPos(times[0]), yPos(profits[0]));
-    profits.forEach((p, i) => ctx.lineTo(xPos(times[i]), yPos(p)));
-    const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-    grad.addColorStop(0, isPos ? "rgba(46,204,113,0.2)" : "rgba(231,76,60,0.2)");
-    grad.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.lineTo(xPos(times[times.length - 1]), H - pad.bottom);
-    ctx.lineTo(xPos(times[0]), H - pad.bottom);
-    ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(xPos(times[0]), yPos(profits[0]));
-    profits.forEach((p, i) => ctx.lineTo(xPos(times[i]), yPos(p)));
-    ctx.strokeStyle = isPos ? "#2ecc71" : "#e74c3c"; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.strokeStyle = "rgba(42,51,64,0.6)"; ctx.lineWidth = 1;
+      [0, 0.5, 1].forEach(t => {
+        const y = pad.top + t * (H - pad.top - pad.bottom);
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+        const val = maxV - t * range2;
+        ctx.fillStyle = "#4a5a6a"; ctx.font = "10px Inter"; ctx.textAlign = "right";
+        ctx.fillText((val >= 0 ? "+" : "") + formatGP(Math.round(val)), pad.left - 4, y + 4);
+      });
 
-    // X-axis labels
-    ctx.fillStyle = "#4a5a6a"; ctx.font = "10px Inter"; ctx.textAlign = "center";
-    [0, 0.5, 1].forEach(t => {
-      const ts = minT + t * (maxT - minT);
-      ctx.fillText(new Date(ts).toLocaleDateString([], { month: "short", day: "numeric" }), xPos(ts), H - pad.bottom + 14);
-    });
+      const isPos = profits[profits.length - 1] >= profits[0];
+      ctx.beginPath(); ctx.moveTo(xPos(times[0]), yPos(profits[0]));
+      profits.forEach((p, i) => ctx.lineTo(xPos(times[i]), yPos(p)));
+      const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+      grad.addColorStop(0, isPos ? "rgba(46,204,113,0.2)" : "rgba(231,76,60,0.2)");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.lineTo(xPos(times[times.length - 1]), H - pad.bottom);
+      ctx.lineTo(xPos(times[0]), H - pad.bottom);
+      ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(xPos(times[0]), yPos(profits[0]));
+      profits.forEach((p, i) => ctx.lineTo(xPos(times[i]), yPos(p)));
+      ctx.strokeStyle = isPos ? "#2ecc71" : "#e74c3c"; ctx.lineWidth = 2.5; ctx.stroke();
+
+      ctx.fillStyle = "#4a5a6a"; ctx.font = "10px Inter"; ctx.textAlign = "center";
+      [0, 0.5, 1].forEach(t => {
+        const ts = minT + t * (maxT - minT);
+        ctx.fillText(new Date(ts).toLocaleDateString([], { month: "short", day: "numeric" }), xPos(ts), H - pad.bottom + 14);
+      });
+    }
+
+    const ro = new ResizeObserver(() => draw());
+    ro.observe(canvas);
+    draw();
+    return () => ro.disconnect();
   }, [snapshots, range]);
 
   // % change helpers
@@ -899,9 +927,12 @@ function PortfolioPage({ user, flipsLog, items, onSignIn, showToast, supabase: s
             const unrealised = unrealisedEach !== null ? unrealisedEach * pos.qty : null;
             return (
               <div key={pos.id} className="position-row">
-                <div>
-                  <div className="log-item-name">{pos.item_name}</div>
-                  <div className="log-date">{new Date(pos.date_opened).toLocaleDateString([], { month: "short", day: "numeric" })}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <img src={itemIconUrl(pos.item_name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
+                  <div>
+                    <div className="log-item-name">{pos.item_name}</div>
+                    <div className="log-date">{new Date(pos.date_opened).toLocaleDateString([], { month: "short", day: "numeric" })}</div>
+                  </div>
                 </div>
                 <span>{formatGP(pos.buy_price)}</span>
                 <span>{pos.qty.toLocaleString()}</span>
@@ -949,9 +980,9 @@ function PortfolioPage({ user, flipsLog, items, onSignIn, showToast, supabase: s
               );
             })()}
             <div className="close-pos-btns">
-              <button className="close-pos-cancel" onClick={() => setClosingPos(null)}>Cancel</button>
-              <button className="close-pos-confirm" disabled={!closeSellPrice} onClick={() => closePosition(closingPos, closeSellPrice)}>
-                Confirm &amp; Log Flip
+              <button className="close-pos-cancel" onClick={() => setClosingPos(null)} disabled={closingLoading}>Cancel</button>
+              <button className="close-pos-confirm" disabled={!closeSellPrice || closingLoading} onClick={() => closePosition(closingPos, closeSellPrice)}>
+                {closingLoading ? "Saving..." : "Confirm & Log Flip"}
               </button>
             </div>
           </div>
@@ -1017,12 +1048,8 @@ export default function RuneTrader() {
     setTourStep(next);
   }
 
-  async function handleSignOut() {
-    await supabase.auth.signOut();
-    setUser(null);
-    setFlipsLog([]);
-    setAlerts([]);
-  }
+  // handleSignOut is defined after state declarations to avoid referencing
+  // setFlipsLog / setAlerts before they exist — called via ref below
 
   // ── Market data ──
   const [items, setItems] = useState([]);
@@ -1032,8 +1059,8 @@ export default function RuneTrader() {
   const [allItemsMap, setAllItemsMap] = useState({}); // id -> name, for autocomplete
 
   // ── Prefs ──
-  const [budget, setBudget] = useState("");
   const [prefs, setPrefs] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}"); } catch { return {}; } });
+  const [budget, setBudget] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}").budget || ""; } catch { return ""; } });
   function savePref(key, val) {
     const u = { ...prefs, [key]: val };
     setPrefs(u);
@@ -1081,7 +1108,9 @@ export default function RuneTrader() {
   }
 
   // ── Alerts ──
-  const [alerts, setAlerts] = useState([]);
+  const [alerts, setAlerts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("runetrader_alerts") || "[]"); } catch { return []; }
+  });
   const [alertForm, setAlertForm] = useState({ item: "", price: "", type: "above" });
   const [alertAutocomplete, setAlertAutocomplete] = useState([]);
   const [showAlertAutocomplete, setShowAlertAutocomplete] = useState(false);
@@ -1118,6 +1147,16 @@ export default function RuneTrader() {
 
   // ── Fetch market prices ──
   useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 5 * 60 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
+
+  // ── Sign out — declared here so all state setters are in scope ──
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    setUser(null);
+    setFlipsLog([]);
+    setAlerts([]);
+    localStorage.removeItem("runetrader_alerts");
+    setActiveTab("flips");
+  }
 
   // ── Check alerts against live prices ──
   useEffect(() => {
@@ -1242,11 +1281,21 @@ export default function RuneTrader() {
     const liveItem = items.find(i => i.name.toLowerCase() === alertForm.item.toLowerCase());
     const currentPrice = liveItem?.high || null;
     const newAlert = { id: Date.now(), item: alertForm.item, price: parseInt(alertForm.price.replace(/,/g, "")), type: alertForm.type, currentPrice, triggered: false };
-    setAlerts(prev => [newAlert, ...prev]);
+    setAlerts(prev => {
+      const next = [newAlert, ...prev];
+      localStorage.setItem("runetrader_alerts", JSON.stringify(next));
+      return next;
+    });
     setAlertForm({ item: "", price: "", type: "above" });
     setShowAlertAutocomplete(false);
   }
-  function deleteAlert(id) { setAlerts(prev => prev.filter(a => a.id !== id)); }
+  function deleteAlert(id) {
+    setAlerts(prev => {
+      const next = prev.filter(a => a.id !== id);
+      localStorage.setItem("runetrader_alerts", JSON.stringify(next));
+      return next;
+    });
+  }
 
   // ── AI sendMessage ──
   async function sendMessage(text) {
@@ -1312,6 +1361,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
       return sortDir === "asc" ? adj(a) - adj(b) : adj(b) - adj(a);
     }
     if (sortCol === "score") return sortDir === "asc" ? a.prefScore - b.prefScore : b.prefScore - a.prefScore;
+    if (sortCol === "lastTradeTime") return sortDir === "asc" ? (a.lastTradeTime || 0) - (b.lastTradeTime || 0) : (b.lastTradeTime || 0) - (a.lastTradeTime || 0);
     return sortDir === "asc" ? a[sortCol] - b[sortCol] : b[sortCol] - a[sortCol];
   });
 
@@ -1569,6 +1619,8 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
               <PortfolioPage
                 user={user}
                 flipsLog={flipsLog}
+                setFlipsLog={setFlipsLog}
+                mapFlipRow={mapFlipRow}
                 items={items}
                 onSignIn={() => setShowAuth(true)}
                 showToast={showToast}
@@ -1646,6 +1698,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                           <div key={item.id} className="flip-row" onClick={() => setSelectedItem({ ...item, adjLow, adjHigh, adjMargin })}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={favourites.includes(item.id) ? "Remove favourite" : "Add to favourites"}>⭐</button>
+                              <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                               <div><div className="item-name">{item.name}</div><div className="item-category">{item.category} · Limit: {item.buyLimit?.toLocaleString() || "?"}</div></div>
                             </div>
                             <span className="price">{formatGP(adjLow)}</span>
