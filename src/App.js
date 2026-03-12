@@ -1739,14 +1739,13 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], merchan
               <div className="merchant-section">
                 <div className="merchant-section-header">
                   <span className="merchant-section-title">GE Slots</span>
-                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{Math.max(geOffers.length, allOpenPositions.length)} / 8 occupied</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{Math.max(geOffers.filter(o => o.status === "BUYING" || o.status === "SELLING").length, allOpenPositions.length)} / 8 occupied</span>
                 </div>
                 <div className="slots-grid">
                   {Array.from({ length: 8 }).map((_, i) => {
                     const liveOffer = geOffers.find(o => o.slot === i && (o.status === "BUYING" || o.status === "SELLING"));
                     const pos = allOpenPositions[i];
                     if (liveOffer) {
-                      // Show live GE data from plugin
                       const slotColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[liveOffer.status] || "var(--border)";
                       const pct = liveOffer.qty_total > 0 ? Math.round((liveOffer.qty_filled / liveOffer.qty_total) * 100) : 0;
                       return (
@@ -2495,8 +2494,7 @@ function LiveGESlots({ user, supabase: sb }) {
   const [autoFlips, setAutoFlips] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
+  useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
     if (!user) return;
     setLoading(true);
     Promise.all([
@@ -2524,7 +2522,7 @@ function LiveGESlots({ user, supabase: sb }) {
         setAutoFlips(prev => [payload.new, ...prev].slice(0, 20));
       }).subscribe();
     return () => { sb.removeChannel(offersChannel); sb.removeChannel(flipsChannel); };
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!user) return null;
   const slotColor = s => ({ BUYING: "var(--gold)", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)", CANCELLED_BUY: "var(--red)", CANCELLED_SELL: "var(--red)" }[s] || "#555");
@@ -2749,16 +2747,13 @@ export default function RuneTrader() {
   useEffect(() => {
     if (!user || !merchantMode) return;
     supabase.from("positions").select("*").then(({ data }) => setMerchantPositions(data || []));
-    // Fetch live GE offers
     supabase.from("ge_offers").select("*").eq("user_id", user.id).order("slot")
       .then(({ data }) => setGeOffers(data || []));
-    // Realtime subscription
     const ch = supabase.channel("merchant-ge-offers-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_offers", filter: `user_id=eq.${user.id}` }, payload => {
         setGeOffers(prev => {
           if (payload.eventType === "DELETE") return prev.filter(o => o.id !== payload.old.id);
           const o = payload.new;
-          // keep all statuses in state, filter on render
           const idx = prev.findIndex(x => x.slot === o.slot);
           if (idx >= 0) { const next = [...prev]; next[idx] = o; return next; }
           return [...prev, o].sort((a, b) => a.slot - b.slot);
