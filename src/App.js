@@ -275,6 +275,12 @@ const STYLES = `
   .smart-badge-dump { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(231,76,60,0.15); color: var(--red); border: 1px solid var(--red-dim); }
   .smart-badge-crash { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid var(--gold-dim); }
   .smart-empty { padding: 40px 20px; text-align: center; color: var(--text-dim); font-size: 13px; }
+  .smart-feed-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .smart-feed-select { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--text); font-size: 12px; font-family: "Inter", sans-serif; outline: none; cursor: pointer; transition: border-color 0.2s; }
+  .smart-feed-select:focus { border-color: var(--gold-dim); }
+  .smart-refresh-btn { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; white-space: nowrap; }
+  .smart-refresh-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .smart-refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
   /* THRESHOLD POPOVER */
   .threshold-popover-wrap { position: relative; display: inline-flex; }
@@ -1416,6 +1422,8 @@ export default function RuneTrader() {
     catch { return { marginSpike: true, volumeSurge: true, dumpDetected: true, priceCrash: true }; }
   });
   const [smartEvents, setSmartEvents] = useState([]);
+  const [smartFeedFilter, setSmartFeedFilter] = useState("all"); // all | spike | surge | dump | crash
+  const [smartFeedSort, setSmartFeedSort] = useState("recent");  // recent | change | margin
   const prevItemsRef = useRef({});
   const smartCooldownRef = useRef({}); // key: `${itemId}_${type}` → timestamp
 
@@ -2298,43 +2306,89 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                 <div>
                   <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Recent Smart Alerts</span>
-                    {smartEvents.length > 0 && (
-                      <button className="clear-btn" onClick={() => setSmartEvents([])}>Clear</button>
-                    )}
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <button className="smart-refresh-btn" disabled={refreshing}
+                        onClick={() => { fetchPrices(false).then(() => runSmartAlerts(itemsRef.current)); showToast("Smart alerts refreshed!", "success"); }}>
+                        <span className={refreshing ? "refresh-spin" : ""}>↻</span> Refresh
+                      </button>
+                      {smartEvents.length > 0 && (
+                        <button className="clear-btn" onClick={() => setSmartEvents([])}>Clear</button>
+                      )}
+                    </div>
                   </div>
+
+                  {smartEvents.length > 0 && (
+                    <div className="smart-feed-controls" style={{ marginBottom: "10px" }}>
+                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Filter:</span>
+                      <select className="smart-feed-select" value={smartFeedFilter} onChange={e => setSmartFeedFilter(e.target.value)}>
+                        <option value="all">All types</option>
+                        <option value="spike">📈 Spike only</option>
+                        <option value="surge">🔥 Surge only</option>
+                        <option value="dump">⚠️ Dump only</option>
+                        <option value="crash">💥 Crash only</option>
+                      </select>
+                      <span style={{ fontSize: "11px", color: "var(--text-dim)", marginLeft: "8px" }}>Sort:</span>
+                      <select className="smart-feed-select" value={smartFeedSort} onChange={e => setSmartFeedSort(e.target.value)}>
+                        <option value="recent">Most Recent</option>
+                        <option value="change">Largest % Change</option>
+                        <option value="margin">Largest Margin</option>
+                      </select>
+                    </div>
+                  )}
+
                   <div className="smart-events-list">
-                    {smartEvents.length === 0 ? (
-                      <div className="smart-empty">
-                        No smart alerts yet — they'll appear here when market conditions shift.
-                      </div>
-                    ) : smartEvents.map(e => {
-                      const liveItem = items.find(i => i.id === e.itemId);
-                      return (
-                        <div key={e.id} className="smart-event-row"
-                          style={{ cursor: liveItem ? "pointer" : "default" }}
-                          onClick={() => { if (liveItem) setSelectedItem(liveItem); }}
-                          title={liveItem ? `View ${e.itemName} details` : ""}>
-                          <span className="smart-event-icon">{e.icon}</span>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)" }}>{e.itemName}</span>
-                              <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
-                              {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view →</span>}
-                            </div>
-                            <div className="smart-event-msg">{e.message}</div>
-                            {liveItem && (
-                              <div style={{ display: "flex", gap: "16px", marginTop: "4px", fontSize: "11px" }}>
-                                <span style={{ color: "var(--text-dim)" }}>Buy: <span style={{ color: "var(--text)" }}>{formatGP(liveItem.low)}</span></span>
-                                <span style={{ color: "var(--text-dim)" }}>Sell: <span style={{ color: "var(--text)" }}>{formatGP(liveItem.high)}</span></span>
-                                <span style={{ color: "var(--text-dim)" }}>Margin: <span style={{ color: liveItem.margin > 0 ? "var(--green)" : "var(--red)" }}>{formatGP(liveItem.margin)}</span></span>
-                                <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: "var(--gold)" }}>{liveItem.roi}%</span></span>
-                              </div>
-                            )}
-                          </div>
-                          <span className="smart-event-time">{formatTime(e.time)}</span>
+                    {(() => {
+                      let feed = [...smartEvents];
+                      // Filter
+                      if (smartFeedFilter !== "all") feed = feed.filter(e => e.badge === smartFeedFilter);
+                      // Sort
+                      if (smartFeedSort === "change") {
+                        feed.sort((a, b) => {
+                          const pctA = a.oldVal ? Math.abs((a.newVal - a.oldVal) / Math.abs(a.oldVal)) : 0;
+                          const pctB = b.oldVal ? Math.abs((b.newVal - b.oldVal) / Math.abs(b.oldVal)) : 0;
+                          return pctB - pctA;
+                        });
+                      } else if (smartFeedSort === "margin") {
+                        feed.sort((a, b) => {
+                          const mA = items.find(i => i.id === a.itemId)?.margin || 0;
+                          const mB = items.find(i => i.id === b.itemId)?.margin || 0;
+                          return mB - mA;
+                        });
+                      }
+                      if (feed.length === 0) return (
+                        <div className="smart-empty">
+                          {smartEvents.length > 0 ? "No alerts match this filter." : "No smart alerts yet — they'll appear here when market conditions shift."}
                         </div>
                       );
-                    })}
+                      return feed.map(e => {
+                        const liveItem = items.find(i => i.id === e.itemId);
+                        return (
+                          <div key={e.id} className="smart-event-row"
+                            style={{ cursor: liveItem ? "pointer" : "default" }}
+                            onClick={() => { if (liveItem) setSelectedItem(liveItem); }}
+                            title={liveItem ? `View ${e.itemName} details` : ""}>
+                            <span className="smart-event-icon">{e.icon}</span>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)" }}>{e.itemName}</span>
+                                <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
+                                {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view →</span>}
+                              </div>
+                              <div className="smart-event-msg">{e.message}</div>
+                              {liveItem && (
+                                <div style={{ display: "flex", gap: "16px", marginTop: "4px", fontSize: "11px" }}>
+                                  <span style={{ color: "var(--text-dim)" }}>Buy: <span style={{ color: "var(--text)" }}>{formatGP(liveItem.low)}</span></span>
+                                  <span style={{ color: "var(--text-dim)" }}>Sell: <span style={{ color: "var(--text)" }}>{formatGP(liveItem.high)}</span></span>
+                                  <span style={{ color: "var(--text-dim)" }}>Margin: <span style={{ color: liveItem.margin > 0 ? "var(--green)" : "var(--red)" }}>{formatGP(liveItem.margin)}</span></span>
+                                  <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: "var(--gold)" }}>{liveItem.roi}%</span></span>
+                                </div>
+                              )}
+                            </div>
+                            <span className="smart-event-time">{formatTime(e.time)}</span>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               </div>
