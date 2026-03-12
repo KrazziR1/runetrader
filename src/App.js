@@ -2588,11 +2588,11 @@ function LiveGESlots({ user, supabase: sb }) {
                 </div>
                 <span style={{ fontSize: "12px" }}>{fmtGP(f.buy_price)}</span>
                 <span style={{ fontSize: "12px" }}>{fmtGP(f.sell_price)}</span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.qty||0).toLocaleString()}</span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{fmtGP(f.tax_paid)}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.quantity||0).toLocaleString()}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{—}</span>
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: 600, color: f.profit >= 0 ? "var(--green)" : "var(--red)" }}>{f.profit >= 0 ? "+" : ""}{fmtGP(f.profit)}</div>
-                  {f.roi_pct != null && <div style={{ fontSize: "11px", color: f.roi_pct >= 0 ? "var(--green)" : "var(--red)" }}>{f.roi_pct >= 0 ? "+" : ""}{Number(f.roi_pct).toFixed(1)}% ROI</div>}
+                  {f.roi != null && <div style={{ fontSize: "11px", color: f.roi >= 0 ? "var(--green)" : "var(--red)" }}>{f.roi >= 0 ? "+" : ""}{Number(f.roi).toFixed(1)}% ROI</div>}
                 </div>
               </div>
             ))}
