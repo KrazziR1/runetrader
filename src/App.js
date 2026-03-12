@@ -2162,11 +2162,17 @@ export default function RuneTrader() {
   async function addPositionFromMerchant({ item, buyPrice, qty }) {
     if (!user) return;
     const itemMatch = items.find(i => i.name.toLowerCase() === item.toLowerCase());
+    // Insert into positions table (for Portfolio / Merchant Mode)
     const { data, error } = await supabase.from("positions").insert({
       user_id: user.id, item_id: itemMatch?.id || 0, item_name: item, buy_price: buyPrice, qty
     }).select().single();
     if (error) { showToast("Failed to add position.", "error"); return; }
     setMerchantPositions(prev => [data, ...prev]);
+    // Also insert an open flip into flips table so it shows in Tracker
+    const { data: flipData } = await supabase.from("flips").insert({
+      user_id: user.id, item, buy_price: buyPrice, qty, status: "open"
+    }).select().single();
+    if (flipData) setFlipsLog(prev => [mapFlipRow(flipData), ...prev]);
     showToast(`Position opened: ${item}`, "success");
   }
 
