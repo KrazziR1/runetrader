@@ -54,7 +54,7 @@ const STYLES = `
   /* FLIPS TABLE */
   .section-title { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-  .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
   .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
   .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-family: "Inter", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; }
   .sort-btn:hover { color: var(--gold); }
@@ -941,7 +941,7 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, 
             { label: "ROI", value: item.roi + "%", color: "var(--gold)", tip: "Return on investment — margin ÷ buy price. Higher is better, but balance this against volume and buy limit." },
             { label: "Vol / Day", value: item.volume > 0 ? item.volume.toLocaleString() : "—", color: "var(--text-dim)", tip: "Total items traded across all GE slots per day. Higher volume = easier fills and less competition risk." },
             { label: "GP / Fill", value: item.buyLimit > 0 ? formatGP((item.adjMargin ?? item.margin) * item.buyLimit) : "—", color: "var(--gold)", tip: "Maximum GP profit per 4-hour buy limit window (margin × buy limit). Use this to compare how much a full cycle is worth." },
-            { label: "Cycles / Day", value: item.buyLimit > 0 && item.volume > 0 ? (item.volume / item.buyLimit).toFixed(1) + "×" : "—", color: item.buyLimit > 0 && item.volume / item.buyLimit >= 5 ? "var(--green)" : item.buyLimit > 0 && item.volume / item.buyLimit >= 2 ? "var(--gold)" : "var(--red)", tip: "How many times the daily volume could fill your buy limit (vol ÷ limit). Green = 5×+, easy fills. Red = <2×, you may compete for supply." },
+            { label: "Cycles / Day", value: item.buyLimit > 0 && item.volume > 0 ? (item.volume / item.buyLimit).toFixed(1) + "×" : "—", color: item.buyLimit > 0 && item.volume / item.buyLimit >= 71 ? "var(--green)" : item.buyLimit > 0 && item.volume / item.buyLimit >= 31 ? "#f39c12" : "var(--red)", tip: "How many times the daily volume could fill your buy limit (vol ÷ limit). 🟢 71×+ = Liquid. 🟠 31–70× = Active. 🔴 ≤30× = Competitive (fills may be slow)." },
             { label: "Last Trade", value: item.lastTradeTime ? formatTime(item.lastTradeTime * 1000) : "—", color: "var(--text-dim)", tip: "When this item last traded on the GE. Stale data (hours ago) means low activity — prices may not reflect reality." },
           ].map((s, i) => (
             <div key={i} className="modal-stat">
