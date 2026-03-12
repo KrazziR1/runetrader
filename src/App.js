@@ -371,9 +371,9 @@ const STYLES = `
   .merchant-ac-list { position: absolute; top: calc(100% + 2px); left: 0; min-width: 280px; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 6px; z-index: 9999; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
   .merchant-ac-item { padding: 7px 10px; font-size: 12px; color: var(--text); cursor: pointer; transition: background 0.1s; }
   .merchant-ac-item:hover, .merchant-ac-item.highlighted { background: var(--bg4); color: var(--gold); }
-  .m-panel-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .m-panel-section { padding: 16px 18px; border-bottom: 1px solid var(--border); }
   .m-panel-section:last-child { border-bottom: none; }
-  .m-smart-alert-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .m-smart-alert-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); }
   .m-smart-alert-row:last-child { border-bottom: none; }
   .m-panel-title { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
   .gauge-wrap { display: flex; align-items: center; gap: 16px; }
@@ -805,7 +805,7 @@ const MERCHANT_TOUR_STEPS = [
   { title: "Welcome to Merchant Mode ⚔️", desc: "Your war room for managing multiple GE positions at once. Let's walk through each section.", target: null, placement: "center" },
   { title: "Capital Overview", desc: "Tracks your full GP stack. Deployed = locked in positions. Idle = unused GP. Realised = profit closed today. Click 'Update' to adjust your stack any time.", target: ".capital-bar", placement: "bottom" },
   { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips and Portfolio positions. Dot colours: 🟡 Buying · 🔵 Selling · 🟢 Holding · 🔴 Needs attention. Click any slot to view the item chart.", target: ".slots-grid", placement: "bottom" },
-  { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Green = strong margin. Amber = fading. Red = consider cutting. Click any row to view the item chart.", target: ".ops-table", placement: "top" },
+  { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Green = strong margin. Amber = fading. Red = consider cutting. Click any row to view the item chart.", target: "#active-operations-section", placement: "top" },
   { title: "Capital Efficiency", desc: "The gauge shows what % of your stack is actively working. Aim for 70%+ for best returns. Below 50% means too much idle GP.", target: ".gauge-ring", placement: "left" },
   { title: "Rotation Picks", desc: "AI-suggested items that fit your idle GP and aren't already in your slots. Ranked by score. Click any card to view the chart and decide if it's worth flipping.", target: ".rotation-picks-section", placement: "left" },
   { title: "You're set! ⚔️", desc: "Log a buy in the Tracker without a sell price to open a position. It'll appear here automatically. Good luck on the GE.", target: null, placement: "center" },
@@ -1765,7 +1765,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
               </div>
 
               {/* Active Operations Table */}
-              <div className="merchant-section" style={{ flex: 1 }}>
+              <div id="active-operations-section" className="merchant-section" style={{ flex: 1 }}>
                 <div className="merchant-section-header">
                   <span className="merchant-section-title">Active Operations</span>
                   <button className="ops-add-btn" onClick={() => setShowAddRow(r => !r)}>+ Add Position</button>
@@ -3550,15 +3550,21 @@ RULES:
           <div className="header-right">
             {lastUpdate && <div className="live-badge"><div className="live-dot" />Live · {formatTime(lastUpdate)}</div>}
             {user && merchantMode && (
-              <button onClick={startMerchantTour} style={{ padding: "6px 14px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
-                onMouseOver={e => e.currentTarget.style.color = "var(--gold)"} onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>
-                📖 Tutorial
+              <button onClick={startMerchantTour}
+                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 14px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.2s", letterSpacing: "0.3px" }}
+                onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; e.currentTarget.style.background = "rgba(201,168,76,0.06)"; }}
+                onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.background = "transparent"; }}>
+                <span style={{ fontSize: "13px" }}>📖</span> Tutorial
               </button>
             )}
             {user && (
-              <button className={`merchant-nav-btn${merchantMode ? " active" : ""}`} onClick={toggleMerchantMode}>
-                {merchantMode && <div className="merchant-dot" />}
-                ⚔️ {merchantMode ? "Merchant Mode" : "Merchant Mode"}
+              <button onClick={toggleMerchantMode}
+                style={{ display: "flex", alignItems: "center", gap: "7px", padding: "7px 16px", borderRadius: "8px", border: `1px solid ${merchantMode ? "var(--gold)" : "var(--border)"}`, background: merchantMode ? "rgba(201,168,76,0.12)" : "transparent", color: merchantMode ? "var(--gold)" : "var(--text-dim)", fontSize: "12px", fontWeight: merchantMode ? "600" : "400", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.2s", letterSpacing: "0.3px" }}
+                onMouseOver={e => { if (!merchantMode) { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; e.currentTarget.style.background = "rgba(201,168,76,0.06)"; }}}
+                onMouseOut={e => { if (!merchantMode) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.background = "transparent"; }}}>
+                {merchantMode && <div className="merchant-dot" style={{ background: "var(--green)" }} />}
+                <span style={{ fontSize: "13px" }}>⚔️</span>
+                {merchantMode ? "Exit Merchant" : "Merchant Mode"}
               </button>
             )}
             {user ? (
