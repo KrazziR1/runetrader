@@ -511,7 +511,7 @@ const STYLES = `
   .tour-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; pointer-events: all; }
   .tour-highlight { position: fixed; z-index: 301; border-radius: 10px; box-shadow: 0 0 0 3px var(--gold), 0 0 0 6px rgba(201,168,76,0.2), 0 0 40px rgba(201,168,76,0.15); pointer-events: none; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); animation: tourPulse 2s ease-in-out infinite; }
   @keyframes tourPulse { 0%,100%{box-shadow:0 0 0 3px var(--gold),0 0 0 6px rgba(201,168,76,0.2),0 0 40px rgba(201,168,76,0.15)} 50%{box-shadow:0 0 0 3px var(--gold-light),0 0 0 10px rgba(201,168,76,0.15),0 0 60px rgba(201,168,76,0.25)} }
-  .tour-tooltip { position: fixed; z-index: 302; pointer-events: all; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 14px; padding: 26px 28px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: tooltipIn 0.25s cubic-bezier(0.4,0,0.2,1); }
+  .tour-tooltip { position: fixed; z-index: 302; pointer-events: all; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 14px; padding: 26px 28px; width: 320px; max-width: calc(100vw - 24px); max-height: calc(100vh - 24px); overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: tooltipIn 0.25s cubic-bezier(0.4,0,0.2,1); }
   @keyframes tooltipIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   .tour-step-label { font-size: 11px; color: var(--gold-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
   .tour-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 12px; }
@@ -2590,7 +2590,7 @@ export default function RuneTrader() {
       // Delay so React re-renders the correct tab before we measure
       setTimeout(() => {
         const el = document.querySelector(step.target);
-        if (el) { const r = el.getBoundingClientRect(); setMerchantTourRect({ top: r.top, left: r.left, width: r.width, height: r.height }); }
+        if (el) { el.scrollIntoView({ block: "nearest", behavior: "instant" }); const r = el.getBoundingClientRect(); setMerchantTourRect({ top: r.top, left: r.left, width: r.width, height: r.height }); }
         else { setMerchantTourRect(null); }
       }, 80);
     } else { setMerchantTourRect(null); }
@@ -3414,15 +3414,41 @@ RULES:
         const isCenter = step.placement === "center" || !merchantTourRect;
         const pad = 10;
         const hl = merchantTourRect || {};
+        const ttHeight = 220; // approx tooltip height
+        const ttWidth = 300;
+        const vp = window.innerHeight;
+        const leftPos = Math.max(8, Math.min((hl.left || 0), window.innerWidth - ttWidth - 8));
         let ttStyle = {};
         if (isCenter) {
           ttStyle = { top: "50%", left: "50%", transform: "translate(-50%,-50%)" };
         } else if (step.placement === "bottom") {
-          ttStyle = { top: hl.top + hl.height + pad + 12, left: Math.max(8, Math.min(hl.left, window.innerWidth - 320)) };
+          const wouldOverflow = (hl.top + hl.height + pad + 12 + ttHeight) > vp;
+          if (wouldOverflow) {
+            ttStyle = { bottom: vp - hl.top + pad + 8, left: leftPos };
+          } else {
+            ttStyle = { top: hl.top + hl.height + pad + 12, left: leftPos };
+          }
         } else if (step.placement === "top") {
-          ttStyle = { top: hl.top - pad - 180, left: Math.max(8, Math.min(hl.left, window.innerWidth - 320)) };
+          const topPos = hl.top - pad - ttHeight;
+          if (topPos < 8) {
+            ttStyle = { top: hl.top + hl.height + pad + 12, left: leftPos };
+          } else {
+            ttStyle = { top: topPos, left: leftPos };
+          }
         } else if (step.placement === "left") {
-          ttStyle = { top: hl.top, right: window.innerWidth - hl.left + pad + 8, left: "auto" };
+          // If element is in the right sidebar, prefer showing tooltip to its left
+          // Clamp vertically so it never goes off screen
+          const topPos = Math.max(8, Math.min(hl.top, vp - ttHeight - 8));
+          const rightSidebar = hl.left > window.innerWidth * 0.5;
+          if (rightSidebar) {
+            ttStyle = { top: topPos, right: window.innerWidth - hl.left + pad + 8, left: "auto" };
+          } else {
+            // Fall back to above if left placement doesn't make sense
+            const abovePos = hl.top - ttHeight - pad;
+            ttStyle = abovePos > 8
+              ? { top: abovePos, left: leftPos }
+              : { top: hl.top + hl.height + pad + 8, left: leftPos };
+          }
         }
         return (
           <>
