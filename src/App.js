@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import { supabase } from "./supabaseClient";
+import SettingsPage from "./SettingsPage";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
@@ -3567,7 +3568,7 @@ RULES:
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {!merchantMode && ["flips", "tracker", "alerts", ...(user ? ["portfolio"] : [])].map(t => (
+            {!merchantMode && ["flips", "tracker", "alerts", ...(user ? ["portfolio", "settings"] : [])].map(t => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
                 {t === "tracker" && openFlips.length > 0 && (
@@ -3777,6 +3778,10 @@ RULES:
                   </div>
                 </div>
               </div>
+            )}
+
+            {activeTab === "settings" && (
+              <SettingsPage user={user} supabase={supabase} showToast={showToast} />
             )}
 
             {activeTab === "alerts" && (
