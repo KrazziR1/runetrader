@@ -2589,7 +2589,7 @@ function LiveGESlots({ user, supabase: sb }) {
                 <span style={{ fontSize: "12px" }}>{fmtGP(f.buy_price)}</span>
                 <span style={{ fontSize: "12px" }}>{fmtGP(f.sell_price)}</span>
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.quantity||0).toLocaleString()}</span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{—}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{"—"}</span>
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: 600, color: f.profit >= 0 ? "var(--green)" : "var(--red)" }}>{f.profit >= 0 ? "+" : ""}{fmtGP(f.profit)}</div>
                   {f.roi != null && <div style={{ fontSize: "11px", color: f.roi >= 0 ? "var(--green)" : "var(--red)" }}>{f.roi >= 0 ? "+" : ""}{Number(f.roi).toFixed(1)}% ROI</div>}
