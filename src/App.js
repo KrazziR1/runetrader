@@ -1502,7 +1502,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos }) {
+function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos }) {
   // Build open positions — tracker flips only (portfolio positions are now also written as flips)
   // Deduplicate: if same item appears in both flipsLog and manualPositions, prefer flipsLog entry
   const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
@@ -2355,10 +2355,6 @@ export default function RuneTrader() {
     const updated = { ...thresholds, [key]: parsed };
     setThresholds(updated);
     localStorage.setItem("runetrader_thresholds", JSON.stringify(updated));
-  }
-
-  function resetThreshold(key) {
-    saveThreshold(key, THRESHOLD_DEFAULTS[key]);
   }
 
   // Close popover on outside click
