@@ -97,9 +97,11 @@ const STYLES = `
   .msg { display: flex; flex-direction: column; gap: 4px; max-width: 92%; }
   .msg.user { align-self: flex-end; }
   .msg.assistant { align-self: flex-start; }
-  .msg-bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; }
-  .msg.user .msg-bubble { background: linear-gradient(135deg, var(--gold-dim), #6b4f1a); color: #fff; border-radius: 12px 12px 2px 12px; }
+  .msg-bubble { padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.6; }
+  .msg.user .msg-bubble { background: linear-gradient(135deg, var(--gold-dim), #6b4f1a); color: #fff; border-radius: 12px 12px 2px 12px; white-space: pre-wrap; }
   .msg.assistant .msg-bubble { background: var(--bg3); border: 1px solid var(--border); color: var(--text); border-radius: 12px 12px 12px 2px; }
+  .msg.assistant .msg-bubble ul { color: var(--text); }
+  .msg.assistant .msg-bubble strong { letter-spacing: 0.1px; }
   .msg-time { font-size: 10px; color: var(--text-dim); padding: 0 4px; }
   .msg.user .msg-time { text-align: right; }
   .typing { display: flex; gap: 4px; align-items: center; padding: 12px 14px; }
@@ -300,15 +302,15 @@ const STYLES = `
 
   /* MERCHANT MODE */
   .merchant-wrap { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-  .merchant-layout { display: grid; grid-template-columns: 1fr 320px; flex: 1; min-height: 0; overflow: hidden; }
+  .merchant-layout { display: grid; grid-template-columns: 1fr 420px; flex: 1; min-height: 0; overflow: hidden; }
   .merchant-left { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
   .merchant-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; }
   .capital-bar { display: grid; grid-template-columns: repeat(5,1fr); background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .cap-cell { padding: 14px 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; }
   .cap-cell:last-child { border-right: none; }
-  .cap-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; }
-  .cap-value { font-size: 17px; font-weight: 600; font-family: 'Cinzel', serif; }
-  .cap-sub { font-size: 10px; color: var(--text-dim); }
+  .cap-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; }
+  .cap-value { font-size: 20px; font-weight: 600; font-family: 'Cinzel', serif; }
+  .cap-sub { font-size: 12px; color: var(--text-dim); }
   .cap-sub.up { color: var(--green); }
   .cap-sub.warn { color: #f39c12; }
   .slots-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 8px; }
@@ -317,42 +319,42 @@ const STYLES = `
   .ge-slot.empty { background: var(--bg2); border-style: dashed; opacity: 0.35; }
   .ge-slot.empty:hover { opacity: 0.6; }
   .slot-icon { font-size: 20px; }
-  .slot-name { font-size: 8px; color: var(--text-dim); text-align: center; line-height: 1.2; padding: 0 3px; }
-  .slot-pnl { font-size: 9px; font-weight: 600; }
+  .slot-name { font-size: 10px; color: var(--text-dim); text-align: center; line-height: 1.2; padding: 0 3px; }
+  .slot-pnl { font-size: 11px; font-weight: 600; }
   .slot-dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; }
   .slot-dot.buying { background: #f39c12; animation: pulse 1.5s infinite; }
   .slot-dot.selling { background: var(--blue); animation: pulse 1.5s infinite; }
   .slot-dot.holding { background: var(--green); }
   .slot-dot.danger { background: var(--red); animation: pulse 0.8s infinite; }
   .ops-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .ops-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px 80px; padding: 10px 16px; background: var(--bg4); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
-  .op-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 12px; transition: background 0.15s; cursor: pointer; position: relative; }
+  .ops-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 110px 80px; padding: 10px 16px; background: var(--bg4); font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+  .op-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 110px 80px; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; cursor: pointer; position: relative; }
   .op-row:last-child { border-bottom: none; }
   .op-row:hover { background: var(--bg4); }
   .op-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0 2px 2px 0; }
   .op-row.op-healthy::before { background: var(--green); }
   .op-row.op-warn::before { background: #f39c12; }
   .op-row.op-danger::before { background: var(--red); }
-  .op-item-name { font-weight: 500; font-size: 13px; color: var(--text); }
-  .op-item-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .op-item-name { font-weight: 500; font-size: 14px; color: var(--text); }
+  .op-item-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
   .health-bar-wrap { display: flex; flex-direction: column; gap: 3px; }
-  .health-track { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; width: 70px; }
+  .health-track { height: 5px; background: var(--bg4); border-radius: 2px; overflow: hidden; width: 80px; }
   .health-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
-  .health-label { font-size: 10px; }
-  .op-action-btn { padding: 5px 10px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
+  .health-label { font-size: 11px; }
+  .op-action-btn { padding: 6px 12px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
   .op-action-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
   .op-action-btn.danger-btn:hover { border-color: var(--red); color: var(--red); }
-  .m-panel-section { padding: 16px 18px; border-bottom: 1px solid var(--border); }
-  .m-panel-title { font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+  .m-panel-section { padding: 18px 20px; border-bottom: 1px solid var(--border); }
+  .m-panel-title { font-family: 'Cinzel', serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
   .gauge-wrap { display: flex; align-items: center; gap: 16px; }
-  .gauge-ring { position: relative; width: 76px; height: 76px; flex-shrink: 0; }
+  .gauge-ring { position: relative; width: 86px; height: 86px; flex-shrink: 0; }
   .gauge-ring svg { transform: rotate(-90deg); }
   .gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .gauge-pct { font-size: 17px; font-weight: 700; color: var(--gold); font-family: 'Cinzel', serif; }
-  .gauge-sub-lbl { font-size: 8px; color: var(--text-dim); }
-  .gauge-stats { display: flex; flex-direction: column; gap: 6px; }
-  .gauge-stat-label { font-size: 10px; color: var(--text-dim); }
-  .gauge-stat-val { font-size: 13px; font-weight: 600; }
+  .gauge-pct { font-size: 20px; font-weight: 700; color: var(--gold); font-family: 'Cinzel', serif; }
+  .gauge-sub-lbl { font-size: 10px; color: var(--text-dim); }
+  .gauge-stats { display: flex; flex-direction: column; gap: 8px; }
+  .gauge-stat-label { font-size: 12px; color: var(--text-dim); }
+  .gauge-stat-val { font-size: 15px; font-weight: 600; }
   .idle-alert { background: rgba(243,156,18,0.08); border: 1px solid rgba(243,156,18,0.25); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #f39c12; line-height: 1.5; }
   .rotation-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
   .rotation-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
@@ -479,19 +481,19 @@ const STYLES = `
   .tour-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; pointer-events: all; }
   .tour-highlight { position: fixed; z-index: 301; border-radius: 10px; box-shadow: 0 0 0 3px var(--gold), 0 0 0 6px rgba(201,168,76,0.2), 0 0 40px rgba(201,168,76,0.15); pointer-events: none; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); animation: tourPulse 2s ease-in-out infinite; }
   @keyframes tourPulse { 0%,100%{box-shadow:0 0 0 3px var(--gold),0 0 0 6px rgba(201,168,76,0.2),0 0 40px rgba(201,168,76,0.15)} 50%{box-shadow:0 0 0 3px var(--gold-light),0 0 0 10px rgba(201,168,76,0.15),0 0 60px rgba(201,168,76,0.25)} }
-  .tour-tooltip { position: fixed; z-index: 302; pointer-events: all; background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 14px; padding: 20px 22px; width: 300px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: tooltipIn 0.25s cubic-bezier(0.4,0,0.2,1); }
+  .tour-tooltip { position: fixed; z-index: 302; pointer-events: all; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 14px; padding: 26px 28px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: tooltipIn 0.25s cubic-bezier(0.4,0,0.2,1); }
   @keyframes tooltipIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-  .tour-step-label { font-size: 10px; color: var(--gold-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-  .tour-title { font-family: "Cinzel", serif; font-size: 15px; color: var(--gold); margin-bottom: 8px; }
-  .tour-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 16px; }
+  .tour-step-label { font-size: 11px; color: var(--gold-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .tour-title { font-family: "Cinzel", serif; font-size: 18px; color: var(--gold); margin-bottom: 12px; }
+  .tour-desc { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 20px; }
   .tour-actions { display: flex; align-items: center; justify-content: space-between; }
   .tour-dots { display: flex; gap: 5px; }
-  .tour-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
+  .tour-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
   .tour-dot.active { background: var(--gold); }
   .tour-btn-row { display: flex; gap: 8px; }
-  .tour-skip { background: none; border: none; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: "Inter", sans-serif; padding: 0; transition: color 0.2s; }
+  .tour-skip { background: none; border: none; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: "Inter", sans-serif; padding: 0; transition: color 0.2s; }
   .tour-skip:hover { color: var(--text); }
-  .tour-next { padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 600; font-family: "Inter", sans-serif; transition: opacity 0.2s; }
+  .tour-next { padding: 10px 22px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 14px; font-weight: 600; font-family: "Inter", sans-serif; transition: opacity 0.2s; }
   .tour-next:hover { opacity: 0.85; }
 
   /* TOAST */
@@ -661,7 +663,48 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
   return Math.max(0, Math.min(100, Math.round(base * freshness)));
 }
 
-function itemIconUrl(name) {
+function renderMarkdown(text) {
+  if (!text) return null;
+  const lines = text.split("\n");
+  const elements = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    // blank line → spacer
+    if (line.trim() === "") { elements.push(<div key={i} style={{ height: "6px" }} />); i++; continue; }
+    // bullet line
+    if (/^[-*]\s/.test(line.trim())) {
+      const bulletLines = [];
+      while (i < lines.length && /^[-*]\s/.test(lines[i].trim())) {
+        bulletLines.push(lines[i].trim().replace(/^[-*]\s/, ""));
+        i++;
+      }
+      elements.push(
+        <ul key={i} style={{ paddingLeft: "16px", margin: "4px 0", listStyle: "disc" }}>
+          {bulletLines.map((bl, j) => <li key={j} style={{ marginBottom: "3px" }}>{inlineFormat(bl)}</li>)}
+        </ul>
+      );
+      continue;
+    }
+    // regular line
+    elements.push(<div key={i} style={{ marginBottom: "2px" }}>{inlineFormat(line)}</div>);
+    i++;
+  }
+  return elements;
+}
+
+function inlineFormat(text) {
+  // **bold**, then plain text
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={i} style={{ color: "var(--gold-light)", fontWeight: 600 }}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
+
+
   return `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}_detail.png`;
 }
 
@@ -1485,11 +1528,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
 
           {/* Capital Overview */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px" }}>⚔️ Merchant Mode</div>
-            <button onClick={onStartTour} style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", padding: "4px 10px", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", gap: "5px" }}
-              onMouseOver={e => e.currentTarget.style.color = "var(--gold)"} onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>
-              ? Help
-            </button>
+            <div style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px" }}>⚔️ Merchant Mode</div>
           </div>
           <div className="capital-bar">
             {[
@@ -1531,7 +1570,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                   <div key={i} className="ge-slot active" onClick={() => liveItem && setSelectedItem(liveItem)}
                     title={`${pos.name} — click to view chart`}>
                     <div className={`slot-dot ${status}`} />
-                    <div className="slot-icon">{getIcon(pos.name)}</div>
+                    <img src={itemIconUrl(pos.name)} alt="" style={{ width: 28, height: 28, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
                     <div className="slot-name">{pos.name.length > 14 ? pos.name.slice(0, 13) + "…" : pos.name}</div>
                     <div className={`slot-pnl`} style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
                       {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
@@ -1570,7 +1609,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                   const pnlPct = ((pnlEach / pos.buyPrice) * 100).toFixed(1);
                   const healthPct = getHealthPct(pos);
                   const healthColor = healthPct >= 60 ? "var(--green)" : healthPct >= 25 ? "#f39c12" : "var(--red)";
-                  const healthText = healthPct >= 60 ? "Strong" : healthPct >= 25 ? "Fading" : "Exit now";
+                  const healthText = healthPct >= 60 ? "Strong" : healthPct >= 25 ? "Fading" : "Needs Attention";
                   return (
                     <div key={pos.id} className={`op-row ${getHealthClass(healthPct)}`} onClick={() => liveItem && setSelectedItem(liveItem)}>
                       <div>
@@ -1794,7 +1833,11 @@ export default function RuneTrader() {
     setShowCapitalSetup(false);
     setMerchantLoading(false);
     showToast("Merchant Mode activated!", "success");
-    setTimeout(() => startMerchantTour(), 400);
+    const tourKey = `runetrader_merchant_tour_seen_${user.id}`;
+    if (!localStorage.getItem(tourKey)) {
+      localStorage.setItem(tourKey, "1");
+      setTimeout(() => startMerchantTour(), 400);
+    }
   }
 
   function startMerchantTour() {
@@ -2721,7 +2764,7 @@ RULES:
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {["flips", "tracker", "alerts", ...(user ? ["portfolio"] : [])].map(t => (
+            {!merchantMode && ["flips", "tracker", "alerts", ...(user ? ["portfolio"] : [])].map(t => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
                 {t === "tracker" && openFlips.length > 0 && (
@@ -2739,6 +2782,12 @@ RULES:
           </div>
           <div className="header-right">
             {lastUpdate && <div className="live-badge"><div className="live-dot" />Live · {formatTime(lastUpdate)}</div>}
+            {user && merchantMode && (
+              <button onClick={startMerchantTour} style={{ padding: "6px 14px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+                onMouseOver={e => e.currentTarget.style.color = "var(--gold)"} onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>
+                📖 Tutorial
+              </button>
+            )}
             {user && (
               <button className={`merchant-nav-btn${merchantMode ? " active" : ""}`} onClick={toggleMerchantMode}>
                 {merchantMode && <div className="merchant-dot" />}
@@ -3235,7 +3284,9 @@ RULES:
               <div className="chat-messages">
                 {messages.map((msg, i) => (
                   <div key={i} className={`msg ${msg.role}`}>
-                    <div className="msg-bubble" style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
+                    <div className="msg-bubble">
+                      {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
+                    </div>
                     <span className="msg-time">{formatTime(msg.time)}</span>
                   </div>
                 ))}
