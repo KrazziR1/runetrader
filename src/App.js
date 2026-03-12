@@ -301,10 +301,11 @@ const STYLES = `
   .threshold-reset:hover { color: var(--gold); }
 
   /* MERCHANT MODE */
-  .merchant-wrap { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-  .merchant-layout { display: grid; grid-template-columns: 1fr 340px; flex: 1; min-height: 0; overflow: hidden; width: 100%; }
+  .merchant-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; width: 100%; }
+  .merchant-layout { display: grid; grid-template-columns: 1fr 340px 320px; flex: 1; min-height: 0; overflow: hidden; width: 100%; height: 100%; }
   .merchant-left { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
   .merchant-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
+  .merchant-far-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
   .capital-bar { display: grid; grid-template-columns: repeat(5,1fr); background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .cap-cell { padding: 14px 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; }
   .cap-cell:last-child { border-right: none; }
@@ -1501,7 +1502,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, resetThreshold, ThresholdPopover }) {
+function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, resetThreshold, ThresholdPopover, smartEvents, setSmartEvents }) {
   const allOpenPositions = [
     ...flipsLog.filter(f => f.status === "open").map(f => ({
       id: f.id, name: f.item, gpIn: f.buyPrice * (f.qty || 1),
@@ -1527,6 +1528,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
   const [addAc, setAddAc] = useState([]);
   const [showAddAc, setShowAddAc] = useState(false);
   const [addAcIdx, setAddAcIdx] = useState(-1);
+  const [merchantFeedFilter, setMerchantFeedFilter] = useState("all");
 
   const unrealisedTotal = allOpenPositions.reduce((s, pos) => {
     const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
@@ -1886,7 +1888,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
           </div>
 
           {/* Session Intel — compact */}
-          <div className="m-panel-section">
+          <div className="m-panel-section" style={{ flex: 1 }}>
             <div className="m-panel-title">📊 Session Intel</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               {[
@@ -1908,24 +1910,34 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                 </div>
               )}
             </div>
+            <div style={{ marginTop: "14px" }}>
+              <button className="op-action-btn" style={{ width: "100%", textAlign: "center", padding: "7px" }} onClick={onUpdateCapital}>
+                💰 Update Total Capital
+              </button>
+            </div>
           </div>
 
-          {/* Smart Alerts */}
-          <div className="m-panel-section" style={{ flex: 1 }}>
+        </div>
+
+        {/* FAR RIGHT — Smart Alerts */}
+        <div className="merchant-far-right">
+
+          {/* Alert toggles */}
+          <div className="m-panel-section">
             <div className="m-panel-title">⚡ Smart Alerts</div>
-            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "10px" }}>Fires automatically when market conditions shift.</div>
+            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "12px" }}>Auto-fires when market conditions shift. Checks every 5 min.</div>
             {[
-              { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps 50%+", unit: "%",  min: 5,   max: 200, step: 5   },
+              { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps 50%+",       unit: "%",  min: 5,   max: 200, step: 5   },
               { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Volume triples",           unit: "x",  min: 1.5, max: 10,  step: 0.5 },
-              { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell drops 10%+",         unit: "%",  min: 2,   max: 50,  step: 1   },
+              { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops 10%+",   unit: "%",  min: 2,   max: 50,  step: 1   },
               { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Buy & sell drop 15%+",    unit: "%",  min: 2,   max: 50,  step: 1   },
             ].map(({ key, icon, label, desc, unit, min, max, step }) => (
               <div key={key} className="m-smart-alert-row">
-                <div style={{ display: "flex", flexDirection: "column", gap: "1px", flex: 1 }}>
-                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "5px" }}>{icon} {label}</div>
-                  <div style={{ fontSize: "10px", color: "var(--text-dim)" }}>{desc}</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px", flex: 1 }}>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "5px" }}>{icon} {label}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{desc}</div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
                   {ThresholdPopover && <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} />}
                   <label className="toggle-switch">
                     <input type="checkbox" checked={smartAlertSettings?.[key] ?? true} onChange={e => saveSmartAlertSettings?.(key, e.target.checked)} />
@@ -1934,10 +1946,68 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                 </div>
               </div>
             ))}
-            <div style={{ marginTop: "12px" }}>
-              <button className="op-action-btn" style={{ width: "100%", textAlign: "center", padding: "7px" }} onClick={onUpdateCapital}>
-                💰 Update Total Capital
-              </button>
+          </div>
+
+          {/* Live alert feed */}
+          <div className="m-panel-section" style={{ flex: 1 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+              <div className="m-panel-title" style={{ marginBottom: 0 }}>
+                📡 Live Feed
+                {smartEvents?.length > 0 && (
+                  <span style={{ marginLeft: "8px", background: "rgba(201,168,76,0.2)", border: "1px solid var(--gold-dim)", borderRadius: "10px", padding: "1px 7px", fontSize: "10px", color: "var(--gold)", fontFamily: "Inter, sans-serif", fontWeight: 700 }}>
+                    {smartEvents.length}
+                  </span>
+                )}
+              </div>
+              {smartEvents?.length > 0 && (
+                <button style={{ background: "transparent", border: "1px solid var(--border)", borderRadius: "5px", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", padding: "3px 8px", fontFamily: "Inter, sans-serif" }}
+                  onClick={() => setSmartEvents?.([])}>Clear</button>
+              )}
+            </div>
+            {smartEvents?.length > 0 && (
+              <div style={{ display: "flex", gap: "6px", marginBottom: "10px", flexWrap: "wrap" }}>
+                {["all", "spike", "surge", "dump", "crash"].map(f => (
+                  <button key={f} onClick={() => setMerchantFeedFilter?.(f)}
+                    style={{ padding: "3px 9px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === f ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === f ? "var(--gold)" : "var(--text-dim)", fontSize: "10px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                    {f === "all" ? "All" : f === "spike" ? "📈" : f === "surge" ? "🔥" : f === "dump" ? "⚠️" : "💥"}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="smart-events-list" style={{ borderRadius: "8px" }}>
+              {(() => {
+                const feed = (smartEvents || []).filter(e => !merchantFeedFilter || merchantFeedFilter === "all" || e.badge === merchantFeedFilter);
+                if (feed.length === 0) return (
+                  <div style={{ padding: "28px 16px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
+                    <div style={{ fontSize: "28px", marginBottom: "8px", opacity: 0.4 }}>📡</div>
+                    No alerts yet — monitoring every 5 min.
+                  </div>
+                );
+                return feed.map(e => {
+                  const liveItem = items.find(i => i.id === e.itemId);
+                  return (
+                    <div key={e.id} className="smart-event-row"
+                      style={{ cursor: liveItem ? "pointer" : "default" }}
+                      onClick={() => liveItem && setSelectedItem(liveItem)}>
+                      <span className="smart-event-icon">{e.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                          <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)" }}>{e.itemName}</span>
+                          <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
+                        </div>
+                        <div className="smart-event-msg">{e.message}</div>
+                        {liveItem && (
+                          <div style={{ display: "flex", gap: "12px", marginTop: "4px", fontSize: "11px" }}>
+                            <span style={{ color: "var(--text-dim)" }}>Margin: <span style={{ color: liveItem.margin > 0 ? "var(--green)" : "var(--red)" }}>{formatGP(liveItem.margin)}</span></span>
+                            <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: "var(--gold)" }}>{liveItem.roi}%</span></span>
+                          </div>
+                        )}
+                      </div>
+                      <span className="smart-event-time">{e.time}</span>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
 
@@ -3063,6 +3133,8 @@ RULES:
               saveThreshold={saveThreshold}
               resetThreshold={resetThreshold}
               ThresholdPopover={ThresholdPopover}
+              smartEvents={smartEvents}
+              setSmartEvents={setSmartEvents}
             />
           ) : (
           <>
