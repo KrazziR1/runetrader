@@ -1604,7 +1604,7 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabas
   }, [user, sb]); // eslint-disable-line react-hooks/exhaustive-deps
   const [merchantFeedFilter, setMerchantFeedFilter] = useState("all");
   const [closingPos, setClosingPos] = useState(null);
-  const [posStatuses, setPosStatuses] = useState({});
+  const [posStatuses, setPosStatuses] = useState({}); // eslint-disable-line no-unused-vars
   const [dailyGoal, setDailyGoal] = useState(() => { try { return parseInt(localStorage.getItem("rt_daily_goal") || "0"); } catch { return 0; } });
   const [showGoalInput, setShowGoalInput] = useState(false);
   const [goalInput, setGoalInput] = useState("");
