@@ -567,116 +567,124 @@ function timeAgo(unixSec) {
   return Math.floor(diff / 86400) + "d ago";
 }
 
+// ── SCORING SYSTEM ──────────────────────────────────────────────────────────
+// Core question: "How good is this flip for THIS player right now?"
+// Built around one real metric: expected GP per 4hr buy window.
+// Then shaped by risk/speed preferences and data confidence.
+
 function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
-  // ── Hard disqualifiers ──
-  if (margin <= 0) return 0;
-  if (volume < 100) return 0;
+  // Hard disqualifiers — not a flip at all
+  if (margin <= 0)  return 0;
+  if (volume < 200) return 0;
+  // Minimum GP per 4hr window — even cheap items are fine if limit is high enough
+  const limit = buyLimit > 0 ? buyLimit : 500;
+  const marketPer4hr = volume / 6;
+  const fillable = Math.min(limit, marketPer4hr);
+  const gpPer4hr = margin * fillable;
+  if (gpPer4hr < 50_000) return 0; // not worth a GE slot regardless of margin or volume
 
-  // ── 1. Liquidity ratio (0–40 pts) ──
-  const effectiveLimit = buyLimit > 0 ? buyLimit : null;
-  let liqScore;
-  if (effectiveLimit) {
-    const ratio = volume / effectiveLimit;
-    if      (ratio >= 100) liqScore = 40;
-    else if (ratio >= 20)  liqScore = 38;
-    else if (ratio >= 5)   liqScore = 30;
-    else if (ratio >= 1)   liqScore = 15;
-    else                   liqScore = 0;
-  } else {
-    if      (volume >= 100_000) liqScore = 35;
-    else if (volume >= 50_000)  liqScore = 28;
-    else if (volume >= 10_000)  liqScore = 18;
-    else if (volume >= 1_000)   liqScore = 8;
-    else                        liqScore = 2;
-  }
+  // ── Core metric: GP per 4hr buy window ──────────────────────────────────
+  // How much GP can you realistically make in one 4hr GE slot cycle?
+  // = margin × min(buyLimit, volume/6)   [volume/6 = what the market supports per 4hr window]
+  // This combines margin AND volume correctly — 1gp × 1M volume = 4M gp/window (worthy)
+  // vs 1gp × 18k volume/6 = 3k gp/window (not worthy)
+  // Score 0–70 from GP/4hr (the primary signal)
+  let baseScore;
+  if      (gpPer4hr >= 10_000_000) baseScore = 70;
+  else if (gpPer4hr >= 5_000_000)  baseScore = 62;
+  else if (gpPer4hr >= 2_000_000)  baseScore = 54;
+  else if (gpPer4hr >= 800_000)    baseScore = 46;
+  else if (gpPer4hr >= 300_000)    baseScore = 38;
+  else if (gpPer4hr >= 100_000)    baseScore = 28;
+  else if (gpPer4hr >= 30_000)     baseScore = 18;
+  else if (gpPer4hr >= 5_000)      baseScore = 8;
+  else                             baseScore = 2;
 
-  // ── 2. GP/hr potential (0–35 pts) ──
-  const FILL_SHARE = 0.03;
-  const volPerHour = volume / 24;
-  const fillRate = Math.min(volPerHour * FILL_SHARE, effectiveLimit || volPerHour * FILL_SHARE);
-  const gpPerHour = margin * fillRate;
-  let gpScore;
-  if      (gpPerHour >= 5_000_000) gpScore = 35;
-  else if (gpPerHour >= 2_000_000) gpScore = 30;
-  else if (gpPerHour >= 800_000)   gpScore = 24;
-  else if (gpPerHour >= 300_000)   gpScore = 18;
-  else if (gpPerHour >= 100_000)   gpScore = 12;
-  else if (gpPerHour >= 30_000)    gpScore = 6;
-  else if (gpPerHour >= 5_000)     gpScore = 2;
-  else                             gpScore = 0;
+  // ── ROI modifier: ±15pts ────────────────────────────────────────────────
+  // Rewards realistic GE ROI (2–10%). Penalizes extremes heavily.
+  // <0.5% = margin probably noise/tax artifact
+  // >50% = thin market, likely won't fill at that price or is stale
+  let roiMod = 0;
+  if      (roi <  0.5)  roiMod = -10; // near-zero ROI, not worth the slot
+  else if (roi <= 2)    roiMod = 5;
+  else if (roi <= 10)   roiMod = 15;  // sweet spot
+  else if (roi <= 25)   roiMod = 8;
+  else if (roi <= 50)   roiMod = 0;
+  else if (roi <= 100)  roiMod = -8;
+  else                  roiMod = -15; // very high ROI = almost never fills at this spread
 
-  // ── 3. ROI (0–15 pts) — sweet spot 2–5%, >40% suspicious ──
-  let roiScore = 0;
-  if (roi > 0) {
-    if      (roi < 0.5)  roiScore = 0;
-    else if (roi <= 2)   roiScore = Math.round((roi / 2) * 8);
-    else if (roi <= 5)   roiScore = 15;
-    else if (roi <= 15)  roiScore = 12;
-    else if (roi <= 40)  roiScore = 5;
-    else if (roi <= 80)  roiScore = 2;
-    else                 roiScore = 0;
-  }
-
-  // ── 4. Freshness multiplier ──
-  let freshness = 0.40;
+  // ── Data freshness: multiplicative confidence factor ─────────────────────
+  // Stale data = margin shown is probably wrong. Hard kill above 2hr.
+  let freshness = 0.5; // default if unknown
   if (lastTradeTime) {
     const ageSec = Math.floor(Date.now() / 1000 - lastTradeTime);
     if      (ageSec < 300)  freshness = 1.00;
     else if (ageSec < 900)  freshness = 0.90;
     else if (ageSec < 1800) freshness = 0.75;
-    else if (ageSec < 3600) freshness = 0.50;
-    else if (ageSec < 7200) freshness = 0.20;
+    else if (ageSec < 3600) freshness = 0.55;
+    else if (ageSec < 7200) freshness = 0.25;
     else                    freshness = 0.05;
   }
 
-  const base = Math.round((liqScore + gpScore + roiScore) * freshness);
+  const base = Math.max(0, Math.min(85, Math.round((baseScore + roiMod) * freshness)));
 
-  // ── 5. Preference multipliers — these actually reshape the list ──
-  // Applied AFTER base score so they have strong visible impact on ranking.
-  // Each pref can boost or suppress by up to ±50% of the base score.
-  if (!speed && !risk) return Math.max(0, Math.min(100, base));
+  // ── Preference shaping ───────────────────────────────────────────────────
+  // This is the layer that makes the LIST actually change.
+  // Preferences apply ADDITIVE bonus/penalty points (not multipliers)
+  // so that the relative ordering shifts visibly without everything clamping to 100.
 
-  let prefMultiplier = 1.0;
+  if (!speed && !risk) return base;
 
-  // SPEED: Fast = needs high daily volume to fill quickly; Slow = fine with low volume, wants big margins
+  let prefDelta = 0;
+
+  // SPEED preference — about fill time, driven by volume
   if (speed === "Fast") {
-    if      (volume >= 500_000) prefMultiplier *= 1.4;
-    else if (volume >= 100_000) prefMultiplier *= 1.2;
-    else if (volume >= 50_000)  prefMultiplier *= 1.0;
-    else if (volume >= 10_000)  prefMultiplier *= 0.6;
-    else                        prefMultiplier *= 0.2; // too slow to fill fast — heavily demoted
+    // Fast = need to fill within 30min = needs massive daily volume
+    if      (volume >= 1_000_000) prefDelta += 15;
+    else if (volume >= 300_000)   prefDelta += 8;
+    else if (volume >= 100_000)   prefDelta += 2;
+    else if (volume >= 50_000)    prefDelta -= 5;
+    else if (volume >= 10_000)    prefDelta -= 20;
+    else                          prefDelta -= 40; // will not fill fast, hard demote
   } else if (speed === "Slow") {
-    // Slow flippers want big margins and don't care about volume
-    if      (margin >= 500_000) prefMultiplier *= 1.4;
-    else if (margin >= 100_000) prefMultiplier *= 1.2;
-    else if (margin >= 20_000)  prefMultiplier *= 1.0;
-    else if (margin >= 5_000)   prefMultiplier *= 0.8;
-    else                        prefMultiplier *= 0.5; // tiny margin, not worth slow flipping
+    // Slow = don't care about volume, reward big margins
+    if      (margin >= 500_000) prefDelta += 15;
+    else if (margin >= 100_000) prefDelta += 8;
+    else if (margin >= 20_000)  prefDelta += 3;
+    else if (margin < 2_000)    prefDelta -= 15; // tiny margin not worth a slow slot
+    // Don't penalize low volume for slow
+    if (volume >= 1_000_000) prefDelta -= 5; // mega-commodities aren't "slow flip" items
+  } else { // Med
+    if (volume < 5_000)    prefDelta -= 10;
+    if (margin < 1_000)    prefDelta -= 10;
   }
 
-  // RISK: Low = wants high-volume, low-ROI, stable items; High = wants big margin potential, ROI ok
+  // RISK preference — about margin stability and market depth
   if (risk === "Low") {
-    // Penalize anything with ROI > 10% (thin or unstable market) or volume < 10k
-    if (roi > 40)       prefMultiplier *= 0.15; // suspicious margin — near-disqualify
-    else if (roi > 20)  prefMultiplier *= 0.40;
-    else if (roi > 10)  prefMultiplier *= 0.70;
-    if (volume < 10_000)        prefMultiplier *= 0.30; // not liquid enough for low risk
-    else if (volume < 50_000)   prefMultiplier *= 0.70;
-    else if (volume >= 100_000) prefMultiplier *= 1.30; // reward very liquid items
+    // Low risk = stable, liquid, predictable. Punish thin/volatile markets hard.
+    if      (volume >= 500_000)  prefDelta += 12;
+    else if (volume >= 100_000)  prefDelta += 6;
+    else if (volume >= 20_000)   prefDelta += 0;
+    else if (volume >= 5_000)    prefDelta -= 15;
+    else                         prefDelta -= 30;
+    if (roi > 30)   prefDelta -= 20; // high ROI = thin market = risky
+    if (roi > 15)   prefDelta -= 10;
+    if (roi <= 5)   prefDelta += 8;  // low ROI = stable commodity
   } else if (risk === "High") {
-    // Boost high-margin items, don't care about volume as much
-    if (margin >= 200_000)      prefMultiplier *= 1.50;
-    else if (margin >= 50_000)  prefMultiplier *= 1.25;
-    else if (margin < 5_000)    prefMultiplier *= 0.60; // not worth the risk for tiny margin
-    if (roi > 15 && roi <= 60)  prefMultiplier *= 1.20; // reward good ROI for risk takers
-  } else {
-    // Med risk: moderate boosts, minor penalties
-    if (roi > 30)          prefMultiplier *= 0.60;
-    if (volume < 5_000)    prefMultiplier *= 0.50;
-    else if (volume >= 50_000) prefMultiplier *= 1.15;
+    // High risk = OK with thin markets, chasing big margins
+    if      (margin >= 1_000_000) prefDelta += 15;
+    else if (margin >= 200_000)   prefDelta += 8;
+    else if (margin >= 50_000)    prefDelta += 3;
+    else if (margin < 5_000)      prefDelta -= 10; // not worth high risk for small margin
+    if (roi > 20 && roi <= 80)    prefDelta += 8;  // reward higher ROI
+    if (volume >= 500_000)        prefDelta -= 8;  // high risk players don't need commodities
+  } else { // Med
+    if (roi > 40)        prefDelta -= 12;
+    if (volume < 2_000)  prefDelta -= 12;
+    if (margin >= 50_000 && roi <= 30) prefDelta += 6;
   }
 
-  return Math.max(0, Math.min(100, Math.round(base * prefMultiplier)));
+  return Math.max(0, Math.min(100, base + prefDelta));
 }
 
 function renderMarkdown(text) {
