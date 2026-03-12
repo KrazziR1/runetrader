@@ -4,16 +4,16 @@
 // GET    /api/api-keys          → list active keys (no raw key values returned)
 // DELETE /api/api-keys?id=<id>  → revoke a key by its UUID
 
-import { createClient } from '@supabase/supabase-js';
+const { createClient } = require('@supabase/supabase-js');
 
 const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 const supabasePublic = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  process.env.REACT_APP_SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_ANON_KEY
 );
 
 async function getUser(req) {

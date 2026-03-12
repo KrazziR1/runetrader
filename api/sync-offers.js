@@ -7,11 +7,10 @@
 //
 // Body: array of up to 8 offer objects (one per GE slot)
 
-import { createClient } from '@supabase/supabase-js';
+const { createClient } = require('@supabase/supabase-js');
 
-// ─── Supabase admin client (service-role key bypasses RLS) ───
 const supabase = createClient(
-  process.env.SUPABASE_URL,
+  process.env.REACT_APP_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
