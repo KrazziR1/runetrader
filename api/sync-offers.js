@@ -98,17 +98,35 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Body must be an array of 1-8 offer objects' });
   }
 
-  const validationErrors = body.flatMap((offer, i) => validateOffer(offer, i));
+  const validationErrors = body.flatMap((offer, i) => {
+    if (offer.status === 'EMPTY') return []; // EMPTY only needs slot
+    return validateOffer(offer, i);
+  });
   if (validationErrors.length > 0) {
     return res.status(400).json({ error: 'Validation failed', details: validationErrors });
   }
 
-  // ── 4. Upsert offers ──────────────────────────────────────
-  // One row per (user_id, slot) — this replaces whatever was there before.
-  // The auto_match_flip trigger fires automatically on each upsert.
+  // ── 4. Upsert offers (delete EMPTY slots, upsert active ones) ──
   const syncedAt = new Date().toISOString();
 
-  const rows = body.map((offer) => ({
+  const emptySlots = body.filter(o => o.status === 'EMPTY').map(o => o.slot);
+  const activeOffers = body.filter(o => o.status !== 'EMPTY');
+
+  // Delete empty slots
+  if (emptySlots.length > 0) {
+    await supabase
+      .from('ge_offers')
+      .delete()
+      .eq('user_id', userId)
+      .in('slot', emptySlots);
+  }
+
+  if (activeOffers.length === 0) {
+    supabase.rpc('touch_api_key', { p_key: apiKey }).then(() => {}).catch(() => {});
+    return res.status(200).json({ ok: true, synced: 0, synced_at: syncedAt });
+  }
+
+  const rows = activeOffers.map((offer) => ({
     user_id:     userId,
     slot:        offer.slot,
     item_id:     offer.itemId,
