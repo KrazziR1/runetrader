@@ -1738,6 +1738,41 @@ export default function RuneTrader() {
     supabase.from("positions").select("*").then(({ data }) => setMerchantPositions(data || []));
   }, [user, merchantMode]); // eslint-disable-line
 
+
+
+  // ── Prefs ──
+  const [prefs, setPrefs] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}"); } catch { return {}; } });
+  const [budget, setBudget] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}").budget || ""; } catch { return ""; } });
+  function savePref(key, val) {
+    const u = { ...prefs, [key]: val };
+    setPrefs(u);
+    localStorage.setItem("runetrader_prefs", JSON.stringify(u));
+    setSortCol("score");
+    setSortDir("desc");
+  }
+
+  // ── UI state ──
+  const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("flips");
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [sortCol, setSortCol] = useState("score");
+  const [sortDir, setSortDir] = useState("desc");
+  function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } }
+
+  // ── AI Chat ──
+  const [messages, setMessages] = useState([WELCOME_MSG]);
+  const [input, setInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+  const itemsRef = useRef([]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  // ── Tracker ──
+  const [flipsLog, setFlipsLog] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch { return []; } });
+  const [flipsLoading, setFlipsLoading] = useState(false);
+
+  // ── Merchant P&L tracking (after flipsLog is declared) ──
   useEffect(() => {
     if (!merchantMode) return;
     const totalRealised = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.totalProfit || 0), 0);
@@ -1777,38 +1812,6 @@ export default function RuneTrader() {
   }, [pnlHistory, merchantMode]); // eslint-disable-line
 
 
-
-  // ── Prefs ──
-  const [prefs, setPrefs] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}"); } catch { return {}; } });
-  const [budget, setBudget] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}").budget || ""; } catch { return ""; } });
-  function savePref(key, val) {
-    const u = { ...prefs, [key]: val };
-    setPrefs(u);
-    localStorage.setItem("runetrader_prefs", JSON.stringify(u));
-    setSortCol("score");
-    setSortDir("desc");
-  }
-
-  // ── UI state ──
-  const [filter, setFilter] = useState("all");
-  const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("flips");
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [sortCol, setSortCol] = useState("score");
-  const [sortDir, setSortDir] = useState("desc");
-  function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } }
-
-  // ── AI Chat ──
-  const [messages, setMessages] = useState([WELCOME_MSG]);
-  const [input, setInput] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const messagesEndRef = useRef(null);
-  const itemsRef = useRef([]);
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
-
-  // ── Tracker ──
-  const [flipsLog, setFlipsLog] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch { return []; } });
-  const [flipsLoading, setFlipsLoading] = useState(false);
   const [logForm, setLogForm] = useState({ item: "", buyPrice: "", sellPrice: "", qty: "1" });
   const [autocomplete, setAutocomplete] = useState([]);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
