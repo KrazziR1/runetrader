@@ -565,40 +565,100 @@ function timeAgo(unixSec) {
   return Math.floor(diff / 86400) + "d ago";
 }
 
-function getScore(margin, volume, roi, speed, risk, buyLimit) {
-  const vWeight   = speed === "Fast" ? 55 : speed === "Slow" ? 15 : 35;
-  const mWeight   = speed === "Slow" ? 50 : speed === "Fast" ? 15 : 30;
-  const roiWeight = 100 - vWeight - mWeight;
-  const volCap = speed === "Fast" ? 500 : speed === "Slow" ? 100 : 300;
-  const v = Math.min(volume / volCap, 1) * vWeight;
-  const marginCap = risk === "Low" ? 5000 : risk === "High" ? 50000 : 15000;
-  const m = Math.min(margin / marginCap, 1) * mWeight;
+function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
+  // ── Hard disqualifiers ──
+  if (margin <= 0) return 0;
+  if (volume < 100) return 0;
+
+  // ── 1. Liquidity ratio score (0–40 pts) ──
+  // Use volume/buyLimit ratio rather than raw volume tiers.
+  // Rationale: a 100-limit item flipping 500/day is MORE liquid than a 50k-limit item trading 100k/day.
+  // Items with no buy limit data fall back to raw volume bands (commodities/runes).
+  const effectiveLimit = buyLimit > 0 ? buyLimit : null;
+  let liqScore;
+  if (effectiveLimit) {
+    const ratio = volume / effectiveLimit; // how many full buy-limit cycles the market supports per day
+    if      (ratio >= 100) liqScore = 40;
+    else if (ratio >= 20)  liqScore = 38;
+    else if (ratio >= 5)   liqScore = 30;
+    else if (ratio >= 1)   liqScore = 15;
+    else                   liqScore = 0;  // market doesn't even support one full cycle/day — skip
+  } else {
+    // No buy limit data — fall back to raw volume tiers
+    if      (volume >= 100_000) liqScore = 35;
+    else if (volume >= 50_000)  liqScore = 28;
+    else if (volume >= 10_000)  liqScore = 18;
+    else if (volume >= 1_000)   liqScore = 8;
+    else                        liqScore = 2;
+  }
+
+  // Speed preference modifier
+  if (speed === "Fast") {
+    // Fast flippers need ratio >= 20 to matter; penalize thin markets harder
+    if (effectiveLimit && volume / effectiveLimit < 5) liqScore = Math.round(liqScore * 0.3);
+  }
+  if (speed === "Slow") {
+    // Slow flippers are OK with ratio >= 1; soften the penalty slightly
+    if (liqScore === 0 && effectiveLimit && volume / effectiveLimit >= 0.5) liqScore = 5;
+  }
+
+  // ── 2. GP/hr potential (0–35 pts) ──
+  // Realistic fill rate: you're competing with other flippers.
+  // Assume you capture ~3% of hourly volume (conservative fill_share for a single account).
+  // GP/hr = margin × min(fill_rate, buyLimit) where fill_rate = volume/24 * 0.03
+  const FILL_SHARE = 0.03;
+  const volPerHour = volume / 24;
+  const fillRate = Math.min(volPerHour * FILL_SHARE, effectiveLimit || volPerHour * FILL_SHARE);
+  const gpPerHour = margin * fillRate;
+
+  // Log scale so mega-flips don't dominate — cap score at 35
+  let gpScore;
+  if      (gpPerHour >= 5_000_000) gpScore = 35;
+  else if (gpPerHour >= 2_000_000) gpScore = 30;
+  else if (gpPerHour >= 800_000)   gpScore = 24;
+  else if (gpPerHour >= 300_000)   gpScore = 18;
+  else if (gpPerHour >= 100_000)   gpScore = 12;
+  else if (gpPerHour >= 30_000)    gpScore = 6;
+  else if (gpPerHour >= 5_000)     gpScore = 2;
+  else                             gpScore = 0;
+
+  if (risk === "Low" && margin < 1_000)          gpScore = Math.round(gpScore * 0.4);
+  if (risk === "High" && gpPerHour >= 300_000)   gpScore = Math.min(gpScore + 4, 35);
+
+  // ── 3. ROI score (0–15 pts) ──
+  // Real OSRS high-volume flips run at 0.5–5%. Sweet spot here is 2–5%.
+  // >15% = likely slow/niche gear, >40% = suspicious (thin market or manipulation).
   let roiScore = 0;
   if (roi > 0) {
-    if (risk === "Low") {
-      if (roi <= 20)       roiScore = (roi / 20) * roiWeight;
-      else if (roi <= 60)  roiScore = roiWeight * (1 - ((roi - 20) / 40) * 0.6);
-      else                 roiScore = Math.max(0, roiWeight * 0.4 - (roi - 60) / 20);
-    } else if (risk === "High") {
-      if (roi <= 150)      roiScore = (roi / 150) * roiWeight;
-      else if (roi <= 400) roiScore = roiWeight * (1 - ((roi - 150) / 250) * 0.5);
-      else                 roiScore = Math.max(0, roiWeight * 0.5 - (roi - 400) / 100);
-    } else {
-      if (roi <= 60)       roiScore = (roi / 60) * roiWeight;
-      else if (roi <= 200) roiScore = roiWeight * (1 - ((roi - 60) / 140) * 0.5);
-      else                 roiScore = Math.max(0, roiWeight * 0.5 - (roi - 200) / 100);
-    }
+    if      (roi < 0.5)  roiScore = 0;
+    else if (roi <= 2)   roiScore = Math.round((roi / 2) * 8);
+    else if (roi <= 5)   roiScore = 15;  // peak
+    else if (roi <= 15)  roiScore = 12;
+    else if (roi <= 40)  roiScore = 5;
+    else if (roi <= 80)  roiScore = 2;
+    else                 roiScore = 0;   // >80% = almost certainly bad data or dead market
+
+    if (risk === "Low"  && roi > 15) roiScore = Math.round(roiScore * 0.4);
+    if (risk === "High" && roi > 5 && roi <= 40) roiScore = Math.min(roiScore + 3, 15);
   }
-  const liquidityRatio = buyLimit > 0 ? volume / buyLimit : 1;
-  let liquidityMultiplier;
-  if (risk === "Low") {
-    liquidityMultiplier = liquidityRatio >= 2 ? 1 : liquidityRatio >= 1 ? 0.7 : liquidityRatio >= 0.5 ? 0.4 : 0.15;
-  } else if (risk === "High") {
-    liquidityMultiplier = liquidityRatio >= 1 ? 1 : liquidityRatio >= 0.3 ? 0.85 : 0.6;
+
+  // ── 4. Freshness multiplier — pure multiplicative, outside the 100pt pool ──
+  // Stale data = wrong margin. This invalidates confidence, not just reduces it.
+  let freshness;
+  if (lastTradeTime) {
+    const ageSec = Math.floor(Date.now() / 1000 - lastTradeTime);
+    if      (ageSec < 300)   freshness = 1.00; // < 5 min
+    else if (ageSec < 900)   freshness = 0.90; // < 15 min
+    else if (ageSec < 1800)  freshness = 0.75; // < 30 min
+    else if (ageSec < 3600)  freshness = 0.50; // < 1 hr
+    else if (ageSec < 7200)  freshness = 0.20; // < 2 hr
+    else                     freshness = 0.05; // 2hr+ — near-disqualified
   } else {
-    liquidityMultiplier = liquidityRatio >= 2 ? 1 : liquidityRatio >= 1 ? 0.85 : liquidityRatio >= 0.5 ? 0.65 : 0.4;
+    freshness = 0.40; // unknown age — be conservative
   }
-  return Math.round((v + m + roiScore) * liquidityMultiplier);
+
+  const base = liqScore + gpScore + roiScore; // max possible: 40+35+15 = 90 (leaves headroom)
+  return Math.max(0, Math.min(100, Math.round(base * freshness)));
 }
 
 function itemIconUrl(name) {
@@ -606,7 +666,7 @@ function itemIconUrl(name) {
 }
 
 function isValidFlip(item) {
-  return item.high >= item.low && item.low >= 2;
+  return item.high > item.low && item.low >= 50 && item.margin > 0;
 }
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
@@ -2162,7 +2222,7 @@ export default function RuneTrader() {
         const margin = high - low - TAX;
         const roi = parseFloat(((margin / low) * 100).toFixed(1));
         const volume = volumeMap[id] || 0;
-        const score = getScore(margin, volume, roi, null, null, meta.limit || 0);
+        const score = getScore(margin, volume, roi, null, null, meta.limit || 0, lastTradeTime);
         const lastTradeTime = Math.max(highTime || 0, lowTime || 0);
         const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high, low, margin, roi, volume, score, lastTradeTime };
         if (!isValidFlip(flip)) continue;
@@ -2377,19 +2437,51 @@ export default function RuneTrader() {
   async function sendMessage(text) {
     setMessages(prev => [...prev, { role: "user", content: text, time: new Date() }]);
     setInput(""); setAiLoading(true);
-    const reliableItems = itemsRef.current.filter(i => i.roi <= 200 && i.volume >= 5);
-    const topFlips = reliableItems.slice(0, 50).map(i => `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, volume ${i.volume.toLocaleString()}/day, score ${i.score}`).join("\n");
+    const reliableItems = itemsRef.current
+      .filter(i => {
+        if (i.margin <= 0) return false;
+        if (i.volume < 1000) return false; // must have meaningful daily volume
+        if (i.roi > 150) return false; // suspiciously high — likely manipulated or untradeable
+        const ageSec = i.lastTradeTime ? Math.floor(Date.now() / 1000 - i.lastTradeTime) : 99999;
+        if (ageSec > 10800) return false; // data older than 3hrs = unreliable margin
+        return true;
+      })
+      .sort((a, b) => b.score - a.score);
+    const topFlips = reliableItems.slice(0, 60).map(i => {
+      const ageSec = i.lastTradeTime ? Math.floor(Date.now() / 1000 - i.lastTradeTime) : null;
+      const freshness = !ageSec ? "unknown" : ageSec < 300 ? "fresh" : ageSec < 1800 ? "recent" : "aging";
+      const cyclesPerDay = i.buyLimit > 0 ? Math.min(i.volume / i.buyLimit, 6).toFixed(1) : "?";
+      return `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, vol ${i.volume.toLocaleString()}/day, limit ${i.buyLimit.toLocaleString()}, cycles/day ~${cyclesPerDay}, data ${freshness}, score ${i.score}`;
+    }).join("\n");
     const mentionedItems = itemsRef.current.filter(i => text.toLowerCase().includes(i.name.toLowerCase())).map(i => `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, volume ${i.volume.toLocaleString()}/day, score ${i.score}`).join("\n");
     const riskMap = { Low: "only high-volume safe items (volume 500+/day, ROI 2-15%)", Med: "balance margin and volume (volume 100+/day, ROI 5-40%)", High: "higher margin items OK (volume 50+/day, ROI up to 100%)" };
     const speedMap = { Fast: "only items with very high daily volume (500+)", Med: "items that fill within 1-2 hours (volume 100+/day)", Slow: "slower filling items with bigger margins acceptable" };
     const systemPrompt = `You are the RuneTrader AI assistant — an expert OSRS Grand Exchange flipping advisor with live GE data.
-${budget ? `User cash stack: ${parseInt(budget.replace(/,/g,"")).toLocaleString()} gp — only recommend affordable items (at least 5x)` : "Cash stack not specified — ask before recommending."}
+${budget ? `User cash stack: ${parseInt(budget.replace(/,/g,"")).toLocaleString()} gp — only recommend items they can afford (buy price must fit their stack, ideally with room for 5+ flips)` : "Cash stack not set — ask before recommending specific items."}
 ${prefs.risk ? `Risk tolerance: ${prefs.risk} — ${riskMap[prefs.risk]}` : "Risk not set."}
 ${prefs.speed ? `Flip speed: ${prefs.speed} — ${speedMap[prefs.speed]}` : "Speed not set."}
-Top flips (live): ${topFlips}${mentionedItems ? `\nMentioned items: ${mentionedItems}` : ""}
-Be concise and specific. Write GP as full numbers with commas (1,220,000 not 1.22M). Never mention internal mechanics.
-GE tax: 2% of sell price capped at 5M. Under 50gp = no tax. Bonds exempt. Margins shown are after tax.
-NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/day, score >50.`;
+
+SCORING SYSTEM (explain if asked):
+- Score 0–100. Three components multiplied by a freshness multiplier.
+- Liquidity ratio (40pts): daily_volume ÷ buy_limit. Ratio ≥ 20 = excellent (market supports 20 full buy cycles/day). Ratio < 1 = market can't even fill one cycle — score 0.
+- GP/hr (35pts): margin × (volume/24 × 0.03 fill_share, capped at buy limit). Log-scaled. 2M+/hr = top tier.
+- ROI (15pts): sweet spot 2–5% (real high-volume OSRS flips). >40% = suspicious. >80% = likely dead market or manipulation — score 0.
+- Freshness multiplier: applied after scoring. <5min = ×1.0, <15min = ×0.9, <30min = ×0.75, <1hr = ×0.5, <2hr = ×0.2, 2hr+ = ×0.05.
+- Score 70+ = strong. 50–69 = decent. Under 50 = risky or marginal.
+- Items with ratio < 1 (market can't fill a full buy cycle/day), margin ≤ 0, or data 2hr+ old score near zero.
+
+LIVE DATA (pre-filtered: margin > 0, volume ≥ 1,000/day, data < 3hrs old, ROI ≤ 150%):
+${topFlips}${mentionedItems ? `\nMentioned items (from user query):\n${mentionedItems}` : ""}
+
+RULES:
+- Only recommend items from the live data above. Never invent or assume prices.
+- Always state the buy limit when recommending — it defines how fast they can fill an order.
+- "cycles/day" = how many 4hr windows the market supports being fully bought. Lower = slower flip.
+- Warn explicitly if data freshness is "aging" — the margin shown may not be real anymore.
+- Write all GP as full numbers with commas (1,220,000 not 1.22M).
+- GE tax: 2% of sell price, capped at 5,000,000. Under 50gp = no tax. Bonds exempt. All margins shown are already after tax.
+- High ROI (>40%) on a GE flip is a red flag, not a green one. It usually means thin market, slow fill, or a one-sided margin snapshot. Say so.
+- Be concise, honest, and specific. If something looks sketchy, say it.`;
     try {
       const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 400, system: systemPrompt, messages: [...messages.filter(m => m.role !== "system").slice(-6).map(m => ({ role: m.role, content: m.content })), { role: "user", content: text }] }) });
       const data = await res.json();
@@ -2403,7 +2495,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
   // ── Filtered items ──
   const scoredItems = items.map(item => ({
     ...item,
-    prefScore: getScore(item.margin, item.volume, item.roi, prefs.speed, prefs.risk, item.buyLimit),
+    prefScore: getScore(item.margin, item.volume, item.roi, prefs.speed, prefs.risk, item.buyLimit, item.lastTradeTime),
   }));
 
   const filtered = scoredItems.filter(item => {
