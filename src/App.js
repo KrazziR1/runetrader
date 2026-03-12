@@ -802,13 +802,24 @@ const TOUR_STEPS = [
 ];
 
 const MERCHANT_TOUR_STEPS = [
-  { title: "Welcome to Merchant Mode ⚔️", desc: "Your war room for managing multiple GE positions at once. Let's walk through each section.", target: null, placement: "center" },
-  { title: "Capital Overview", desc: "Tracks your full GP stack. Deployed = locked in positions. Idle = unused GP. Realised = profit closed today. Click 'Update' to adjust your stack any time.", target: ".capital-bar", placement: "bottom" },
-  { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips and Portfolio positions. Dot colours: 🟡 Buying · 🔵 Selling · 🟢 Holding · 🔴 Needs attention. Click any slot to view the item chart.", target: ".slots-grid", placement: "bottom" },
-  { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Green = strong margin. Amber = fading. Red = consider cutting. Click any row to view the item chart.", target: "#active-operations-section", placement: "top" },
-  { title: "Capital Efficiency", desc: "The gauge shows what % of your stack is actively working. Aim for 70%+ for best returns. Below 50% means too much idle GP.", target: ".gauge-ring", placement: "left" },
-  { title: "Rotation Picks", desc: "AI-suggested items that fit your idle GP and aren't already in your slots. Ranked by score. Click any card to view the chart and decide if it's worth flipping.", target: ".rotation-picks-section", placement: "left" },
-  { title: "You're set! ⚔️", desc: "Log a buy in the Tracker without a sell price to open a position. It'll appear here automatically. Good luck on the GE.", target: null, placement: "center" },
+  // ── Operations tab ──
+  { title: "Welcome to Merchant Mode ⚔️", desc: "Your war room for managing multiple GE positions at once. Three tabs cover everything: Operations, Analytics, and Alerts. Let's walk through each one.", target: null, placement: "center", view: "operations" },
+  { title: "Capital Overview", desc: "Tracks your full GP stack at a glance. Deployed = GP locked in open positions. Idle = unused GP ready to put to work. Realised = profit closed today. Click 'Update' any time to adjust your stack.", target: ".capital-bar", placement: "bottom", view: "operations" },
+  { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips. Dot colours show each position's status: 🟡 Buying · 🟢 Holding · 🔵 Selling · 🔴 Danger. Click any slot to view that item's price chart.", target: ".slots-grid", placement: "bottom", view: "operations" },
+  { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Use the status dropdown to mark each flip: Buying → Holding → Selling. Red health bar means consider cutting the position.", target: "#active-operations-section", placement: "top", view: "operations" },
+  { title: "Capital Efficiency", desc: "The ring gauge shows what % of your stack is actively working. Aim for 70%+ for best returns. Below 50% means too much idle GP sitting unused.", target: ".gauge-ring", placement: "left", view: "operations" },
+  { title: "🎯 Daily GP Goal", desc: "Set a daily GP target and track your progress in real time. The bar fills as you close flips, and gives you an ETA based on your current GP/hr rate.", target: "#tour-daily-goal", placement: "left", view: "operations" },
+  { title: "⚡ Rotation Picks", desc: "Items suggested to fill your idle GP right now — filtered to fit your budget and ranked by score. Click any card to open the price chart and decide if it's worth a flip.", target: ".rotation-picks-section", placement: "left", view: "operations" },
+  { title: "📋 Flip Queue", desc: "A wishlist of items you want to flip next. Add anything here, and the live margin updates automatically. When a slot opens up, your queue tells you exactly what to buy.", target: "#tour-flip-queue", placement: "left", view: "operations" },
+  // ── Analytics tab ──
+  { title: "📊 Session Intel", desc: "A full breakdown of your current session: duration, GP/hr rate, flips closed, return on capital, and more. All updated live as you trade.", target: "#tour-session-intel", placement: "right", view: "analytics" },
+  { title: "⚠️ Risk Exposure", desc: "See how concentrated your capital is across items. Any position above 40% of your stack triggers a warning — over-concentration is one of the biggest risks in GE flipping.", target: "#tour-risk-exposure", placement: "right", view: "analytics" },
+  { title: "✅ Closed Today", desc: "A full log of every flip you've closed today with buy price, sell price, and profit per flip. Great for reviewing what's working and what isn't.", target: "#tour-closed-today", placement: "right", view: "analytics" },
+  // ── Alerts tab ──
+  { title: "⚡ Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the ⚙️ gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
+  { title: "📡 Live Feed", desc: "Every alert that's fired this session lands here in real time. Filter by type, click any alert to jump straight to that item's chart, and clear the feed whenever you like.", target: "#tour-live-feed", placement: "right", view: "alerts" },
+  // ── Done ──
+  { title: "You're fully set up ⚔️", desc: "Log a buy in the Tracker without a sell price — it opens a position here automatically. Close it from Merchant Mode and it goes straight to your Flip History. Good luck on the GE.", target: null, placement: "center", view: "operations" },
 ];
 
 // ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
@@ -1524,7 +1535,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos }) {
+function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView }) {
 
   // ── Build open positions ──
   const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
@@ -1567,8 +1578,6 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
   const [showAddAc, setShowAddAc] = useState(false);
   const [addAcIdx, setAddAcIdx] = useState(-1);
   const [merchantFeedFilter, setMerchantFeedFilter] = useState("all");
-  const [closingPos, setClosingPos] = useState(null);
-  const [posStatuses, setPosStatuses] = useState({}); // id -> "buying"|"selling"|"holding"
   const [dailyGoal, setDailyGoal] = useState(() => { try { return parseInt(localStorage.getItem("rt_daily_goal") || "0"); } catch { return 0; } });
   const [showGoalInput, setShowGoalInput] = useState(false);
   const [goalInput, setGoalInput] = useState("");
@@ -1577,7 +1586,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
   const [queueInput, setQueueInput] = useState("");
   const [sessionStart] = useState(() => Date.now());
   const [now, setNow] = useState(Date.now());
-  const [activeView, setActiveView] = useState("operations"); // operations | analytics | alerts
+  // activeView and setActiveView come from props (lifted to RuneTrader for tour control)
 
   // Live clock for session timer
   useEffect(() => {
@@ -1757,9 +1766,11 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
                     );
                   })}
                 </div>
-                <div style={{ display: "flex", gap: "16px", marginTop: "10px", fontSize: "11px", color: "var(--text-dim)" }}>
+                <div style={{ display: "flex", gap: "20px", padding: "12px 16px", borderTop: "1px solid var(--border)" }}>
                   {[["#f39c12","Buying"],["var(--green)","Holding"],["var(--blue)","Selling"],["var(--red)","Danger"]].map(([c,l]) => (
-                    <span key={l}><span style={{ background: c, borderRadius: "50%", display: "inline-block", width: 7, height: 7, marginRight: 4 }} />{l}</span>
+                    <span key={l} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)" }}>
+                      <span style={{ background: c, borderRadius: "50%", display: "inline-block", width: 9, height: 9, flexShrink: 0 }} />{l}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -1957,7 +1968,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
               </div>
 
               {/* Daily GP Goal */}
-              <div className="m-panel-section">
+              <div id="tour-daily-goal" className="m-panel-section">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                   <div className="m-panel-title" style={{ marginBottom: 0 }}>🎯 Daily Goal</div>
                   <button style={{ background: "transparent", border: "none", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
@@ -2058,7 +2069,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
               </div>
 
               {/* Flip Queue */}
-              <div className="m-panel-section" style={{ flex: 1 }}>
+              <div id="tour-flip-queue" className="m-panel-section" style={{ flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                   <div className="m-panel-title" style={{ marginBottom: 0 }}>📋 Flip Queue</div>
                   <button style={{ background: "transparent", border: "none", color: "var(--gold)", fontSize: "18px", cursor: "pointer", lineHeight: 1 }}
@@ -2110,9 +2121,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
             <div className="merchant-left">
 
               {/* Session Intel */}
-              <div className="merchant-section">
-                <div className="merchant-section-header">
-                  <span className="merchant-section-title">📊 Session Intel</span>
+              <div id="tour-session-intel" className="merchant-section">
                   <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Started {getSessionTime()} ago</span>
                 </div>
                 <div className="analytics-grid">
@@ -2135,13 +2144,11 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
               </div>
 
               {/* Risk Exposure */}
-              <div className="merchant-section">
-                <div className="merchant-section-header">
-                  <span className="merchant-section-title">⚠️ Risk Exposure</span>
+              <div id="tour-risk-exposure" className="merchant-section">
                   {topRiskPct > 50 && <span style={{ fontSize: "11px", color: "var(--red)", fontWeight: 600 }}>Concentrated position</span>}
                 </div>
                 {riskItems.length === 0 ? (
-                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No open positions to analyse.</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", padding: "12px 16px" }}>No open positions to analyse.</div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {riskItems.map(pos => (
@@ -2173,9 +2180,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
               </div>
 
               {/* Today's Closed Flips */}
-              <div className="merchant-section" style={{ flex: 1 }}>
-                <div className="merchant-section-header">
-                  <span className="merchant-section-title">✅ Closed Today</span>
+              <div id="tour-closed-today" className="merchant-section" style={{ flex: 1 }}>
                   <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{todayFlips.length} flips</span>
                 </div>
                 {todayFlips.length === 0 ? (
@@ -2281,7 +2286,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
             <div className="merchant-left">
 
               {/* Alert toggles */}
-              <div className="merchant-section">
+              <div id="tour-smart-alerts" className="merchant-section">
                 <div className="merchant-section-header">
                   <span className="merchant-section-title">⚡ Smart Alerts</span>
                   <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Auto-fires on market shifts</span>
@@ -2311,7 +2316,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
               </div>
 
               {/* Live Feed */}
-              <div className="merchant-section" style={{ flex: 1 }}>
+              <div id="tour-live-feed" className="merchant-section" style={{ flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span className="merchant-section-title" style={{ marginBottom: 0 }}>📡 Live Feed</span>
@@ -2529,6 +2534,7 @@ export default function RuneTrader() {
   const [merchantLoading, setMerchantLoading] = useState(false);
   const [merchantTourStep, setMerchantTourStep] = useState(-1);
   const [merchantTourRect, setMerchantTourRect] = useState(null);
+  const [merchantView, setMerchantView] = useState("operations");
   const [pnlHistory, setPnlHistory] = useState(() => {
     try { return JSON.parse(localStorage.getItem("runetrader_pnl_history") || "[]"); } catch { return []; }
   });
@@ -2568,13 +2574,18 @@ export default function RuneTrader() {
 
   function advanceMerchantTour(next) {
     if (next >= MERCHANT_TOUR_STEPS.length) { endMerchantTour(); return; }
-    const target = MERCHANT_TOUR_STEPS[next].target;
-    if (target) {
-      const el = document.querySelector(target);
-      if (el) { const r = el.getBoundingClientRect(); setMerchantTourRect({ top: r.top, left: r.left, width: r.width, height: r.height }); }
-      else { setMerchantTourRect(null); }
-    } else { setMerchantTourRect(null); }
+    const step = MERCHANT_TOUR_STEPS[next];
+    // Switch to the required tab first, then measure after render
+    if (step.view) setMerchantView(step.view);
     setMerchantTourStep(next);
+    if (step.target) {
+      // Delay so React re-renders the correct tab before we measure
+      setTimeout(() => {
+        const el = document.querySelector(step.target);
+        if (el) { const r = el.getBoundingClientRect(); setMerchantTourRect({ top: r.top, left: r.left, width: r.width, height: r.height }); }
+        else { setMerchantTourRect(null); }
+      }, 80);
+    } else { setMerchantTourRect(null); }
   }
 
   async function toggleMerchantMode() {
@@ -3610,6 +3621,8 @@ RULES:
               refreshCooldown={refreshCooldown}
               onCloseFlip={merchantCloseFlip}
               onClosePortfolioPos={merchantClosePortfolioPos}
+              activeView={merchantView}
+              setActiveView={setMerchantView}
             />
           ) : (
           <>
