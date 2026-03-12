@@ -1586,7 +1586,8 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabas
     const ch = sb.channel("merchant-live-ops-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          setLiveOps(prev => prev.filter(o => o.id !== payload.old.id));
+          // payload.old.slot is reliable; payload.old.id requires REPLICA IDENTITY FULL
+          setLiveOps(prev => prev.filter(o => o.slot !== payload.old.slot));
         } else {
           const op = payload.new;
           if (["SOLD", "CANCELLED"].includes(op.status)) {
@@ -2439,7 +2440,8 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
     const ch = sb.channel("auto-flip-history-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          setFlips(prev => prev.filter(f => f.id !== payload.old.id));
+          // payload.old.slot is reliable; payload.old.id requires REPLICA IDENTITY FULL
+          setFlips(prev => prev.filter(f => f.slot !== payload.old.slot));
         } else {
           setFlips(prev => {
             const idx = prev.findIndex(f => f.id === payload.new.id);
@@ -2563,7 +2565,8 @@ function LiveGESlots({ user, supabase: sb }) {
     const offersChannel = sb.channel("live-ge-offers-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_offers", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          setOffers(prev => prev.filter(o => o.id !== payload.old.id));
+          // payload.old.slot is reliable; payload.old.id requires REPLICA IDENTITY FULL
+          setOffers(prev => prev.filter(o => o.slot !== payload.old.slot));
         } else {
           setOffers(prev => {
             const idx = prev.findIndex(o => o.slot === payload.new.slot);
@@ -2807,7 +2810,7 @@ export default function RuneTrader() {
     const ch = supabase.channel("merchant-ge-offers-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_offers", filter: `user_id=eq.${user.id}` }, payload => {
         setGeOffers(prev => {
-          if (payload.eventType === "DELETE") return prev.filter(o => o.id !== payload.old.id);
+          if (payload.eventType === "DELETE") return prev.filter(o => o.slot !== payload.old.slot);
           const o = payload.new;
           const idx = prev.findIndex(x => x.slot === o.slot);
           if (idx >= 0) { const next = [...prev]; next[idx] = o; return next; }
