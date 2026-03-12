@@ -704,7 +704,7 @@ function inlineFormat(text) {
   });
 }
 
-
+function itemIconUrl(name) {
   return `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}_detail.png`;
 }
 
