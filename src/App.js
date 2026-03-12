@@ -1536,7 +1536,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView }) {
+function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView }) {
 
   // ── Build open positions ──
   const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
@@ -1573,6 +1573,36 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], merchan
 
   // ── State ──
   const [showAddRow, setShowAddRow] = useState(false);
+  const [liveOps, setLiveOps] = useState([]);
+
+  useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
+    if (!user || !sb) return;
+    sb.from("ge_flips_live")
+      .select("*")
+      .eq("user_id", user.id)
+      .not("status", "in", '(SOLD,CANCELLED)')
+      .order("buy_started_at", { ascending: false })
+      .then(({ data }) => setLiveOps(data || []));
+
+    const ch = sb.channel("merchant-live-ops-" + user.id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
+        if (payload.eventType === "DELETE") {
+          setLiveOps(prev => prev.filter(o => o.id !== payload.old.id));
+        } else {
+          const op = payload.new;
+          if (["SOLD", "CANCELLED"].includes(op.status)) {
+            setLiveOps(prev => prev.filter(o => o.id !== op.id));
+          } else {
+            setLiveOps(prev => {
+              const idx = prev.findIndex(o => o.id === op.id);
+              if (idx >= 0) { const next = [...prev]; next[idx] = op; return next; }
+              return [op, ...prev];
+            });
+          }
+        }
+      }).subscribe();
+    return () => sb.removeChannel(ch);
+  }, [user, sb]); // eslint-disable-line react-hooks/exhaustive-deps
   const [addForm, setAddForm] = useState({ item: "", buyPrice: "", qty: "1" });
   const [addingPos, setAddingPos] = useState(false);
   const [addAc, setAddAc] = useState([]);
@@ -1796,156 +1826,68 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], merchan
               <div id="active-operations-section" className="merchant-section" style={{ flex: 1 }}>
                 <div className="merchant-section-header">
                   <span className="merchant-section-title">Active Operations</span>
-                  <button className="ops-add-btn" onClick={() => setShowAddRow(r => !r)}>+ Add Position</button>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Auto-tracked via plugin</span>
                 </div>
 
-                {allOpenPositions.length === 0 && !showAddRow ? (
+                {liveOps.length === 0 ? (
                   <div className="merchant-empty">
                     <div style={{ fontSize: "36px", opacity: 0.3 }}>⚔️</div>
                     <p style={{ marginTop: "10px", color: "var(--text-dim)", fontSize: "13px" }}>No open positions</p>
-                    <small style={{ color: "var(--text-dim)", fontSize: "11px" }}>Log a buy in the Tracker, or add one here.</small>
-                    <button className="ops-add-btn" style={{ marginTop: "12px" }} onClick={() => setShowAddRow(true)}>+ Add Position</button>
+                    <small style={{ color: "var(--text-dim)", fontSize: "11px" }}>Start a buy offer in-game — it will appear here automatically.</small>
                   </div>
                 ) : (
                   <div className="ops-table">
                     <div className="ops-header">
-                      <span>Item</span><span>Status</span><span>Investment</span><span>Qty</span><span>Avg Buy</span><span>Sell Now</span><span>Live P&amp;L</span><span>Health</span><span>Action</span>
+                      <span>Item</span><span>Status</span><span>Investment</span><span>Qty</span><span>Buy Price</span><span>Sell Now</span><span>Live P&amp;L</span><span>Progress</span>
                     </div>
-
-                    {allOpenPositions.map(pos => {
-                      const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
-                      const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
-                      const pnlEach = liveItem ? liveItem.high - pos.buyPrice - tax : 0;
-                      const pnlTotal = pnlEach * pos.qty;
-                      const pnlPct = pos.buyPrice > 0 ? ((pnlEach / pos.buyPrice) * 100).toFixed(1) : "0.0";
-                      const marginGone = liveItem && liveItem.high <= pos.buyPrice;
-                      const healthPct = getHealthPct(pos);
-                      const healthColor = healthPct >= 60 ? "var(--green)" : healthPct >= 25 ? "#f39c12" : "var(--red)";
-                      const healthText = healthPct >= 60 ? "Strong" : healthPct >= 25 ? "Fading" : "Danger";
-                      const status = getPosStatus(pos);
+                    {liveOps.map(op => {
+                      const liveItem = items.find(i => i.name.toLowerCase() === op.item_name.toLowerCase());
+                      const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.01), 5_000_000) : 0;
+                      const pnlEach = (op.buy_price && liveItem) ? liveItem.high - op.buy_price - tax : 0;
+                      const pnlTotal = pnlEach * (op.quantity || 1);
+                      const pnlPct = op.buy_price > 0 ? ((pnlEach / op.buy_price) * 100).toFixed(1) : "0.0";
+                      const fillPct = op.quantity > 0 ? Math.round(((op.status === "BUYING" ? op.qty_filled_buy : op.qty_filled_sell) || 0) / op.quantity * 100) : 0;
+                      const statusColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[op.status] || "var(--text-dim)";
+                      const statusLabel = { BUYING: "🟡 Buying", BOUGHT: "🟢 Holding", SELLING: "🔵 Selling", SOLD: "✅ Sold" }[op.status] || op.status;
                       return (
-                        <div key={pos.id} className={`op-row op-row-${healthPct >= 60 ? "healthy" : healthPct >= 25 ? "warn" : "danger"}`}
-                          onClick={() => liveItem && setSelectedItem(liveItem)}>
+                        <div key={op.id} className="op-row op-row-healthy" onClick={() => liveItem && setSelectedItem(liveItem)}>
                           <div>
-                            <div className="op-item-name">{pos.name}</div>
-                            <div className="op-item-sub">{getHoldTime(pos.openedAt)} · {pos.source === "tracker" ? "Tracker" : "Portfolio"}</div>
+                            <div className="op-item-name">{op.item_name}</div>
+                            <div className="op-item-sub">Slot {op.slot + 1} · {op.buy_started_at ? getHoldTime(op.buy_started_at) : ""}</div>
                           </div>
-
-                          {/* Status selector */}
-                          <div onClick={e => e.stopPropagation()}>
-                            <select className="pos-status-select"
-                              value={status}
-                              style={{ color: STATUS_COLORS[status] }}
-                              onChange={e => setPosStatus(pos.id, e.target.value)}>
-                              <option value="buying">🟡 Buying</option>
-                              <option value="holding">🟢 Holding</option>
-                              <option value="selling">🔵 Selling</option>
-                              <option value="danger">🔴 Danger</option>
-                            </select>
-                          </div>
-
-                          <span style={{ fontSize: "12px" }}>{formatGP(pos.gpIn)}</span>
-                          <span style={{ fontSize: "12px" }}>{pos.qty.toLocaleString()}</span>
-                          <span style={{ fontSize: "12px" }}>{formatGP(pos.buyPrice)}</span>
+                          <span style={{ fontSize: "12px", color: statusColor }}>{statusLabel}</span>
+                          <span style={{ fontSize: "12px" }}>{op.buy_price && op.quantity ? formatGP(op.buy_price * op.quantity) : "—"}</span>
+                          <span style={{ fontSize: "12px" }}>{(op.quantity || 0).toLocaleString()}</span>
+                          <span style={{ fontSize: "12px" }}>{op.buy_price ? formatGP(op.buy_price) : "—"}</span>
                           <span style={{ fontSize: "12px", color: liveItem ? "var(--text)" : "var(--text-dim)" }}>
                             {liveItem ? formatGP(liveItem.high) : "—"}
                           </span>
                           <div>
-                            <div style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>
-                              {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
-                            </div>
-                            <div style={{ fontSize: "10px", color: marginGone ? "var(--red)" : pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
-                              {marginGone ? "⚠ inverted" : `${pnlPct}%`}
-                            </div>
+                            {op.status === "SOLD" ? (
+                              <>
+                                <div style={{ color: (op.profit || 0) >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>
+                                  {(op.profit || 0) >= 0 ? "+" : ""}{formatGP(op.profit || 0)}
+                                </div>
+                                <div style={{ fontSize: "10px", color: (op.roi || 0) >= 0 ? "var(--green)" : "var(--red)" }}>{op.roi}% ROI</div>
+                              </>
+                            ) : op.buy_price ? (
+                              <>
+                                <div style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>
+                                  {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
+                                </div>
+                                <div style={{ fontSize: "10px", color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>{pnlPct}%</div>
+                              </>
+                            ) : <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>—</span>}
                           </div>
-                          <div className="health-bar-wrap" onClick={e => e.stopPropagation()}>
-                            <div className="health-track">
-                              <div className="health-fill" style={{ width: `${healthPct}%`, background: healthColor }} />
+                          <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                            <div style={{ background: "var(--bg4)", borderRadius: "3px", height: "4px", overflow: "hidden" }}>
+                              <div style={{ background: statusColor, height: "100%", width: fillPct + "%", borderRadius: "3px" }} />
                             </div>
-                            <span className="health-label" style={{ color: healthColor }}>{healthPct}% {healthText}</span>
+                            <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>{fillPct}% filled</span>
                           </div>
-                          <button className={`op-action-btn${healthPct < 25 ? " danger-btn" : ""}`}
-                            onClick={e => { e.stopPropagation(); setClosingPos({ pos, type: pos.source }); }}>
-                            {healthPct < 25 ? "Cut Loss" : "Close"}
-                          </button>
                         </div>
                       );
                     })}
-
-                    {/* Inline add-position row */}
-                    {showAddRow && (() => {
-                      const computedQty = parseInt(addForm.qty) || 1;
-                      const computedBuy = parseInt(addForm.buyPrice.replace(/[^0-9]/g, "")) || 0;
-                      const computedInvestment = computedBuy > 0 && computedQty > 0 ? (computedBuy * computedQty).toLocaleString() : "";
-                      return (
-                        <div className="add-pos-row">
-                          <div className="merchant-ac-wrap" style={{ gridColumn: "span 1" }}>
-                            <input className="add-pos-input" placeholder="Item name..." value={addForm.item} autoComplete="off"
-                              onChange={e => {
-                                const v = e.target.value;
-                                setAddForm(f => ({ ...f, item: v }));
-                                setAddAcIdx(-1);
-                                if (v.length >= 2) {
-                                  const matches = items.filter(i => i.name.toLowerCase().includes(v.toLowerCase())).slice(0, 8).map(i => i.name);
-                                  setAddAc(matches); setShowAddAc(matches.length > 0);
-                                } else setShowAddAc(false);
-                              }}
-                              onKeyDown={e => {
-                                if (!showAddAc || addAc.length === 0) return;
-                                if (e.key === "ArrowDown") { e.preventDefault(); setAddAcIdx(i => Math.min(i + 1, addAc.length - 1)); }
-                                else if (e.key === "ArrowUp") { e.preventDefault(); setAddAcIdx(i => Math.max(i - 1, 0)); }
-                                else if (e.key === "Enter" && addAcIdx >= 0) { e.preventDefault(); setAddForm(f => ({ ...f, item: addAc[addAcIdx] })); setShowAddAc(false); setAddAcIdx(-1); }
-                                else if (e.key === "Escape") setShowAddAc(false);
-                              }}
-                              onBlur={() => setTimeout(() => setShowAddAc(false), 150)} />
-                            {showAddAc && (
-                              <div className="merchant-ac-list">
-                                {addAc.map((name, idx) => (
-                                  <div key={name} className={`merchant-ac-item${idx === addAcIdx ? " highlighted" : ""}`}
-                                    onMouseDown={() => { setAddForm(f => ({ ...f, item: name })); setShowAddAc(false); setAddAcIdx(-1); }}>
-                                    {name}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                          <div />
-                          <div style={{ paddingRight: "6px" }}>
-                            <input className="add-pos-input readonly" readOnly tabIndex={-1}
-                              value={computedInvestment || ""} placeholder="Auto" />
-                          </div>
-                          <div style={{ paddingRight: "6px" }}>
-                            <input className="add-pos-input" placeholder="Qty" value={addForm.qty}
-                              onChange={e => setAddForm(f => ({ ...f, qty: e.target.value }))} />
-                          </div>
-                          <div style={{ paddingRight: "6px" }}>
-                            <input className="add-pos-input" placeholder="Buy price ea." value={addForm.buyPrice}
-                              onChange={e => setAddForm(f => ({ ...f, buyPrice: e.target.value }))} />
-                          </div>
-                          <div style={{ color: "var(--text-dim)", fontSize: "11px" }}>Live</div>
-                          <div style={{ color: "var(--text-dim)", fontSize: "11px" }}>—</div>
-                          <div />
-                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                            <button className="add-pos-confirm" disabled={addingPos}
-                              onClick={async e => {
-                                e.stopPropagation();
-                                if (!addForm.item || !addForm.buyPrice) return;
-                                const buy = parseInt(addForm.buyPrice.replace(/[^0-9]/g, ""));
-                                const qty = parseInt(addForm.qty) || 1;
-                                if (isNaN(buy)) return;
-                                setAddingPos(true);
-                                await onAddPosition({ item: addForm.item, buyPrice: buy, qty });
-                                setAddForm({ item: "", buyPrice: "", qty: "1" });
-                                setShowAddRow(false);
-                                setAddingPos(false);
-                              }}>
-                              {addingPos ? "…" : "Add"}
-                            </button>
-                            <button className="add-pos-cancel" onClick={e => { e.stopPropagation(); setShowAddRow(false); setAddForm({ item: "", buyPrice: "", qty: "1" }); setShowAddAc(false); }}>✕</button>
-                          </div>
-                        </div>
-                      );
-                    })()}
                   </div>
                 )}
               </div>
@@ -2489,6 +2431,129 @@ function ThresholdPopover({ alertKey, label, unit, min, max, step, thresholds, o
 
 
 // ── LIVE GE SLOTS COMPONENT ──────────────────────────────────
+
+// ── AUTO FLIP HISTORY COMPONENT ─────────────────────────────────────────────
+function AutoFlipHistory({ user, supabase: sb, formatGP }) {
+  const [flips, setFlips] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
+    if (!user) return;
+    sb.from("ge_flips_live")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .then(({ data }) => { setFlips(data || []); setLoading(false); });
+
+    const ch = sb.channel("auto-flip-history-" + user.id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
+        if (payload.eventType === "DELETE") {
+          setFlips(prev => prev.filter(f => f.id !== payload.old.id));
+        } else {
+          setFlips(prev => {
+            const idx = prev.findIndex(f => f.id === payload.new.id);
+            if (idx >= 0) { const next = [...prev]; next[idx] = payload.new; return next; }
+            return [payload.new, ...prev].slice(0, 50);
+          });
+        }
+      }).subscribe();
+    return () => sb.removeChannel(ch);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fmtDate = ts => ts ? new Date(ts).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+  const statusBadge = s => {
+    const map = { BUYING: ["#f39c12", "Buying"], BOUGHT: ["var(--green)", "Holding"], SELLING: ["#4fc3f7", "Selling"], SOLD: ["var(--green)", "Closed"], CANCELLED: ["var(--text-dim)", "Cancelled"] };
+    const [color, label] = map[s] || ["var(--text-dim)", s];
+    return <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "10px", border: `1px solid ${color}`, color }}>{label}</span>;
+  };
+
+  if (!user) return null;
+  const openFlips = flips.filter(f => !["SOLD", "CANCELLED"].includes(f.status));
+  const closedFlips = flips.filter(f => ["SOLD", "CANCELLED"].includes(f.status));
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      {/* Open flips */}
+      <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
+          ⚔️ Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "Inter", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{openFlips.length} active</span>
+        </div>
+        {loading ? <div style={{ color: "var(--text-dim)", fontSize: "13px" }}>Loading...</div>
+        : openFlips.length === 0 ? (
+          <div style={{ color: "var(--text-dim)", fontSize: "13px", textAlign: "center", padding: "20px 0" }}>
+            <div style={{ fontSize: "24px", opacity: 0.4, marginBottom: "8px" }}>📋</div>
+            <div>No open flips — start a buy offer in-game</div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 90px 80px 80px 80px 100px", gap: "10px", padding: "0 4px 8px", fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <span>Item</span><span>Status</span><span>Buy</span><span>Sell</span><span>Qty</span><span>Started</span>
+            </div>
+            {openFlips.map(f => (
+              <div key={f.id} style={{ display: "grid", gridTemplateColumns: "2fr 90px 80px 80px 80px 100px", gap: "10px", padding: "10px 4px", borderTop: "1px solid var(--border)", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: 500 }}>{f.item_name}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {f.slot + 1}</div>
+                </div>
+                {statusBadge(f.status)}
+                <span style={{ fontSize: "12px" }}>{f.buy_price ? formatGP(f.buy_price) : "—"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{f.sell_price ? formatGP(f.sell_price) : "—"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.quantity || 0).toLocaleString()}</span>
+                <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{fmtDate(f.buy_started_at)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Closed flips */}
+      <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
+          📜 Flip History
+        </div>
+        {loading ? <div style={{ color: "var(--text-dim)", fontSize: "13px" }}>Loading...</div>
+        : closedFlips.length === 0 ? (
+          <div style={{ color: "var(--text-dim)", fontSize: "13px", textAlign: "center", padding: "20px 0" }}>
+            <div style={{ fontSize: "24px", opacity: 0.4, marginBottom: "8px" }}>📊</div>
+            <div>No completed flips yet</div>
+            <div style={{ fontSize: "11px", marginTop: "4px", opacity: 0.6 }}>Complete a buy + sell in-game to see your P&L here</div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 80px 80px 60px 60px 90px 90px", gap: "10px", padding: "0 4px 8px", fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <span>Item</span><span>Buy</span><span>Sell</span><span>Qty</span><span>Tax</span><span>Profit</span><span>Closed</span>
+            </div>
+            {closedFlips.map(f => (
+              <div key={f.id} style={{ display: "grid", gridTemplateColumns: "2fr 80px 80px 60px 60px 90px 90px", gap: "10px", padding: "10px 4px", borderTop: "1px solid var(--border)", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: 500 }}>{f.item_name}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {f.slot + 1}</div>
+                </div>
+                <span style={{ fontSize: "12px" }}>{f.buy_price ? formatGP(f.buy_price) : "—"}</span>
+                <span style={{ fontSize: "12px" }}>{f.sell_price ? formatGP(f.sell_price) : "—"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.quantity || 0).toLocaleString()}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{f.tax ? formatGP(f.tax) : "—"}</span>
+                <div>
+                  {f.status === "SOLD" ? (
+                    <>
+                      <div style={{ fontSize: "13px", fontWeight: 600, color: (f.profit || 0) >= 0 ? "var(--green)" : "var(--red)" }}>
+                        {(f.profit || 0) >= 0 ? "+" : ""}{formatGP(f.profit || 0)}
+                      </div>
+                      {f.roi != null && <div style={{ fontSize: "11px", color: f.roi >= 0 ? "var(--green)" : "var(--red)" }}>{f.roi >= 0 ? "+" : ""}{Number(f.roi).toFixed(1)}% ROI</div>}
+                    </>
+                  ) : <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>Cancelled</span>}
+                </div>
+                <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{fmtDate(f.sell_completed_at)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function LiveGESlots({ user, supabase: sb }) {
   const [offers, setOffers] = useState([]);
   const [autoFlips, setAutoFlips] = useState([]);
@@ -3821,109 +3886,7 @@ RULES:
 
                 <LiveGESlots user={user} supabase={supabase} />
 
-                <div className="tracker-form">
-                  <div className="tracker-form-title">⚔️ Log a Flip</div>
-                  <div className="tracker-form-row">
-                    <div className="tracker-field">
-                      <label className="tracker-label">Item Name</label>
-                      <input className="tracker-input" placeholder="e.g. Abyssal whip" value={logForm.item}
-                        onChange={e => handleItemInput(e.target.value, setLogForm, setAutocomplete, setShowAutocomplete)}
-                        onKeyDown={e => { if (e.key === "Enter") logFlip(); if (e.key === "Escape") setShowAutocomplete(false); }}
-                        onBlur={() => setTimeout(() => setShowAutocomplete(false), 150)}
-                        autoComplete="off" />
-                      {showAutocomplete && (
-                        <div className="autocomplete-list">
-                          {autocomplete.map(name => (
-                            <div key={name} className="autocomplete-item" onMouseDown={() => {
-                              const liveItem = items.find(i => i.name === name);
-                              const extraFields = liveItem ? { buyPrice: String(liveItem.low), sellPrice: String(liveItem.high) } : {};
-                              selectAutocomplete(name, setLogForm, setShowAutocomplete, () => extraFields);
-                            }}>{name}</div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="tracker-field">
-                      <label className="tracker-label">Buy Price (gp)</label>
-                      <input className="tracker-input" placeholder="e.g. 1500000" value={logForm.buyPrice} onChange={e => setLogForm(f => ({ ...f, buyPrice: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") logFlip(); }} />
-                    </div>
-                    <div className="tracker-field">
-                      <label className="tracker-label">
-                        Sell Price (gp)
-                        <span style={{ color: "var(--gold-dim)", marginLeft: "4px", fontStyle: "italic", textTransform: "none", letterSpacing: 0 }}>optional</span>
-                      </label>
-                      <input
-                        className="tracker-input optional-field"
-                        placeholder="Leave blank = open flip"
-                        value={logForm.sellPrice}
-                        onChange={e => setLogForm(f => ({ ...f, sellPrice: e.target.value }))}
-                        onKeyDown={e => { if (e.key === "Enter") logFlip(); }}
-                      />
-                    </div>
-                    <div className="tracker-field">
-                      <label className="tracker-label">Quantity</label>
-                      <input className="tracker-input" placeholder="1" value={logForm.qty} onChange={e => setLogForm(f => ({ ...f, qty: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") logFlip(); }} />
-                    </div>
-                    <button className="log-btn" disabled={!logForm.item || !logForm.buyPrice} onClick={logFlip}>
-                      {logForm.sellPrice.trim() ? "+ Log" : "+ Open"}
-                    </button>
-                  </div>
-                  {!logForm.sellPrice.trim() && logForm.buyPrice && (
-                    <div style={{ fontSize: "11px", color: "var(--gold-dim)", display: "flex", alignItems: "center", gap: "4px" }}>
-                      ℹ️ No sell price — will be logged as an <strong>open flip</strong>. Close it later when you sell.
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span>Flip History</span>
-                    {flipsLog.length > 0 && <button className="clear-btn" onClick={clearAllFlips}>Clear All</button>}
-                  </div>
-                  <div className="flips-log">
-                    <div className="log-header">
-                      <span>Item</span><span>Buy</span><span>Sell</span><span>Qty</span><span>Tax</span><span>Profit</span><span>Action</span>
-                    </div>
-                    {flipsLoading ? <div style={{ textAlign: "center", color: "var(--text-dim)", padding: "40px" }}>Loading flips...</div>
-                      : flipsLog.length === 0 ? (
-                        <div className="tracker-empty"><div className="icon">📋</div><p>No flips logged yet</p><small>Fill in the form above to start tracking your profits</small></div>
-                      ) : flipsLog.map(f => (
-                        <div key={f.id} className={`log-row${f.status === "open" ? " open-flip" : ""}`}>
-                          <div>
-                            <div className="log-item-name">{f.item}</div>
-                            <div className="log-date">{new Date(f.date || Date.now()).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
-                            {f.status === "open" && merchantMode && (
-                              <span className="merchant-sync-badge">⚔️ In Merchant Mode</span>
-                            )}
-                          </div>
-                          <span>{formatGP(f.buyPrice)}</span>
-                          <span style={{ color: f.status === "open" ? "var(--text-dim)" : "var(--text)" }}>
-                            {f.status === "open" ? "—" : formatGP(f.sellPrice)}
-                          </span>
-                          <span>{(f.qty || 1).toLocaleString()}</span>
-                          <span style={{ color: "var(--text-dim)" }}>
-                            {f.status === "open" ? "—" : formatGP((f.tax || 0) * (f.qty || 1))}
-                          </span>
-                          <div>
-                            {f.status === "open" ? (
-                              <span className="open-badge">OPEN</span>
-                            ) : (
-                              <>
-                                <div className={f.totalProfit >= 0 ? "profit-pos" : "profit-neg"}>{f.totalProfit >= 0 ? "+" : ""}{formatGP(f.totalProfit)}</div>
-                                <div className={f.roi >= 5 ? "roi-pos" : f.roi < 0 ? "roi-neg" : "roi-neu"}>{f.roi > 0 ? "+" : ""}{f.roi}% ROI</div>
-                              </>
-                            )}
-                          </div>
-                          <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                            {f.status === "open" && (
-                              <button className="close-flip-btn" onClick={() => setClosingFlip(f)}>Close</button>
-                            )}
-                            <button className="delete-btn" onClick={() => deleteFlip(f.id)}>✕</button>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
+                <AutoFlipHistory user={user} supabase={supabase} formatGP={formatGP} />
               </div>
             )}
 
