@@ -302,9 +302,9 @@ const STYLES = `
 
   /* MERCHANT MODE */
   .merchant-wrap { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-  .merchant-layout { display: grid; grid-template-columns: 1fr 380px; flex: 1; min-height: 0; overflow: hidden; width: 100%; }
+  .merchant-layout { display: grid; grid-template-columns: 1fr 340px; flex: 1; min-height: 0; overflow: hidden; width: 100%; }
   .merchant-left { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-  .merchant-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; }
+  .merchant-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
   .capital-bar { display: grid; grid-template-columns: repeat(5,1fr); background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .cap-cell { padding: 14px 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; }
   .cap-cell:last-child { border-right: none; }
@@ -344,10 +344,11 @@ const STYLES = `
   .op-action-btn { padding: 6px 12px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
   .op-action-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
   .op-action-btn.danger-btn:hover { border-color: var(--red); color: var(--red); }
-  .add-pos-row { display: grid; grid-template-columns: 2.2fr 1fr 0.7fr 1fr 1fr 1fr 120px 80px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; gap: 0; background: rgba(201,168,76,0.04); }
+  .add-pos-row { display: grid; grid-template-columns: 2.2fr 1fr 0.7fr 1fr 1fr 1fr 120px 80px; padding: 10px 16px; border-top: 1px solid var(--gold-dim); align-items: center; gap: 0; background: rgba(201,168,76,0.04); }
   .add-pos-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: 'Inter', sans-serif; outline: none; width: 100%; transition: border-color 0.2s; }
   .add-pos-input:focus { border-color: var(--gold-dim); }
   .add-pos-input::placeholder { color: var(--text-dim); font-size: 11px; }
+  .add-pos-input.readonly { background: var(--bg3); color: var(--text-dim); cursor: not-allowed; border-color: transparent; }
   .add-pos-confirm { padding: 6px 10px; border-radius: 5px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; transition: opacity 0.2s; width: 100%; }
   .add-pos-confirm:hover { opacity: 0.85; }
   .add-pos-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -355,7 +356,14 @@ const STYLES = `
   .add-pos-cancel:hover { border-color: var(--red); color: var(--red); }
   .ops-add-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 7px; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; margin: 10px 16px; }
   .ops-add-btn:hover { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.05); }
-  .m-panel-section { padding: 18px 20px; border-bottom: 1px solid var(--border); }
+  .merchant-ac-wrap { position: relative; width: 100%; }
+  .merchant-ac-list { position: absolute; top: calc(100% + 2px); left: 0; right: 0; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 6px; z-index: 200; max-height: 160px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .merchant-ac-item { padding: 7px 10px; font-size: 12px; color: var(--text); cursor: pointer; transition: background 0.1s; }
+  .merchant-ac-item:hover, .merchant-ac-item.highlighted { background: var(--bg4); color: var(--gold); }
+  .m-panel-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .m-panel-section:last-child { border-bottom: none; }
+  .m-smart-alert-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .m-smart-alert-row:last-child { border-bottom: none; }
   .m-panel-title { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
   .gauge-wrap { display: flex; align-items: center; gap: 16px; }
   .gauge-ring { position: relative; width: 86px; height: 86px; flex-shrink: 0; }
@@ -1493,7 +1501,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition }) {
+function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, resetThreshold, ThresholdPopover }) {
   const allOpenPositions = [
     ...flipsLog.filter(f => f.status === "open").map(f => ({
       id: f.id, name: f.item, gpIn: f.buyPrice * (f.qty || 1),
@@ -1516,6 +1524,9 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
   const [showAddRow, setShowAddRow] = useState(false);
   const [addForm, setAddForm] = useState({ item: "", buyPrice: "", qty: "1", totalGp: "" });
   const [addingPos, setAddingPos] = useState(false);
+  const [addAc, setAddAc] = useState([]);
+  const [showAddAc, setShowAddAc] = useState(false);
+  const [addAcIdx, setAddAcIdx] = useState(-1);
 
   const unrealisedTotal = allOpenPositions.reduce((s, pos) => {
     const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
@@ -1701,47 +1712,82 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                   );
                 })}
                 {/* Inline add-position row */}
-                {showAddRow && (
-                  <div className="add-pos-row">
-                    <div style={{ paddingRight: "8px" }}>
-                      <input className="add-pos-input" placeholder="Item name..." value={addForm.item}
-                        onChange={e => setAddForm(f => ({ ...f, item: e.target.value }))} />
+                {showAddRow && (() => {
+                  const computedQty = parseInt(addForm.qty) || 1;
+                  const computedBuy = parseInt(addForm.buyPrice.replace(/[^0-9]/g, "")) || 0;
+                  const computedInvestment = computedBuy > 0 && computedQty > 0 ? (computedBuy * computedQty).toLocaleString() : "";
+                  return (
+                    <div className="add-pos-row">
+                      {/* Item name with autocomplete */}
+                      <div style={{ paddingRight: "8px" }} className="merchant-ac-wrap">
+                        <input className="add-pos-input" placeholder="Item name..." value={addForm.item}
+                          autoComplete="off"
+                          onChange={e => {
+                            const v = e.target.value;
+                            setAddForm(f => ({ ...f, item: v }));
+                            setAddAcIdx(-1);
+                            if (v.length >= 2) {
+                              const matches = items.filter(i => i.name.toLowerCase().includes(v.toLowerCase())).slice(0, 8).map(i => i.name);
+                              setAddAc(matches);
+                              setShowAddAc(matches.length > 0);
+                            } else { setShowAddAc(false); }
+                          }}
+                          onKeyDown={e => {
+                            if (!showAddAc || addAc.length === 0) return;
+                            if (e.key === "ArrowDown") { e.preventDefault(); setAddAcIdx(i => Math.min(i + 1, addAc.length - 1)); }
+                            else if (e.key === "ArrowUp") { e.preventDefault(); setAddAcIdx(i => Math.max(i - 1, 0)); }
+                            else if (e.key === "Enter" && addAcIdx >= 0) { e.preventDefault(); setAddForm(f => ({ ...f, item: addAc[addAcIdx] })); setShowAddAc(false); setAddAcIdx(-1); }
+                            else if (e.key === "Escape") { setShowAddAc(false); }
+                          }}
+                          onBlur={() => setTimeout(() => setShowAddAc(false), 150)} />
+                        {showAddAc && (
+                          <div className="merchant-ac-list">
+                            {addAc.map((name, idx) => (
+                              <div key={name} className={`merchant-ac-item${idx === addAcIdx ? " highlighted" : ""}`}
+                                onMouseDown={() => { setAddForm(f => ({ ...f, item: name })); setShowAddAc(false); setAddAcIdx(-1); }}>
+                                {name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {/* Investment — auto-calculated, read-only */}
+                      <div style={{ paddingRight: "6px" }}>
+                        <input className="add-pos-input readonly" readOnly tabIndex={-1}
+                          value={computedInvestment ? computedInvestment : ""} placeholder="Auto" />
+                      </div>
+                      <div style={{ paddingRight: "6px" }}>
+                        <input className="add-pos-input" placeholder="Qty" value={addForm.qty}
+                          onChange={e => setAddForm(f => ({ ...f, qty: e.target.value }))} />
+                      </div>
+                      <div style={{ paddingRight: "6px" }}>
+                        <input className="add-pos-input" placeholder="Buy price ea." value={addForm.buyPrice}
+                          onChange={e => setAddForm(f => ({ ...f, buyPrice: e.target.value }))} />
+                      </div>
+                      <div style={{ color: "var(--text-dim)", fontSize: "11px" }}>Live</div>
+                      <div style={{ color: "var(--text-dim)", fontSize: "11px" }}>—</div>
+                      <div style={{ color: "var(--text-dim)", fontSize: "11px" }}>—</div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        <button className="add-pos-confirm" disabled={addingPos}
+                          onClick={async e => {
+                            e.stopPropagation();
+                            if (!addForm.item || !addForm.buyPrice) return;
+                            const buy = parseInt(addForm.buyPrice.replace(/[^0-9]/g, ""));
+                            const qty = parseInt(addForm.qty) || 1;
+                            if (isNaN(buy)) return;
+                            setAddingPos(true);
+                            await onAddPosition({ item: addForm.item, buyPrice: buy, qty });
+                            setAddForm({ item: "", buyPrice: "", qty: "1", totalGp: "" });
+                            setShowAddRow(false);
+                            setAddingPos(false);
+                          }}>
+                          {addingPos ? "…" : "Add"}
+                        </button>
+                        <button className="add-pos-cancel" onClick={e => { e.stopPropagation(); setShowAddRow(false); setAddForm({ item: "", buyPrice: "", qty: "1", totalGp: "" }); setShowAddAc(false); }}>✕</button>
+                      </div>
                     </div>
-                    <div style={{ paddingRight: "6px" }}>
-                      <input className="add-pos-input" placeholder="Total GP..." value={addForm.totalGp}
-                        onChange={e => setAddForm(f => ({ ...f, totalGp: e.target.value }))} />
-                    </div>
-                    <div style={{ paddingRight: "6px" }}>
-                      <input className="add-pos-input" placeholder="Qty" value={addForm.qty}
-                        onChange={e => setAddForm(f => ({ ...f, qty: e.target.value }))} />
-                    </div>
-                    <div style={{ paddingRight: "6px" }}>
-                      <input className="add-pos-input" placeholder="Buy price ea." value={addForm.buyPrice}
-                        onChange={e => setAddForm(f => ({ ...f, buyPrice: e.target.value }))} />
-                    </div>
-                    <div style={{ color: "var(--text-dim)", fontSize: "11px", paddingTop: "4px" }}>Live</div>
-                    <div style={{ color: "var(--text-dim)", fontSize: "11px", paddingTop: "4px" }}>—</div>
-                    <div style={{ color: "var(--text-dim)", fontSize: "11px", paddingTop: "4px" }}>—</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                      <button className="add-pos-confirm" disabled={addingPos}
-                        onClick={async e => {
-                          e.stopPropagation();
-                          if (!addForm.item || !addForm.buyPrice) return;
-                          const buy = parseInt(addForm.buyPrice.replace(/[^0-9]/g, ""));
-                          const qty = parseInt(addForm.qty) || 1;
-                          if (isNaN(buy)) return;
-                          setAddingPos(true);
-                          await onAddPosition({ item: addForm.item, buyPrice: buy, qty });
-                          setAddForm({ item: "", buyPrice: "", qty: "1", totalGp: "" });
-                          setShowAddRow(false);
-                          setAddingPos(false);
-                        }}>
-                        {addingPos ? "..." : "Add"}
-                      </button>
-                      <button className="add-pos-cancel" onClick={e => { e.stopPropagation(); setShowAddRow(false); setAddForm({ item: "", buyPrice: "", qty: "1", totalGp: "" }); }}>✕</button>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
               <button className="ops-add-btn" onClick={() => setShowAddRow(r => !r)}>
                 <span style={{ fontSize: "16px", lineHeight: 1 }}>+</span> Add Position
@@ -1789,26 +1835,21 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
           {idleGP > merchantCapital * 0.25 && merchantCapital > 0 && (
             <div className="m-panel-section">
               <div className="idle-alert">
-                ⚠️ <strong>{formatGP(idleGP)} idle.</strong> That's {Math.round((idleGP / merchantCapital) * 100)}% of your stack sitting unused. Check the rotation picks below.
+                ⚠️ <strong>{formatGP(idleGP)} idle.</strong> That's {Math.round((idleGP / merchantCapital) * 100)}% sitting unused. Check rotation picks.
               </div>
             </div>
           )}
 
-          {/* AI Rotation Picks */}
+          {/* Rotation Picks */}
           <div className="m-panel-section">
             <div className="m-panel-title">⚡ Rotation Picks</div>
-            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "12px" }}>
-              Top opportunities for your {formatGP(idleGP)} idle GP:
-            </div>
+            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "10px" }}>Top picks for your {formatGP(idleGP)} idle GP:</div>
             {rotationPicks.length === 0 ? (
-              <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No picks available — all good candidates may already be in your slots.</div>
+              <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No picks — good candidates may already be in your slots.</div>
             ) : rotationPicks.map((item, i) => (
-              <div key={item.id} className={`rotation-card ${["rc-green", "rc-blue", "rc-amber"][i]}`}
-                onClick={() => setSelectedItem(item)}>
+              <div key={item.id} className={`rotation-card ${["rc-green", "rc-blue", "rc-amber"][i]}`} onClick={() => setSelectedItem(item)}>
                 <div className="rc-name">{item.name}</div>
-                <div className="rc-reason">
-                  Score {item.score}/100 · {item.volume.toLocaleString()} trades/day · fits your idle stack
-                </div>
+                <div className="rc-reason">Score {item.score}/100 · {item.volume.toLocaleString()} trades/day</div>
                 <div className="rc-stats">
                   <div className="rc-stat">Margin <span style={{ color: "var(--green)" }}>{formatGP(item.margin)}</span></div>
                   <div className="rc-stat">ROI <span style={{ color: "var(--gold)" }}>{item.roi}%</span></div>
@@ -1819,11 +1860,16 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
             ))}
           </div>
 
-          {/* P&L Timeline */}
+          {/* Today's P&L */}
           <div className="m-panel-section">
-            <div className="m-panel-title">Today's P&L</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+              <div className="m-panel-title" style={{ marginBottom: 0 }}>Today's P&L</div>
+              <span style={{ fontSize: "12px", fontWeight: 600, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>
+                {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}
+              </span>
+            </div>
             {pnlHistory.length < 2 ? (
-              <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>P&L timeline builds as you close flips today.</div>
+              <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>P&L timeline builds as you close flips today.</div>
             ) : (
               <>
                 <div className="pnl-chart-wrap">
@@ -1839,115 +1885,59 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
             )}
           </div>
 
-          {/* Update capital */}
+          {/* Session Intel — compact */}
           <div className="m-panel-section">
-            <button className="op-action-btn" style={{ width: "100%", textAlign: "center", padding: "8px" }} onClick={onUpdateCapital}>
-              💰 Update Total Capital
-            </button>
+            <div className="m-panel-title">📊 Session Intel</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {[
+                { label: "Flips closed today", val: todayFlips.length, color: "var(--text)" },
+                { label: "Realised profit", val: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
+                { label: "Return on capital", val: `${merchantCapital > 0 ? ((realisedToday / merchantCapital) * 100).toFixed(2) : "0.00"}%`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
+                { label: "Unrealised P&L", val: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)" },
+                { label: "Deployed", val: `${efficiencyPct}% · ${formatGP(totalDeployed)}`, color: "var(--blue)" },
+                { label: "Idle GP", val: formatGP(idleGP), color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text-dim)" },
+              ].map(row => (
+                <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{row.label}</span>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: row.color }}>{row.val}</span>
+                </div>
+              ))}
+              {merchantCapital > 0 && (
+                <div style={{ background: "var(--bg4)", borderRadius: "3px", overflow: "hidden", height: "3px", marginTop: "4px" }}>
+                  <div style={{ height: "100%", width: `${efficiencyPct}%`, background: "var(--blue)", transition: "width 0.5s" }} />
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Session Intel — fills remaining right panel space */}
+          {/* Smart Alerts */}
           <div className="m-panel-section" style={{ flex: 1 }}>
-            <div className="m-panel-title">📊 Session Intel</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-
-              {/* Best performer */}
-              {allOpenPositions.length > 0 && (() => {
-                const withPnl = allOpenPositions.map(pos => {
-                  const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
-                  const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
-                  const pnlEach = liveItem ? liveItem.high - tax - pos.buyPrice : 0;
-                  return { ...pos, pnlEach, pnlTotal: pnlEach * pos.qty };
-                }).sort((a, b) => b.pnlTotal - a.pnlTotal);
-                const best = withPnl[0];
-                const worst = withPnl[withPnl.length - 1];
-                return (
-                  <>
-                    <div style={{ background: "var(--bg3)", borderRadius: "8px", padding: "10px 12px", border: "1px solid var(--border)" }}>
-                      <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>🏆 Best Position</div>
-                      <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{best.name.length > 22 ? best.name.slice(0, 21) + "…" : best.name}</div>
-                      <div style={{ fontSize: "12px", color: best.pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, marginTop: "2px" }}>
-                        {best.pnlTotal >= 0 ? "+" : ""}{formatGP(best.pnlTotal)} unrealised
-                      </div>
-                    </div>
-                    {withPnl.length > 1 && worst.pnlTotal < 0 && (
-                      <div style={{ background: "rgba(231,76,60,0.06)", borderRadius: "8px", padding: "10px 12px", border: "1px solid rgba(231,76,60,0.2)" }}>
-                        <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>⚠️ Needs Attention</div>
-                        <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{worst.name.length > 22 ? worst.name.slice(0, 21) + "…" : worst.name}</div>
-                        <div style={{ fontSize: "12px", color: "var(--red)", fontWeight: 600, marginTop: "2px" }}>
-                          {formatGP(worst.pnlTotal)} unrealised
-                        </div>
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-
-              {/* Capital breakdown */}
-              <div style={{ background: "var(--bg3)", borderRadius: "8px", padding: "10px 12px", border: "1px solid var(--border)" }}>
-                <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>💼 Capital Breakdown</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                  {[
-                    { label: "Deployed", val: totalDeployed, color: "var(--blue)", pct: efficiencyPct },
-                    { label: "Idle", val: idleGP, color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text-dim)", pct: merchantCapital > 0 ? Math.round((idleGP / merchantCapital) * 100) : 0 },
-                    { label: "Unrealised P&L", val: unrealisedTotal, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)", pct: null },
-                  ].map(row => (
-                    <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{row.label}</span>
-                      <span style={{ fontSize: "12px", fontWeight: 600, color: row.color }}>
-                        {row.pct !== null ? `${row.pct}% · ` : (unrealisedTotal >= 0 ? "+" : "")}{formatGP(row.val)}
-                      </span>
-                    </div>
-                  ))}
+            <div className="m-panel-title">⚡ Smart Alerts</div>
+            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "10px" }}>Fires automatically when market conditions shift.</div>
+            {[
+              { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps 50%+", unit: "%",  min: 5,   max: 200, step: 5   },
+              { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Volume triples",           unit: "x",  min: 1.5, max: 10,  step: 0.5 },
+              { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell drops 10%+",         unit: "%",  min: 2,   max: 50,  step: 1   },
+              { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Buy & sell drop 15%+",    unit: "%",  min: 2,   max: 50,  step: 1   },
+            ].map(({ key, icon, label, desc, unit, min, max, step }) => (
+              <div key={key} className="m-smart-alert-row">
+                <div style={{ display: "flex", flexDirection: "column", gap: "1px", flex: 1 }}>
+                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "5px" }}>{icon} {label}</div>
+                  <div style={{ fontSize: "10px", color: "var(--text-dim)" }}>{desc}</div>
                 </div>
-                {merchantCapital > 0 && (
-                  <div style={{ marginTop: "8px", background: "var(--bg4)", borderRadius: "4px", overflow: "hidden", height: "4px" }}>
-                    <div style={{ height: "100%", width: `${efficiencyPct}%`, background: "var(--blue)", borderRadius: "4px", transition: "width 0.5s" }} />
-                  </div>
-                )}
-              </div>
-
-              {/* Avg hold time */}
-              {allOpenPositions.length > 0 && (() => {
-                const avgMs = allOpenPositions.reduce((s, p) => s + (Date.now() - new Date(p.openedAt).getTime()), 0) / allOpenPositions.length;
-                const h = Math.floor(avgMs / 3600000), m = Math.floor((avgMs % 3600000) / 60000);
-                const longestPos = [...allOpenPositions].sort((a, b) => new Date(a.openedAt) - new Date(b.openedAt))[0];
-                const longestMs = Date.now() - new Date(longestPos.openedAt).getTime();
-                const lh = Math.floor(longestMs / 3600000), lm = Math.floor((longestMs % 3600000) / 60000);
-                return (
-                  <div style={{ background: "var(--bg3)", borderRadius: "8px", padding: "10px 12px", border: "1px solid var(--border)" }}>
-                    <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>⏱ Hold Times</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Avg hold</span>
-                        <span style={{ fontSize: "12px", fontWeight: 600 }}>{h > 0 ? `${h}h ${m}m` : `${m}m`}</span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Oldest: {longestPos.name.length > 14 ? longestPos.name.slice(0, 13) + "…" : longestPos.name}</span>
-                        <span style={{ fontSize: "12px", fontWeight: 600, color: lh >= 4 ? "#f39c12" : "var(--text)" }}>{lh > 0 ? `${lh}h ${lm}m` : `${lm}m`}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Today's trade summary */}
-              <div style={{ background: "var(--bg3)", borderRadius: "8px", padding: "10px 12px", border: "1px solid var(--border)" }}>
-                <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>📅 Today's Summary</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                  {[
-                    { label: "Flips closed", val: todayFlips.length, color: "var(--text)" },
-                    { label: "Realised profit", val: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
-                    { label: "Return on capital", val: `${merchantCapital > 0 ? ((realisedToday / merchantCapital) * 100).toFixed(2) : "0.00"}%`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
-                  ].map(row => (
-                    <div key={row.label} style={{ display: "flex", justifyContent: "space-between" }}>
-                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{row.label}</span>
-                      <span style={{ fontSize: "12px", fontWeight: 600, color: row.color }}>{row.val}</span>
-                    </div>
-                  ))}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                  {ThresholdPopover && <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} />}
+                  <label className="toggle-switch">
+                    <input type="checkbox" checked={smartAlertSettings?.[key] ?? true} onChange={e => saveSmartAlertSettings?.(key, e.target.checked)} />
+                    <span className="toggle-slider"></span>
+                  </label>
                 </div>
               </div>
-
+            ))}
+            <div style={{ marginTop: "12px" }}>
+              <button className="op-action-btn" style={{ width: "100%", textAlign: "center", padding: "7px" }} onClick={onUpdateCapital}>
+                💰 Update Total Capital
+              </button>
             </div>
           </div>
 
@@ -3067,6 +3057,12 @@ RULES:
               user={user}
               onUpdateCapital={() => setShowCapitalSetup(true)}
               onAddPosition={addPositionFromMerchant}
+              smartAlertSettings={smartAlertSettings}
+              saveSmartAlertSettings={saveSmartAlertSettings}
+              thresholds={thresholds}
+              saveThreshold={saveThreshold}
+              resetThreshold={resetThreshold}
+              ThresholdPopover={ThresholdPopover}
             />
           ) : (
           <>
