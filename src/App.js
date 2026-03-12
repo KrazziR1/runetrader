@@ -1081,7 +1081,7 @@ function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }
             </button>
             <button className="close-flip-option-btn" onClick={() => onCancelled(flip)}>
               <span className="opt-title">❌ Cancelled</span>
-              <span className="opt-sub">Order didn't fill or I changed my mind — remove from open flips</span>
+              <span className="opt-sub">Order didn&apos;t fill or I changed my mind — remove from open flips</span>
             </button>
           </div>
         )}
@@ -1964,7 +1964,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
                   <div className="gauge-stats">
                     <div><div className="gauge-stat-label">GP Working</div><div className="gauge-stat-val" style={{ color: "var(--gold)" }}>{formatGP(totalDeployed)}</div></div>
                     <div><div className="gauge-stat-label">Slots Used</div><div className="gauge-stat-val">{allOpenPositions.length} / 8</div></div>
-                    <div><div className="gauge-stat-label">Today's P&L</div><div className="gauge-stat-val" style={{ color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>{realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}</div></div>
+                    <div><div className="gauge-stat-label">{"Today's"} P&L</div><div className="gauge-stat-val" style={{ color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>{realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}</div></div>
                   </div>
                 </div>
               </div>
@@ -2026,7 +2026,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
               {/* Today P&L chart */}
               <div className="m-panel-section">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <div className="m-panel-title" style={{ marginBottom: 0 }}>Today's P&L</div>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>{"Today's"} P&L</div>
                   <span style={{ fontSize: "13px", fontWeight: 600, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>
                     {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}
                   </span>
@@ -2214,7 +2214,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
               {/* P&L Chart */}
               <div className="m-panel-section">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <div className="m-panel-title" style={{ marginBottom: 0 }}>Today's P&L</div>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>{"Today's"} P&L</div>
                   <span style={{ fontSize: "13px", fontWeight: 600, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>
                     {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}
                   </span>
@@ -3781,7 +3781,7 @@ RULES:
 
                 {notifPermission === "granted" && (
                   <div className="notif-active-banner">
-                    <span>✅ Push notifications active — you'll be alerted even when RuneTrader is closed.</span>
+                    <span>✅ Push notifications active — you&apos;ll be alerted even when RuneTrader is closed.</span>
                   </div>
                 )}
 
@@ -3814,7 +3814,7 @@ RULES:
                 </div>
 
                 {/* ── PRICE ALERT FORM ── */}
-                <div className="alert-info">ℹ️ Price alerts check every 5 minutes. Triggered alerts won't fire again — delete and re-add to reset.</div>
+                <div className="alert-info">ℹ️ Price alerts check every 5 minutes. Triggered alerts won&apos;t fire again — delete and re-add to reset.</div>
                 <div className="alert-form">
                   <div className="alert-form-title">🔔 Set a Price Alert</div>
                   <div className="alert-form-row">
