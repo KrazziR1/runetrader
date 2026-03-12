@@ -586,7 +586,7 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing }
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
-    const W = rect.width, H = rect.height, pad = { top: 20, right: 20, bottom: 40, left: 60 };
+    const W = rect.width, H = rect.height, pad = { top: 20, right: 20, bottom: 40, left: 82 };
     ctx.clearRect(0, 0, W, H);
     const allPrices = [...chartData.map(d => d.avgHighPrice), ...chartData.map(d => d.avgLowPrice)].filter(Boolean);
     if (!allPrices.length) return;
@@ -594,12 +594,18 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing }
     const minT = chartData[0].timestamp, maxT = chartData[chartData.length - 1].timestamp;
     const xPos = t => pad.left + ((t - minT) / (maxT - minT)) * (W - pad.left - pad.right);
     const yPos = p => pad.top + (1 - (p - minP) / (maxP - minP)) * (H - pad.top - pad.bottom);
+    function fmtYLabel(n) {
+      if (Math.abs(n) >= 1_000_000_000) return (n / 1_000_000_000).toFixed(n % 1_000_000_000 === 0 ? 0 : 2) + "B";
+      if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
+      if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1) + "K";
+      return Math.round(n).toLocaleString();
+    }
     ctx.strokeStyle = "rgba(42,51,64,0.8)"; ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
       const y = pad.top + (i / 4) * (H - pad.top - pad.bottom);
       ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
       ctx.fillStyle = "#4a5a6a"; ctx.font = "11px Inter"; ctx.textAlign = "right";
-      ctx.fillText(formatGP(Math.round(maxP - (i / 4) * (maxP - minP))), pad.left - 8, y + 4);
+      ctx.fillText(fmtYLabel(Math.round(maxP - (i / 4) * (maxP - minP))), pad.left - 8, y + 4);
     }
     const highPoints = chartData.filter(d => d.avgHighPrice);
     if (highPoints.length > 1) {
@@ -653,7 +659,7 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing }
           {[
             { label: "Buy Price", value: formatGP(item.adjLow ?? item.low), color: "var(--green)" },
             { label: "Sell Price", value: formatGP(item.adjHigh ?? item.high), color: "var(--text)" },
-            { label: "Margin (after tax)", value: formatGP(item.adjMargin ?? item.margin), color: item.margin > 0 ? "var(--green)" : "var(--red)" },
+            { label: "Margin (after tax)", value: formatGP(item.adjMargin ?? item.margin), color: (item.adjMargin ?? item.margin) > 0 ? "var(--green)" : "var(--red)" },
             { label: "ROI", value: item.roi + "%", color: "var(--gold)" },
           ].map((s, i) => (
             <div key={i} className="modal-stat">
