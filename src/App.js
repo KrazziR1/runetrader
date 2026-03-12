@@ -306,11 +306,11 @@ const STYLES = `
   .merchant-left { overflow-y: auto; overflow-x: visible; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
   .merchant-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
   .merchant-far-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
-  .capital-bar { display: grid; grid-template-columns: repeat(5,1fr); background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .cap-cell { padding: 14px 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; }
+  .capital-bar { display: grid; grid-template-columns: repeat(5,1fr); background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
+  .cap-cell { padding: 14px 16px 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; min-height: 80px; }
   .cap-cell:last-child { border-right: none; }
-  .cap-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; }
-  .cap-value { font-size: 20px; font-weight: 600; font-family: 'Cinzel', serif; }
+  .cap-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; }
+  .cap-value { font-size: 18px; font-weight: 600; font-family: 'Cinzel', serif; line-height: 1.3; }
   .cap-sub { font-size: 12px; color: var(--text-dim); }
   .cap-sub.up { color: var(--green); }
   .cap-sub.warn { color: #f39c12; }
@@ -1584,6 +1584,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
 
 
   return (
+    <>
     <div className="merchant-wrap">
       <div className="merchant-layout">
         {/* LEFT */}
@@ -2050,6 +2051,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
         />
       );
     })()}
+    </>
   );
 }
 
