@@ -1572,7 +1572,6 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabas
   }, 0);
 
   // ── State ──
-  const [showAddRow, setShowAddRow] = useState(false);
   const [liveOps, setLiveOps] = useState([]);
 
   useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
@@ -1603,11 +1602,6 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabas
       }).subscribe();
     return () => sb.removeChannel(ch);
   }, [user, sb]); // eslint-disable-line react-hooks/exhaustive-deps
-  const [addForm, setAddForm] = useState({ item: "", buyPrice: "", qty: "1" });
-  const [addingPos, setAddingPos] = useState(false);
-  const [addAc, setAddAc] = useState([]);
-  const [showAddAc, setShowAddAc] = useState(false);
-  const [addAcIdx, setAddAcIdx] = useState(-1);
   const [merchantFeedFilter, setMerchantFeedFilter] = useState("all");
   const [closingPos, setClosingPos] = useState(null);
   const [posStatuses, setPosStatuses] = useState({});
@@ -1664,10 +1658,6 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabas
     if (holdMs < 20 * 60 * 1000) return "buying";
     if (healthPct >= 60) return "holding";
     return "selling";
-  }
-
-  function setPosStatus(id, status) {
-    setPosStatuses(prev => ({ ...prev, [id]: status }));
   }
 
   function saveGoal(val) {
@@ -2872,7 +2862,8 @@ export default function RuneTrader() {
 
   // ── Tracker ──
   const [flipsLog, setFlipsLog] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch { return []; } });
-  const [flipsLoading, setFlipsLoading] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [flipsLoading, setFlipsLoading] = useState(false); // eslint-disable-line no-unused-vars
 
   // ── Merchant P&L tracking (after flipsLog is declared) ──
   useEffect(() => {
@@ -2915,8 +2906,10 @@ export default function RuneTrader() {
 
 
   const [logForm, setLogForm] = useState({ item: "", buyPrice: "", sellPrice: "", qty: "1" });
-  const [autocomplete, setAutocomplete] = useState([]);
-  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [autocomplete, setAutocomplete] = useState([]); // eslint-disable-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
+  const [showAutocomplete, setShowAutocomplete] = useState(false); // eslint-disable-line no-unused-vars
 
   // ── Close flip modal ──
   const [closingFlip, setClosingFlip] = useState(null);
@@ -3272,7 +3265,8 @@ export default function RuneTrader() {
   }
 
   // ── Log a flip (buy-only or full) ──
-  async function logFlip() {
+  // eslint-disable-next-line no-unused-vars
+  async function logFlip() { // eslint-disable-line no-unused-vars
     const buy = parseInt(logForm.buyPrice.replace(/,/g, ""));
     const qty = parseInt(logForm.qty) || 1;
     if (!logForm.item || isNaN(buy)) return;
@@ -3422,13 +3416,15 @@ export default function RuneTrader() {
     setActiveTab("tracker");
   }
 
-  async function deleteFlip(id) {
+  // eslint-disable-next-line no-unused-vars
+  async function deleteFlip(id) { // eslint-disable-line no-unused-vars
     if (user) { await supabase.from("flips").delete().eq("id", id); }
     else { localStorage.setItem("runetrader_flips", JSON.stringify(flipsLog.filter(f => f.id !== id))); }
     setFlipsLog(prev => prev.filter(f => f.id !== id));
   }
 
-  async function clearAllFlips() {
+  // eslint-disable-next-line no-unused-vars
+  async function clearAllFlips() { // eslint-disable-line no-unused-vars
     if (!window.confirm("Clear all logged flips? This cannot be undone.")) return;
     if (user) await supabase.from("flips").delete().eq("user_id", user.id);
     else localStorage.removeItem("runetrader_flips");
