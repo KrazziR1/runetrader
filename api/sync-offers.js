@@ -27,101 +27,91 @@ const VALID_TYPES = new Set(['BUY', 'SELL']);
 // ─── Input validation ─────────────────────────────────────────
 function validateOffer(offer, index) {
   const errors = [];
-
-  if (typeof offer.slot !== 'number' || offer.slot < 0 || offer.slot > 7) {
+  if (typeof offer.slot !== 'number' || offer.slot < 0 || offer.slot > 7)
     errors.push(`[${index}] slot must be 0-7`);
-  }
-  if (typeof offer.itemId !== 'number' || offer.itemId <= 0) {
+  if (typeof offer.itemId !== 'number' || offer.itemId <= 0)
     errors.push(`[${index}] itemId must be a positive integer`);
-  }
-  if (typeof offer.itemName !== 'string' || offer.itemName.trim() === '') {
+  if (typeof offer.itemName !== 'string' || offer.itemName.trim() === '')
     errors.push(`[${index}] itemName must be a non-empty string`);
-  }
-  if (!VALID_TYPES.has(offer.offerType)) {
+  if (!VALID_TYPES.has(offer.offerType))
     errors.push(`[${index}] offerType must be BUY or SELL`);
-  }
-  if (typeof offer.offerPrice !== 'number' || offer.offerPrice <= 0) {
+  if (typeof offer.offerPrice !== 'number' || offer.offerPrice <= 0)
     errors.push(`[${index}] offerPrice must be a positive integer`);
-  }
-  if (typeof offer.qtyTotal !== 'number' || offer.qtyTotal <= 0) {
+  if (typeof offer.qtyTotal !== 'number' || offer.qtyTotal <= 0)
     errors.push(`[${index}] qtyTotal must be a positive integer`);
-  }
-  if (typeof offer.qtyFilled !== 'number' || offer.qtyFilled < 0) {
+  if (typeof offer.qtyFilled !== 'number' || offer.qtyFilled < 0)
     errors.push(`[${index}] qtyFilled must be >= 0`);
-  }
-  if (!VALID_STATUSES.has(offer.status)) {
+  if (!VALID_STATUSES.has(offer.status))
     errors.push(`[${index}] status "${offer.status}" is not a valid GrandExchangeOfferState`);
-  }
-
   return errors;
 }
 
 // ─── Main handler ─────────────────────────────────────────────
 export default async function handler(req, res) {
-  // Only accept POST
-  if (req.method !== 'POST') {
+  if (req.method !== 'POST')
     return res.status(405).json({ error: 'Method not allowed' });
-  }
 
-  // ── 1. Extract & validate API key ──────────────────────────
+  // ── 1. Auth ────────────────────────────────────────────────
   const authHeader = req.headers['authorization'] ?? '';
-  if (!authHeader.startsWith('Bearer ')) {
+  if (!authHeader.startsWith('Bearer '))
     return res.status(401).json({ error: 'Missing or malformed Authorization header' });
-  }
 
   const apiKey = authHeader.slice(7).trim();
-  if (!apiKey.startsWith('rt_') || apiKey.length < 10) {
+  if (!apiKey.startsWith('rt_') || apiKey.length < 10)
     return res.status(401).json({ error: 'Invalid API key format' });
-  }
 
-  // ── 2. Look up API key in database ─────────────────────────
   const { data: keyRow, error: keyError } = await supabase
     .from('ge_api_keys')
     .select('id, user_id, revoked_at')
     .eq('api_key', apiKey)
     .single();
 
-  if (keyError || !keyRow) {
+  if (keyError || !keyRow)
     return res.status(401).json({ error: 'API key not found' });
-  }
-
-  if (keyRow.revoked_at !== null) {
+  if (keyRow.revoked_at !== null)
     return res.status(401).json({ error: 'API key has been revoked' });
-  }
 
   const userId = keyRow.user_id;
 
-  // ── 3. Validate request body ───────────────────────────────
+  // ── 2. Validate body ───────────────────────────────────────
   const body = req.body;
-
-  if (!Array.isArray(body) || body.length === 0 || body.length > 8) {
+  if (!Array.isArray(body) || body.length === 0 || body.length > 8)
     return res.status(400).json({ error: 'Body must be an array of 1-8 offer objects' });
-  }
 
   const validationErrors = body.flatMap((offer, i) => {
-    if (offer.status === 'EMPTY') return []; // EMPTY only needs slot
+    if (offer.status === 'EMPTY') return [];
     return validateOffer(offer, i);
   });
-  if (validationErrors.length > 0) {
+  if (validationErrors.length > 0)
     return res.status(400).json({ error: 'Validation failed', details: validationErrors });
-  }
 
-  // ── 4. Upsert ge_offers (display table — unchanged) ────────
   const syncedAt = new Date().toISOString();
 
-  const emptySlots   = body.filter(o => o.status === 'EMPTY').map(o => o.slot);
-  const activeOffers = body.filter(o => o.status !== 'EMPTY');
+  // ── 3. ge_offers (Live GE Slots display table) ─────────────
+  //
+  // FIX: Always delete a slot from ge_offers when its status is EMPTY *or*
+  // SOLD/CANCELLED — these are all terminal states meaning the slot is done.
+  // Previously only EMPTY slots were deleted, so SOLD offers lingered in
+  // Live GE Slots until the next poll sent an EMPTY for that slot.
 
-  if (emptySlots.length > 0) {
+  const terminalSlots = body
+    .filter(o => ['EMPTY', 'SOLD', 'CANCELLED_BUY', 'CANCELLED_SELL'].includes(o.status))
+    .map(o => o.slot);
+
+  const activeOffers = body.filter(
+    o => !['EMPTY', 'SOLD', 'CANCELLED_BUY', 'CANCELLED_SELL'].includes(o.status)
+  );
+
+  if (terminalSlots.length > 0) {
     await supabase
       .from('ge_offers')
       .delete()
       .eq('user_id', userId)
-      .in('slot', emptySlots);
+      .in('slot', terminalSlots);
   }
 
   if (activeOffers.length > 0) {
-    const rows = activeOffers.map((offer) => ({
+    const rows = activeOffers.map(offer => ({
       user_id:     userId,
       slot:        offer.slot,
       item_id:     offer.itemId,
@@ -144,27 +134,37 @@ export default async function handler(req, res) {
     }
   }
 
-  // ── 5. Update ge_flips_live ────────────────────────────────
+  // ── 4. ge_flips_live (Open Flips + Flip History) ───────────
   //
   // State machine per slot:
   //
-  //   BUYING / BOUGHT  → upsert a live flip row (open position)
-  //   SELLING          → mark the live flip row as SELLING (still open)
-  //   SOLD             → write sell price + profit, mark SOLD — keep the row
-  //                      so Flip History can display it. Active Operations
-  //                      already filters out SOLD via .not("status","in","(SOLD,CANCELLED)")
-  //   EMPTY            → DELETE the live flip row for that slot
-  //                      (item collected from GE — slot is now empty)
-  //   CANCELLED_BUY    → DELETE the live flip row (buy never happened)
-  //   CANCELLED_SELL   → leave open (item still held, sell cancelled)
+  //   BUYING          → INSERT a new open flip row (if none exists for this slot)
+  //   BOUGHT          → UPDATE status on the open row
+  //   SELLING         → UPDATE status on the open row
+  //   SOLD            → UPDATE open row with sell price + profit, mark SOLD
+  //                     Row stays permanently — Flip History reads SOLD rows,
+  //                     Active Operations filters them out.
+  //   EMPTY           → DELETE only non-SOLD rows (open flip is gone; SOLD rows
+  //                     stay so flip history is preserved)
+  //   CANCELLED_BUY   → DELETE the open flip row
+  //   CANCELLED_SELL  → UPDATE status back to BOUGHT (item still held)
 
   for (const offer of body) {
     const slot = offer.slot;
 
-    // ── EMPTY: item collected — remove open flip for this slot ────
-    // Only delete non-SOLD rows — completed flips stay permanently
-    // so Flip History can display them.
+    // ── EMPTY ───────────────────────────────────────────────
     if (offer.status === 'EMPTY') {
+      await supabase
+        .from('ge_flips_live')
+        .delete()
+        .eq('user_id', userId)
+        .eq('slot', slot)
+        .neq('status', 'SOLD'); // preserve completed flip history
+      continue;
+    }
+
+    // ── CANCELLED_BUY ───────────────────────────────────────
+    if (offer.status === 'CANCELLED_BUY') {
       await supabase
         .from('ge_flips_live')
         .delete()
@@ -174,31 +174,36 @@ export default async function handler(req, res) {
       continue;
     }
 
-    // ── CANCELLED_BUY: buy never filled — clean up ──────────
-    if (offer.status === 'CANCELLED_BUY') {
+    // ── CANCELLED_SELL ──────────────────────────────────────
+    if (offer.status === 'CANCELLED_SELL') {
       await supabase
         .from('ge_flips_live')
-        .delete()
+        .update({ status: 'BOUGHT' })
         .eq('user_id', userId)
-        .eq('slot', slot);
+        .eq('slot', slot)
+        .eq('status', 'SELLING');
       continue;
     }
 
-    // ── SOLD: complete the flip ──────────────────────────────
+    // ── SOLD ────────────────────────────────────────────────
     if (offer.status === 'SOLD') {
-      // Find the open live flip for this slot to get the buy price
-      const { data: existingFlip } = await supabase
+      // FIX: only match the current OPEN flip for this slot (not old SOLD rows).
+      // Previously .maybeSingle() with no status filter would match old SOLD rows
+      // from previous flips on the same slot → buy_price came back null → profit = 0.
+      const { data: openFlip } = await supabase
         .from('ge_flips_live')
-        .select('*')
+        .select('id, buy_price, quantity')
         .eq('user_id', userId)
         .eq('slot', slot)
+        .in('status', ['BUYING', 'BOUGHT', 'SELLING']) // only match the open flip
+        .order('buy_started_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       const sellPrice = offer.offerPrice;
-      const buyPrice  = existingFlip?.buy_price ?? null;
+      const buyPrice  = openFlip?.buy_price ?? null;
       const quantity  = offer.qtyFilled || offer.qtyTotal;
 
-      // Calculate profit if we have buy price
       let profit = null;
       let roi    = null;
       if (buyPrice && sellPrice) {
@@ -208,20 +213,19 @@ export default async function handler(req, res) {
         roi    = parseFloat(((margin / buyPrice) * 100).toFixed(2));
       }
 
-      if (existingFlip) {
-        // Update the existing row with sell data and mark SOLD
+      if (openFlip) {
         await supabase
           .from('ge_flips_live')
           .update({
-            status:           'SOLD',
-            sell_price:       sellPrice,
-            profit:           profit,
-            roi:              roi,
+            status:            'SOLD',
+            sell_price:        sellPrice,
+            profit:            profit,
+            roi:               roi,
             sell_completed_at: syncedAt,
           })
-          .eq('id', existingFlip.id);
+          .eq('id', openFlip.id);
       } else {
-        // No open flip found (e.g. server restarted mid-flip) — insert a closed record
+        // No open flip found (plugin restarted mid-flip) — insert a closed record
         await supabase
           .from('ge_flips_live')
           .insert({
@@ -233,76 +237,70 @@ export default async function handler(req, res) {
             sell_price:        sellPrice,
             profit:            profit,
             roi:               roi,
-            buy_started_at:    syncedAt, // best guess
-            sell_completed_at: syncedAt,
             quantity:          quantity,
+            buy_started_at:    syncedAt,
+            sell_completed_at: syncedAt,
           });
       }
-
-      // Row stays in ge_flips_live with status=SOLD.
-      // Active Operations filters it out via .not("status","in","(SOLD,CANCELLED)").
-      // Flip History shows it because it filters for status === "SOLD".
-      // The realtime UPDATE event fires on the frontend and moves it from
-      // openFlips → closedFlips automatically.
       continue;
     }
 
     // ── BUYING / BOUGHT / SELLING: upsert open flip ─────────
-    const isBuyOffer = offer.offerType === 'BUY';
-
-    if (isBuyOffer) {
-      // Only BUY offers create/update live flip rows
-      const flipRow = {
-        user_id:       userId,
-        slot:          slot,
-        item_id:       offer.itemId,
-        item_name:     offer.itemName.trim(),
-        status:        offer.status,            // BUYING, BOUGHT, or SELLING
-        buy_price:     offer.offerPrice,
-        quantity:      offer.qtyFilled || offer.qtyTotal,
-        buy_started_at: syncedAt,
-      };
-
-      const { data: existing } = await supabase
+    if (offer.offerType === 'BUY') {
+      // FIX: only look for the currently open (non-SOLD) row for this slot.
+      // Previously maybeSingle() with no status filter matched old SOLD rows,
+      // causing the UPDATE to fire on a completed flip instead of inserting a
+      // new row → duplicate open flips accumulated.
+      const { data: openFlip } = await supabase
         .from('ge_flips_live')
-        .select('id, buy_started_at, buy_price')
+        .select('id, buy_price')
         .eq('user_id', userId)
         .eq('slot', slot)
+        .in('status', ['BUYING', 'BOUGHT', 'SELLING'])
+        .order('buy_started_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
-      if (existing) {
-        // Update status + quantity, preserve original buy_started_at and buy_price
+      if (openFlip) {
+        // Update status on the existing open flip
         await supabase
           .from('ge_flips_live')
           .update({
             status:   offer.status,
             quantity: offer.qtyFilled || offer.qtyTotal,
-            // Only update buy_price if it wasn't set yet (BUYING → BOUGHT transition)
-            ...(existing.buy_price ? {} : { buy_price: offer.offerPrice }),
+            // Only lock in buy_price once we have it (BUYING may send 0)
+            ...(openFlip.buy_price ? {} : { buy_price: offer.offerPrice }),
           })
-          .eq('id', existing.id);
+          .eq('id', openFlip.id);
       } else {
-        // New flip — insert fresh row
+        // No open flip for this slot — insert fresh
         await supabase
           .from('ge_flips_live')
-          .insert(flipRow);
+          .insert({
+            user_id:        userId,
+            slot:           slot,
+            item_id:        offer.itemId,
+            item_name:      offer.itemName.trim(),
+            status:         offer.status,
+            buy_price:      offer.offerPrice,
+            quantity:       offer.qtyFilled || offer.qtyTotal,
+            buy_started_at: syncedAt,
+          });
       }
     } else {
-      // SELL offer — update status on the existing flip row to SELLING
-      // (the SOLD case above handles full completion)
+      // SELL offer (SELLING status) — update the open flip row
       await supabase
         .from('ge_flips_live')
         .update({ status: 'SELLING' })
         .eq('user_id', userId)
         .eq('slot', slot)
-        .not('status', 'eq', 'SOLD'); // don't overwrite a completed flip
+        .in('status', ['BUYING', 'BOUGHT']); // only update open rows
     }
   }
 
-  // ── 6. Touch last_used async (best-effort) ─────────────────
+  // ── 5. Touch last_used async ───────────────────────────────
   supabase.rpc('touch_api_key', { p_key: apiKey }).then(() => {}).catch(() => {});
 
-  // ── 7. Return success ──────────────────────────────────────
   return res.status(200).json({
     ok: true,
     synced: activeOffers.length,
