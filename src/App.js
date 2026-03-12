@@ -308,60 +308,64 @@ const STYLES = `
 
   /* MERCHANT MODE */
   .merchant-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; width: 100%; }
-  .merchant-layout { display: grid; grid-template-columns: 1fr 340px 320px; flex: 1; min-height: 0; overflow: hidden; width: 100%; height: 100%; }
-  .merchant-left { overflow-y: auto; overflow-x: visible; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .merchant-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .merchant-header-pills { display: flex; gap: 4px; }
+  .merchant-nav-pill { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+  .merchant-nav-pill:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .merchant-nav-pill.active { background: rgba(201,168,76,0.15); border-color: var(--gold); color: var(--gold); font-weight: 600; }
+  .merchant-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+  .merchant-layout { display: grid; grid-template-columns: 1fr 320px; flex: 1; min-height: 0; overflow: hidden; width: 100%; }
+  .merchant-left { overflow-y: auto; overflow-x: visible; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
   .merchant-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
-  .merchant-far-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
-  .capital-bar { display: grid; grid-template-columns: repeat(5,1fr); background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
-  .cap-cell { padding: 14px 16px 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; min-height: 80px; }
+  .merchant-section { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
+  .merchant-section-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .merchant-section-title { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; }
+  .merchant-empty { padding: 32px 20px; text-align: center; }
+  .capital-bar { display: grid; grid-template-columns: repeat(5,1fr); background: var(--bg3); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .cap-cell { padding: 14px 16px 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; min-height: 76px; }
   .cap-cell:last-child { border-right: none; }
   .cap-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; }
-  .cap-value { font-size: 18px; font-weight: 600; font-family: 'Cinzel', serif; line-height: 1.3; }
-  .cap-sub { font-size: 12px; color: var(--text-dim); }
-  .cap-sub.up { color: var(--green); }
-  .cap-sub.warn { color: #f39c12; }
-  .slots-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 8px; }
-  .ge-slot { aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; position: relative; transition: all 0.2s; overflow: hidden; background: var(--bg3); }
-  .ge-slot.active:hover { border-color: var(--gold-dim); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-  .ge-slot.empty { background: var(--bg2); border-style: dashed; opacity: 0.35; }
-  .ge-slot.empty:hover { opacity: 0.6; }
-  .slot-icon { font-size: 20px; }
-  .slot-name { font-size: 10px; color: var(--text-dim); text-align: center; line-height: 1.2; padding: 0 3px; }
-  .slot-pnl { font-size: 11px; font-weight: 600; }
+  .cap-value { font-size: 17px; font-weight: 600; font-family: 'Cinzel', serif; line-height: 1.3; }
+  .cap-sub { font-size: 11px; color: var(--text-dim); }
+  .slots-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 8px; padding: 12px 16px; }
+  .ge-slot { aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; position: relative; transition: all 0.2s; overflow: hidden; background: var(--bg2); }
+  .ge-slot.active:hover { border-color: var(--gold-dim); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
+  .ge-slot.empty { border-style: dashed; opacity: 0.3; cursor: pointer; }
+  .ge-slot.empty:hover { opacity: 0.6; border-color: var(--gold-dim); }
+  .slot-name { font-size: 9px; color: var(--text-dim); text-align: center; line-height: 1.2; padding: 0 3px; }
+  .slot-pnl { font-size: 10px; font-weight: 600; }
   .slot-dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; }
-  .slot-dot.buying { background: #f39c12; animation: pulse 1.5s infinite; }
-  .slot-dot.selling { background: var(--blue); animation: pulse 1.5s infinite; }
-  .slot-dot.holding { background: var(--green); }
-  .slot-dot.danger { background: var(--red); animation: pulse 0.8s infinite; }
-  .ops-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
-  .ops-header { display: grid; grid-template-columns: 2.2fr 1fr 0.7fr 1fr 1fr 1fr 120px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
-  .op-row { display: grid; grid-template-columns: 2.2fr 1fr 0.7fr 1fr 1fr 1fr 120px 80px; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; cursor: pointer; position: relative; }
+  .ops-table { overflow: visible; }
+  .ops-header { display: grid; grid-template-columns: 2fr 100px 1fr 0.7fr 1fr 1fr 1fr 110px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); border-radius: 0; }
+  .op-row { display: grid; grid-template-columns: 2fr 100px 1fr 0.7fr 1fr 1fr 1fr 110px 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; cursor: pointer; position: relative; }
   .op-row:last-child { border-bottom: none; }
   .op-row:hover { background: var(--bg4); }
-  .op-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0 2px 2px 0; }
-  .op-row.op-healthy::before { background: var(--green); }
-  .op-row.op-warn::before { background: #f39c12; }
-  .op-row.op-danger::before { background: var(--red); }
-  .op-item-name { font-weight: 500; font-size: 14px; color: var(--text); }
-  .op-item-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .op-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0; }
+  .op-row.op-row-healthy::before { background: var(--green); }
+  .op-row.op-row-warn::before { background: #f39c12; }
+  .op-row.op-row-danger::before { background: var(--red); animation: pulse 1s infinite; }
+  .op-item-name { font-weight: 500; font-size: 13px; color: var(--text); }
+  .op-item-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .pos-status-select { background: var(--bg4); border: 1px solid var(--border); border-radius: 5px; padding: 3px 6px; font-size: 11px; font-family: 'Inter', sans-serif; cursor: pointer; outline: none; font-weight: 600; }
   .health-bar-wrap { display: flex; flex-direction: column; gap: 3px; }
   .health-track { height: 5px; background: var(--bg4); border-radius: 2px; overflow: hidden; width: 80px; }
   .health-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
-  .health-label { font-size: 11px; }
-  .op-action-btn { padding: 6px 12px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
+  .health-label { font-size: 10px; }
+  .op-action-btn { padding: 6px 12px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
   .op-action-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
-  .op-action-btn.danger-btn:hover { border-color: var(--red); color: var(--red); }
-  .add-pos-row { display: grid; grid-template-columns: 2.2fr 1fr 0.7fr 1fr 1fr 1fr 120px 80px; padding: 10px 16px; border-top: 1px solid var(--gold-dim); align-items: center; gap: 0; background: rgba(201,168,76,0.04); }
+  .op-action-btn.danger-btn { border-color: rgba(231,76,60,0.4); color: var(--red); }
+  .op-action-btn.danger-btn:hover { background: rgba(231,76,60,0.1); }
+  .add-pos-row { display: grid; grid-template-columns: 2fr 100px 1fr 0.7fr 1fr 1fr 1fr 110px 80px; padding: 10px 16px; border-top: 1px solid var(--gold-dim); align-items: center; background: rgba(201,168,76,0.04); }
   .add-pos-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: 'Inter', sans-serif; outline: none; width: 100%; transition: border-color 0.2s; }
   .add-pos-input:focus { border-color: var(--gold-dim); }
   .add-pos-input::placeholder { color: var(--text-dim); font-size: 11px; }
   .add-pos-input.readonly { background: var(--bg3); color: var(--text-dim); cursor: not-allowed; border-color: transparent; }
-  .add-pos-confirm { padding: 6px 10px; border-radius: 5px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; transition: opacity 0.2s; width: 100%; }
+  .add-pos-confirm { padding: 6px 10px; border-radius: 5px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: opacity 0.2s; width: 100%; }
   .add-pos-confirm:hover { opacity: 0.85; }
   .add-pos-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
   .add-pos-cancel { padding: 6px 8px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; width: 100%; margin-top: 4px; }
   .add-pos-cancel:hover { border-color: var(--red); color: var(--red); }
-  .ops-add-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 7px; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; margin: 10px 16px; }
+  .ops-add-btn { padding: 6px 12px; border-radius: 6px; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
   .ops-add-btn:hover { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.05); }
   .merchant-ac-wrap { position: relative; width: 100%; }
   .merchant-ac-list { position: absolute; top: calc(100% + 2px); left: 0; min-width: 280px; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 6px; z-index: 9999; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
@@ -373,15 +377,13 @@ const STYLES = `
   .m-smart-alert-row:last-child { border-bottom: none; }
   .m-panel-title { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
   .gauge-wrap { display: flex; align-items: center; gap: 16px; }
-  .gauge-ring { position: relative; width: 86px; height: 86px; flex-shrink: 0; }
-  .gauge-ring svg { transform: rotate(-90deg); }
+  .gauge-ring { position: relative; width: 86px; height: 86px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   .gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .gauge-pct { font-size: 20px; font-weight: 700; color: var(--gold); font-family: 'Cinzel', serif; }
   .gauge-sub-lbl { font-size: 10px; color: var(--text-dim); }
   .gauge-stats { display: flex; flex-direction: column; gap: 8px; }
-  .gauge-stat-label { font-size: 12px; color: var(--text-dim); }
-  .gauge-stat-val { font-size: 15px; font-weight: 600; }
-  .idle-alert { background: rgba(243,156,18,0.08); border: 1px solid rgba(243,156,18,0.25); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #f39c12; line-height: 1.5; }
+  .gauge-stat-label { font-size: 11px; color: var(--text-dim); }
+  .gauge-stat-val { font-size: 14px; font-weight: 600; }
   .rotation-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
   .rotation-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
   .rotation-card.rc-green::before { background: var(--green); }
@@ -396,6 +398,10 @@ const STYLES = `
   .pnl-chart-wrap { width: 100%; height: 72px; }
   .pnl-time-labels { display: flex; justify-content: space-between; margin-top: 4px; }
   .pnl-time-label { font-size: 9px; color: var(--text-dim); }
+  .analytics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 12px 16px; }
+  .analytics-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; }
+  .analytics-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .analytics-val { font-size: 15px; font-weight: 600; font-family: 'Cinzel', serif; }
   .capital-setup { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 24px; }
   .capital-setup-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 420px; padding: 32px; display: flex; flex-direction: column; gap: 20px; }
   .capital-setup-title { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); }
@@ -405,10 +411,8 @@ const STYLES = `
   .capital-setup-btn { padding: 12px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 0.5px; transition: opacity 0.2s; }
   .capital-setup-btn:hover { opacity: 0.85; }
   .capital-setup-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .merchant-nav-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--gold-dim); background: rgba(201,168,76,0.08); color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
-  .merchant-nav-btn:hover { background: rgba(201,168,76,0.16); }
-  .merchant-nav-btn.active { background: rgba(201,168,76,0.18); border-color: var(--gold); }
-  .merchant-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
+  .merchant-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+
 
   .alerts-wrap { display: flex; flex-direction: column; gap: 20px; }
   .alert-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
@@ -1521,12 +1525,13 @@ const WELCOME_MSG = {
 
 // ── MERCHANT MODE COMPONENT ──
 function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos }) {
-  // Build open positions — tracker flips only (portfolio positions are now also written as flips)
-  // Deduplicate: if same item appears in both flipsLog and manualPositions, prefer flipsLog entry
+
+  // ── Build open positions ──
   const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
     id: f.id, name: f.item, gpIn: (f.buyPrice || 0) * (f.qty || 1),
     qty: f.qty || 1, buyPrice: f.buyPrice || 0, source: "tracker",
     openedAt: f.date ? new Date(f.date) : new Date(),
+    posStatus: f.posStatus || "buying",
   }));
   const trackerNames = new Set(trackerOpen.map(p => p.name.toLowerCase()));
   const portfolioOnly = manualPositions
@@ -1535,24 +1540,18 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
       id: p.id, name: p.item_name, gpIn: (p.buy_price || 0) * (p.qty || 1),
       qty: p.qty || 1, buyPrice: p.buy_price || 0, source: "portfolio",
       openedAt: p.date_opened ? new Date(p.date_opened) : new Date(),
+      posStatus: p.pos_status || "buying",
     }));
   const allOpenPositions = [...trackerOpen, ...portfolioOnly];
 
+  // ── Core metrics ──
   const totalDeployed = allOpenPositions.reduce((s, p) => s + p.gpIn, 0);
   const idleGP = Math.max(0, merchantCapital - totalDeployed);
+  const efficiencyPct = merchantCapital > 0 ? Math.round((totalDeployed / merchantCapital) * 100) : 0;
+  const circumference = 2 * Math.PI * 32;
+  const dashOffset = circumference - (efficiencyPct / 100) * circumference;
   const todayFlips = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString());
   const realisedToday = todayFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
-
-  // Inline add position state
-  const [showAddRow, setShowAddRow] = useState(false);
-  const [addForm, setAddForm] = useState({ item: "", buyPrice: "", qty: "1", totalGp: "" });
-  const [addingPos, setAddingPos] = useState(false);
-  const [addAc, setAddAc] = useState([]);
-  const [showAddAc, setShowAddAc] = useState(false);
-  const [addAcIdx, setAddAcIdx] = useState(-1);
-  const [merchantFeedFilter, setMerchantFeedFilter] = useState("all");
-  const [closingPos, setClosingPos] = useState(null); // { pos, type: "tracker"|"portfolio" }
-
   const unrealisedTotal = allOpenPositions.reduce((s, pos) => {
     const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
     if (!liveItem) return s;
@@ -1560,20 +1559,49 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
     return s + (liveItem.high - pos.buyPrice - tax) * pos.qty;
   }, 0);
 
-  const efficiencyPct = merchantCapital > 0 ? Math.round((totalDeployed / merchantCapital) * 100) : 0;
-  const circumference = 2 * Math.PI * 32;
-  const dashOffset = circumference - (efficiencyPct / 100) * circumference;
+  // ── State ──
+  const [showAddRow, setShowAddRow] = useState(false);
+  const [addForm, setAddForm] = useState({ item: "", buyPrice: "", qty: "1" });
+  const [addingPos, setAddingPos] = useState(false);
+  const [addAc, setAddAc] = useState([]);
+  const [showAddAc, setShowAddAc] = useState(false);
+  const [addAcIdx, setAddAcIdx] = useState(-1);
+  const [merchantFeedFilter, setMerchantFeedFilter] = useState("all");
+  const [closingPos, setClosingPos] = useState(null);
+  const [posStatuses, setPosStatuses] = useState({}); // id -> "buying"|"selling"|"holding"
+  const [dailyGoal, setDailyGoal] = useState(() => { try { return parseInt(localStorage.getItem("rt_daily_goal") || "0"); } catch { return 0; } });
+  const [showGoalInput, setShowGoalInput] = useState(false);
+  const [goalInput, setGoalInput] = useState("");
+  const [flipQueue, setFlipQueue] = useState(() => { try { return JSON.parse(localStorage.getItem("rt_flip_queue") || "[]"); } catch { return []; } });
+  const [showQueueAdd, setShowQueueAdd] = useState(false);
+  const [queueInput, setQueueInput] = useState("");
+  const [sessionStart] = useState(() => Date.now());
+  const [now, setNow] = useState(Date.now());
+  const [activeView, setActiveView] = useState("operations"); // operations | analytics | alerts
 
-  // AI rotation picks — top 3 items by score that fit idle GP
-  const rotationPicks = items
-    .filter(i => i.low <= idleGP && i.margin > 0 && i.score >= 60)
-    .filter(i => !allOpenPositions.some(p => p.name.toLowerCase() === i.name.toLowerCase()))
-    .slice(0, 3);
+  // Live clock for session timer
+  useEffect(() => {
+    const iv = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(iv);
+  }, []);
 
+  // ── Helpers ──
   function getHoldTime(openedAt) {
     const ms = Date.now() - new Date(openedAt).getTime();
     const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  }
+
+  function getSessionTime() {
+    const ms = now - sessionStart;
+    const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  }
+
+  function getGPHr() {
+    const hrs = (now - sessionStart) / 3600000;
+    if (hrs < 0.05 || realisedToday === 0) return null;
+    return Math.round(realisedToday / hrs);
   }
 
   function getHealthPct(pos) {
@@ -1585,466 +1613,797 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
     return Math.max(0, Math.min(100, Math.round((currentMargin / originalMargin) * 100)));
   }
 
-  function getHealthClass(pct) {
-    if (pct >= 60) return "op-healthy";
-    if (pct >= 25) return "op-warn";
-    return "op-danger";
-  }
-
-  function getSlotStatus(pos) {
-    const pct = getHealthPct(pos);
-    if (pct < 20) return "danger";
+  function getPosStatus(pos) {
+    const override = posStatuses[pos.id];
+    if (override) return override;
     const holdMs = Date.now() - new Date(pos.openedAt).getTime();
-    if (holdMs < 30 * 60 * 1000) return "buying";
-    if (pct >= 60) return "holding";
+    const healthPct = getHealthPct(pos);
+    if (healthPct < 20) return "danger";
+    if (holdMs < 20 * 60 * 1000) return "buying";
+    if (healthPct >= 60) return "holding";
     return "selling";
   }
 
+  function setPosStatus(id, status) {
+    setPosStatuses(prev => ({ ...prev, [id]: status }));
+  }
+
+  function saveGoal(val) {
+    const n = parseInt(val.replace(/[^0-9]/g, "")) || 0;
+    setDailyGoal(n);
+    localStorage.setItem("rt_daily_goal", String(n));
+    setShowGoalInput(false);
+  }
+
+  function addToQueue(name) {
+    if (!name.trim()) return;
+    const item = items.find(i => i.name.toLowerCase() === name.trim().toLowerCase());
+    const entry = { id: Date.now(), name: name.trim(), margin: item?.margin || 0, score: item?.score || 0, buyLimit: item?.buyLimit || 0 };
+    const updated = [...flipQueue, entry];
+    setFlipQueue(updated);
+    localStorage.setItem("rt_flip_queue", JSON.stringify(updated));
+    setQueueInput("");
+    setShowQueueAdd(false);
+  }
+
+  function removeFromQueue(id) {
+    const updated = flipQueue.filter(q => q.id !== id);
+    setFlipQueue(updated);
+    localStorage.setItem("rt_flip_queue", JSON.stringify(updated));
+  }
+
+  // ── Rotation picks ──
+  const rotationPicks = items
+    .filter(i => i.low <= idleGP && i.margin > 0 && i.score >= 60)
+    .filter(i => !allOpenPositions.some(p => p.name.toLowerCase() === i.name.toLowerCase()))
+    .slice(0, 3);
+
+  // ── Risk exposure ──
+  const riskItems = allOpenPositions.map(pos => {
+    const pct = merchantCapital > 0 ? Math.round((pos.gpIn / merchantCapital) * 100) : 0;
+    return { ...pos, pct };
+  }).sort((a, b) => b.pct - a.pct);
+  const topRiskPct = riskItems[0]?.pct || 0;
+  const gpHr = getGPHr();
+
+  const STATUS_COLORS = { buying: "#f39c12", selling: "var(--blue)", holding: "var(--green)", danger: "var(--red)" };
+  const STATUS_LABELS = { buying: "Buying", selling: "Selling", holding: "Holding", danger: "⚠ Danger" };
 
   return (
     <>
     <div className="merchant-wrap">
-      <div className="merchant-layout">
-        {/* LEFT */}
-        <div className="merchant-left">
-
-          {/* Capital Overview */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px" }}>⚔️ Merchant Mode</div>
-            <button className="refresh-btn" disabled={refreshing || refreshCooldown > 0} onClick={onRefresh}
-              style={{ fontSize: "12px" }}>
-              <span className={refreshing ? "refresh-spin" : ""}>↻</span>
-              {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh Prices"}
-            </button>
+      {/* ── HEADER BAR ── */}
+      <div className="merchant-header">
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div className="merchant-dot" />
+            <span style={{ fontFamily: "'Cinzel', serif", fontSize: "14px", fontWeight: 700, color: "var(--gold)", letterSpacing: "1.5px" }}>MERCHANT MODE</span>
           </div>
-          <div className="capital-bar">
-            {[
-              { label: "Total Capital", value: formatGP(merchantCapital), color: "var(--gold)", sub: <span style={{ cursor: "pointer", textDecoration: "underline", color: "var(--text-dim)" }} onClick={onUpdateCapital}>Update</span> },
-              { label: "Deployed", value: formatGP(totalDeployed), color: "var(--blue)", sub: `${efficiencyPct}% of stack` },
-              { label: "Idle GP", value: formatGP(idleGP), color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text)", sub: idleGP > merchantCapital * 0.3 ? <span className="cap-sub warn">⚠ Sitting unused</span> : <span className="cap-sub">Available to deploy</span> },
-              { label: "Realised Today", value: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)", sub: <span className="cap-sub up">{merchantCapital > 0 ? ((realisedToday / merchantCapital) * 100).toFixed(2) : "0.00"}% on capital</span> },
-              { label: "Unrealised P&L", value: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)", sub: "Open positions" },
-            ].map((c, i) => (
-              <div key={i} className="cap-cell">
-                <span className="cap-label">{c.label}</span>
-                <span className="cap-value" style={{ color: c.color }}>{c.value}</span>
-                <span className="cap-sub">{c.sub}</span>
-              </div>
+          <div className="merchant-header-pills">
+            {[["operations", "⚔️ Operations"], ["analytics", "📊 Analytics"], ["alerts", "⚡ Alerts"]].map(([v, l]) => (
+              <button key={v} className={`merchant-nav-pill${activeView === v ? " active" : ""}`} onClick={() => setActiveView(v)}>{l}</button>
             ))}
           </div>
-
-          {/* GE Slots */}
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-              <div className="section-title">GE Slots</div>
-              <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{allOpenPositions.length} / 8 active</span>
-            </div>
-            <div className="slots-grid">
-              {Array.from({ length: 8 }).map((_, i) => {
-                const pos = allOpenPositions[i];
-                if (!pos) return (
-                  <div key={i} className="ge-slot empty">
-                    <div style={{ fontSize: "18px", color: "var(--border)" }}>+</div>
-                    <div style={{ fontSize: "8px", color: "var(--border)" }}>Empty</div>
-                  </div>
-                );
-                const liveItem = items.find(it => it.name.toLowerCase() === pos.name.toLowerCase());
-                const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
-                const pnlEach = liveItem ? liveItem.high - pos.buyPrice - tax : 0;
-                const pnlTotal = pnlEach * pos.qty;
-                const status = getSlotStatus(pos);
-                return (
-                  <div key={i} className="ge-slot active" onClick={() => liveItem && setSelectedItem(liveItem)}
-                    title={`${pos.name} — click to view chart`}>
-                    <div className={`slot-dot ${status}`} />
-                    <img src={itemIconUrl(pos.name)} alt="" style={{ width: 28, height: 28, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
-                    <div className="slot-name">{pos.name.length > 14 ? pos.name.slice(0, 13) + "…" : pos.name}</div>
-                    <div className={`slot-pnl`} style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
-                      {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ display: "flex", gap: "16px", marginTop: "8px", fontSize: "11px", color: "var(--text-dim)" }}>
-              <span><span style={{ background: "#f39c12", borderRadius: "50%", display: "inline-block", width: 7, height: 7, marginRight: 4 }} />Buying</span>
-              <span><span style={{ background: "var(--blue)", borderRadius: "50%", display: "inline-block", width: 7, height: 7, marginRight: 4 }} />Selling</span>
-              <span><span style={{ background: "var(--green)", borderRadius: "50%", display: "inline-block", width: 7, height: 7, marginRight: 4 }} />Holding</span>
-              <span><span style={{ background: "var(--red)", borderRadius: "50%", display: "inline-block", width: 7, height: 7, marginRight: 4 }} />Needs attention</span>
-            </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {/* Session timer */}
+          <div style={{ fontSize: "11px", color: "var(--text-dim)", display: "flex", gap: "10px", alignItems: "center" }}>
+            <span>⏱ {getSessionTime()}</span>
+            {gpHr !== null && <span style={{ color: gpHr >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>{gpHr >= 0 ? "+" : ""}{formatGP(gpHr)} gp/hr</span>}
           </div>
+          <button className="refresh-btn" disabled={refreshing || refreshCooldown > 0} onClick={onRefresh} style={{ fontSize: "12px" }}>
+            <span className={refreshing ? "refresh-spin" : ""}>↻</span>
+            {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh"}
+          </button>
+        </div>
+      </div>
 
-          {/* Operations Table */}
-          <div>
-            <div className="section-title" style={{ marginBottom: "10px" }}>Active Operations</div>
-            {allOpenPositions.length === 0 && !showAddRow ? (
-              <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "32px 20px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
-                <div style={{ fontSize: "32px", marginBottom: "10px", opacity: 0.4 }}>⚔️</div>
-                <p>No open positions yet.</p>
-                <small>Log a buy in the Tracker, or add one directly below.</small>
-                <div style={{ marginTop: "14px" }}>
-                  <button className="ops-add-btn" style={{ margin: "0 auto" }} onClick={() => setShowAddRow(true)}>
-                    <span style={{ fontSize: "16px", lineHeight: 1 }}>+</span> Add Position
-                  </button>
+      {/* ── CAPITAL BAR ── */}
+      <div className="capital-bar">
+        {[
+          { label: "Total Capital", value: formatGP(merchantCapital), color: "var(--gold)", sub: <span style={{ cursor: "pointer", textDecoration: "underline", color: "var(--text-dim)", fontSize: "11px" }} onClick={onUpdateCapital}>Update</span> },
+          { label: "Deployed", value: formatGP(totalDeployed), color: "var(--blue)", sub: `${efficiencyPct}% of stack` },
+          { label: "Idle GP", value: formatGP(idleGP), color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text)", sub: idleGP > merchantCapital * 0.3 ? <span style={{ color: "#f39c12" }}>⚠ Sitting unused</span> : "Available" },
+          { label: "Unrealised P&L", value: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)", sub: `${allOpenPositions.length} open positions` },
+          { label: "Realised Today", value: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)", sub: `${todayFlips.length} flips closed` },
+        ].map((c, i) => (
+          <div key={i} className="cap-cell">
+            <span className="cap-label">{c.label}</span>
+            <span className="cap-value" style={{ color: c.color }}>{c.value}</span>
+            <span className="cap-sub">{c.sub}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="merchant-body">
+        {/* ══════════════════════ OPERATIONS VIEW ══════════════════════ */}
+        {activeView === "operations" && (
+          <div className="merchant-layout">
+
+            {/* ── LEFT: GE Slots + Active Operations ── */}
+            <div className="merchant-left">
+
+              {/* GE Slot Grid */}
+              <div className="merchant-section">
+                <div className="merchant-section-header">
+                  <span className="merchant-section-title">GE Slots</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{allOpenPositions.length} / 8 occupied</span>
                 </div>
-              </div>
-            ) : (
-              <>
-              <div className="ops-table">
-                <div className="ops-header">
-                  <span>Item</span><span>Investment</span><span>Qty</span><span>Avg Buy</span><span>Sell Now</span><span>Live P&L</span><span>Margin Health</span><span>Action</span>
-                </div>
-                {allOpenPositions.map(pos => {
-                  const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
-                  // Live P&L: what you'd net if you sold right now at current GE sell price
-                  // = (currentHigh - tax) - yourBuyPrice
-                  // This is genuinely unrealised — you still need to list and sell.
-                  // If currentHigh hasn't changed from when you bought, P&L = original margin.
-                  // We also show a warning if the margin has compressed since you bought.
-                  const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
-                  const currentNetSell = liveItem ? liveItem.high - tax : 0;
-                  const pnlEach = liveItem ? currentNetSell - pos.buyPrice : 0;
-                  const pnlTotal = pnlEach * pos.qty;
-                  const pnlPct = pos.buyPrice > 0 ? ((pnlEach / pos.buyPrice) * 100).toFixed(1) : "0.0";
-                  // Warn if sell price has dropped below buy price (margin gone / inverted)
-                  const marginGone = liveItem && liveItem.high <= pos.buyPrice;
-                  const healthPct = getHealthPct(pos);
-                  const healthColor = healthPct >= 60 ? "var(--green)" : healthPct >= 25 ? "#f39c12" : "var(--red)";
-                  const healthText = healthPct >= 60 ? "Strong" : healthPct >= 25 ? "Fading" : "Needs Attention";
-                  return (
-                    <div key={pos.id} className={`op-row ${getHealthClass(healthPct)}`} onClick={() => liveItem && setSelectedItem(liveItem)}>
-                      <div>
-                        <div className="op-item-name">{pos.name}</div>
-                        <div className="op-item-sub">{getHoldTime(pos.openedAt)} · {pos.source === "tracker" ? "via Tracker" : "via Portfolio"}</div>
+                <div className="slots-grid">
+                  {Array.from({ length: 8 }).map((_, i) => {
+                    const pos = allOpenPositions[i];
+                    if (!pos) return (
+                      <div key={i} className="ge-slot empty" onClick={() => setShowAddRow(true)} title="Empty slot — click to add position">
+                        <div style={{ fontSize: "20px", color: "var(--border)", lineHeight: 1 }}>+</div>
+                        <div style={{ fontSize: "8px", color: "var(--border)", marginTop: "2px" }}>Empty</div>
                       </div>
-                      <span style={{ fontSize: "12px" }}>{formatGP(pos.gpIn)}</span>
-                      <span style={{ fontSize: "12px" }}>{pos.qty.toLocaleString()}</span>
-                      <span style={{ fontSize: "12px" }}>{formatGP(pos.buyPrice)}</span>
-                      <span style={{ fontSize: "12px", color: liveItem ? "var(--text)" : "var(--text-dim)" }}>
-                        {liveItem ? formatGP(liveItem.high) : "—"}
-                      </span>
-                      <div>
-                        <div style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>
+                    );
+                    const liveItem = items.find(it => it.name.toLowerCase() === pos.name.toLowerCase());
+                    const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
+                    const pnlTotal = liveItem ? (liveItem.high - pos.buyPrice - tax) * pos.qty : 0;
+                    const status = getPosStatus(pos);
+                    return (
+                      <div key={i} className={`ge-slot active slot-status-${status}`}
+                        onClick={() => liveItem && setSelectedItem(liveItem)}
+                        title={`${pos.name} · ${STATUS_LABELS[status]} · Click to view chart`}>
+                        <div className={`slot-dot`} style={{ background: STATUS_COLORS[status] }} />
+                        <img src={itemIconUrl(pos.name)} alt="" style={{ width: 28, height: 28, objectFit: "contain", imageRendering: "pixelated" }}
+                          onError={e => { e.target.style.display = "none"; }} />
+                        <div className="slot-name">{pos.name.length > 12 ? pos.name.slice(0, 11) + "…" : pos.name}</div>
+                        <div className="slot-pnl" style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
                           {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
                         </div>
-                        <div style={{ fontSize: "10px", color: marginGone ? "var(--red)" : pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
-                          {marginGone ? "⚠ margin gone" : `${pnlPct}%`}
-                        </div>
                       </div>
-                      <div className="health-bar-wrap" onClick={e => e.stopPropagation()}>
-                        <div className="health-track"><div className="health-fill" style={{ width: `${healthPct}%`, background: healthColor }} /></div>
-                        <span className="health-label" style={{ color: healthColor }}>{healthPct}% — {healthText}</span>
-                      </div>
-                      <button className={`op-action-btn${healthPct < 25 ? " danger-btn" : ""}`}
-                        onClick={e => { e.stopPropagation(); setClosingPos({ pos, type: pos.source }); }}>
-                        {healthPct < 25 ? "Cut Loss" : "Close"}
-                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ display: "flex", gap: "16px", marginTop: "10px", fontSize: "11px", color: "var(--text-dim)" }}>
+                  {[["#f39c12","Buying"],["var(--green)","Holding"],["var(--blue)","Selling"],["var(--red)","Danger"]].map(([c,l]) => (
+                    <span key={l}><span style={{ background: c, borderRadius: "50%", display: "inline-block", width: 7, height: 7, marginRight: 4 }} />{l}</span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Active Operations Table */}
+              <div className="merchant-section" style={{ flex: 1 }}>
+                <div className="merchant-section-header">
+                  <span className="merchant-section-title">Active Operations</span>
+                  <button className="ops-add-btn" onClick={() => setShowAddRow(r => !r)}>+ Add Position</button>
+                </div>
+
+                {allOpenPositions.length === 0 && !showAddRow ? (
+                  <div className="merchant-empty">
+                    <div style={{ fontSize: "36px", opacity: 0.3 }}>⚔️</div>
+                    <p style={{ marginTop: "10px", color: "var(--text-dim)", fontSize: "13px" }}>No open positions</p>
+                    <small style={{ color: "var(--text-dim)", fontSize: "11px" }}>Log a buy in the Tracker, or add one here.</small>
+                    <button className="ops-add-btn" style={{ marginTop: "12px" }} onClick={() => setShowAddRow(true)}>+ Add Position</button>
+                  </div>
+                ) : (
+                  <div className="ops-table">
+                    <div className="ops-header">
+                      <span>Item</span><span>Status</span><span>Investment</span><span>Qty</span><span>Avg Buy</span><span>Sell Now</span><span>Live P&L</span><span>Health</span><span>Action</span>
                     </div>
-                  );
-                })}
-                {/* Inline add-position row */}
-                {showAddRow && (() => {
-                  const computedQty = parseInt(addForm.qty) || 1;
-                  const computedBuy = parseInt(addForm.buyPrice.replace(/[^0-9]/g, "")) || 0;
-                  const computedInvestment = computedBuy > 0 && computedQty > 0 ? (computedBuy * computedQty).toLocaleString() : "";
-                  return (
-                    <div className="add-pos-row">
-                      {/* Item name with autocomplete */}
-                      <div style={{ paddingRight: "8px" }} className="merchant-ac-wrap">
-                        <input className="add-pos-input" placeholder="Item name..." value={addForm.item}
-                          autoComplete="off"
-                          onChange={e => {
-                            const v = e.target.value;
-                            setAddForm(f => ({ ...f, item: v }));
-                            setAddAcIdx(-1);
-                            if (v.length >= 2) {
-                              const matches = items.filter(i => i.name.toLowerCase().includes(v.toLowerCase())).slice(0, 8).map(i => i.name);
-                              setAddAc(matches);
-                              setShowAddAc(matches.length > 0);
-                            } else { setShowAddAc(false); }
-                          }}
-                          onKeyDown={e => {
-                            if (!showAddAc || addAc.length === 0) return;
-                            if (e.key === "ArrowDown") { e.preventDefault(); setAddAcIdx(i => Math.min(i + 1, addAc.length - 1)); }
-                            else if (e.key === "ArrowUp") { e.preventDefault(); setAddAcIdx(i => Math.max(i - 1, 0)); }
-                            else if (e.key === "Enter" && addAcIdx >= 0) { e.preventDefault(); setAddForm(f => ({ ...f, item: addAc[addAcIdx] })); setShowAddAc(false); setAddAcIdx(-1); }
-                            else if (e.key === "Escape") { setShowAddAc(false); }
-                          }}
-                          onBlur={() => setTimeout(() => setShowAddAc(false), 150)} />
-                        {showAddAc && (
-                          <div className="merchant-ac-list">
-                            {addAc.map((name, idx) => (
-                              <div key={name} className={`merchant-ac-item${idx === addAcIdx ? " highlighted" : ""}`}
-                                onMouseDown={() => { setAddForm(f => ({ ...f, item: name })); setShowAddAc(false); setAddAcIdx(-1); }}>
-                                {name}
-                              </div>
-                            ))}
+
+                    {allOpenPositions.map(pos => {
+                      const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
+                      const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
+                      const pnlEach = liveItem ? liveItem.high - pos.buyPrice - tax : 0;
+                      const pnlTotal = pnlEach * pos.qty;
+                      const pnlPct = pos.buyPrice > 0 ? ((pnlEach / pos.buyPrice) * 100).toFixed(1) : "0.0";
+                      const marginGone = liveItem && liveItem.high <= pos.buyPrice;
+                      const healthPct = getHealthPct(pos);
+                      const healthColor = healthPct >= 60 ? "var(--green)" : healthPct >= 25 ? "#f39c12" : "var(--red)";
+                      const healthText = healthPct >= 60 ? "Strong" : healthPct >= 25 ? "Fading" : "Danger";
+                      const status = getPosStatus(pos);
+                      return (
+                        <div key={pos.id} className={`op-row op-row-${healthPct >= 60 ? "healthy" : healthPct >= 25 ? "warn" : "danger"}`}
+                          onClick={() => liveItem && setSelectedItem(liveItem)}>
+                          <div>
+                            <div className="op-item-name">{pos.name}</div>
+                            <div className="op-item-sub">{getHoldTime(pos.openedAt)} · {pos.source === "tracker" ? "Tracker" : "Portfolio"}</div>
                           </div>
-                        )}
-                      </div>
-                      {/* Investment — auto-calculated, read-only */}
-                      <div style={{ paddingRight: "6px" }}>
-                        <input className="add-pos-input readonly" readOnly tabIndex={-1}
-                          value={computedInvestment ? computedInvestment : ""} placeholder="Auto" />
-                      </div>
-                      <div style={{ paddingRight: "6px" }}>
-                        <input className="add-pos-input" placeholder="Qty" value={addForm.qty}
-                          onChange={e => setAddForm(f => ({ ...f, qty: e.target.value }))} />
-                      </div>
-                      <div style={{ paddingRight: "6px" }}>
-                        <input className="add-pos-input" placeholder="Buy price ea." value={addForm.buyPrice}
-                          onChange={e => setAddForm(f => ({ ...f, buyPrice: e.target.value }))} />
-                      </div>
-                      <div style={{ color: "var(--text-dim)", fontSize: "11px" }}>Live</div>
-                      <div style={{ color: "var(--text-dim)", fontSize: "11px" }}>—</div>
-                      <div style={{ color: "var(--text-dim)", fontSize: "11px" }}>—</div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        <button className="add-pos-confirm" disabled={addingPos}
-                          onClick={async e => {
-                            e.stopPropagation();
-                            if (!addForm.item || !addForm.buyPrice) return;
-                            const buy = parseInt(addForm.buyPrice.replace(/[^0-9]/g, ""));
-                            const qty = parseInt(addForm.qty) || 1;
-                            if (isNaN(buy)) return;
-                            setAddingPos(true);
-                            await onAddPosition({ item: addForm.item, buyPrice: buy, qty });
-                            setAddForm({ item: "", buyPrice: "", qty: "1", totalGp: "" });
-                            setShowAddRow(false);
-                            setAddingPos(false);
-                          }}>
-                          {addingPos ? "…" : "Add"}
-                        </button>
-                        <button className="add-pos-cancel" onClick={e => { e.stopPropagation(); setShowAddRow(false); setAddForm({ item: "", buyPrice: "", qty: "1", totalGp: "" }); setShowAddAc(false); }}>✕</button>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-              <button className="ops-add-btn" onClick={() => setShowAddRow(r => !r)}>
-                <span style={{ fontSize: "16px", lineHeight: 1 }}>+</span> Add Position
-              </button>
-              </>
-            )}
-          </div>
-        </div>
 
-        {/* RIGHT PANEL */}
-        <div className="merchant-right">
+                          {/* Status selector */}
+                          <div onClick={e => e.stopPropagation()}>
+                            <select className="pos-status-select"
+                              value={status}
+                              style={{ color: STATUS_COLORS[status] }}
+                              onChange={e => setPosStatus(pos.id, e.target.value)}>
+                              <option value="buying">🟡 Buying</option>
+                              <option value="holding">🟢 Holding</option>
+                              <option value="selling">🔵 Selling</option>
+                              <option value="danger">🔴 Danger</option>
+                            </select>
+                          </div>
 
-          {/* Capital Efficiency */}
-          <div className="m-panel-section">
-            <div className="m-panel-title">Capital Efficiency</div>
-            <div className="gauge-wrap">
-              <div className="gauge-ring">
-                <svg width="76" height="76" viewBox="0 0 76 76">
-                  <circle cx="38" cy="38" r="32" fill="none" stroke="var(--bg4)" strokeWidth="8" />
-                  <circle cx="38" cy="38" r="32" fill="none"
-                    stroke="url(#gGrad)" strokeWidth="8" strokeLinecap="round"
-                    strokeDasharray={circumference} strokeDashoffset={dashOffset}
-                    style={{ transition: "stroke-dashoffset 1s ease" }} />
-                  <defs>
-                    <linearGradient id="gGrad" x1="0" y1="0" x2="1" y2="1">
-                      <stop offset="0%" stopColor="var(--gold-dim)" />
-                      <stop offset="100%" stopColor="var(--gold)" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div className="gauge-center">
-                  <span className="gauge-pct">{efficiencyPct}%</span>
-                  <span className="gauge-sub-lbl">deployed</span>
-                </div>
-              </div>
-              <div className="gauge-stats">
-                <div><div className="gauge-stat-label">GP Working</div><div className="gauge-stat-val" style={{ color: "var(--gold)" }}>{formatGP(totalDeployed)}</div></div>
-                <div><div className="gauge-stat-label">Positions</div><div className="gauge-stat-val">{allOpenPositions.length}</div></div>
-                <div><div className="gauge-stat-label">Today's P&L</div><div className="gauge-stat-val" style={{ color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>{realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}</div></div>
-              </div>
-            </div>
-          </div>
+                          <span style={{ fontSize: "12px" }}>{formatGP(pos.gpIn)}</span>
+                          <span style={{ fontSize: "12px" }}>{pos.qty.toLocaleString()}</span>
+                          <span style={{ fontSize: "12px" }}>{formatGP(pos.buyPrice)}</span>
+                          <span style={{ fontSize: "12px", color: liveItem ? "var(--text)" : "var(--text-dim)" }}>
+                            {liveItem ? formatGP(liveItem.high) : "—"}
+                          </span>
+                          <div>
+                            <div style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>
+                              {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
+                            </div>
+                            <div style={{ fontSize: "10px", color: marginGone ? "var(--red)" : pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
+                              {marginGone ? "⚠ inverted" : `${pnlPct}%`}
+                            </div>
+                          </div>
+                          <div className="health-bar-wrap" onClick={e => e.stopPropagation()}>
+                            <div className="health-track">
+                              <div className="health-fill" style={{ width: `${healthPct}%`, background: healthColor }} />
+                            </div>
+                            <span className="health-label" style={{ color: healthColor }}>{healthPct}% {healthText}</span>
+                          </div>
+                          <button className={`op-action-btn${healthPct < 25 ? " danger-btn" : ""}`}
+                            onClick={e => { e.stopPropagation(); setClosingPos({ pos, type: pos.source }); }}>
+                            {healthPct < 25 ? "Cut Loss" : "Close"}
+                          </button>
+                        </div>
+                      );
+                    })}
 
-          {/* Idle alert */}
-          {idleGP > merchantCapital * 0.25 && merchantCapital > 0 && (
-            <div className="m-panel-section">
-              <div className="idle-alert">
-                ⚠️ <strong>{formatGP(idleGP)} idle.</strong> That's {Math.round((idleGP / merchantCapital) * 100)}% sitting unused. Check rotation picks.
-              </div>
-            </div>
-          )}
-
-          {/* Rotation Picks */}
-          <div className="m-panel-section rotation-picks-section">
-            <div className="m-panel-title">⚡ Rotation Picks</div>
-            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "10px" }}>Top picks for your {formatGP(idleGP)} idle GP:</div>
-            {rotationPicks.length === 0 ? (
-              <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No picks — good candidates may already be in your slots.</div>
-            ) : rotationPicks.map((item, i) => (
-              <div key={item.id} className={`rotation-card ${["rc-green", "rc-blue", "rc-amber"][i]}`} onClick={() => setSelectedItem(item)}>
-                <div className="rc-name">{item.name}</div>
-                <div className="rc-reason">Score {item.score}/100 · {item.volume.toLocaleString()} trades/day</div>
-                <div className="rc-stats">
-                  <div className="rc-stat">Margin <span style={{ color: "var(--green)" }}>{formatGP(item.margin)}</span></div>
-                  <div className="rc-stat">ROI <span style={{ color: "var(--gold)" }}>{item.roi}%</span></div>
-                  <div className="rc-stat">Limit <span style={{ color: "var(--text)" }}>{item.buyLimit || "?"}</span></div>
-                </div>
-                <div className="rc-action">→ Click to view chart</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Today's P&L */}
-          <div className="m-panel-section">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-              <div className="m-panel-title" style={{ marginBottom: 0 }}>Today's P&L</div>
-              <span style={{ fontSize: "12px", fontWeight: 600, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>
-                {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}
-              </span>
-            </div>
-            {pnlHistory.length < 2 ? (
-              <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>P&L timeline builds as you close flips today.</div>
-            ) : (
-              <>
-                <div className="pnl-chart-wrap">
-                  <canvas ref={pnlCanvasRef} style={{ width: "100%", height: "100%", display: "block" }} />
-                </div>
-                <div className="pnl-time-labels">
-                  <span className="pnl-time-label">Start of day</span>
-                  <span className="pnl-time-label" style={{ color: realisedToday >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>
-                    {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)} now
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Session Intel — compact */}
-          <div className="m-panel-section" style={{ flex: 1 }}>
-            <div className="m-panel-title">📊 Session Intel</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              {[
-                { label: "Flips closed today", val: todayFlips.length, color: "var(--text)" },
-                { label: "Realised profit", val: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
-                { label: "Return on capital", val: `${merchantCapital > 0 ? ((realisedToday / merchantCapital) * 100).toFixed(2) : "0.00"}%`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
-                { label: "Unrealised P&L", val: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)" },
-                { label: "Deployed", val: `${efficiencyPct}% · ${formatGP(totalDeployed)}`, color: "var(--blue)" },
-                { label: "Idle GP", val: formatGP(idleGP), color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text-dim)" },
-              ].map(row => (
-                <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{row.label}</span>
-                  <span style={{ fontSize: "11px", fontWeight: 600, color: row.color }}>{row.val}</span>
-                </div>
-              ))}
-              {merchantCapital > 0 && (
-                <div style={{ background: "var(--bg4)", borderRadius: "3px", overflow: "hidden", height: "3px", marginTop: "4px" }}>
-                  <div style={{ height: "100%", width: `${efficiencyPct}%`, background: "var(--blue)", transition: "width 0.5s" }} />
-                </div>
-              )}
-            </div>
-            <div style={{ marginTop: "14px" }}>
-              <button className="op-action-btn" style={{ width: "100%", textAlign: "center", padding: "7px" }} onClick={onUpdateCapital}>
-                💰 Update Total Capital
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        {/* FAR RIGHT — Smart Alerts */}
-        <div className="merchant-far-right">
-
-          {/* Alert toggles */}
-          <div className="m-panel-section">
-            <div className="m-panel-title">⚡ Smart Alerts</div>
-            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "12px" }}>Auto-fires when market conditions shift. Checks every 5 min.</div>
-            {[
-              { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps 50%+",       unit: "%",  min: 5,   max: 200, step: 5   },
-              { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Volume triples",           unit: "x",  min: 1.5, max: 10,  step: 0.5 },
-              { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops 10%+",   unit: "%",  min: 2,   max: 50,  step: 1   },
-              { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Buy & sell drop 15%+",    unit: "%",  min: 2,   max: 50,  step: 1   },
-            ].map(({ key, icon, label, desc, unit, min, max, step }) => (
-              <div key={key} className="m-smart-alert-row">
-                <div style={{ display: "flex", flexDirection: "column", gap: "2px", flex: 1 }}>
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "5px" }}>{icon} {label}</div>
-                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{desc}</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                  <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} thresholds={thresholds} openPopover={openPopover} setOpenPopover={setOpenPopover} saveThreshold={saveThreshold} />
-                  <label className="toggle-switch">
-                    <input type="checkbox" checked={smartAlertSettings?.[key] ?? true} onChange={e => saveSmartAlertSettings?.(key, e.target.checked)} />
-                    <span className="toggle-slider"></span>
-                  </label>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Live alert feed */}
-          <div className="m-panel-section" style={{ flex: 1 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-              <div className="m-panel-title" style={{ marginBottom: 0 }}>
-                📡 Live Feed
-                {smartEvents?.length > 0 && (
-                  <span style={{ marginLeft: "8px", background: "rgba(201,168,76,0.2)", border: "1px solid var(--gold-dim)", borderRadius: "10px", padding: "1px 7px", fontSize: "10px", color: "var(--gold)", fontFamily: "Inter, sans-serif", fontWeight: 700 }}>
-                    {smartEvents.length}
-                  </span>
+                    {/* Inline add-position row */}
+                    {showAddRow && (() => {
+                      const computedQty = parseInt(addForm.qty) || 1;
+                      const computedBuy = parseInt(addForm.buyPrice.replace(/[^0-9]/g, "")) || 0;
+                      const computedInvestment = computedBuy > 0 && computedQty > 0 ? (computedBuy * computedQty).toLocaleString() : "";
+                      return (
+                        <div className="add-pos-row">
+                          <div className="merchant-ac-wrap" style={{ gridColumn: "span 1" }}>
+                            <input className="add-pos-input" placeholder="Item name..." value={addForm.item} autoComplete="off"
+                              onChange={e => {
+                                const v = e.target.value;
+                                setAddForm(f => ({ ...f, item: v }));
+                                setAddAcIdx(-1);
+                                if (v.length >= 2) {
+                                  const matches = items.filter(i => i.name.toLowerCase().includes(v.toLowerCase())).slice(0, 8).map(i => i.name);
+                                  setAddAc(matches); setShowAddAc(matches.length > 0);
+                                } else setShowAddAc(false);
+                              }}
+                              onKeyDown={e => {
+                                if (!showAddAc || addAc.length === 0) return;
+                                if (e.key === "ArrowDown") { e.preventDefault(); setAddAcIdx(i => Math.min(i + 1, addAc.length - 1)); }
+                                else if (e.key === "ArrowUp") { e.preventDefault(); setAddAcIdx(i => Math.max(i - 1, 0)); }
+                                else if (e.key === "Enter" && addAcIdx >= 0) { e.preventDefault(); setAddForm(f => ({ ...f, item: addAc[addAcIdx] })); setShowAddAc(false); setAddAcIdx(-1); }
+                                else if (e.key === "Escape") setShowAddAc(false);
+                              }}
+                              onBlur={() => setTimeout(() => setShowAddAc(false), 150)} />
+                            {showAddAc && (
+                              <div className="merchant-ac-list">
+                                {addAc.map((name, idx) => (
+                                  <div key={name} className={`merchant-ac-item${idx === addAcIdx ? " highlighted" : ""}`}
+                                    onMouseDown={() => { setAddForm(f => ({ ...f, item: name })); setShowAddAc(false); setAddAcIdx(-1); }}>
+                                    {name}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <div />
+                          <div style={{ paddingRight: "6px" }}>
+                            <input className="add-pos-input readonly" readOnly tabIndex={-1}
+                              value={computedInvestment || ""} placeholder="Auto" />
+                          </div>
+                          <div style={{ paddingRight: "6px" }}>
+                            <input className="add-pos-input" placeholder="Qty" value={addForm.qty}
+                              onChange={e => setAddForm(f => ({ ...f, qty: e.target.value }))} />
+                          </div>
+                          <div style={{ paddingRight: "6px" }}>
+                            <input className="add-pos-input" placeholder="Buy price ea." value={addForm.buyPrice}
+                              onChange={e => setAddForm(f => ({ ...f, buyPrice: e.target.value }))} />
+                          </div>
+                          <div style={{ color: "var(--text-dim)", fontSize: "11px" }}>Live</div>
+                          <div style={{ color: "var(--text-dim)", fontSize: "11px" }}>—</div>
+                          <div />
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            <button className="add-pos-confirm" disabled={addingPos}
+                              onClick={async e => {
+                                e.stopPropagation();
+                                if (!addForm.item || !addForm.buyPrice) return;
+                                const buy = parseInt(addForm.buyPrice.replace(/[^0-9]/g, ""));
+                                const qty = parseInt(addForm.qty) || 1;
+                                if (isNaN(buy)) return;
+                                setAddingPos(true);
+                                await onAddPosition({ item: addForm.item, buyPrice: buy, qty });
+                                setAddForm({ item: "", buyPrice: "", qty: "1" });
+                                setShowAddRow(false);
+                                setAddingPos(false);
+                              }}>
+                              {addingPos ? "…" : "Add"}
+                            </button>
+                            <button className="add-pos-cancel" onClick={e => { e.stopPropagation(); setShowAddRow(false); setAddForm({ item: "", buyPrice: "", qty: "1" }); setShowAddAc(false); }}>✕</button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 )}
               </div>
-              {smartEvents?.length > 0 && (
-                <button style={{ background: "transparent", border: "1px solid var(--border)", borderRadius: "5px", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", padding: "3px 8px", fontFamily: "Inter, sans-serif" }}
-                  onClick={() => setSmartEvents?.([])}>Clear</button>
-              )}
             </div>
-            {smartEvents?.length > 0 && (
-              <div style={{ display: "flex", gap: "6px", marginBottom: "10px", flexWrap: "wrap" }}>
-                {["all", "spike", "surge", "dump", "crash"].map(f => (
-                  <button key={f} onClick={() => setMerchantFeedFilter?.(f)}
-                    style={{ padding: "3px 9px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === f ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === f ? "var(--gold)" : "var(--text-dim)", fontSize: "10px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
-                    {f === "all" ? "All" : f === "spike" ? "📈" : f === "surge" ? "🔥" : f === "dump" ? "⚠️" : "💥"}
+
+            {/* ── RIGHT SIDEBAR ── */}
+            <div className="merchant-right">
+
+              {/* Capital Efficiency Ring */}
+              <div className="m-panel-section">
+                <div className="m-panel-title">Capital Efficiency</div>
+                <div className="gauge-wrap">
+                  <div className="gauge-ring">
+                    <svg width="76" height="76" viewBox="0 0 76 76">
+                      <circle cx="38" cy="38" r="32" fill="none" stroke="var(--bg4)" strokeWidth="8" />
+                      <circle cx="38" cy="38" r="32" fill="none" stroke="url(#gGrad)" strokeWidth="8" strokeLinecap="round"
+                        strokeDasharray={circumference} strokeDashoffset={dashOffset}
+                        style={{ transition: "stroke-dashoffset 1s ease", transform: "rotate(-90deg)", transformOrigin: "50% 50%" }} />
+                      <defs>
+                        <linearGradient id="gGrad" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="var(--gold-dim)" />
+                          <stop offset="100%" stopColor="var(--gold)" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="gauge-center">
+                      <span className="gauge-pct">{efficiencyPct}%</span>
+                      <span className="gauge-sub-lbl">deployed</span>
+                    </div>
+                  </div>
+                  <div className="gauge-stats">
+                    <div><div className="gauge-stat-label">GP Working</div><div className="gauge-stat-val" style={{ color: "var(--gold)" }}>{formatGP(totalDeployed)}</div></div>
+                    <div><div className="gauge-stat-label">Slots Used</div><div className="gauge-stat-val">{allOpenPositions.length} / 8</div></div>
+                    <div><div className="gauge-stat-label">Today's P&L</div><div className="gauge-stat-val" style={{ color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>{realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}</div></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Daily GP Goal */}
+              <div className="m-panel-section">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>🎯 Daily Goal</div>
+                  <button style={{ background: "transparent", border: "none", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+                    onClick={() => { setShowGoalInput(true); setGoalInput(dailyGoal > 0 ? String(dailyGoal) : ""); }}>
+                    {dailyGoal > 0 ? "Edit" : "Set Goal"}
                   </button>
+                </div>
+                {showGoalInput ? (
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <input className="add-pos-input" style={{ flex: 1 }} placeholder="e.g. 5000000" value={goalInput}
+                      onChange={e => setGoalInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") saveGoal(goalInput); if (e.key === "Escape") setShowGoalInput(false); }}
+                      autoFocus />
+                    <button className="add-pos-confirm" onClick={() => saveGoal(goalInput)}>✓</button>
+                    <button className="add-pos-cancel" onClick={() => setShowGoalInput(false)}>✕</button>
+                  </div>
+                ) : dailyGoal > 0 ? (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>
+                        {formatGP(realisedToday)} / {formatGP(dailyGoal)}
+                      </span>
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: realisedToday >= dailyGoal ? "var(--green)" : "var(--gold)" }}>
+                        {Math.min(100, Math.round((realisedToday / dailyGoal) * 100))}%
+                      </span>
+                    </div>
+                    <div style={{ background: "var(--bg4)", borderRadius: "4px", overflow: "hidden", height: "8px" }}>
+                      <div style={{
+                        height: "100%",
+                        width: `${Math.min(100, (realisedToday / dailyGoal) * 100)}%`,
+                        background: realisedToday >= dailyGoal ? "var(--green)" : "linear-gradient(90deg, var(--gold-dim), var(--gold))",
+                        transition: "width 0.6s ease", borderRadius: "4px"
+                      }} />
+                    </div>
+                    {realisedToday >= dailyGoal && (
+                      <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--green)", fontWeight: 600, textAlign: "center" }}>
+                        🎉 Goal reached!
+                      </div>
+                    )}
+                    {realisedToday < dailyGoal && gpHr !== null && gpHr > 0 && (
+                      <div style={{ marginTop: "6px", fontSize: "11px", color: "var(--text-dim)" }}>
+                        ~{Math.ceil((dailyGoal - realisedToday) / gpHr * 60)}min at current rate
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", textAlign: "center", padding: "8px 0" }}>
+                    No goal set. Set a daily GP target to track progress.
+                  </div>
+                )}
+              </div>
+
+              {/* Today P&L chart */}
+              <div className="m-panel-section">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>Today's P&L</div>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>
+                    {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}
+                  </span>
+                </div>
+                {pnlHistory.length < 2 ? (
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>P&L timeline builds as you close flips today.</div>
+                ) : (
+                  <>
+                    <div className="pnl-chart-wrap">
+                      <canvas ref={pnlCanvasRef} style={{ width: "100%", height: "100%", display: "block" }} />
+                    </div>
+                    <div className="pnl-time-labels">
+                      <span className="pnl-time-label">Start of day</span>
+                      <span className="pnl-time-label" style={{ color: realisedToday >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>
+                        {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)} now
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Rotation Picks */}
+              <div className="m-panel-section rotation-picks-section">
+                <div className="m-panel-title">⚡ Rotation Picks</div>
+                <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "10px" }}>
+                  Best fits for your {formatGP(idleGP)} idle GP:
+                </div>
+                {rotationPicks.length === 0 ? (
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No picks — all capital deployed or no good candidates.</div>
+                ) : rotationPicks.map((item, i) => (
+                  <div key={item.id} className={`rotation-card ${["rc-green","rc-blue","rc-amber"][i]}`} onClick={() => setSelectedItem(item)}>
+                    <div className="rc-name">{item.name}</div>
+                    <div className="rc-reason">Score {item.score}/100 · {item.volume.toLocaleString()}/day</div>
+                    <div className="rc-stats">
+                      <div className="rc-stat">Margin <span style={{ color: "var(--green)" }}>{formatGP(item.margin)}</span></div>
+                      <div className="rc-stat">ROI <span style={{ color: "var(--gold)" }}>{item.roi}%</span></div>
+                      <div className="rc-stat">Limit <span style={{ color: "var(--text)" }}>{item.buyLimit > 0 ? item.buyLimit.toLocaleString() : "?"}</span></div>
+                    </div>
+                    <div className="rc-action">→ Click to view chart</div>
+                  </div>
                 ))}
               </div>
-            )}
-            <div className="smart-events-list" style={{ borderRadius: "8px" }}>
-              {(() => {
-                const feed = (smartEvents || []).filter(e => !merchantFeedFilter || merchantFeedFilter === "all" || e.badge === merchantFeedFilter);
-                if (feed.length === 0) return (
-                  <div style={{ padding: "28px 16px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
-                    <div style={{ fontSize: "28px", marginBottom: "8px", opacity: 0.4 }}>📡</div>
-                    No alerts yet — monitoring every 5 min.
+
+              {/* Flip Queue */}
+              <div className="m-panel-section" style={{ flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>📋 Flip Queue</div>
+                  <button style={{ background: "transparent", border: "none", color: "var(--gold)", fontSize: "18px", cursor: "pointer", lineHeight: 1 }}
+                    onClick={() => setShowQueueAdd(v => !v)}>+</button>
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "8px" }}>Items to flip when a slot opens up.</div>
+                {showQueueAdd && (
+                  <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
+                    <input className="add-pos-input" style={{ flex: 1 }} placeholder="Item name..." value={queueInput}
+                      onChange={e => setQueueInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") addToQueue(queueInput); if (e.key === "Escape") setShowQueueAdd(false); }}
+                      autoFocus />
+                    <button className="add-pos-confirm" onClick={() => addToQueue(queueInput)}>Add</button>
                   </div>
-                );
-                return feed.map(e => {
-                  const liveItem = items.find(i => i.id === e.itemId);
-                  return (
-                    <div key={e.id} className="smart-event-row"
-                      style={{ cursor: liveItem ? "pointer" : "default" }}
-                      onClick={() => liveItem && setSelectedItem(liveItem)}>
-                      <span className="smart-event-icon">{e.icon}</span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                          <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)" }}>{e.itemName}</span>
-                          <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
-                        </div>
-                        <div className="smart-event-msg">{e.message}</div>
-                        {liveItem && (
-                          <div style={{ display: "flex", gap: "12px", marginTop: "4px", fontSize: "11px" }}>
-                            <span style={{ color: "var(--text-dim)" }}>Margin: <span style={{ color: liveItem.margin > 0 ? "var(--green)" : "var(--red)" }}>{formatGP(liveItem.margin)}</span></span>
-                            <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: "var(--gold)" }}>{liveItem.roi}%</span></span>
+                )}
+                {flipQueue.length === 0 ? (
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", textAlign: "center", padding: "8px 0" }}>
+                    Queue is empty. Add items you want to flip next.
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {flipQueue.map((q, i) => {
+                      const liveItem = items.find(it => it.name.toLowerCase() === q.name.toLowerCase());
+                      return (
+                        <div key={q.id} style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--bg3)", borderRadius: "6px", padding: "8px 10px", border: "1px solid var(--border)" }}>
+                          <span style={{ fontSize: "11px", color: "var(--text-dim)", width: "14px" }}>#{i + 1}</span>
+                          <div style={{ flex: 1, cursor: liveItem ? "pointer" : "default" }} onClick={() => liveItem && setSelectedItem(liveItem)}>
+                            <div style={{ fontSize: "12px", color: liveItem ? "var(--gold)" : "var(--text)", fontWeight: 500 }}>{q.name}</div>
+                            {liveItem && <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "1px" }}>
+                              Margin {formatGP(liveItem.margin)} · ROI {liveItem.roi}%
+                            </div>}
                           </div>
-                        )}
-                      </div>
-                      <span className="smart-event-time">{formatTime(e.time)}</span>
-                    </div>
-                  );
-                });
-              })()}
+                          <button onClick={() => removeFromQueue(q.id)}
+                            style={{ background: "transparent", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "13px", padding: "2px 4px" }}>✕</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
             </div>
           </div>
+        )}
 
-        </div>
+        {/* ══════════════════════ ANALYTICS VIEW ══════════════════════ */}
+        {activeView === "analytics" && (
+          <div className="merchant-layout">
+            <div className="merchant-left">
+
+              {/* Session Intel */}
+              <div className="merchant-section">
+                <div className="merchant-section-header">
+                  <span className="merchant-section-title">📊 Session Intel</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Started {getSessionTime()} ago</span>
+                </div>
+                <div className="analytics-grid">
+                  {[
+                    { label: "Session Duration", val: getSessionTime(), color: "var(--text)" },
+                    { label: "GP / Hour", val: gpHr !== null ? `${gpHr >= 0 ? "+" : ""}${formatGP(gpHr)}` : "—", color: gpHr !== null ? (gpHr >= 0 ? "var(--green)" : "var(--red)") : "var(--text-dim)" },
+                    { label: "Flips Closed Today", val: todayFlips.length, color: "var(--text)" },
+                    { label: "Realised Today", val: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
+                    { label: "Unrealised P&L", val: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)" },
+                    { label: "Return on Capital", val: merchantCapital > 0 ? `${((realisedToday / merchantCapital) * 100).toFixed(2)}%` : "—", color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
+                    { label: "Capital Deployed", val: `${efficiencyPct}%`, color: "var(--blue)" },
+                    { label: "Idle GP", val: formatGP(idleGP), color: idleGP > merchantCapital * 0.3 ? "#f39c12" : "var(--text-dim)" },
+                  ].map(row => (
+                    <div key={row.label} className="analytics-card">
+                      <div className="analytics-label">{row.label}</div>
+                      <div className="analytics-val" style={{ color: row.color }}>{row.val}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Risk Exposure */}
+              <div className="merchant-section">
+                <div className="merchant-section-header">
+                  <span className="merchant-section-title">⚠️ Risk Exposure</span>
+                  {topRiskPct > 50 && <span style={{ fontSize: "11px", color: "var(--red)", fontWeight: 600 }}>Concentrated position</span>}
+                </div>
+                {riskItems.length === 0 ? (
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No open positions to analyse.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {riskItems.map(pos => (
+                      <div key={pos.id}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+                          <span style={{ fontSize: "12px", color: pos.pct > 40 ? "#f39c12" : "var(--text)" }}>{pos.name}</span>
+                          <span style={{ fontSize: "12px", fontWeight: 600, color: pos.pct > 50 ? "var(--red)" : pos.pct > 30 ? "#f39c12" : "var(--green)" }}>{pos.pct}%</span>
+                        </div>
+                        <div style={{ background: "var(--bg4)", borderRadius: "3px", overflow: "hidden", height: "6px" }}>
+                          <div style={{
+                            height: "100%",
+                            width: `${pos.pct}%`,
+                            background: pos.pct > 50 ? "var(--red)" : pos.pct > 30 ? "#f39c12" : "var(--green)",
+                            transition: "width 0.6s ease", borderRadius: "3px"
+                          }} />
+                        </div>
+                        <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "2px" }}>
+                          {formatGP(pos.gpIn)} invested · {pos.qty.toLocaleString()} qty
+                        </div>
+                      </div>
+                    ))}
+                    {topRiskPct > 40 && (
+                      <div style={{ marginTop: "4px", fontSize: "11px", color: "#f39c12", background: "rgba(243,156,18,0.08)", border: "1px solid rgba(243,156,18,0.2)", borderRadius: "6px", padding: "8px 10px" }}>
+                        ⚠️ {riskItems[0].name} represents {topRiskPct}% of your capital. Consider diversifying.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Today's Closed Flips */}
+              <div className="merchant-section" style={{ flex: 1 }}>
+                <div className="merchant-section-header">
+                  <span className="merchant-section-title">✅ Closed Today</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{todayFlips.length} flips</span>
+                </div>
+                {todayFlips.length === 0 ? (
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No flips closed today yet.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {todayFlips.slice(0, 10).map(f => (
+                      <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "var(--bg3)", borderRadius: "6px", border: "1px solid var(--border)" }}>
+                        <div>
+                          <div style={{ fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>{f.item}</div>
+                          <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "1px" }}>
+                            {f.qty?.toLocaleString()}x · Buy {formatGP(f.buyPrice)} → Sell {formatGP(f.sellPrice)}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontSize: "12px", fontWeight: 600, color: (f.totalProfit || 0) >= 0 ? "var(--green)" : "var(--red)" }}>
+                            {(f.totalProfit || 0) >= 0 ? "+" : ""}{formatGP(f.totalProfit || 0)}
+                          </div>
+                          <div style={{ fontSize: "10px", color: "var(--text-dim)" }}>{f.roi}% ROI</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="merchant-right">
+              {/* P&L Chart */}
+              <div className="m-panel-section">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>Today's P&L</div>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>
+                    {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}
+                  </span>
+                </div>
+                {pnlHistory.length < 2 ? (
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>P&L timeline builds as you close flips today.</div>
+                ) : (
+                  <>
+                    <div className="pnl-chart-wrap">
+                      <canvas ref={pnlCanvasRef} style={{ width: "100%", height: "100%", display: "block" }} />
+                    </div>
+                    <div className="pnl-time-labels">
+                      <span className="pnl-time-label">Start of day</span>
+                      <span className="pnl-time-label" style={{ color: realisedToday >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>
+                        {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Daily Goal */}
+              <div className="m-panel-section">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>🎯 Daily Goal</div>
+                  <button style={{ background: "transparent", border: "none", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+                    onClick={() => { setShowGoalInput(true); setGoalInput(dailyGoal > 0 ? String(dailyGoal) : ""); }}>
+                    {dailyGoal > 0 ? "Edit" : "Set Goal"}
+                  </button>
+                </div>
+                {showGoalInput ? (
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <input className="add-pos-input" style={{ flex: 1 }} placeholder="e.g. 5000000" value={goalInput}
+                      onChange={e => setGoalInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter") saveGoal(goalInput); if (e.key === "Escape") setShowGoalInput(false); }}
+                      autoFocus />
+                    <button className="add-pos-confirm" onClick={() => saveGoal(goalInput)}>✓</button>
+                    <button className="add-pos-cancel" onClick={() => setShowGoalInput(false)}>✕</button>
+                  </div>
+                ) : dailyGoal > 0 ? (
+                  <>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{formatGP(realisedToday)} / {formatGP(dailyGoal)}</span>
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: realisedToday >= dailyGoal ? "var(--green)" : "var(--gold)" }}>
+                        {Math.min(100, Math.round((realisedToday / dailyGoal) * 100))}%
+                      </span>
+                    </div>
+                    <div style={{ background: "var(--bg4)", borderRadius: "4px", overflow: "hidden", height: "8px" }}>
+                      <div style={{ height: "100%", width: `${Math.min(100, (realisedToday / dailyGoal) * 100)}%`, background: realisedToday >= dailyGoal ? "var(--green)" : "linear-gradient(90deg, var(--gold-dim), var(--gold))", transition: "width 0.6s ease", borderRadius: "4px" }} />
+                    </div>
+                    {realisedToday >= dailyGoal && <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--green)", fontWeight: 600, textAlign: "center" }}>🎉 Goal reached!</div>}
+                  </>
+                ) : (
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", textAlign: "center", padding: "8px 0" }}>No goal set.</div>
+                )}
+              </div>
+
+              {/* Update Capital */}
+              <div className="m-panel-section">
+                <button className="op-action-btn" style={{ width: "100%", textAlign: "center", padding: "9px" }} onClick={onUpdateCapital}>
+                  💰 Update Total Capital
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════ ALERTS VIEW ══════════════════════ */}
+        {activeView === "alerts" && (
+          <div className="merchant-layout">
+            <div className="merchant-left">
+
+              {/* Alert toggles */}
+              <div className="merchant-section">
+                <div className="merchant-section-header">
+                  <span className="merchant-section-title">⚡ Smart Alerts</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Auto-fires on market shifts</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                  {[
+                    { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps above threshold",    unit: "%",  min: 5,   max: 200, step: 5   },
+                    { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Volume multiplies suddenly",      unit: "x",  min: 1.5, max: 10,  step: 0.5 },
+                    { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops sharply",        unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy & sell price collapse",  unit: "%",  min: 2,   max: 50,  step: 1   },
+                  ].map(({ key, icon, label, desc, unit, min, max, step }) => (
+                    <div key={key} className="m-smart-alert-row">
+                      <div style={{ display: "flex", flexDirection: "column", gap: "2px", flex: 1 }}>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "5px" }}>{icon} {label}</div>
+                        <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{desc}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                        <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} thresholds={thresholds} openPopover={openPopover} setOpenPopover={setOpenPopover} saveThreshold={saveThreshold} />
+                        <label className="toggle-switch">
+                          <input type="checkbox" checked={smartAlertSettings?.[key] ?? true} onChange={e => saveSmartAlertSettings?.(key, e.target.checked)} />
+                          <span className="toggle-slider"></span>
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Live Feed */}
+              <div className="merchant-section" style={{ flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span className="merchant-section-title" style={{ marginBottom: 0 }}>📡 Live Feed</span>
+                    {smartEvents?.length > 0 && (
+                      <span style={{ background: "rgba(201,168,76,0.2)", border: "1px solid var(--gold-dim)", borderRadius: "10px", padding: "1px 7px", fontSize: "10px", color: "var(--gold)", fontWeight: 700 }}>
+                        {smartEvents.length}
+                      </span>
+                    )}
+                  </div>
+                  {smartEvents?.length > 0 && (
+                    <button style={{ background: "transparent", border: "1px solid var(--border)", borderRadius: "5px", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", padding: "3px 8px", fontFamily: "Inter, sans-serif" }}
+                      onClick={() => setSmartEvents?.([])}>Clear</button>
+                  )}
+                </div>
+                {smartEvents?.length > 0 && (
+                  <div style={{ display: "flex", gap: "6px", marginBottom: "10px", flexWrap: "wrap" }}>
+                    {["all","spike","surge","dump","crash"].map(f => (
+                      <button key={f} onClick={() => setMerchantFeedFilter(f)}
+                        style={{ padding: "3px 9px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === f ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === f ? "var(--gold)" : "var(--text-dim)", fontSize: "10px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                        {f === "all" ? "All" : f === "spike" ? "📈" : f === "surge" ? "🔥" : f === "dump" ? "⚠️" : "💥"}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="smart-events-list" style={{ borderRadius: "8px" }}>
+                  {(() => {
+                    const feed = (smartEvents || []).filter(e => !merchantFeedFilter || merchantFeedFilter === "all" || e.badge === merchantFeedFilter);
+                    if (feed.length === 0) return (
+                      <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
+                        <div style={{ fontSize: "32px", marginBottom: "8px", opacity: 0.4 }}>📡</div>
+                        No alerts yet. Monitoring every 30 seconds.
+                      </div>
+                    );
+                    return feed.map(e => {
+                      const liveItem = items.find(i => i.id === e.itemId);
+                      return (
+                        <div key={e.id} className="smart-event-row" style={{ cursor: liveItem ? "pointer" : "default" }}
+                          onClick={() => liveItem && setSelectedItem(liveItem)}>
+                          <span className="smart-event-icon">{e.icon}</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                              <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)" }}>{e.itemName}</span>
+                              <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
+                            </div>
+                            <div className="smart-event-msg">{e.message}</div>
+                            {liveItem && (
+                              <div style={{ display: "flex", gap: "12px", marginTop: "4px", fontSize: "11px" }}>
+                                <span style={{ color: "var(--text-dim)" }}>Margin: <span style={{ color: liveItem.margin > 0 ? "var(--green)" : "var(--red)" }}>{formatGP(liveItem.margin)}</span></span>
+                                <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: "var(--gold)" }}>{liveItem.roi}%</span></span>
+                              </div>
+                            )}
+                          </div>
+                          <span className="smart-event-time">{formatTime(e.time)}</span>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            <div className="merchant-right">
+              <div className="m-panel-section">
+                <div className="m-panel-title">📊 Alert Summary</div>
+                {smartEvents?.length === 0 ? (
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No events fired this session.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {[
+                      { badge: "spike", icon: "📈", label: "Margin Spikes" },
+                      { badge: "surge", icon: "🔥", label: "Volume Surges" },
+                      { badge: "dump",  icon: "⚠️", label: "Dumps Detected" },
+                      { badge: "crash", icon: "💥", label: "Price Crashes" },
+                    ].map(({ badge, icon, label }) => {
+                      const count = (smartEvents || []).filter(e => e.badge === badge).length;
+                      return (
+                        <div key={badge} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "var(--bg3)", borderRadius: "6px", border: "1px solid var(--border)" }}>
+                          <span style={{ fontSize: "12px", color: "var(--text)" }}>{icon} {label}</span>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color: count > 0 ? "var(--gold)" : "var(--text-dim)" }}>{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
 
-    {/* Close Position Modal — inline in Merchant Mode, no tab switching needed */}
+    {/* Close Position Modal */}
     {closingPos && (() => {
       const flip = closingPos.type === "tracker"
         ? flipsLog.find(f => f.id === closingPos.pos.id)
@@ -2054,16 +2413,8 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
         <CloseFlipModal
           flip={flip}
           items={items}
-          onSold={(f, sellPrice) => {
-            if (closingPos.type === "tracker") onCloseFlip(f, sellPrice);
-            else onClosePortfolioPos(closingPos.pos, sellPrice);
-            setClosingPos(null);
-          }}
-          onCancelled={(f) => {
-            if (closingPos.type === "tracker") onCloseFlip(f, null, true);
-            else onClosePortfolioPos(closingPos.pos, null, true);
-            setClosingPos(null);
-          }}
+          onSold={(f, sellPrice) => { if (closingPos.type === "tracker") onCloseFlip(f, sellPrice); else onClosePortfolioPos(closingPos.pos, sellPrice); setClosingPos(null); }}
+          onCancelled={(f) => { if (closingPos.type === "tracker") onCloseFlip(f, null, true); else onClosePortfolioPos(closingPos.pos, null, true); setClosingPos(null); }}
           onDismiss={() => setClosingPos(null)}
           loading={false}
         />
