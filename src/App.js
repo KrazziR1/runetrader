@@ -1502,19 +1502,23 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, resetThreshold, ThresholdPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown }) {
-  const allOpenPositions = [
-    ...flipsLog.filter(f => f.status === "open").map(f => ({
-      id: f.id, name: f.item, gpIn: f.buyPrice * (f.qty || 1),
-      qty: f.qty || 1, buyPrice: f.buyPrice, source: "tracker",
-      openedAt: f.date ? new Date(f.date) : new Date(),
-    })),
-    ...manualPositions.map(p => ({
-      id: p.id, name: p.item_name, gpIn: p.buy_price * p.qty,
-      qty: p.qty, buyPrice: p.buy_price, source: "portfolio",
-      openedAt: new Date(p.date_opened),
-    })),
-  ];
+function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, resetThreshold, ThresholdPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos }) {
+  // Build open positions — tracker flips only (portfolio positions are now also written as flips)
+  // Deduplicate: if same item appears in both flipsLog and manualPositions, prefer flipsLog entry
+  const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
+    id: f.id, name: f.item, gpIn: (f.buyPrice || 0) * (f.qty || 1),
+    qty: f.qty || 1, buyPrice: f.buyPrice || 0, source: "tracker",
+    openedAt: f.date ? new Date(f.date) : new Date(),
+  }));
+  const trackerNames = new Set(trackerOpen.map(p => p.name.toLowerCase()));
+  const portfolioOnly = manualPositions
+    .filter(p => !trackerNames.has(p.item_name.toLowerCase()))
+    .map(p => ({
+      id: p.id, name: p.item_name, gpIn: (p.buy_price || 0) * (p.qty || 1),
+      qty: p.qty || 1, buyPrice: p.buy_price || 0, source: "portfolio",
+      openedAt: p.date_opened ? new Date(p.date_opened) : new Date(),
+    }));
+  const allOpenPositions = [...trackerOpen, ...portfolioOnly];
 
   const totalDeployed = allOpenPositions.reduce((s, p) => s + p.gpIn, 0);
   const idleGP = Math.max(0, merchantCapital - totalDeployed);
@@ -1529,6 +1533,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
   const [showAddAc, setShowAddAc] = useState(false);
   const [addAcIdx, setAddAcIdx] = useState(-1);
   const [merchantFeedFilter, setMerchantFeedFilter] = useState("all");
+  const [closingPos, setClosingPos] = useState(null); // { pos, type: "tracker"|"portfolio" }
 
   const unrealisedTotal = allOpenPositions.reduce((s, pos) => {
     const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
@@ -1712,7 +1717,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                         <span className="health-label" style={{ color: healthColor }}>{healthPct}% — {healthText}</span>
                       </div>
                       <button className={`op-action-btn${healthPct < 25 ? " danger-btn" : ""}`}
-                        onClick={e => { e.stopPropagation(); showToast(`Close ${pos.name} in the ${pos.source === "tracker" ? "Tracker" : "Portfolio"} tab`, "info", 4000); }}>
+                        onClick={e => { e.stopPropagation(); setClosingPos({ pos, type: pos.source }); }}>
                         {healthPct < 25 ? "Cut Loss" : "Close"}
                       </button>
                     </div>
@@ -2019,10 +2024,36 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
         </div>
       </div>
     </div>
+
+    {/* Close Position Modal — inline in Merchant Mode, no tab switching needed */}
+    {closingPos && (() => {
+      const flip = closingPos.type === "tracker"
+        ? flipsLog.find(f => f.id === closingPos.pos.id)
+        : { id: closingPos.pos.id, item: closingPos.pos.name, buyPrice: closingPos.pos.buyPrice, qty: closingPos.pos.qty };
+      if (!flip) return null;
+      return (
+        <CloseFlipModal
+          flip={flip}
+          items={items}
+          onSold={(f, sellPrice) => {
+            if (closingPos.type === "tracker") onCloseFlip(f, sellPrice);
+            else onClosePortfolioPos(closingPos.pos, sellPrice);
+            setClosingPos(null);
+          }}
+          onCancelled={(f) => {
+            if (closingPos.type === "tracker") onCloseFlip(f, null, true);
+            else onClosePortfolioPos(closingPos.pos, null, true);
+            setClosingPos(null);
+          }}
+          onDismiss={() => setClosingPos(null)}
+          loading={false}
+        />
+      );
+    })()}
   );
 }
 
-export default function RuneTrader() {
+
   const [showApp, setShowApp] = useState(false);
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -2161,17 +2192,13 @@ export default function RuneTrader() {
 
   async function addPositionFromMerchant({ item, buyPrice, qty }) {
     if (!user) return;
-    const itemMatch = items.find(i => i.name.toLowerCase() === item.toLowerCase());
-    // Insert into positions table (for Portfolio / Merchant Mode)
-    const { data, error } = await supabase.from("positions").insert({
-      user_id: user.id, item_id: itemMatch?.id || 0, item_name: item, buy_price: buyPrice, qty
+    // Write only to flips table as an open flip — this shows in Tracker and Merchant Mode
+    // (previously also wrote to positions table causing duplicate entries)
+    const { data: flipData, error } = await supabase.from("flips").insert({
+      user_id: user.id, item, buy_price: buyPrice, qty, status: "open",
+      date: new Date().toISOString(),
     }).select().single();
     if (error) { showToast("Failed to add position.", "error"); return; }
-    setMerchantPositions(prev => [data, ...prev]);
-    // Also insert an open flip into flips table so it shows in Tracker
-    const { data: flipData } = await supabase.from("flips").insert({
-      user_id: user.id, item, buy_price: buyPrice, qty, status: "open"
-    }).select().single();
     if (flipData) setFlipsLog(prev => [mapFlipRow(flipData), ...prev]);
     showToast(`Position opened: ${item}`, "success");
   }
@@ -2733,6 +2760,42 @@ export default function RuneTrader() {
     showToast(`${flip.item} removed from open flips.`, "info");
   }
 
+  // ── Merchant Mode close handlers (no tab switching needed) ──
+  async function merchantCloseFlip(flip, sellPrice, cancelled = false) {
+    if (cancelled) {
+      await handleCloseFlipCancelled(flip);
+    } else {
+      await handleCloseFlipSold(flip, sellPrice);
+    }
+  }
+
+  async function merchantClosePortfolioPos(pos, sellPrice, cancelled = false) {
+    if (!user) return;
+    if (cancelled) {
+      // Just delete the portfolio position
+      await supabase.from("positions").delete().eq("id", pos.id);
+      setMerchantPositions(prev => prev.filter(p => p.id !== pos.id));
+      showToast(`${pos.name} removed.`, "info");
+      return;
+    }
+    const sell = parseInt(String(sellPrice).replace(/,/g, ""));
+    if (isNaN(sell)) return;
+    const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
+    const profitEach = sell - pos.buyPrice - tax;
+    const totalProfit = profitEach * (pos.qty || 1);
+    const roi = parseFloat(((profitEach / pos.buyPrice) * 100).toFixed(1));
+    // Write closed flip to history
+    const { data: flipData } = await supabase.from("flips").insert({
+      user_id: user.id, item: pos.name, buy_price: pos.buyPrice, sell_price: sell,
+      qty: pos.qty || 1, tax, profit_each: profitEach, total_profit: totalProfit, roi, status: "closed"
+    }).select().single();
+    if (flipData) setFlipsLog(prev => [mapFlipRow(flipData), ...prev]);
+    // Remove portfolio position
+    await supabase.from("positions").delete().eq("id", pos.id);
+    setMerchantPositions(prev => prev.filter(p => p.id !== pos.id));
+    showToast(`Closed! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
+  }
+
   // ── "Flip This" from item modal ──
   function flipThisItem(item) {
     const { adjLow, adjHigh } = applyOffset(item.low, item.high, prefs.speed);
@@ -3149,6 +3212,8 @@ RULES:
               onRefresh={() => fetchPrices(true)}
               refreshing={refreshing}
               refreshCooldown={refreshCooldown}
+              onCloseFlip={merchantCloseFlip}
+              onClosePortfolioPos={merchantClosePortfolioPos}
             />
           ) : (
           <>
