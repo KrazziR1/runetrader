@@ -546,7 +546,7 @@ const TOUR_STEPS = [
 
 // ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
 
-function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing }) {
+function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, refreshCooldown }) {
   const [range, setRange] = useState("7D");
   const [chartData, setChartData] = useState(null);
   const [chartLoading, setChartLoading] = useState(true);
@@ -646,11 +646,11 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing }
             <button
               className="refresh-btn"
               onClick={onRefresh}
-              disabled={refreshing}
-              title="Refresh prices"
+              disabled={refreshing || refreshCooldown > 0}
+              title={refreshCooldown > 0 ? `Wait ${refreshCooldown}s` : "Refresh prices"}
             >
               <span className={refreshing ? "refresh-spin" : ""}>↻</span>
-              {refreshing ? "Refreshing..." : "Refresh"}
+              {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `↻ ${refreshCooldown}s` : "Refresh"}
             </button>
             <button className="modal-close" onClick={onClose}>✕</button>
           </div>
@@ -1297,6 +1297,8 @@ export default function RuneTrader() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshCooldown, setRefreshCooldown] = useState(0); // seconds remaining
+  const cooldownRef = useRef(null);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [allItemsMap, setAllItemsMap] = useState({});
@@ -1656,7 +1658,17 @@ export default function RuneTrader() {
       itemsRef.current = flips;
       runSmartAlerts(flips);
       setLastUpdate(new Date());
-      if (isManualRefresh) showToast("Prices refreshed!", "success");
+      if (isManualRefresh) {
+        showToast("Prices refreshed!", "success");
+        setRefreshCooldown(30);
+        clearInterval(cooldownRef.current);
+        cooldownRef.current = setInterval(() => {
+          setRefreshCooldown(prev => {
+            if (prev <= 1) { clearInterval(cooldownRef.current); return 0; }
+            return prev - 1;
+          });
+        }, 1000);
+      }
     } catch { setError("Failed to load GE data. Check your connection."); }
     finally { setLoading(false); setRefreshing(false); }
   }
@@ -1946,6 +1958,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
           onFlipThis={flipThisItem}
           onRefresh={() => fetchPrices(true)}
           refreshing={refreshing}
+          refreshCooldown={refreshCooldown}
         />
       )}
 
@@ -2313,9 +2326,11 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                   <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Recent Smart Alerts</span>
                     <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                      <button className="smart-refresh-btn" disabled={refreshing}
-                        onClick={() => { fetchPrices(false).then(() => runSmartAlerts(itemsRef.current)); showToast("Smart alerts refreshed!", "success"); }}>
-                        <span className={refreshing ? "refresh-spin" : ""}>↻</span> Refresh
+                      <button className="smart-refresh-btn" disabled={refreshing || refreshCooldown > 0}
+                        onClick={() => fetchPrices(true)}
+                        title={refreshCooldown > 0 ? `Wait ${refreshCooldown}s` : "Refresh prices"}>
+                        <span className={refreshing ? "refresh-spin" : ""}>↻</span>
+                        {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh"}
                       </button>
                       {smartEvents.length > 0 && (
                         <button className="clear-btn" onClick={() => setSmartEvents([])}>Clear</button>
@@ -2459,11 +2474,11 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
                   <button
                     className="refresh-btn"
                     onClick={() => fetchPrices(true)}
-                    disabled={refreshing || loading}
-                    title="Refresh all prices"
+                    disabled={refreshing || loading || refreshCooldown > 0}
+                    title={refreshCooldown > 0 ? `Wait ${refreshCooldown}s` : "Refresh all prices"}
                   >
                     <span className={refreshing ? "refresh-spin" : ""}>↻</span>
-                    {refreshing ? "Refreshing..." : "Refresh"}
+                    {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh"}
                   </button>
                 </div>
 
