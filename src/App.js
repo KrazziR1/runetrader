@@ -3445,7 +3445,7 @@ RULES:
           <>
             <div className="tour-backdrop" onClick={endMerchantTour} />
             {!isCenter && merchantTourRect && <div className="tour-highlight" style={{ top: hl.top - pad, left: hl.left - pad, width: hl.width + pad * 2, height: hl.height + pad * 2 }} />}
-            <div className="tour-tooltip" style={{ ...ttStyle, ...(ttStyle.top !== undefined && typeof ttStyle.top === "number" && ttStyle.top + ttHeight > vp ? { top: "auto", bottom: 8 } : {}) }}>
+            <div className="tour-tooltip" style={ttStyle}>
               <div className="tour-step-label">Step {merchantTourStep + 1} of {MERCHANT_TOUR_STEPS.length}</div>
               <div className="tour-title">{step.title}</div>
               <div className="tour-desc">{step.desc}</div>
@@ -3502,7 +3502,7 @@ RULES:
           <>
             <div className="tour-backdrop" onClick={endTour} />
             {!isCenter && <div className="tour-highlight" style={{ top: hl.top - pad, left: hl.left - pad, width: hl.width + pad * 2, height: hl.height + pad * 2 }} />}
-            <div className="tour-tooltip" style={{ ...ttStyle, ...(ttStyle.top !== undefined && typeof ttStyle.top === "number" && ttStyle.top + ttHeight > vp ? { top: "auto", bottom: 8 } : {}) }}>
+            <div className="tour-tooltip" style={ttStyle}>
               <div className="tour-step-label">Step {tourStep + 1} of {TOUR_STEPS.length}</div>
               <div className="tour-title">{step.title}</div>
               <div className="tour-desc">{step.desc}</div>
