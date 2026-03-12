@@ -150,8 +150,9 @@ export default async function handler(req, res) {
   //
   //   BUYING / BOUGHT  → upsert a live flip row (open position)
   //   SELLING          → mark the live flip row as SELLING (still open)
-  //   SOLD             → write sell price + profit, mark SOLD, then DELETE the row
-  //                      so Active Operations clears automatically
+  //   SOLD             → write sell price + profit, mark SOLD — keep the row
+  //                      so Flip History can display it. Active Operations
+  //                      already filters out SOLD via .not("status","in","(SOLD,CANCELLED)")
   //   EMPTY            → DELETE the live flip row for that slot
   //                      (item collected from GE — slot is now empty)
   //   CANCELLED_BUY    → DELETE the live flip row (buy never happened)
@@ -160,13 +161,16 @@ export default async function handler(req, res) {
   for (const offer of body) {
     const slot = offer.slot;
 
-    // ── EMPTY: item collected — remove from live flips ──────
+    // ── EMPTY: item collected — remove open flip for this slot ────
+    // Only delete non-SOLD rows — completed flips stay permanently
+    // so Flip History can display them.
     if (offer.status === 'EMPTY') {
       await supabase
         .from('ge_flips_live')
         .delete()
         .eq('user_id', userId)
-        .eq('slot', slot);
+        .eq('slot', slot)
+        .neq('status', 'SOLD');
       continue;
     }
 
@@ -235,16 +239,11 @@ export default async function handler(req, res) {
           });
       }
 
-      // BUG 1 FIX + BUG 2 FIX:
-      // Delete the row from ge_flips_live so it disappears from Active Operations.
-      // The sell data has already been written above — the realtime DELETE event
-      // will trigger the frontend to remove it from the live view.
-      await supabase
-        .from('ge_flips_live')
-        .delete()
-        .eq('user_id', userId)
-        .eq('slot', slot);
-
+      // Row stays in ge_flips_live with status=SOLD.
+      // Active Operations filters it out via .not("status","in","(SOLD,CANCELLED)").
+      // Flip History shows it because it filters for status === "SOLD".
+      // The realtime UPDATE event fires on the frontend and moves it from
+      // openFlips → closedFlips automatically.
       continue;
     }
 
