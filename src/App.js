@@ -627,6 +627,16 @@ const TOUR_STEPS = [
   { id: "done", title: "You're Ready to Flip! ⚔️", desc: "That's everything. Start by setting your cash stack, then check the top flips list. Good luck on the Grand Exchange!", target: null, placement: "center" },
 ];
 
+const MERCHANT_TOUR_STEPS = [
+  { title: "Welcome to Merchant Mode ⚔️", desc: "Your war room for managing multiple GE positions at once. Let's walk through each section.", target: null, placement: "center" },
+  { title: "Capital Overview", desc: "Tracks your full GP stack. Deployed = locked in positions. Idle = unused GP. Realised = profit closed today. Click 'Update' to adjust your stack any time.", target: ".capital-bar", placement: "bottom" },
+  { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips and Portfolio positions. Dot colours: 🟡 Buying · 🔵 Selling · 🟢 Holding · 🔴 Needs attention. Click any slot to view the item chart.", target: ".slots-grid", placement: "bottom" },
+  { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Green = strong margin. Amber = fading. Red = consider cutting. Click any row to view the item chart.", target: ".ops-table", placement: "top" },
+  { title: "Capital Efficiency", desc: "The gauge shows what % of your stack is actively working. Aim for 70%+ for best returns. Below 50% means too much idle GP.", target: ".gauge-ring", placement: "left" },
+  { title: "Rotation Picks", desc: "AI-suggested items that fit your idle GP and aren't already in your slots. Ranked by score. Click any card to view the chart and decide if it's worth flipping.", target: ".m-panel-title", placement: "left" },
+  { title: "You're set! ⚔️", desc: "Log a buy in the Tracker without a sell price to open a position. It'll appear here automatically. Good luck on the GE.", target: null, placement: "center" },
+];
+
 // ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
 
 function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, refreshCooldown }) {
@@ -1328,7 +1338,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital }) {
+function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onStartTour }) {
   const allOpenPositions = [
     ...flipsLog.filter(f => f.status === "open").map(f => ({
       id: f.id, name: f.item, gpIn: f.buyPrice * (f.qty || 1),
@@ -1414,6 +1424,13 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
         <div className="merchant-left">
 
           {/* Capital Overview */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px" }}>⚔️ Merchant Mode</div>
+            <button onClick={onStartTour} style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", padding: "4px 10px", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", gap: "5px" }}
+              onMouseOver={e => e.currentTarget.style.color = "var(--gold)"} onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>
+              ? Help
+            </button>
+          </div>
           <div className="capital-bar">
             {[
               { label: "Total Capital", value: formatGP(merchantCapital), color: "var(--gold)", sub: <span style={{ cursor: "pointer", textDecoration: "underline", color: "var(--text-dim)" }} onClick={onUpdateCapital}>Update</span> },
@@ -1691,6 +1708,8 @@ export default function RuneTrader() {
   const [merchantCapitalInput, setMerchantCapitalInput] = useState("");
   const [showCapitalSetup, setShowCapitalSetup] = useState(false);
   const [merchantLoading, setMerchantLoading] = useState(false);
+  const [merchantTourStep, setMerchantTourStep] = useState(-1);
+  const [merchantTourRect, setMerchantTourRect] = useState(null);
   const [pnlHistory, setPnlHistory] = useState(() => {
     try { return JSON.parse(localStorage.getItem("runetrader_pnl_history") || "[]"); } catch { return []; }
   });
@@ -1715,6 +1734,24 @@ export default function RuneTrader() {
     setShowCapitalSetup(false);
     setMerchantLoading(false);
     showToast("Merchant Mode activated!", "success");
+    setTimeout(() => startMerchantTour(), 400);
+  }
+
+  function startMerchantTour() {
+    advanceMerchantTour(0);
+  }
+
+  function endMerchantTour() { setMerchantTourStep(-1); setMerchantTourRect(null); }
+
+  function advanceMerchantTour(next) {
+    if (next >= MERCHANT_TOUR_STEPS.length) { endMerchantTour(); return; }
+    const target = MERCHANT_TOUR_STEPS[next].target;
+    if (target) {
+      const el = document.querySelector(target);
+      if (el) { const r = el.getBoundingClientRect(); setMerchantTourRect({ top: r.top, left: r.left, width: r.width, height: r.height }); }
+      else { setMerchantTourRect(null); }
+    } else { setMerchantTourRect(null); }
+    setMerchantTourStep(next);
   }
 
   async function toggleMerchantMode() {
@@ -2450,6 +2487,44 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
         </div>
       )}
 
+      {/* MERCHANT TOUR */}
+      {merchantTourStep >= 0 && (() => {
+        const step = MERCHANT_TOUR_STEPS[merchantTourStep];
+        const isCenter = step.placement === "center" || !merchantTourRect;
+        const pad = 10;
+        const hl = merchantTourRect || {};
+        let ttStyle = {};
+        if (isCenter) {
+          ttStyle = { top: "50%", left: "50%", transform: "translate(-50%,-50%)" };
+        } else if (step.placement === "bottom") {
+          ttStyle = { top: hl.top + hl.height + pad + 12, left: Math.max(8, Math.min(hl.left, window.innerWidth - 320)) };
+        } else if (step.placement === "top") {
+          ttStyle = { top: hl.top - pad - 180, left: Math.max(8, Math.min(hl.left, window.innerWidth - 320)) };
+        } else if (step.placement === "left") {
+          ttStyle = { top: hl.top, right: window.innerWidth - hl.left + pad + 8, left: "auto" };
+        }
+        return (
+          <>
+            <div className="tour-backdrop" onClick={endMerchantTour} />
+            {!isCenter && merchantTourRect && <div className="tour-highlight" style={{ top: hl.top - pad, left: hl.left - pad, width: hl.width + pad * 2, height: hl.height + pad * 2 }} />}
+            <div className="tour-tooltip" style={ttStyle}>
+              <div className="tour-step-label">Step {merchantTourStep + 1} of {MERCHANT_TOUR_STEPS.length}</div>
+              <div className="tour-title">{step.title}</div>
+              <div className="tour-desc">{step.desc}</div>
+              <div className="tour-actions">
+                <div className="tour-dots">{MERCHANT_TOUR_STEPS.map((_, i) => <div key={i} className={"tour-dot" + (i === merchantTourStep ? " active" : "")} />)}</div>
+                <div className="tour-btn-row">
+                  <button className="tour-skip" onClick={endMerchantTour}>Skip</button>
+                  <button className="tour-next" onClick={() => advanceMerchantTour(merchantTourStep + 1)}>
+                    {merchantTourStep === MERCHANT_TOUR_STEPS.length - 1 ? "Let's go!" : "Next →"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
       {/* ITEM CHART MODAL */}
       {selectedItem && (
         <ItemChart
@@ -2607,6 +2682,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
               supabase={supabase}
               user={user}
               onUpdateCapital={() => setShowCapitalSetup(true)}
+              onStartTour={startMerchantTour}
             />
           ) : (
           <>
