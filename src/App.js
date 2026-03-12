@@ -55,12 +55,12 @@ const STYLES = `
   .section-title { font-family: 'Cinzel', serif; font-size: 14px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
   .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-family: "Inter", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; }
   .sort-btn:hover { color: var(--gold); }
   .sort-btn.active { color: var(--gold); }
   .sort-arrow { font-size: 9px; opacity: 0.7; }
-  .flip-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; }
+  .flip-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; }
   .flip-row:last-child { border-bottom: none; }
   .flip-row:hover { background: var(--bg4); }
   .item-icon { width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; image-rendering: pixelated; }
@@ -2587,6 +2587,10 @@ RULES:
       return sortDir === "asc" ? adj(a) - adj(b) : adj(b) - adj(a);
     }
     if (sortCol === "score") return sortDir === "asc" ? a.prefScore - b.prefScore : b.prefScore - a.prefScore;
+    if (sortCol === "gpPerFill") {
+      const calc = i => { const lim = i.buyLimit > 0 ? i.buyLimit : 500; return i.margin * Math.min(lim, i.volume / 6); };
+      return sortDir === "asc" ? calc(a) - calc(b) : calc(b) - calc(a);
+    }
     if (sortCol === "lastTradeTime") return sortDir === "asc" ? (a.lastTradeTime || 0) - (b.lastTradeTime || 0) : (b.lastTradeTime || 0) - (a.lastTradeTime || 0);
     return sortDir === "asc" ? a[sortCol] - b[sortCol] : b[sortCol] - a[sortCol];
   });
@@ -3245,7 +3249,7 @@ RULES:
                   <div className="section-title">Top Flips</div>
                   <div className="flips-table">
                     <div className="table-header">
-                      {[["name", "Item"], ["low", "Buy Price"], ["high", "Sell Price"], ["margin", "Margin"], ["roi", "ROI"], ["volume", "Vol/Day"], ["buylimit", "Limit"], ["lastTradeTime", "Last Trade"], ["score", "Score"]].map(([col, label]) => (
+                      {[["name", "Item"], ["low", "Buy Price"], ["high", "Sell Price"], ["margin", "Margin"], ["roi", "ROI"], ["volume", "Vol/Day"], ["buylimit", "Limit"], ["gpPerFill", "GP/Fill"], ["lastTradeTime", "Last Trade"], ["score", "Score"]].map(([col, label]) => (
                         <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
                           {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
                         </button>
@@ -3253,7 +3257,7 @@ RULES:
                     </div>
                     {loading ? (
                       Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="flip-row">{Array.from({ length: 9 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
+                        <div key={i} className="flip-row">{Array.from({ length: 10 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
                       ))
                     ) : filtered.length === 0 ? (
                       <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
@@ -3263,6 +3267,15 @@ RULES:
                         const adjMargin = item.margin - (adjLow - item.low) - (item.high - adjHigh);
                         const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
                         const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
+                        // GP/Fill: how much you realistically earn per 4hr buy window
+                        const lim = item.buyLimit > 0 ? item.buyLimit : 500;
+                        const marketPer4hr = item.volume / 6;
+                        const fillable = Math.min(lim, marketPer4hr);
+                        const gpPerFill = Math.round(adjMargin * fillable);
+                        // Liquidity confidence: can the market actually fill your buy limit?
+                        const liqRatio = item.buyLimit > 0 ? marketPer4hr / item.buyLimit : 1;
+                        const liqLabel = liqRatio >= 2 ? null : liqRatio >= 0.5 ? "~partial" : "low liq";
+                        const liqColor = liqRatio >= 2 ? "var(--green)" : liqRatio >= 0.5 ? "var(--gold)" : "var(--red)";
                         return (
                           <div key={item.id} className="flip-row" onClick={() => setSelectedItem({ ...item, adjLow, adjHigh, adjMargin })}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -3279,6 +3292,13 @@ RULES:
                               {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit — hard to fill">⚠</span>}
                             </span>
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1_000_000 ? "var(--green)" : gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}
+                                title={`${formatGP(gpPerFill)} GP if you fill your full buy limit in 4hrs`}>
+                                {formatGP(gpPerFill)}
+                              </span>
+                              {liqLabel && <span style={{ fontSize: "10px", color: liqColor }}>{liqLabel}</span>}
+                            </div>
                             <span style={{ fontSize: "11px", color: tradeColor }}>{timeAgo(item.lastTradeTime)}</span>
                             <span className={`score-badge ${item.prefScore >= 70 ? "score-high" : item.prefScore >= 40 ? "score-med" : "score-low"}`}>{item.prefScore}</span>
                           </div>
