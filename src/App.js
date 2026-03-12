@@ -1822,6 +1822,7 @@ export default function RuneTrader() {
 
   // ── Market data ──
   const [items, setItems] = useState([]);
+  const [allItems, setAllItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshCooldown, setRefreshCooldown] = useState(0); // seconds remaining
@@ -2297,12 +2298,13 @@ export default function RuneTrader() {
         const lastTradeTime = Math.max(highTime || 0, lowTime || 0);
         const score = getScore(margin, volume, roi, null, null, meta.limit || 0, lastTradeTime);
         const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high, low, margin, roi, volume, score, lastTradeTime };
-        if (!isValidFlip(flip)) continue;
         flips.push(flip);
       }
-      flips.sort((a, b) => b.score - a.score);
-      setItems(flips);
-      itemsRef.current = flips;
+      const validFlips = flips.filter(isValidFlip);
+      validFlips.sort((a, b) => b.score - a.score);
+      setItems(validFlips);
+      setAllItems(flips); // all items including invalid — for search
+      itemsRef.current = validFlips;
       runSmartAlerts(flips);
       setLastUpdate(new Date());
       if (isManualRefresh) {
@@ -2565,14 +2567,18 @@ RULES:
     } finally { setAiLoading(false); }
   }
 
-  // ── Filtered items ──
-  const scoredItems = items.map(item => ({
+  const sourceItems = search.trim() ? allItems : items;
+  const scoredItems = sourceItems.map(item => ({
     ...item,
     prefScore: getScore(item.margin, item.volume, item.roi, prefs.speed, prefs.risk, item.buyLimit, item.lastTradeTime),
   }));
 
   const filtered = scoredItems.filter(item => {
-    if (search.trim()) return item.name.toLowerCase().includes(search.toLowerCase());
+    if (search.trim()) {
+      const matched = item.name.toLowerCase().includes(search.toLowerCase());
+      // When searching, show all matching items but mark invalid ones visually
+      return matched;
+    }
     const budgetGp = budget ? parseInt(budget.replace(/[^0-9]/g, "")) * (budget.toLowerCase().includes("m") ? 1_000_000 : budget.toLowerCase().includes("k") ? 1_000 : 1) : null;
     const { adjLow, adjHigh } = applyOffset(item.low, item.high, prefs.speed);
     const adjMargin = item.margin - (adjLow - item.low) - (item.high - adjHigh);
@@ -3311,7 +3317,10 @@ RULES:
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={favourites.includes(item.id) ? "Remove favourite" : "Add to favourites"}>⭐</button>
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                              <div><div className="item-name">{item.name}</div></div>
+                              <div>
+                                <div className="item-name">{item.name}</div>
+                                {search.trim() && !isValidFlip(item) && <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "2px" }}>no margin right now</div>}
+                              </div>
                             </div>
                             <span className="price">{formatGP(adjLow)}</span>
                             <span className="price">{formatGP(adjHigh)}</span>
