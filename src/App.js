@@ -2222,8 +2222,8 @@ export default function RuneTrader() {
         const margin = high - low - TAX;
         const roi = parseFloat(((margin / low) * 100).toFixed(1));
         const volume = volumeMap[id] || 0;
-        const score = getScore(margin, volume, roi, null, null, meta.limit || 0, lastTradeTime);
         const lastTradeTime = Math.max(highTime || 0, lowTime || 0);
+        const score = getScore(margin, volume, roi, null, null, meta.limit || 0, lastTradeTime);
         const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high, low, margin, roi, volume, score, lastTradeTime };
         if (!isValidFlip(flip)) continue;
         flips.push(flip);
