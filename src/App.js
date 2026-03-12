@@ -1794,7 +1794,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
                 ) : (
                   <div className="ops-table">
                     <div className="ops-header">
-                      <span>Item</span><span>Status</span><span>Investment</span><span>Qty</span><span>Avg Buy</span><span>Sell Now</span><span>Live P&L</span><span>Health</span><span>Action</span>
+                      <span>Item</span><span>Status</span><span>Investment</span><span>Qty</span><span>Avg Buy</span><span>Sell Now</span><span>Live P&amp;L</span><span>Health</span><span>Action</span>
                     </div>
 
                     {allOpenPositions.map(pos => {
@@ -1964,7 +1964,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
                   <div className="gauge-stats">
                     <div><div className="gauge-stat-label">GP Working</div><div className="gauge-stat-val" style={{ color: "var(--gold)" }}>{formatGP(totalDeployed)}</div></div>
                     <div><div className="gauge-stat-label">Slots Used</div><div className="gauge-stat-val">{allOpenPositions.length} / 8</div></div>
-                    <div><div className="gauge-stat-label">{"Today's"} P&L</div><div className="gauge-stat-val" style={{ color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>{realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}</div></div>
+                    <div><div className="gauge-stat-label">{"Today's"} P&amp;L</div><div className="gauge-stat-val" style={{ color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>{realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}</div></div>
                   </div>
                 </div>
               </div>
@@ -2026,13 +2026,13 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
               {/* Today P&L chart */}
               <div className="m-panel-section">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <div className="m-panel-title" style={{ marginBottom: 0 }}>{"Today's"} P&L</div>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>{"Today's"} P&amp;L</div>
                   <span style={{ fontSize: "13px", fontWeight: 600, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>
                     {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}
                   </span>
                 </div>
                 {pnlHistory.length < 2 ? (
-                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>P&L timeline builds as you close flips today.</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>P&amp;L timeline builds as you close flips today.</div>
                 ) : (
                   <>
                     <div className="pnl-chart-wrap">
@@ -2214,13 +2214,13 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
               {/* P&L Chart */}
               <div className="m-panel-section">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <div className="m-panel-title" style={{ marginBottom: 0 }}>{"Today's"} P&L</div>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>{"Today's"} P&amp;L</div>
                   <span style={{ fontSize: "13px", fontWeight: 600, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>
                     {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}
                   </span>
                 </div>
                 {pnlHistory.length < 2 ? (
-                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>P&L timeline builds as you close flips today.</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>P&amp;L timeline builds as you close flips today.</div>
                 ) : (
                   <>
                     <div className="pnl-chart-wrap">
