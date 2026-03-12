@@ -2091,7 +2091,7 @@ export default function RuneTrader() {
   }
 
   // ── Fetch market prices ──
-  useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 5 * 60 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
+  useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 60 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
 
   async function fetchPrices(isManualRefresh = false) {
     try {
