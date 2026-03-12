@@ -572,21 +572,17 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
   if (margin <= 0) return 0;
   if (volume < 100) return 0;
 
-  // ── 1. Liquidity ratio score (0–40 pts) ──
-  // Use volume/buyLimit ratio rather than raw volume tiers.
-  // Rationale: a 100-limit item flipping 500/day is MORE liquid than a 50k-limit item trading 100k/day.
-  // Items with no buy limit data fall back to raw volume bands (commodities/runes).
+  // ── 1. Liquidity ratio (0–40 pts) ──
   const effectiveLimit = buyLimit > 0 ? buyLimit : null;
   let liqScore;
   if (effectiveLimit) {
-    const ratio = volume / effectiveLimit; // how many full buy-limit cycles the market supports per day
+    const ratio = volume / effectiveLimit;
     if      (ratio >= 100) liqScore = 40;
     else if (ratio >= 20)  liqScore = 38;
     else if (ratio >= 5)   liqScore = 30;
     else if (ratio >= 1)   liqScore = 15;
-    else                   liqScore = 0;  // market doesn't even support one full cycle/day — skip
+    else                   liqScore = 0;
   } else {
-    // No buy limit data — fall back to raw volume tiers
     if      (volume >= 100_000) liqScore = 35;
     else if (volume >= 50_000)  liqScore = 28;
     else if (volume >= 10_000)  liqScore = 18;
@@ -594,26 +590,11 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
     else                        liqScore = 2;
   }
 
-  // Speed preference modifier
-  if (speed === "Fast") {
-    // Fast flippers need ratio >= 20 to matter; penalize thin markets harder
-    if (effectiveLimit && volume / effectiveLimit < 5) liqScore = Math.round(liqScore * 0.3);
-  }
-  if (speed === "Slow") {
-    // Slow flippers are OK with ratio >= 1; soften the penalty slightly
-    if (liqScore === 0 && effectiveLimit && volume / effectiveLimit >= 0.5) liqScore = 5;
-  }
-
   // ── 2. GP/hr potential (0–35 pts) ──
-  // Realistic fill rate: you're competing with other flippers.
-  // Assume you capture ~3% of hourly volume (conservative fill_share for a single account).
-  // GP/hr = margin × min(fill_rate, buyLimit) where fill_rate = volume/24 * 0.03
   const FILL_SHARE = 0.03;
   const volPerHour = volume / 24;
   const fillRate = Math.min(volPerHour * FILL_SHARE, effectiveLimit || volPerHour * FILL_SHARE);
   const gpPerHour = margin * fillRate;
-
-  // Log scale so mega-flips don't dominate — cap score at 35
   let gpScore;
   if      (gpPerHour >= 5_000_000) gpScore = 35;
   else if (gpPerHour >= 2_000_000) gpScore = 30;
@@ -624,43 +605,78 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
   else if (gpPerHour >= 5_000)     gpScore = 2;
   else                             gpScore = 0;
 
-  if (risk === "Low" && margin < 1_000)          gpScore = Math.round(gpScore * 0.4);
-  if (risk === "High" && gpPerHour >= 300_000)   gpScore = Math.min(gpScore + 4, 35);
-
-  // ── 3. ROI score (0–15 pts) ──
-  // Real OSRS high-volume flips run at 0.5–5%. Sweet spot here is 2–5%.
-  // >15% = likely slow/niche gear, >40% = suspicious (thin market or manipulation).
+  // ── 3. ROI (0–15 pts) — sweet spot 2–5%, >40% suspicious ──
   let roiScore = 0;
   if (roi > 0) {
     if      (roi < 0.5)  roiScore = 0;
     else if (roi <= 2)   roiScore = Math.round((roi / 2) * 8);
-    else if (roi <= 5)   roiScore = 15;  // peak
+    else if (roi <= 5)   roiScore = 15;
     else if (roi <= 15)  roiScore = 12;
     else if (roi <= 40)  roiScore = 5;
     else if (roi <= 80)  roiScore = 2;
-    else                 roiScore = 0;   // >80% = almost certainly bad data or dead market
-
-    if (risk === "Low"  && roi > 15) roiScore = Math.round(roiScore * 0.4);
-    if (risk === "High" && roi > 5 && roi <= 40) roiScore = Math.min(roiScore + 3, 15);
+    else                 roiScore = 0;
   }
 
-  // ── 4. Freshness multiplier — pure multiplicative, outside the 100pt pool ──
-  // Stale data = wrong margin. This invalidates confidence, not just reduces it.
-  let freshness;
+  // ── 4. Freshness multiplier ──
+  let freshness = 0.40;
   if (lastTradeTime) {
     const ageSec = Math.floor(Date.now() / 1000 - lastTradeTime);
-    if      (ageSec < 300)   freshness = 1.00; // < 5 min
-    else if (ageSec < 900)   freshness = 0.90; // < 15 min
-    else if (ageSec < 1800)  freshness = 0.75; // < 30 min
-    else if (ageSec < 3600)  freshness = 0.50; // < 1 hr
-    else if (ageSec < 7200)  freshness = 0.20; // < 2 hr
-    else                     freshness = 0.05; // 2hr+ — near-disqualified
-  } else {
-    freshness = 0.40; // unknown age — be conservative
+    if      (ageSec < 300)  freshness = 1.00;
+    else if (ageSec < 900)  freshness = 0.90;
+    else if (ageSec < 1800) freshness = 0.75;
+    else if (ageSec < 3600) freshness = 0.50;
+    else if (ageSec < 7200) freshness = 0.20;
+    else                    freshness = 0.05;
   }
 
-  const base = liqScore + gpScore + roiScore; // max possible: 40+35+15 = 90 (leaves headroom)
-  return Math.max(0, Math.min(100, Math.round(base * freshness)));
+  const base = Math.round((liqScore + gpScore + roiScore) * freshness);
+
+  // ── 5. Preference multipliers — these actually reshape the list ──
+  // Applied AFTER base score so they have strong visible impact on ranking.
+  // Each pref can boost or suppress by up to ±50% of the base score.
+  if (!speed && !risk) return Math.max(0, Math.min(100, base));
+
+  let prefMultiplier = 1.0;
+
+  // SPEED: Fast = needs high daily volume to fill quickly; Slow = fine with low volume, wants big margins
+  if (speed === "Fast") {
+    if      (volume >= 500_000) prefMultiplier *= 1.4;
+    else if (volume >= 100_000) prefMultiplier *= 1.2;
+    else if (volume >= 50_000)  prefMultiplier *= 1.0;
+    else if (volume >= 10_000)  prefMultiplier *= 0.6;
+    else                        prefMultiplier *= 0.2; // too slow to fill fast — heavily demoted
+  } else if (speed === "Slow") {
+    // Slow flippers want big margins and don't care about volume
+    if      (margin >= 500_000) prefMultiplier *= 1.4;
+    else if (margin >= 100_000) prefMultiplier *= 1.2;
+    else if (margin >= 20_000)  prefMultiplier *= 1.0;
+    else if (margin >= 5_000)   prefMultiplier *= 0.8;
+    else                        prefMultiplier *= 0.5; // tiny margin, not worth slow flipping
+  }
+
+  // RISK: Low = wants high-volume, low-ROI, stable items; High = wants big margin potential, ROI ok
+  if (risk === "Low") {
+    // Penalize anything with ROI > 10% (thin or unstable market) or volume < 10k
+    if (roi > 40)       prefMultiplier *= 0.15; // suspicious margin — near-disqualify
+    else if (roi > 20)  prefMultiplier *= 0.40;
+    else if (roi > 10)  prefMultiplier *= 0.70;
+    if (volume < 10_000)        prefMultiplier *= 0.30; // not liquid enough for low risk
+    else if (volume < 50_000)   prefMultiplier *= 0.70;
+    else if (volume >= 100_000) prefMultiplier *= 1.30; // reward very liquid items
+  } else if (risk === "High") {
+    // Boost high-margin items, don't care about volume as much
+    if (margin >= 200_000)      prefMultiplier *= 1.50;
+    else if (margin >= 50_000)  prefMultiplier *= 1.25;
+    else if (margin < 5_000)    prefMultiplier *= 0.60; // not worth the risk for tiny margin
+    if (roi > 15 && roi <= 60)  prefMultiplier *= 1.20; // reward good ROI for risk takers
+  } else {
+    // Med risk: moderate boosts, minor penalties
+    if (roi > 30)          prefMultiplier *= 0.60;
+    if (volume < 5_000)    prefMultiplier *= 0.50;
+    else if (volume >= 50_000) prefMultiplier *= 1.15;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(base * prefMultiplier)));
 }
 
 function renderMarkdown(text) {
@@ -2534,14 +2550,20 @@ RULES:
     const budgetGp = budget ? parseInt(budget.replace(/[^0-9]/g, "")) * (budget.toLowerCase().includes("m") ? 1_000_000 : budget.toLowerCase().includes("k") ? 1_000 : 1) : null;
     const { adjLow, adjHigh } = applyOffset(item.low, item.high, prefs.speed);
     const adjMargin = item.margin - (adjLow - item.low) - (item.high - adjHigh);
-    const passesRisk = !prefs.risk ||
-      (prefs.risk === "Low" && item.volume >= 200) ||
-      (prefs.risk === "Med" && item.volume >= 50) ||
-      prefs.risk === "High";
+
+    // Speed filter: Fast needs genuinely high volume to fill quickly
     const passesSpeed = !prefs.speed ||
-      (prefs.speed === "Fast" && item.volume >= 300) ||
-      (prefs.speed === "Med" && item.volume >= 30) ||
+      (prefs.speed === "Fast"  && item.volume >= 50_000) ||
+      (prefs.speed === "Med"   && item.volume >= 5_000)  ||
       prefs.speed === "Slow";
+
+    // Risk filter: Low risk = only high-volume, low-ROI items; High = relax everything
+    const passesRisk = !prefs.risk ||
+      (prefs.risk === "Low"  && item.volume >= 20_000 && item.roi <= 20) ||
+      (prefs.risk === "Med"  && item.volume >= 2_000  && item.roi <= 60) ||
+      prefs.risk === "High";
+
+    // Always: must have positive adjusted margin, valid price, pass budget & tab filter
     return (!budgetGp || item.low <= budgetGp) &&
       (filter === "all" || (filter === "f2p" && item.category === "F2P") || (filter === "members" && item.category === "Members") || (filter === "highvol" && item.volume > 500)) &&
       passesRisk && passesSpeed &&
