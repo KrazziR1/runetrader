@@ -1536,7 +1536,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView }) {
+function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView }) {
 
   // ── Build open positions ──
   const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
@@ -1739,11 +1739,26 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
               <div className="merchant-section">
                 <div className="merchant-section-header">
                   <span className="merchant-section-title">GE Slots</span>
-                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{allOpenPositions.length} / 8 occupied</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{Math.max(geOffers.length, allOpenPositions.length)} / 8 occupied</span>
                 </div>
                 <div className="slots-grid">
                   {Array.from({ length: 8 }).map((_, i) => {
+                    const liveOffer = geOffers.find(o => o.slot === i && (o.status === "BUYING" || o.status === "SELLING"));
                     const pos = allOpenPositions[i];
+                    if (liveOffer) {
+                      // Show live GE data from plugin
+                      const slotColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[liveOffer.status] || "var(--border)";
+                      const pct = liveOffer.qty_total > 0 ? Math.round((liveOffer.qty_filled / liveOffer.qty_total) * 100) : 0;
+                      return (
+                        <div key={i} className="ge-slot active" title={`${liveOffer.item_name} · ${liveOffer.status} · ${pct}% filled`}
+                          onClick={() => { const it = items.find(x => x.name.toLowerCase() === liveOffer.item_name.toLowerCase()); if (it) setSelectedItem(it); }}>
+                          <div className="slot-dot" style={{ background: slotColor }} />
+                          <img src={itemIconUrl(liveOffer.item_name)} alt="" style={{ width: 28, height: 28, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
+                          <div className="slot-name">{liveOffer.item_name.length > 12 ? liveOffer.item_name.slice(0, 11) + "…" : liveOffer.item_name}</div>
+                          <div className="slot-pnl" style={{ color: "var(--text-dim)", fontSize: "10px" }}>{pct}%</div>
+                        </div>
+                      );
+                    }
                     if (!pos) return (
                       <div key={i} className="ge-slot empty" onClick={() => setShowAddRow(true)} title="Empty slot — click to add position">
                         <div style={{ fontSize: "20px", color: "var(--border)", lineHeight: 1 }}>+</div>
@@ -2473,6 +2488,123 @@ function ThresholdPopover({ alertKey, label, unit, min, max, step, thresholds, o
   );
 }
 
+
+// ── LIVE GE SLOTS COMPONENT ──────────────────────────────────
+function LiveGESlots({ user, supabase: sb }) {
+  const [offers, setOffers] = useState([]);
+  const [autoFlips, setAutoFlips] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!user) return;
+    setLoading(true);
+    Promise.all([
+      sb.from("ge_offers").select("*").eq("user_id", user.id).order("slot"),
+      sb.from("ge_flips_auto").select("*").eq("user_id", user.id).order("sell_completed_at", { ascending: false }).limit(20),
+    ]).then(([{ data: offersData }, { data: flipsData }]) => {
+      setOffers(offersData || []);
+      setAutoFlips(flipsData || []);
+      setLoading(false);
+    });
+    const offersChannel = sb.channel("live-ge-offers-" + user.id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ge_offers", filter: `user_id=eq.${user.id}` }, payload => {
+        if (payload.eventType === "DELETE") {
+          setOffers(prev => prev.filter(o => o.id !== payload.old.id));
+        } else {
+          setOffers(prev => {
+            const idx = prev.findIndex(o => o.slot === payload.new.slot);
+            if (idx >= 0) { const next = [...prev]; next[idx] = payload.new; return next; }
+            return [...prev, payload.new].sort((a, b) => a.slot - b.slot);
+          });
+        }
+      }).subscribe();
+    const flipsChannel = sb.channel("live-ge-flips-" + user.id)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "ge_flips_auto", filter: `user_id=eq.${user.id}` }, payload => {
+        setAutoFlips(prev => [payload.new, ...prev].slice(0, 20));
+      }).subscribe();
+    return () => { sb.removeChannel(offersChannel); sb.removeChannel(flipsChannel); };
+  }, [user]);
+
+  if (!user) return null;
+  const slotColor = s => ({ BUYING: "var(--gold)", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)", CANCELLED_BUY: "var(--red)", CANCELLED_SELL: "var(--red)" }[s] || "#555");
+  const slotLabel = s => !s || s === "EMPTY" ? "Empty" : s.charAt(0) + s.slice(1).toLowerCase().replace("_", " ");
+  const fmtGP = n => { if (!n && n !== 0) return "—"; if (n >= 1e6) return (n/1e6).toFixed(1)+"M"; if (n >= 1e3) return (n/1e3).toFixed(1)+"K"; return n.toLocaleString(); };
+  const pct = o => o.qty_total > 0 ? Math.round((o.qty_filled / o.qty_total) * 100) : 0;
+  const activeOffers = offers.filter(o => o.status === "BUYING" || o.status === "SELLING");
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <span style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px" }}>🔴 Live GE Slots</span>
+          <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{activeOffers.length} / 8 active</span>
+        </div>
+        {loading ? (
+          <div style={{ color: "var(--text-dim)", fontSize: "13px", padding: "20px 0" }}>Loading slots...</div>
+        ) : activeOffers.length === 0 ? (
+          <div style={{ color: "var(--text-dim)", fontSize: "13px", padding: "20px 0", textAlign: "center" }}>
+            <div style={{ fontSize: "28px", marginBottom: "8px", opacity: 0.4 }}>📦</div>
+            <div>No active GE offers</div>
+            <div style={{ fontSize: "11px", marginTop: "4px", opacity: 0.6 }}>Open offers in-game — they will appear here in real time</div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "24px 2fr 60px 80px 100px 80px 80px", gap: "10px", padding: "0 4px 6px", fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <span>#</span><span>Item</span><span>Type</span><span>Price</span><span>Progress</span><span>Qty</span><span>Status</span>
+            </div>
+            {activeOffers.map(o => (
+              <div key={o.slot} style={{ display: "grid", gridTemplateColumns: "24px 2fr 60px 80px 100px 80px 80px", gap: "10px", padding: "10px 4px", borderTop: "1px solid var(--border)", alignItems: "center" }}>
+                <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{o.slot + 1}</span>
+                <span style={{ fontSize: "13px", fontWeight: 500 }}>{o.item_name}</span>
+                <span style={{ fontSize: "11px", color: o.offer_type === "BUY" ? "var(--gold)" : "#4fc3f7" }}>{o.offer_type}</span>
+                <span style={{ fontSize: "12px" }}>{fmtGP(o.offer_price)}</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                  <div style={{ background: "var(--bg4)", borderRadius: "3px", height: "4px", overflow: "hidden" }}>
+                    <div style={{ background: slotColor(o.status), height: "100%", width: pct(o)+"%", transition: "width 0.4s ease", borderRadius: "3px" }} />
+                  </div>
+                  <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>{pct(o)}%</span>
+                </div>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(o.qty_filled||0).toLocaleString()} / {(o.qty_total||0).toLocaleString()}</span>
+                <span style={{ fontSize: "11px", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: slotColor(o.status), display: "inline-block" }} />
+                  {slotLabel(o.status)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {autoFlips.length > 0 && (
+        <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>⚡ Auto-Detected Flips</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 80px 80px 80px 80px 90px", gap: "10px", padding: "0 4px 8px", fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <span>Item</span><span>Buy</span><span>Sell</span><span>Qty</span><span>Tax</span><span>Profit</span>
+            </div>
+            {autoFlips.map(f => (
+              <div key={f.id} style={{ display: "grid", gridTemplateColumns: "2fr 80px 80px 80px 80px 90px", gap: "10px", padding: "10px 4px", borderTop: "1px solid var(--border)", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: 500 }}>{f.item_name}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{f.sell_completed_at ? new Date(f.sell_completed_at).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}</div>
+                </div>
+                <span style={{ fontSize: "12px" }}>{fmtGP(f.buy_price)}</span>
+                <span style={{ fontSize: "12px" }}>{fmtGP(f.sell_price)}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.qty||0).toLocaleString()}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{fmtGP(f.tax_paid)}</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: f.profit >= 0 ? "var(--green)" : "var(--red)" }}>{f.profit >= 0 ? "+" : ""}{fmtGP(f.profit)}</div>
+                  {f.roi_pct != null && <div style={{ fontSize: "11px", color: f.roi_pct >= 0 ? "var(--green)" : "var(--red)" }}>{f.roi_pct >= 0 ? "+" : ""}{Number(f.roi_pct).toFixed(1)}% ROI</div>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RuneTrader() {
   const [showApp, setShowApp] = useState(false);
   const [user, setUser] = useState(null);
@@ -2613,9 +2745,26 @@ export default function RuneTrader() {
 
   // Load manual positions for Merchant Mode (read-only copy)
   const [merchantPositions, setMerchantPositions] = useState([]);
+  const [geOffers, setGeOffers] = useState([]);
   useEffect(() => {
     if (!user || !merchantMode) return;
     supabase.from("positions").select("*").then(({ data }) => setMerchantPositions(data || []));
+    // Fetch live GE offers
+    supabase.from("ge_offers").select("*").eq("user_id", user.id).order("slot")
+      .then(({ data }) => setGeOffers(data || []));
+    // Realtime subscription
+    const ch = supabase.channel("merchant-ge-offers-" + user.id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ge_offers", filter: `user_id=eq.${user.id}` }, payload => {
+        setGeOffers(prev => {
+          if (payload.eventType === "DELETE") return prev.filter(o => o.id !== payload.old.id);
+          const o = payload.new;
+          // keep all statuses in state, filter on render
+          const idx = prev.findIndex(x => x.slot === o.slot);
+          if (idx >= 0) { const next = [...prev]; next[idx] = o; return next; }
+          return [...prev, o].sort((a, b) => a.slot - b.slot);
+        });
+      }).subscribe();
+    return () => supabase.removeChannel(ch);
   }, [user, merchantMode]); // eslint-disable-line
 
   async function addPositionFromMerchant({ item, buyPrice, qty }) {
@@ -3623,6 +3772,7 @@ RULES:
               items={items}
               flipsLog={flipsLog}
               manualPositions={merchantPositions}
+              geOffers={geOffers}
               merchantCapital={merchantCapital}
               setMerchantCapital={setMerchantCapital}
               pnlHistory={pnlHistory}
@@ -3673,6 +3823,8 @@ RULES:
                 </div>
 
                 <ProfitChart flipsLog={flipsLog} />
+
+                <LiveGESlots user={user} supabase={supabase} />
 
                 <div className="tracker-form">
                   <div className="tracker-form-title">⚔️ Log a Flip</div>
