@@ -2181,7 +2181,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
                 )}
               </div>
 
-              {/* Today's Closed Flips */}
+              {/* Today Closed Flips */}
               <div id="tour-closed-today" className="merchant-section" style={{ flex: 1 }}>
                   <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{todayFlips.length} flips</span>
                 </div>
