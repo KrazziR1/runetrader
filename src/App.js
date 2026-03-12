@@ -1394,7 +1394,6 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
     return "selling";
   }
 
-  const slotIcons = { "sword": "⚔️", "bow": "🏹", "helm": "🪖", "shield": "🛡️", "whip": "⚔️", "default": "📦" };
   function getIcon(name) {
     const n = name.toLowerCase();
     if (n.includes("bow")) return "🏹";
