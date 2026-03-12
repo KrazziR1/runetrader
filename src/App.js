@@ -938,7 +938,7 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, 
             { label: "Buy Price", value: formatGP(item.adjLow ?? item.low), color: "var(--green)", tip: "The current lowest buy offer on the GE. This is what you'll pay to buy the item." },
             { label: "Sell Price", value: formatGP(item.adjHigh ?? item.high), color: "var(--text)", tip: "The current highest sell offer on the GE. This is what buyers are paying right now." },
             { label: "Margin (after tax)", value: formatGP(item.adjMargin ?? item.margin), color: (item.adjMargin ?? item.margin) > 0 ? "var(--green)" : "var(--red)", tip: "Sell price minus buy price minus GE tax (1%, capped at 5M). This is your actual profit per item." },
-            { label: "ROI", value: item.roi + "%", color: "var(--gold)", tip: "Return on investment — margin ÷ buy price. Higher is better, but balance this against volume and buy limit." },
+            { label: "ROI", value: item.roi + "%", color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12", tip: "Return on investment — margin ÷ buy price. 🟢 1–3% = Healthy sweet spot. 🟡 >4% = Risky (wide spread, hard to exit). 🟠 <1% = Competitive (thin margin, many flippers)." },
             { label: "Vol / Day", value: item.volume > 0 ? item.volume.toLocaleString() : "—", color: "var(--text-dim)", tip: "Total items traded across all GE slots per day. Higher volume = easier fills and less competition risk." },
             { label: "GP / Fill", value: item.buyLimit > 0 ? formatGP((item.adjMargin ?? item.margin) * item.buyLimit) : "—", color: "var(--gold)", tip: "Maximum GP profit per 4-hour buy limit window (margin × buy limit). Use this to compare how much a full cycle is worth." },
             { label: "Cycles / Day", value: item.buyLimit > 0 && item.volume > 0 ? (item.volume / item.buyLimit).toFixed(1) + "×" : "—", color: item.buyLimit > 0 && item.volume / item.buyLimit >= 71 ? "var(--green)" : item.buyLimit > 0 && item.volume / item.buyLimit >= 31 ? "#f39c12" : "var(--red)", tip: "How many times the daily volume could fill your buy limit (vol ÷ limit). 🟢 71×+ = Liquid. 🟠 31–70× = Active. 🔴 ≤30× = Competitive (fills may be slow)." },
@@ -2062,7 +2062,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
                     <div className="rc-reason">Score {item.score}/100 · {item.volume.toLocaleString()}/day</div>
                     <div className="rc-stats">
                       <div className="rc-stat">Margin <span style={{ color: "var(--green)" }}>{formatGP(item.margin)}</span></div>
-                      <div className="rc-stat">ROI <span style={{ color: "var(--gold)" }}>{item.roi}%</span></div>
+                      <div className="rc-stat">ROI <span style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.roi}%</span></div>
                       <div className="rc-stat">Limit <span style={{ color: "var(--text)" }}>{item.buyLimit > 0 ? item.buyLimit.toLocaleString() : "?"}</span></div>
                     </div>
                     <div className="rc-action">→ Click to view chart</div>
@@ -2373,7 +2373,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
                             {liveItem && (
                               <div style={{ display: "flex", gap: "12px", marginTop: "4px", fontSize: "11px" }}>
                                 <span style={{ color: "var(--text-dim)" }}>Margin: <span style={{ color: liveItem.margin > 0 ? "var(--green)" : "var(--red)" }}>{formatGP(liveItem.margin)}</span></span>
-                                <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: "var(--gold)" }}>{liveItem.roi}%</span></span>
+                                <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: liveItem.roi > 4 ? "var(--gold)" : liveItem.roi >= 1 ? "var(--green)" : "#f39c12" }}>{liveItem.roi}%</span></span>
                               </div>
                             )}
                           </div>
@@ -3970,7 +3970,7 @@ RULES:
                                   <span style={{ color: "var(--text-dim)" }}>Buy: <span style={{ color: "var(--text)" }}>{formatGP(liveItem.low)}</span></span>
                                   <span style={{ color: "var(--text-dim)" }}>Sell: <span style={{ color: "var(--text)" }}>{formatGP(liveItem.high)}</span></span>
                                   <span style={{ color: "var(--text-dim)" }}>Margin: <span style={{ color: liveItem.margin > 0 ? "var(--green)" : "var(--red)" }}>{formatGP(liveItem.margin)}</span></span>
-                                  <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: "var(--gold)" }}>{liveItem.roi}%</span></span>
+                                  <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: liveItem.roi > 4 ? "var(--gold)" : liveItem.roi >= 1 ? "var(--green)" : "#f39c12" }}>{liveItem.roi}%</span></span>
                                 </div>
                               )}
                             </div>
@@ -4124,7 +4124,7 @@ RULES:
                             <span className="price">{formatGP(adjLow)}</span>
                             <span className="price">{formatGP(adjHigh)}</span>
                             <span className={`margin ${adjMargin < 0 ? "neg" : ""}`}>{formatGP(adjMargin)}</span>
-                            <span className="roi" style={{ color: item.roi >= 20 ? "var(--green)" : item.roi >= 8 ? "var(--gold)" : "var(--text-dim)" }}>{item.roi}%</span>
+                            <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.roi}%</span>
                             <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }} title={item.buyLimit > 0 ? `${(item.volume/Math.max(item.buyLimit,1)).toFixed(1)}x daily vol vs limit` : "No buy limit data"}>
                               {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
                               {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit — hard to fill">⚠</span>}
