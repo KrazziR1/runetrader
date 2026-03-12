@@ -2124,6 +2124,8 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
 
               {/* Session Intel */}
               <div id="tour-session-intel" className="merchant-section">
+                <div className="merchant-section-header">
+                  <span className="merchant-section-title">📊 Session Intel</span>
                   <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Started {getSessionTime()} ago</span>
                 </div>
                 <div className="analytics-grid">
@@ -2147,12 +2149,14 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
 
               {/* Risk Exposure */}
               <div id="tour-risk-exposure" className="merchant-section">
+                <div className="merchant-section-header">
+                  <span className="merchant-section-title">⚖️ Risk Exposure</span>
                   {topRiskPct > 50 && <span style={{ fontSize: "11px", color: "var(--red)", fontWeight: 600 }}>Concentrated position</span>}
                 </div>
                 {riskItems.length === 0 ? (
                   <div style={{ fontSize: "12px", color: "var(--text-dim)", padding: "12px 16px" }}>No open positions to analyse.</div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", padding: "12px 16px" }}>
                     {riskItems.map(pos => (
                       <div key={pos.id}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
@@ -2183,12 +2187,14 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
 
               {/* Today Closed Flips */}
               <div id="tour-closed-today" className="merchant-section" style={{ flex: 1 }}>
+                <div className="merchant-section-header">
+                  <span className="merchant-section-title">✅ Closed Today</span>
                   <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{todayFlips.length} flips</span>
                 </div>
                 {todayFlips.length === 0 ? (
-                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No flips closed today yet.</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", padding: "12px 16px" }}>No flips closed today yet.</div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", padding: "8px 12px" }}>
                     {todayFlips.slice(0, 10).map(f => (
                       <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "var(--bg3)", borderRadius: "6px", border: "1px solid var(--border)" }}>
                         <div>
