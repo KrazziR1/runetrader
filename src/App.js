@@ -1632,10 +1632,18 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                 </div>
                 {allOpenPositions.map(pos => {
                   const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
+                  // Live P&L: what you'd net if you sold right now at current GE sell price
+                  // = (currentHigh - tax) - yourBuyPrice
+                  // This is genuinely unrealised — you still need to list and sell.
+                  // If currentHigh hasn't changed from when you bought, P&L = original margin.
+                  // We also show a warning if the margin has compressed since you bought.
                   const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
-                  const pnlEach = liveItem ? liveItem.high - pos.buyPrice - tax : 0;
+                  const currentNetSell = liveItem ? liveItem.high - tax : 0;
+                  const pnlEach = liveItem ? currentNetSell - pos.buyPrice : 0;
                   const pnlTotal = pnlEach * pos.qty;
-                  const pnlPct = ((pnlEach / pos.buyPrice) * 100).toFixed(1);
+                  const pnlPct = pos.buyPrice > 0 ? ((pnlEach / pos.buyPrice) * 100).toFixed(1) : "0.0";
+                  // Warn if sell price has dropped below buy price (margin gone / inverted)
+                  const marginGone = liveItem && liveItem.high <= pos.buyPrice;
                   const healthPct = getHealthPct(pos);
                   const healthColor = healthPct >= 60 ? "var(--green)" : healthPct >= 25 ? "#f39c12" : "var(--red)";
                   const healthText = healthPct >= 60 ? "Strong" : healthPct >= 25 ? "Fading" : "Needs Attention";
@@ -1652,7 +1660,9 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                         <div style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>
                           {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
                         </div>
-                        <div style={{ fontSize: "10px", color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>{pnlPct}%</div>
+                        <div style={{ fontSize: "10px", color: marginGone ? "var(--red)" : pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
+                          {marginGone ? "⚠ margin gone" : `${pnlPct}%`}
+                        </div>
                       </div>
                       <div className="health-bar-wrap" onClick={e => e.stopPropagation()}>
                         <div className="health-track"><div className="health-fill" style={{ width: `${healthPct}%`, background: healthColor }} /></div>
