@@ -2014,7 +2014,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
                           </div>
                         )}
                       </div>
-                      <span className="smart-event-time">{e.time}</span>
+                      <span className="smart-event-time">{formatTime(e.time)}</span>
                     </div>
                   );
                 });
