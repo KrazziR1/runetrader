@@ -1578,6 +1578,8 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, pnlHi
   const [showAddAc, setShowAddAc] = useState(false);
   const [addAcIdx, setAddAcIdx] = useState(-1);
   const [merchantFeedFilter, setMerchantFeedFilter] = useState("all");
+  const [closingPos, setClosingPos] = useState(null);
+  const [posStatuses, setPosStatuses] = useState({});
   const [dailyGoal, setDailyGoal] = useState(() => { try { return parseInt(localStorage.getItem("rt_daily_goal") || "0"); } catch { return 0; } });
   const [showGoalInput, setShowGoalInput] = useState(false);
   const [goalInput, setGoalInput] = useState("");
