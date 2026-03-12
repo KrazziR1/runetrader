@@ -1441,7 +1441,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onStartTour }) {
+function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital }) {
   const allOpenPositions = [
     ...flipsLog.filter(f => f.status === "open").map(f => ({
       id: f.id, name: f.item, gpIn: f.buyPrice * (f.qty || 1),
@@ -1507,18 +1507,6 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
     return "selling";
   }
 
-  function getIcon(name) {
-    const n = name.toLowerCase();
-    if (n.includes("bow")) return "🏹";
-    if (n.includes("helm") || n.includes("hat") || n.includes("hood")) return "🪖";
-    if (n.includes("shield") || n.includes("ward") || n.includes("kite")) return "🛡️";
-    if (n.includes("sword") || n.includes("whip") || n.includes("scimitar") || n.includes("blade")) return "⚔️";
-    if (n.includes("staff") || n.includes("wand")) return "🔮";
-    if (n.includes("rune") || n.includes("potion")) return "🧪";
-    if (n.includes("ring") || n.includes("amulet") || n.includes("necklace")) return "💍";
-    if (n.includes("boot") || n.includes("glove")) return "🥾";
-    return "📦";
-  }
 
   return (
     <div className="merchant-wrap">
@@ -2823,7 +2811,6 @@ RULES:
               supabase={supabase}
               user={user}
               onUpdateCapital={() => setShowCapitalSetup(true)}
-              onStartTour={startMerchantTour}
             />
           ) : (
           <>
