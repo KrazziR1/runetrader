@@ -1502,7 +1502,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, resetThreshold, ThresholdPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos }) {
+function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos }) {
   // Build open positions — tracker flips only (portfolio positions are now also written as flips)
   // Deduplicate: if same item appears in both flipsLog and manualPositions, prefer flipsLog entry
   const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
@@ -1949,7 +1949,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                   <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{desc}</div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                  {ThresholdPopover && <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} />}
+                  <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} thresholds={thresholds} openPopover={openPopover} setOpenPopover={setOpenPopover} saveThreshold={saveThreshold} />
                   <label className="toggle-switch">
                     <input type="checkbox" checked={smartAlertSettings?.[key] ?? true} onChange={e => saveSmartAlertSettings?.(key, e.target.checked)} />
                     <span className="toggle-slider"></span>
@@ -2055,6 +2055,40 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
   );
 }
 
+
+// ── ThresholdPopover — top-level component (must not be defined inside RuneTrader to avoid remount crashes)
+const THRESHOLD_DEFAULTS = { marginSpike: 50, volumeSurge: 3, dumpDetected: 10, priceCrash: 15 };
+
+function ThresholdPopover({ alertKey, label, unit, min, max, step, thresholds, openPopover, setOpenPopover, saveThreshold }) {
+  const val = thresholds[alertKey];
+  const isDefault = val === THRESHOLD_DEFAULTS[alertKey];
+  return (
+    <div className="threshold-popover-wrap">
+      <button className={`threshold-gear-btn${openPopover === alertKey ? " active" : ""}`}
+        onClick={e => { e.stopPropagation(); setOpenPopover(openPopover === alertKey ? null : alertKey); }}
+        title="Adjust threshold">⚙️</button>
+      {openPopover === alertKey && (
+        <div className="threshold-popover" onClick={e => e.stopPropagation()}>
+          <div className="threshold-popover-title">Threshold — {label}</div>
+          <div className="threshold-popover-label">
+            Trigger when: {alertKey === "volumeSurge" ? `volume is ${val}x previous` : `change is ≥ ${val}${unit}`}
+          </div>
+          <div className="threshold-row">
+            <input type="range" className="threshold-slider" min={min} max={max} step={step} value={val}
+              onChange={e => saveThreshold(alertKey, e.target.value)} />
+            <input type="number" className="threshold-number" min={min} max={max} step={step} value={val}
+              onChange={e => saveThreshold(alertKey, e.target.value)} />
+            <span className="threshold-unit">{unit}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span className="threshold-default">Default: {THRESHOLD_DEFAULTS[alertKey]}{unit}</span>
+            {!isDefault && <button className="threshold-reset" onClick={() => saveThreshold(alertKey, THRESHOLD_DEFAULTS[alertKey])}>Reset</button>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function RuneTrader() {
   const [showApp, setShowApp] = useState(false);
@@ -2309,8 +2343,6 @@ export default function RuneTrader() {
   const [alertAutocomplete, setAlertAutocomplete] = useState([]);
   const [showAlertAutocomplete, setShowAlertAutocomplete] = useState(false);
 
-  const THRESHOLD_DEFAULTS = { marginSpike: 50, volumeSurge: 3, dumpDetected: 10, priceCrash: 15 };
-
   const [thresholds, setThresholds] = useState(() => {
     try { return { ...THRESHOLD_DEFAULTS, ...JSON.parse(localStorage.getItem("runetrader_thresholds") || "{}") }; }
     catch { return { ...THRESHOLD_DEFAULTS }; }
@@ -2338,37 +2370,6 @@ export default function RuneTrader() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [openPopover]);
-
-  function ThresholdPopover({ alertKey, label, unit, min, max, step }) {
-    const val = thresholds[alertKey];
-    const isDefault = val === THRESHOLD_DEFAULTS[alertKey];
-    return (
-      <div className="threshold-popover-wrap">
-        <button className={`threshold-gear-btn${openPopover === alertKey ? " active" : ""}`}
-          onClick={e => { e.stopPropagation(); setOpenPopover(openPopover === alertKey ? null : alertKey); }}
-          title="Adjust threshold">⚙️</button>
-        {openPopover === alertKey && (
-          <div className="threshold-popover" onClick={e => e.stopPropagation()}>
-            <div className="threshold-popover-title">Threshold — {label}</div>
-            <div className="threshold-popover-label">
-              Trigger when: {alertKey === "volumeSurge" ? `volume is ${val}x previous` : `change is ≥ ${val}${unit}`}
-            </div>
-            <div className="threshold-row">
-              <input type="range" className="threshold-slider" min={min} max={max} step={step} value={val}
-                onChange={e => saveThreshold(alertKey, e.target.value)} />
-              <input type="number" className="threshold-number" min={min} max={max} step={step} value={val}
-                onChange={e => saveThreshold(alertKey, e.target.value)} />
-              <span className="threshold-unit">{unit}</span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span className="threshold-default">Default: {THRESHOLD_DEFAULTS[alertKey]}{unit}</span>
-              {!isDefault && <button className="threshold-reset" onClick={() => resetThreshold(alertKey)}>Reset</button>}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
 
   // ── Smart Alerts ──
   const [smartAlertSettings, setSmartAlertSettings] = useState(() => {
@@ -3208,8 +3209,8 @@ RULES:
               saveSmartAlertSettings={saveSmartAlertSettings}
               thresholds={thresholds}
               saveThreshold={saveThreshold}
-              resetThreshold={resetThreshold}
-              ThresholdPopover={ThresholdPopover}
+              openPopover={openPopover}
+              setOpenPopover={setOpenPopover}
               smartEvents={smartEvents}
               setSmartEvents={setSmartEvents}
               onRefresh={() => fetchPrices(true)}
@@ -3392,7 +3393,7 @@ RULES:
                         <div className="smart-alert-toggle-desc">{desc}</div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} />
+                        <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} thresholds={thresholds} openPopover={openPopover} setOpenPopover={setOpenPopover} saveThreshold={saveThreshold} />
                         <label className="toggle-switch">
                           <input type="checkbox" checked={smartAlertSettings[key]} onChange={e => saveSmartAlertSettings(key, e.target.checked)} />
                           <span className="toggle-slider"></span>
