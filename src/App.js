@@ -136,9 +136,14 @@ const STYLES = `
   .modal-close { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
   .modal-close:hover { border-color: var(--red); color: var(--red); }
   .modal-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); }
-  .modal-stat { background: var(--bg3); padding: 16px 20px; }
-  .modal-stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .modal-stat { background: var(--bg3); padding: 16px 20px; position: relative; }
+  .modal-stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; }
   .modal-stat-value { font-size: 20px; font-weight: 600; margin-top: 4px; font-family: 'Cinzel', serif; }
+  .stat-help { display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; border-radius: 50%; background: var(--bg4); border: 1px solid var(--border); color: var(--text-dim); font-size: 9px; cursor: default; flex-shrink: 0; font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: 0; text-transform: none; }
+  .stat-tooltip-wrap { position: relative; display: inline-flex; }
+  .stat-tooltip-wrap:hover .stat-tooltip { opacity: 1; pointer-events: none; }
+  .stat-tooltip { opacity: 0; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: var(--bg1); border: 1px solid var(--gold-dim); border-radius: 8px; padding: 10px 13px; width: 220px; font-size: 12px; color: var(--text); line-height: 1.5; z-index: 999; pointer-events: none; transition: opacity 0.15s; box-shadow: 0 8px 24px rgba(0,0,0,0.5); white-space: normal; font-family: 'Inter', sans-serif; font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .stat-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--gold-dim); }
   .chart-section { padding: 24px 28px; }
   .time-tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
   .time-tab { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; font-weight: 500; }
@@ -200,6 +205,7 @@ const STYLES = `
   .log-row:last-child { border-bottom: none; }
   .log-row:hover { background: var(--bg4); }
   .log-row.open-flip { border-left: 3px solid var(--gold-dim); background: rgba(201,168,76,0.03); }
+  .merchant-sync-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; color: var(--gold); background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.25); border-radius: 4px; padding: 1px 6px; margin-top: 4px; letter-spacing: 0.3px; font-weight: 500; }
   .log-item-name { font-weight: 500; color: var(--text); }
   .log-date { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
   .delete-btn { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
@@ -914,17 +920,25 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, 
         </div>
         <div className="modal-stats">
           {[
-            { label: "Buy Price", value: formatGP(item.adjLow ?? item.low), color: "var(--green)" },
-            { label: "Sell Price", value: formatGP(item.adjHigh ?? item.high), color: "var(--text)" },
-            { label: "Margin (after tax)", value: formatGP(item.adjMargin ?? item.margin), color: (item.adjMargin ?? item.margin) > 0 ? "var(--green)" : "var(--red)" },
-            { label: "ROI", value: item.roi + "%", color: "var(--gold)" },
-            { label: "Vol / Day", value: item.volume > 0 ? item.volume.toLocaleString() : "—", color: "var(--text-dim)" },
-            { label: "GP / Fill", value: item.buyLimit > 0 ? formatGP((item.adjMargin ?? item.margin) * item.buyLimit) : "—", color: "var(--gold)", title: "Max profit per 4hr buy limit window" },
-            { label: "Cycles / Day", value: item.buyLimit > 0 && item.volume > 0 ? (item.volume / item.buyLimit).toFixed(1) + "×" : "—", color: item.buyLimit > 0 && item.volume / item.buyLimit >= 5 ? "var(--green)" : item.buyLimit > 0 && item.volume / item.buyLimit >= 2 ? "var(--gold)" : "var(--red)", title: "How many times the market refills your buy limit per day" },
-            { label: "Last Trade", value: item.lastTradeTime ? formatTime(item.lastTradeTime * 1000) : "—", color: "var(--text-dim)", title: "When this item last traded on the GE" },
+            { label: "Buy Price", value: formatGP(item.adjLow ?? item.low), color: "var(--green)", tip: "The current lowest buy offer on the GE. This is what you'll pay to buy the item." },
+            { label: "Sell Price", value: formatGP(item.adjHigh ?? item.high), color: "var(--text)", tip: "The current highest sell offer on the GE. This is what buyers are paying right now." },
+            { label: "Margin (after tax)", value: formatGP(item.adjMargin ?? item.margin), color: (item.adjMargin ?? item.margin) > 0 ? "var(--green)" : "var(--red)", tip: "Sell price minus buy price minus GE tax (1%, capped at 5M). This is your actual profit per item." },
+            { label: "ROI", value: item.roi + "%", color: "var(--gold)", tip: "Return on investment — margin ÷ buy price. Higher is better, but balance this against volume and buy limit." },
+            { label: "Vol / Day", value: item.volume > 0 ? item.volume.toLocaleString() : "—", color: "var(--text-dim)", tip: "Total items traded across all GE slots per day. Higher volume = easier fills and less competition risk." },
+            { label: "GP / Fill", value: item.buyLimit > 0 ? formatGP((item.adjMargin ?? item.margin) * item.buyLimit) : "—", color: "var(--gold)", tip: "Maximum GP profit per 4-hour buy limit window (margin × buy limit). Use this to compare how much a full cycle is worth." },
+            { label: "Cycles / Day", value: item.buyLimit > 0 && item.volume > 0 ? (item.volume / item.buyLimit).toFixed(1) + "×" : "—", color: item.buyLimit > 0 && item.volume / item.buyLimit >= 5 ? "var(--green)" : item.buyLimit > 0 && item.volume / item.buyLimit >= 2 ? "var(--gold)" : "var(--red)", tip: "How many times the daily volume could fill your buy limit (vol ÷ limit). Green = 5×+, easy fills. Red = <2×, you may compete for supply." },
+            { label: "Last Trade", value: item.lastTradeTime ? formatTime(item.lastTradeTime * 1000) : "—", color: "var(--text-dim)", tip: "When this item last traded on the GE. Stale data (hours ago) means low activity — prices may not reflect reality." },
           ].map((s, i) => (
-            <div key={i} className="modal-stat" title={s.title || ""}>
-              <div className="modal-stat-label">{s.label}</div>
+            <div key={i} className="modal-stat">
+              <div className="modal-stat-label">
+                {s.label}
+                {s.tip && (
+                  <span className="stat-tooltip-wrap">
+                    <span className="stat-help">?</span>
+                    <span className="stat-tooltip">{s.tip}</span>
+                  </span>
+                )}
+              </div>
               <div className="modal-stat-value" style={{ color: s.color }}>{s.value}</div>
             </div>
           ))}
@@ -3335,6 +3349,9 @@ RULES:
                           <div>
                             <div className="log-item-name">{f.item}</div>
                             <div className="log-date">{new Date(f.date || Date.now()).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</div>
+                            {f.status === "open" && merchantMode && (
+                              <span className="merchant-sync-badge">⚔️ In Merchant Mode</span>
+                            )}
                           </div>
                           <span>{formatGP(f.buyPrice)}</span>
                           <span style={{ color: f.status === "open" ? "var(--text-dim)" : "var(--text)" }}>
@@ -3643,9 +3660,26 @@ RULES:
                   <div className="section-title">Top Flips</div>
                   <div className="flips-table">
                     <div className="table-header">
-                      {[["name", "Item"], ["low", "Buy Price"], ["high", "Sell Price"], ["margin", "Margin"], ["roi", "ROI"], ["volume", "Vol/Day"], ["buylimit", "Limit"], ["gpPerFill", "GP/Fill"], ["lastTradeTime", "Last Trade"], ["score", "Score"]].map(([col, label]) => (
+                      {[
+                        ["name", "Item", null],
+                        ["low", "Buy Price", "Lowest current buy offer on the GE"],
+                        ["high", "Sell Price", "Highest current sell offer on the GE"],
+                        ["margin", "Margin", "Sell price minus buy price minus GE tax. Your profit per item."],
+                        ["roi", "ROI", "Margin ÷ buy price. Return on investment per flip."],
+                        ["volume", "Vol/Day", "Total items traded per day. Higher = easier fills."],
+                        ["buylimit", "Limit", "Max items you can buy every 4 hours"],
+                        ["gpPerFill", "GP/Fill", "Realistic GP profit per 4hr window, scaled by market volume"],
+                        ["lastTradeTime", "Last Trade", "When this item last traded. Stale = low activity."],
+                        ["score", "Score", "RuneTrader score 0–100. Combines margin, volume, ROI, liquidity, and trade freshness."],
+                      ].map(([col, label, tip]) => (
                         <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
                           {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
+                          {tip && (
+                            <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
+                              <span className="stat-help">?</span>
+                              <span className="stat-tooltip">{tip}</span>
+                            </span>
+                          )}
                         </button>
                       ))}
                     </div>
