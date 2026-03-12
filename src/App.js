@@ -298,6 +298,89 @@ const STYLES = `
   .threshold-reset { background: none; border: none; color: var(--gold-dim); font-size: 11px; cursor: pointer; font-family: "Inter", sans-serif; padding: 0; text-decoration: underline; }
   .threshold-reset:hover { color: var(--gold); }
 
+  /* MERCHANT MODE */
+  .merchant-wrap { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+  .merchant-layout { display: grid; grid-template-columns: 1fr 320px; flex: 1; min-height: 0; overflow: hidden; }
+  .merchant-left { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .merchant-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; }
+  .capital-bar { display: grid; grid-template-columns: repeat(5,1fr); background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .cap-cell { padding: 14px 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; }
+  .cap-cell:last-child { border-right: none; }
+  .cap-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; }
+  .cap-value { font-size: 17px; font-weight: 600; font-family: 'Cinzel', serif; }
+  .cap-sub { font-size: 10px; color: var(--text-dim); }
+  .cap-sub.up { color: var(--green); }
+  .cap-sub.warn { color: #f39c12; }
+  .slots-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 8px; }
+  .ge-slot { aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; position: relative; transition: all 0.2s; overflow: hidden; background: var(--bg3); }
+  .ge-slot.active:hover { border-color: var(--gold-dim); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .ge-slot.empty { background: var(--bg2); border-style: dashed; opacity: 0.35; }
+  .ge-slot.empty:hover { opacity: 0.6; }
+  .slot-icon { font-size: 20px; }
+  .slot-name { font-size: 8px; color: var(--text-dim); text-align: center; line-height: 1.2; padding: 0 3px; }
+  .slot-pnl { font-size: 9px; font-weight: 600; }
+  .slot-dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; }
+  .slot-dot.buying { background: #f39c12; animation: pulse 1.5s infinite; }
+  .slot-dot.selling { background: var(--blue); animation: pulse 1.5s infinite; }
+  .slot-dot.holding { background: var(--green); }
+  .slot-dot.danger { background: var(--red); animation: pulse 0.8s infinite; }
+  .ops-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .ops-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px 80px; padding: 10px 16px; background: var(--bg4); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+  .op-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 12px; transition: background 0.15s; cursor: pointer; position: relative; }
+  .op-row:last-child { border-bottom: none; }
+  .op-row:hover { background: var(--bg4); }
+  .op-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0 2px 2px 0; }
+  .op-row.op-healthy::before { background: var(--green); }
+  .op-row.op-warn::before { background: #f39c12; }
+  .op-row.op-danger::before { background: var(--red); }
+  .op-item-name { font-weight: 500; font-size: 13px; color: var(--text); }
+  .op-item-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .health-bar-wrap { display: flex; flex-direction: column; gap: 3px; }
+  .health-track { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; width: 70px; }
+  .health-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+  .health-label { font-size: 10px; }
+  .op-action-btn { padding: 5px 10px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
+  .op-action-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .op-action-btn.danger-btn:hover { border-color: var(--red); color: var(--red); }
+  .m-panel-section { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+  .m-panel-title { font-family: 'Cinzel', serif; font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+  .gauge-wrap { display: flex; align-items: center; gap: 16px; }
+  .gauge-ring { position: relative; width: 76px; height: 76px; flex-shrink: 0; }
+  .gauge-ring svg { transform: rotate(-90deg); }
+  .gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .gauge-pct { font-size: 17px; font-weight: 700; color: var(--gold); font-family: 'Cinzel', serif; }
+  .gauge-sub-lbl { font-size: 8px; color: var(--text-dim); }
+  .gauge-stats { display: flex; flex-direction: column; gap: 6px; }
+  .gauge-stat-label { font-size: 10px; color: var(--text-dim); }
+  .gauge-stat-val { font-size: 13px; font-weight: 600; }
+  .idle-alert { background: rgba(243,156,18,0.08); border: 1px solid rgba(243,156,18,0.25); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #f39c12; line-height: 1.5; }
+  .rotation-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+  .rotation-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .rotation-card.rc-green::before { background: var(--green); }
+  .rotation-card.rc-blue::before { background: var(--blue); }
+  .rotation-card.rc-amber::before { background: #f39c12; }
+  .rotation-card:hover { border-color: var(--gold-dim); background: var(--bg4); }
+  .rc-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .rc-reason { font-size: 11px; color: var(--text-dim); line-height: 1.4; margin-bottom: 6px; }
+  .rc-stats { display: flex; gap: 12px; }
+  .rc-stat { font-size: 10px; color: var(--text-dim); }
+  .rc-action { font-size: 10px; color: var(--gold); margin-top: 6px; }
+  .pnl-chart-wrap { width: 100%; height: 72px; }
+  .pnl-time-labels { display: flex; justify-content: space-between; margin-top: 4px; }
+  .pnl-time-label { font-size: 9px; color: var(--text-dim); }
+  .capital-setup { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .capital-setup-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 420px; padding: 32px; display: flex; flex-direction: column; gap: 20px; }
+  .capital-setup-title { font-family: 'Cinzel', serif; font-size: 20px; color: var(--gold); }
+  .capital-setup-sub { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-top: -8px; }
+  .capital-setup-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: var(--text); font-size: 16px; font-family: 'Inter', sans-serif; outline: none; width: 100%; transition: border-color 0.2s; }
+  .capital-setup-input:focus { border-color: var(--gold-dim); }
+  .capital-setup-btn { padding: 12px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 0.5px; transition: opacity 0.2s; }
+  .capital-setup-btn:hover { opacity: 0.85; }
+  .capital-setup-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .merchant-nav-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--gold-dim); background: rgba(201,168,76,0.08); color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+  .merchant-nav-btn:hover { background: rgba(201,168,76,0.16); }
+  .merchant-nav-btn.active { background: rgba(201,168,76,0.18); border-color: var(--gold); }
+  .merchant-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
 
   .alerts-wrap { display: flex; flex-direction: column; gap: 20px; }
   .alert-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
@@ -858,6 +941,94 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
   const chartRef = useRef(null);
   const flipsLoadedRef = useRef(false);
 
+  // ── Merchant Mode ──
+  const [merchantMode, setMerchantMode] = useState(false);
+  const [merchantCapital, setMerchantCapital] = useState(0);
+  const [merchantCapitalInput, setMerchantCapitalInput] = useState("");
+  const [showCapitalSetup, setShowCapitalSetup] = useState(false);
+  const [merchantLoading, setMerchantLoading] = useState(false);
+  const [pnlHistory, setPnlHistory] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("runetrader_pnl_history") || "[]"); } catch { return []; }
+  });
+  const pnlCanvasRef = useRef(null);
+
+  async function loadMerchantSettings() {
+    if (!user) return;
+    const { data } = await supabase.from("merchant_settings").select("*").eq("user_id", user.id).single();
+    if (data) {
+      setMerchantCapital(data.total_capital || 0);
+      if (data.mode_enabled) setMerchantMode(true);
+    }
+  }
+
+  async function saveMerchantCapital(val) {
+    const gp = parseInt(val.replace(/[^0-9]/g, ""));
+    if (isNaN(gp) || gp <= 0) return;
+    setMerchantLoading(true);
+    await supabase.from("merchant_settings").upsert({ user_id: user.id, total_capital: gp, mode_enabled: true, updated_at: new Date().toISOString() });
+    setMerchantCapital(gp);
+    setMerchantMode(true);
+    setShowCapitalSetup(false);
+    setMerchantLoading(false);
+    showToast("Merchant Mode activated!", "success");
+  }
+
+  async function toggleMerchantMode() {
+    if (!user) { setShowAuth(true); return; }
+    if (!merchantMode) {
+      if (merchantCapital === 0) { setShowCapitalSetup(true); return; }
+      setMerchantMode(true);
+      await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
+    } else {
+      setMerchantMode(false);
+      await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
+    }
+  }
+
+  // Track daily P&L snapshots
+  useEffect(() => {
+    if (!merchantMode) return;
+    const totalRealised = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.totalProfit || 0), 0);
+    const snap = { time: Date.now(), value: totalRealised };
+    setPnlHistory(prev => {
+      const today = prev.filter(p => new Date(p.time).toDateString() === new Date().toDateString());
+      const updated = [...today.slice(-48), snap];
+      localStorage.setItem("runetrader_pnl_history", JSON.stringify(updated));
+      return updated;
+    });
+  }, [flipsLog, merchantMode]); // eslint-disable-line
+
+  useEffect(() => { if (user) loadMerchantSettings(); }, [user]); // eslint-disable-line
+
+  // Draw P&L chart
+  useEffect(() => {
+    if (!merchantMode || !pnlCanvasRef.current || pnlHistory.length < 2) return;
+    const canvas = pnlCanvasRef.current;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
+    const W = rect.width, H = rect.height, pad = { top: 6, right: 6, bottom: 6, left: 6 };
+    const vals = pnlHistory.map(p => p.value);
+    const minV = Math.min(0, ...vals), maxV = Math.max(...vals) * 1.1 || 1;
+    const xPos = i => pad.left + (i / (pnlHistory.length - 1)) * (W - pad.left - pad.right);
+    const yPos = v => pad.top + (1 - (v - minV) / (maxV - minV)) * (H - pad.top - pad.bottom);
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "rgba(46,204,113,0.3)"); grad.addColorStop(1, "rgba(46,204,113,0)");
+    ctx.beginPath(); ctx.moveTo(xPos(0), yPos(vals[0]));
+    vals.forEach((v, i) => ctx.lineTo(xPos(i), yPos(v)));
+    ctx.lineTo(xPos(vals.length - 1), H); ctx.lineTo(xPos(0), H);
+    ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(xPos(0), yPos(vals[0]));
+    vals.forEach((v, i) => ctx.lineTo(xPos(i), yPos(v)));
+    ctx.strokeStyle = "var(--green)"; ctx.lineWidth = 2; ctx.stroke();
+    const lx = xPos(vals.length - 1), ly = yPos(vals[vals.length - 1]);
+    ctx.beginPath(); ctx.arc(lx, ly, 3, 0, Math.PI * 2); ctx.fillStyle = "var(--green)"; ctx.fill();
+  }, [pnlHistory, merchantMode]);
+
+
+
   useEffect(() => {
     if (!user) return;
     loadManualPositions();
@@ -1243,6 +1414,306 @@ const WELCOME_MSG = {
 };
 
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
+
+// ── MERCHANT MODE COMPONENT ──
+function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital }) {
+  const allOpenPositions = [
+    ...flipsLog.filter(f => f.status === "open").map(f => ({
+      id: f.id, name: f.item, gpIn: f.buyPrice * (f.qty || 1),
+      qty: f.qty || 1, buyPrice: f.buyPrice, source: "tracker",
+      openedAt: f.date ? new Date(f.date) : new Date(),
+    })),
+    ...manualPositions.map(p => ({
+      id: p.id, name: p.item_name, gpIn: p.buy_price * p.qty,
+      qty: p.qty, buyPrice: p.buy_price, source: "portfolio",
+      openedAt: new Date(p.date_opened),
+    })),
+  ];
+
+  const totalDeployed = allOpenPositions.reduce((s, p) => s + p.gpIn, 0);
+  const idleGP = Math.max(0, merchantCapital - totalDeployed);
+  const todayFlips = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString());
+  const realisedToday = todayFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
+
+  const unrealisedTotal = allOpenPositions.reduce((s, pos) => {
+    const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
+    if (!liveItem) return s;
+    const tax = Math.min(Math.floor(liveItem.high * 0.02), 5_000_000);
+    return s + (liveItem.high - pos.buyPrice - tax) * pos.qty;
+  }, 0);
+
+  const efficiencyPct = merchantCapital > 0 ? Math.round((totalDeployed / merchantCapital) * 100) : 0;
+  const circumference = 2 * Math.PI * 32;
+  const dashOffset = circumference - (efficiencyPct / 100) * circumference;
+
+  // AI rotation picks — top 3 items by score that fit idle GP
+  const rotationPicks = items
+    .filter(i => i.low <= idleGP && i.margin > 0 && i.score >= 60)
+    .filter(i => !allOpenPositions.some(p => p.name.toLowerCase() === i.name.toLowerCase()))
+    .slice(0, 3);
+
+  function getHoldTime(openedAt) {
+    const ms = Date.now() - new Date(openedAt).getTime();
+    const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  }
+
+  function getHealthPct(pos) {
+    const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
+    if (!liveItem) return 50;
+    const currentMargin = liveItem.high - pos.buyPrice - Math.min(Math.floor(liveItem.high * 0.02), 5_000_000);
+    const originalMargin = liveItem.margin;
+    if (originalMargin <= 0) return 0;
+    return Math.max(0, Math.min(100, Math.round((currentMargin / originalMargin) * 100)));
+  }
+
+  function getHealthClass(pct) {
+    if (pct >= 60) return "op-healthy";
+    if (pct >= 25) return "op-warn";
+    return "op-danger";
+  }
+
+  function getSlotStatus(pos) {
+    const pct = getHealthPct(pos);
+    if (pct < 20) return "danger";
+    const holdMs = Date.now() - new Date(pos.openedAt).getTime();
+    if (holdMs < 30 * 60 * 1000) return "buying";
+    if (pct >= 60) return "holding";
+    return "selling";
+  }
+
+  const slotIcons = { "sword": "⚔️", "bow": "🏹", "helm": "🪖", "shield": "🛡️", "whip": "⚔️", "default": "📦" };
+  function getIcon(name) {
+    const n = name.toLowerCase();
+    if (n.includes("bow")) return "🏹";
+    if (n.includes("helm") || n.includes("hat") || n.includes("hood")) return "🪖";
+    if (n.includes("shield") || n.includes("ward") || n.includes("kite")) return "🛡️";
+    if (n.includes("sword") || n.includes("whip") || n.includes("scimitar") || n.includes("blade")) return "⚔️";
+    if (n.includes("staff") || n.includes("wand")) return "🔮";
+    if (n.includes("rune") || n.includes("potion")) return "🧪";
+    if (n.includes("ring") || n.includes("amulet") || n.includes("necklace")) return "💍";
+    if (n.includes("boot") || n.includes("glove")) return "🥾";
+    return "📦";
+  }
+
+  return (
+    <div className="merchant-wrap">
+      <div className="merchant-layout">
+        {/* LEFT */}
+        <div className="merchant-left">
+
+          {/* Capital Overview */}
+          <div className="capital-bar">
+            {[
+              { label: "Total Capital", value: formatGP(merchantCapital), color: "var(--gold)", sub: <span style={{ cursor: "pointer", textDecoration: "underline", color: "var(--text-dim)" }} onClick={onUpdateCapital}>Update</span> },
+              { label: "Deployed", value: formatGP(totalDeployed), color: "var(--blue)", sub: `${efficiencyPct}% of stack` },
+              { label: "Idle GP", value: formatGP(idleGP), color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text)", sub: idleGP > merchantCapital * 0.3 ? <span className="cap-sub warn">⚠ Sitting unused</span> : <span className="cap-sub">Available to deploy</span> },
+              { label: "Realised Today", value: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)", sub: <span className="cap-sub up">{merchantCapital > 0 ? ((realisedToday / merchantCapital) * 100).toFixed(2) : "0.00"}% on capital</span> },
+              { label: "Unrealised P&L", value: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)", sub: "Open positions" },
+            ].map((c, i) => (
+              <div key={i} className="cap-cell">
+                <span className="cap-label">{c.label}</span>
+                <span className="cap-value" style={{ color: c.color }}>{c.value}</span>
+                <span className="cap-sub">{c.sub}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* GE Slots */}
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+              <div className="section-title">GE Slots</div>
+              <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{allOpenPositions.length} / 8 active</span>
+            </div>
+            <div className="slots-grid">
+              {Array.from({ length: 8 }).map((_, i) => {
+                const pos = allOpenPositions[i];
+                if (!pos) return (
+                  <div key={i} className="ge-slot empty">
+                    <div style={{ fontSize: "18px", color: "var(--border)" }}>+</div>
+                    <div style={{ fontSize: "8px", color: "var(--border)" }}>Empty</div>
+                  </div>
+                );
+                const liveItem = items.find(it => it.name.toLowerCase() === pos.name.toLowerCase());
+                const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
+                const pnlEach = liveItem ? liveItem.high - pos.buyPrice - tax : 0;
+                const pnlTotal = pnlEach * pos.qty;
+                const status = getSlotStatus(pos);
+                return (
+                  <div key={i} className="ge-slot active" onClick={() => liveItem && setSelectedItem(liveItem)}
+                    title={`${pos.name} — click to view chart`}>
+                    <div className={`slot-dot ${status}`} />
+                    <div className="slot-icon">{getIcon(pos.name)}</div>
+                    <div className="slot-name">{pos.name.length > 14 ? pos.name.slice(0, 13) + "…" : pos.name}</div>
+                    <div className={`slot-pnl`} style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
+                      {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: "flex", gap: "16px", marginTop: "8px", fontSize: "11px", color: "var(--text-dim)" }}>
+              <span><span style={{ background: "#f39c12", borderRadius: "50%", display: "inline-block", width: 7, height: 7, marginRight: 4 }} />Buying</span>
+              <span><span style={{ background: "var(--blue)", borderRadius: "50%", display: "inline-block", width: 7, height: 7, marginRight: 4 }} />Selling</span>
+              <span><span style={{ background: "var(--green)", borderRadius: "50%", display: "inline-block", width: 7, height: 7, marginRight: 4 }} />Holding</span>
+              <span><span style={{ background: "var(--red)", borderRadius: "50%", display: "inline-block", width: 7, height: 7, marginRight: 4 }} />Needs attention</span>
+            </div>
+          </div>
+
+          {/* Operations Table */}
+          <div>
+            <div className="section-title" style={{ marginBottom: "10px" }}>Active Operations</div>
+            {allOpenPositions.length === 0 ? (
+              <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "40px 20px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
+                <div style={{ fontSize: "32px", marginBottom: "10px", opacity: 0.4 }}>⚔️</div>
+                <p>No open positions yet.</p>
+                <small>Log a buy in the Tracker (without a sell price) to open a position.</small>
+              </div>
+            ) : (
+              <div className="ops-table">
+                <div className="ops-header">
+                  <span>Item</span><span>GP In</span><span>Qty</span><span>Buy Price</span><span>Live P&L</span><span>Margin Health</span><span>Action</span>
+                </div>
+                {allOpenPositions.map(pos => {
+                  const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
+                  const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
+                  const pnlEach = liveItem ? liveItem.high - pos.buyPrice - tax : 0;
+                  const pnlTotal = pnlEach * pos.qty;
+                  const pnlPct = ((pnlEach / pos.buyPrice) * 100).toFixed(1);
+                  const healthPct = getHealthPct(pos);
+                  const healthColor = healthPct >= 60 ? "var(--green)" : healthPct >= 25 ? "#f39c12" : "var(--red)";
+                  const healthText = healthPct >= 60 ? "Strong" : healthPct >= 25 ? "Fading" : "Exit now";
+                  return (
+                    <div key={pos.id} className={`op-row ${getHealthClass(healthPct)}`} onClick={() => liveItem && setSelectedItem(liveItem)}>
+                      <div>
+                        <div className="op-item-name">{pos.name}</div>
+                        <div className="op-item-sub">{getHoldTime(pos.openedAt)} · {pos.source === "tracker" ? "via Tracker" : "via Portfolio"}</div>
+                      </div>
+                      <span style={{ fontSize: "12px" }}>{formatGP(pos.gpIn)}</span>
+                      <span style={{ fontSize: "12px" }}>{pos.qty.toLocaleString()}</span>
+                      <span style={{ fontSize: "12px" }}>{formatGP(pos.buyPrice)}</span>
+                      <div>
+                        <div style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>
+                          {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
+                        </div>
+                        <div style={{ fontSize: "10px", color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>{pnlPct}%</div>
+                      </div>
+                      <div className="health-bar-wrap" onClick={e => e.stopPropagation()}>
+                        <div className="health-track"><div className="health-fill" style={{ width: `${healthPct}%`, background: healthColor }} /></div>
+                        <span className="health-label" style={{ color: healthColor }}>{healthPct}% — {healthText}</span>
+                      </div>
+                      <button className={`op-action-btn${healthPct < 25 ? " danger-btn" : ""}`}
+                        onClick={e => { e.stopPropagation(); showToast(`Close ${pos.name} in the ${pos.source === "tracker" ? "Tracker" : "Portfolio"} tab`, "info", 4000); }}>
+                        {healthPct < 25 ? "Cut Loss" : "Close"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT PANEL */}
+        <div className="merchant-right">
+
+          {/* Capital Efficiency */}
+          <div className="m-panel-section">
+            <div className="m-panel-title">Capital Efficiency</div>
+            <div className="gauge-wrap">
+              <div className="gauge-ring">
+                <svg width="76" height="76" viewBox="0 0 76 76">
+                  <circle cx="38" cy="38" r="32" fill="none" stroke="var(--bg4)" strokeWidth="8" />
+                  <circle cx="38" cy="38" r="32" fill="none"
+                    stroke="url(#gGrad)" strokeWidth="8" strokeLinecap="round"
+                    strokeDasharray={circumference} strokeDashoffset={dashOffset}
+                    style={{ transition: "stroke-dashoffset 1s ease" }} />
+                  <defs>
+                    <linearGradient id="gGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="var(--gold-dim)" />
+                      <stop offset="100%" stopColor="var(--gold)" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="gauge-center">
+                  <span className="gauge-pct">{efficiencyPct}%</span>
+                  <span className="gauge-sub-lbl">deployed</span>
+                </div>
+              </div>
+              <div className="gauge-stats">
+                <div><div className="gauge-stat-label">GP Working</div><div className="gauge-stat-val" style={{ color: "var(--gold)" }}>{formatGP(totalDeployed)}</div></div>
+                <div><div className="gauge-stat-label">Positions</div><div className="gauge-stat-val">{allOpenPositions.length}</div></div>
+                <div><div className="gauge-stat-label">Today's P&L</div><div className="gauge-stat-val" style={{ color: realisedToday >= 0 ? "var(--green)" : "var(--red)" }}>{realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)}</div></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Idle alert */}
+          {idleGP > merchantCapital * 0.25 && merchantCapital > 0 && (
+            <div className="m-panel-section">
+              <div className="idle-alert">
+                ⚠️ <strong>{formatGP(idleGP)} idle.</strong> That's {Math.round((idleGP / merchantCapital) * 100)}% of your stack sitting unused. Check the rotation picks below.
+              </div>
+            </div>
+          )}
+
+          {/* AI Rotation Picks */}
+          <div className="m-panel-section">
+            <div className="m-panel-title">⚡ Rotation Picks</div>
+            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "12px" }}>
+              Top opportunities for your {formatGP(idleGP)} idle GP:
+            </div>
+            {rotationPicks.length === 0 ? (
+              <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No picks available — all good candidates may already be in your slots.</div>
+            ) : rotationPicks.map((item, i) => (
+              <div key={item.id} className={`rotation-card ${["rc-green", "rc-blue", "rc-amber"][i]}`}
+                onClick={() => setSelectedItem(item)}>
+                <div className="rc-name">{item.name}</div>
+                <div className="rc-reason">
+                  Score {item.score}/100 · {item.volume.toLocaleString()} trades/day · fits your idle stack
+                </div>
+                <div className="rc-stats">
+                  <div className="rc-stat">Margin <span style={{ color: "var(--green)" }}>{formatGP(item.margin)}</span></div>
+                  <div className="rc-stat">ROI <span style={{ color: "var(--gold)" }}>{item.roi}%</span></div>
+                  <div className="rc-stat">Limit <span style={{ color: "var(--text)" }}>{item.buyLimit || "?"}</span></div>
+                </div>
+                <div className="rc-action">→ Click to view chart</div>
+              </div>
+            ))}
+          </div>
+
+          {/* P&L Timeline */}
+          <div className="m-panel-section">
+            <div className="m-panel-title">Today's P&L</div>
+            {pnlHistory.length < 2 ? (
+              <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>P&L timeline builds as you close flips today.</div>
+            ) : (
+              <>
+                <div className="pnl-chart-wrap">
+                  <canvas ref={pnlCanvasRef} style={{ width: "100%", height: "100%", display: "block" }} />
+                </div>
+                <div className="pnl-time-labels">
+                  <span className="pnl-time-label">Start of day</span>
+                  <span className="pnl-time-label" style={{ color: realisedToday >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>
+                    {realisedToday >= 0 ? "+" : ""}{formatGP(realisedToday)} now
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Update capital */}
+          <div className="m-panel-section">
+            <button className="op-action-btn" style={{ width: "100%", textAlign: "center", padding: "8px" }} onClick={onUpdateCapital}>
+              💰 Update Total Capital
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function RuneTrader() {
   const [showApp, setShowApp] = useState(false);
@@ -1949,6 +2420,29 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
       {/* AUTH MODAL */}
       {showAuth && <AuthModal onClose={() => setShowAuth(false)} onAuth={u => setUser(u)} />}
 
+      {showCapitalSetup && (
+        <div className="capital-setup" onClick={e => e.target === e.currentTarget && setShowCapitalSetup(false)}>
+          <div className="capital-setup-inner">
+            <div className="capital-setup-title">⚔️ Activate Merchant Mode</div>
+            <div className="capital-setup-sub">Enter your total GP stack. This helps track capital efficiency, idle GP, and expected returns. You can update it any time.</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Capital (GP)</label>
+              <input className="capital-setup-input" placeholder="e.g. 500000000" value={merchantCapitalInput}
+                onChange={e => setMerchantCapitalInput(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") saveMerchantCapital(merchantCapitalInput); }}
+                autoFocus />
+              {merchantCapitalInput && !isNaN(parseInt(merchantCapitalInput.replace(/[^0-9]/g, ""))) && (
+                <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>= {formatGP(parseInt(merchantCapitalInput.replace(/[^0-9]/g, "")))} gp</div>
+              )}
+            </div>
+            <button className="capital-setup-btn" disabled={!merchantCapitalInput || merchantLoading}
+              onClick={() => saveMerchantCapital(merchantCapitalInput)}>
+              {merchantLoading ? "Activating..." : "Activate Merchant Mode →"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ITEM CHART MODAL */}
       {selectedItem && (
         <ItemChart
@@ -2071,6 +2565,12 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
           </div>
           <div className="header-right">
             {lastUpdate && <div className="live-badge"><div className="live-dot" />Live · {formatTime(lastUpdate)}</div>}
+            {user && (
+              <button className={`merchant-nav-btn${merchantMode ? " active" : ""}`} onClick={toggleMerchantMode}>
+                {merchantMode && <div className="merchant-dot" />}
+                ⚔️ {merchantMode ? "Merchant Mode" : "Merchant Mode"}
+              </button>
+            )}
             {user ? (
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{user.user_metadata?.username || user.email?.split("@")[0]}</span>
@@ -2085,6 +2585,24 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
         </header>
 
         <div className="main">
+          {merchantMode && user ? (
+            <MerchantMode
+              items={items}
+              flipsLog={flipsLog}
+              manualPositions={manualPositions}
+              merchantCapital={merchantCapital}
+              setMerchantCapital={setMerchantCapital}
+              pnlHistory={pnlHistory}
+              pnlCanvasRef={pnlCanvasRef}
+              formatGP={formatGP}
+              setSelectedItem={setSelectedItem}
+              showToast={showToast}
+              supabase={supabase}
+              user={user}
+              onUpdateCapital={() => setShowCapitalSetup(true)}
+            />
+          ) : (
+          <>
           <div className="left-panel">
 
             {/* ── TRACKER TAB ── */}
@@ -2567,6 +3085,8 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
             </div>
           </div>
         </div>
+        </>
+        )}
       </div>
     </>
   );
