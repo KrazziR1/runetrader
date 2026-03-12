@@ -576,18 +576,35 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
   // Hard disqualifiers — not a flip at all
   if (margin <= 0)  return 0;
   if (volume < 200) return 0;
-  // Minimum GP per 4hr window — even cheap items are fine if limit is high enough
+
+  // ── Core metric: realistic GP per 4hr buy window ─────────────────────────
+  // Competition model: scales with volume. Deep markets absorb all flippers.
+  // At extreme volume (500k+/day), the market is so liquid that even 2000 flippers
+  // each buying their full limit won't exhaust it — everyone fills.
+  // At low volume, you're fighting over scraps.
   const limit = buyLimit > 0 ? buyLimit : 500;
   const marketPer4hr = volume / 6;
-  const fillable = Math.min(limit, marketPer4hr);
-  const gpPer4hr = margin * fillable;
-  if (gpPer4hr < 50_000) return 0; // not worth a GE slot regardless of margin or volume
 
-  // ── Core metric: GP per 4hr buy window ──────────────────────────────────
-  // How much GP can you realistically make in one 4hr GE slot cycle?
-  // = margin × min(buyLimit, volume/6)   [volume/6 = what the market supports per 4hr window]
-  // This combines margin AND volume correctly — 1gp × 1M volume = 4M gp/window (worthy)
-  // vs 1gp × 18k volume/6 = 3k gp/window (not worthy)
+  let expectedFill;
+  if (volume >= 500_000) {
+    // Extreme volume: fills reliably — competition absorbed by market depth
+    expectedFill = Math.min(limit, marketPer4hr);
+  } else if (volume >= 100_000) {
+    // High volume: light competition, ~60% fill rate
+    expectedFill = Math.min(limit, marketPer4hr * 0.6);
+  } else if (volume >= 20_000) {
+    // Mid volume: real competition, ~20% fill rate
+    expectedFill = Math.min(limit, marketPer4hr * 0.2);
+  } else if (volume >= 5_000) {
+    // Low-mid volume: thin market, ~8% fill rate
+    expectedFill = Math.min(limit, marketPer4hr * 0.08);
+  } else {
+    // Low volume: very uncertain fills, ~3%
+    expectedFill = Math.min(limit, marketPer4hr * 0.03);
+  }
+
+  const gpPer4hr = margin * Math.max(expectedFill, 1);
+  if (gpPer4hr < 50_000) return 0;
   // Score 0–70 from GP/4hr (the primary signal)
   let baseScore;
   if      (gpPer4hr >= 10_000_000) baseScore = 70;
@@ -2530,7 +2547,8 @@ ${topFlips}${mentionedItems ? `\nMentioned items (from user query):\n${mentioned
 
 RULES:
 - Only recommend items from the live data above. Never invent or assume prices.
-- Always state the buy limit when recommending — it defines how fast they can fill an order.
+- Always state the buy limit when recommending — it defines the max you can buy per 4hrs.
+- CRITICAL — COMPETITION & FILLS: OSRS has 100k–200k+ concurrent players with thousands of active flippers. Fill rates are volume-dependent: extremely high volume items (500k+/day) like runes fill reliably because the market is deep enough to absorb all flippers — these are solid low-risk fast flips worth 25–100k GP per fill. High volume (100k–500k/day) items likely fill but face competition. Mid volume (20k–100k/day) is competitive — expect partial fills. Low volume (<5k/day) is uncertain — fills are slow and unreliable. Never tell a user high volume guarantees a fast fill without acknowledging this scale. The GP/Fill number shown already accounts for realistic fill rates at each volume tier.
 - "cycles/day" = how many 4hr windows the market supports being fully bought. Lower = slower flip.
 - Warn explicitly if data freshness is "aging" — the margin shown may not be real anymore.
 - Write all GP as full numbers with commas (1,220,000 not 1.22M).
@@ -3267,15 +3285,27 @@ RULES:
                         const adjMargin = item.margin - (adjLow - item.low) - (item.high - adjHigh);
                         const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
                         const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
-                        // GP/Fill: how much you realistically earn per 4hr buy window
+                        // GP/Fill: volume-scaled realistic profit per 4hr window
                         const lim = item.buyLimit > 0 ? item.buyLimit : 500;
-                        const marketPer4hr = item.volume / 6;
-                        const fillable = Math.min(lim, marketPer4hr);
-                        const gpPerFill = Math.round(adjMargin * fillable);
-                        // Liquidity confidence: can the market actually fill your buy limit?
-                        const liqRatio = item.buyLimit > 0 ? marketPer4hr / item.buyLimit : 1;
-                        const liqLabel = liqRatio >= 2 ? null : liqRatio >= 0.5 ? "~partial" : "low liq";
-                        const liqColor = liqRatio >= 2 ? "var(--green)" : liqRatio >= 0.5 ? "var(--gold)" : "var(--red)";
+                        const mkt4hr = item.volume / 6;
+                        let expFill;
+                        if      (item.volume >= 500_000) expFill = Math.min(lim, mkt4hr);
+                        else if (item.volume >= 100_000) expFill = Math.min(lim, mkt4hr * 0.6);
+                        else if (item.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
+                        else if (item.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
+                        else                             expFill = Math.min(lim, mkt4hr * 0.03);
+                        const gpPerFill = Math.round(adjMargin * Math.max(expFill, 1));
+                        const gpPerFillMax = Math.round(adjMargin * Math.min(lim, mkt4hr));
+                        // Confidence label: can the market supply your buy limit in 4hrs?
+                        // This is the RIGHT question — 5k/day vol with limit=15 is fine (333/4hr >> 15)
+                        // but 5k/day vol with limit=5000 is terrible (333/4hr << 5000)
+                        const liqRatio = mkt4hr / Math.max(lim, 1);
+                        let fillConf, fillConfColor;
+                        if      (liqRatio >= 5)  { fillConf = null;           fillConfColor = "var(--green)"; }  // market supplies 5x limit — fills easily
+                        else if (liqRatio >= 2)  { fillConf = "likely fills"; fillConfColor = "var(--green)"; }  // market supplies 2x limit — good odds
+                        else if (liqRatio >= 0.8){ fillConf = "~competitive"; fillConfColor = "var(--gold)"; }   // market roughly matches limit — competition matters
+                        else if (liqRatio >= 0.3){ fillConf = "~partial";     fillConfColor = "#f39c12"; }       // market can't fully supply limit
+                        else                     { fillConf = "low liq";       fillConfColor = "var(--red)"; }   // market way under limit
                         return (
                           <div key={item.id} className="flip-row" onClick={() => setSelectedItem({ ...item, adjLow, adjHigh, adjMargin })}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -3294,10 +3324,10 @@ RULES:
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
                             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                               <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1_000_000 ? "var(--green)" : gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}
-                                title={`${formatGP(gpPerFill)} GP if you fill your full buy limit in 4hrs`}>
+                                title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case (full limit): ${formatGP(gpPerFillMax)} GP`}>
                                 {formatGP(gpPerFill)}
                               </span>
-                              {liqLabel && <span style={{ fontSize: "10px", color: liqColor }}>{liqLabel}</span>}
+                              {fillConf && <span style={{ fontSize: "10px", color: fillConfColor }}>{fillConf}</span>}
                             </div>
                             <span style={{ fontSize: "11px", color: tradeColor }}>{timeAgo(item.lastTradeTime)}</span>
                             <span className={`score-badge ${item.prefScore >= 70 ? "score-high" : item.prefScore >= 40 ? "score-med" : "score-low"}`}>{item.prefScore}</span>
