@@ -4,7 +4,7 @@ import AuthModal from "./AuthModal";
 import { supabase } from "./supabaseClient";
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
     --gold: #c9a84c; --gold-light: #e8c96a; --gold-dim: #8a6f2e;
@@ -52,7 +52,7 @@ const STYLES = `
   .filter-btn:hover, .filter-btn.active { background: var(--bg4); color: var(--gold); border-color: var(--gold-dim); }
 
   /* FLIPS TABLE */
-  .section-title { font-family: 'Cinzel', serif; font-size: 14px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-title { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
@@ -131,7 +131,7 @@ const STYLES = `
   .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 860px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.25s ease; }
   @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
   .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 24px 28px; border-bottom: 1px solid var(--border); }
-  .modal-title { font-family: 'Cinzel', serif; font-size: 20px; color: var(--gold); }
+  .modal-title { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); }
   .modal-meta { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
   .modal-close { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
   .modal-close:hover { border-color: var(--red); color: var(--red); }
@@ -174,7 +174,7 @@ const STYLES = `
   .tracker-wrap { display: flex; flex-direction: column; gap: 24px; }
   .tracker-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   .tracker-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-  .tracker-form-title { font-family: "Cinzel", serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .tracker-form-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
   .tracker-form-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
   .tracker-field { display: flex; flex-direction: column; gap: 6px; position: relative; }
   .tracker-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -224,7 +224,7 @@ const STYLES = `
   /* CLOSE FLIP MODAL */
   .close-flip-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
   .close-flip-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 440px; padding: 28px; display: flex; flex-direction: column; gap: 18px; }
-  .close-flip-title { font-family: "Cinzel", serif; font-size: 16px; color: var(--gold); }
+  .close-flip-title { font-family: "Cinzel", serif; font-size: 16px; font-weight: 700; color: var(--gold); }
   .close-flip-subtitle { font-size: 13px; color: var(--text-dim); margin-top: -8px; }
   .close-flip-options { display: flex; flex-direction: column; gap: 10px; }
   .close-flip-option-btn { padding: 14px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; font-family: "Inter", sans-serif; transition: all 0.2s; text-align: left; display: flex; flex-direction: column; gap: 3px; }
@@ -247,13 +247,13 @@ const STYLES = `
 
   /* PROFIT CHART */
   .profit-chart-wrap { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
-  .profit-chart-title { font-family: "Cinzel", serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+  .profit-chart-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
   .profit-canvas-wrap { width: 100%; height: 160px; position: relative; }
 
   /* SMART ALERTS */
   .smart-alerts-wrap { display: flex; flex-direction: column; gap: 12px; }
   .smart-alert-toggles { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-  .smart-alert-toggle-title { font-family: "Cinzel", serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .smart-alert-toggle-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
   .smart-alert-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .smart-alert-toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
   .smart-alert-toggle-info { display: flex; flex-direction: column; gap: 3px; }
@@ -302,7 +302,7 @@ const STYLES = `
 
   /* MERCHANT MODE */
   .merchant-wrap { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-  .merchant-layout { display: grid; grid-template-columns: 1fr 420px; flex: 1; min-height: 0; overflow: hidden; }
+  .merchant-layout { display: grid; grid-template-columns: 1fr 380px; flex: 1; min-height: 0; overflow: hidden; width: 100%; }
   .merchant-left { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
   .merchant-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; }
   .capital-bar { display: grid; grid-template-columns: repeat(5,1fr); background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
@@ -327,8 +327,8 @@ const STYLES = `
   .slot-dot.holding { background: var(--green); }
   .slot-dot.danger { background: var(--red); animation: pulse 0.8s infinite; }
   .ops-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .ops-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 110px 80px; padding: 10px 16px; background: var(--bg4); font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
-  .op-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 110px 80px; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; cursor: pointer; position: relative; }
+  .ops-header { display: grid; grid-template-columns: 2.2fr 1fr 0.7fr 1fr 1fr 1fr 120px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
+  .op-row { display: grid; grid-template-columns: 2.2fr 1fr 0.7fr 1fr 1fr 1fr 120px 80px; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; cursor: pointer; position: relative; }
   .op-row:last-child { border-bottom: none; }
   .op-row:hover { background: var(--bg4); }
   .op-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0 2px 2px 0; }
@@ -344,8 +344,19 @@ const STYLES = `
   .op-action-btn { padding: 6px 12px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
   .op-action-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
   .op-action-btn.danger-btn:hover { border-color: var(--red); color: var(--red); }
+  .add-pos-row { display: grid; grid-template-columns: 2.2fr 1fr 0.7fr 1fr 1fr 1fr 120px 80px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; gap: 0; background: rgba(201,168,76,0.04); }
+  .add-pos-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: 'Inter', sans-serif; outline: none; width: 100%; transition: border-color 0.2s; }
+  .add-pos-input:focus { border-color: var(--gold-dim); }
+  .add-pos-input::placeholder { color: var(--text-dim); font-size: 11px; }
+  .add-pos-confirm { padding: 6px 10px; border-radius: 5px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; transition: opacity 0.2s; width: 100%; }
+  .add-pos-confirm:hover { opacity: 0.85; }
+  .add-pos-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+  .add-pos-cancel { padding: 6px 8px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; width: 100%; margin-top: 4px; }
+  .add-pos-cancel:hover { border-color: var(--red); color: var(--red); }
+  .ops-add-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 7px; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; margin: 10px 16px; }
+  .ops-add-btn:hover { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.05); }
   .m-panel-section { padding: 18px 20px; border-bottom: 1px solid var(--border); }
-  .m-panel-title { font-family: 'Cinzel', serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
+  .m-panel-title { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
   .gauge-wrap { display: flex; align-items: center; gap: 16px; }
   .gauge-ring { position: relative; width: 86px; height: 86px; flex-shrink: 0; }
   .gauge-ring svg { transform: rotate(-90deg); }
@@ -372,7 +383,7 @@ const STYLES = `
   .pnl-time-label { font-size: 9px; color: var(--text-dim); }
   .capital-setup { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 24px; }
   .capital-setup-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 420px; padding: 32px; display: flex; flex-direction: column; gap: 20px; }
-  .capital-setup-title { font-family: 'Cinzel', serif; font-size: 20px; color: var(--gold); }
+  .capital-setup-title { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); }
   .capital-setup-sub { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-top: -8px; }
   .capital-setup-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: var(--text); font-size: 16px; font-family: 'Inter', sans-serif; outline: none; width: 100%; transition: border-color 0.2s; }
   .capital-setup-input:focus { border-color: var(--gold-dim); }
@@ -386,7 +397,7 @@ const STYLES = `
 
   .alerts-wrap { display: flex; flex-direction: column; gap: 20px; }
   .alert-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-  .alert-form-title { font-family: "Cinzel", serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .alert-form-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
   .alert-form-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end; }
   .alert-field { display: flex; flex-direction: column; gap: 6px; position: relative; }
   .alert-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -429,7 +440,7 @@ const STYLES = `
   .perf-card-value { font-size: 20px; font-weight: 700; font-family: "Cinzel", serif; }
   .perf-card-sub { font-size: 11px; color: var(--text-dim); }
   .portfolio-chart-wrap { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
-  .portfolio-chart-title { font-family: "Cinzel", serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+  .portfolio-chart-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
   .portfolio-canvas-wrap { width: 100%; height: 200px; position: relative; }
   .portfolio-range-tabs { display: flex; gap: 4px; }
   .portfolio-range-tab { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
@@ -443,7 +454,7 @@ const STYLES = `
   .close-pos-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--green-dim); background: rgba(46,204,113,0.08); color: var(--green); font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
   .close-pos-btn:hover { background: rgba(46,204,113,0.18); }
   .open-pos-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-  .open-pos-title { font-family: "Cinzel", serif; font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .open-pos-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
   .open-pos-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end; }
   .portfolio-login-prompt { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 80px 20px; text-align: center; color: var(--text-dim); }
   .portfolio-login-prompt .icon { font-size: 48px; opacity: 0.4; }
@@ -453,7 +464,7 @@ const STYLES = `
   .portfolio-signin-btn:hover { background: rgba(201,168,76,0.2); }
   .close-pos-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
   .close-pos-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 420px; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
-  .close-pos-title { font-family: "Cinzel", serif; font-size: 16px; color: var(--gold); }
+  .close-pos-title { font-family: "Cinzel", serif; font-size: 16px; font-weight: 700; color: var(--gold); }
   .close-pos-field { display: flex; flex-direction: column; gap: 6px; }
   .close-pos-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
   .close-pos-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: "Inter", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
@@ -484,7 +495,7 @@ const STYLES = `
   .tour-tooltip { position: fixed; z-index: 302; pointer-events: all; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 14px; padding: 26px 28px; width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: tooltipIn 0.25s cubic-bezier(0.4,0,0.2,1); }
   @keyframes tooltipIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   .tour-step-label { font-size: 11px; color: var(--gold-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-  .tour-title { font-family: "Cinzel", serif; font-size: 18px; color: var(--gold); margin-bottom: 12px; }
+  .tour-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 12px; }
   .tour-desc { font-size: 14px; color: var(--text); line-height: 1.7; margin-bottom: 20px; }
   .tour-actions { display: flex; align-items: center; justify-content: space-between; }
   .tour-dots { display: flex; gap: 5px; }
@@ -1482,7 +1493,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital }) {
+function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition }) {
   const allOpenPositions = [
     ...flipsLog.filter(f => f.status === "open").map(f => ({
       id: f.id, name: f.item, gpIn: f.buyPrice * (f.qty || 1),
@@ -1500,6 +1511,11 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
   const idleGP = Math.max(0, merchantCapital - totalDeployed);
   const todayFlips = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString());
   const realisedToday = todayFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
+
+  // Inline add position state
+  const [showAddRow, setShowAddRow] = useState(false);
+  const [addForm, setAddForm] = useState({ item: "", buyPrice: "", qty: "1", totalGp: "" });
+  const [addingPos, setAddingPos] = useState(false);
 
   const unrealisedTotal = allOpenPositions.reduce((s, pos) => {
     const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
@@ -1619,16 +1635,21 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
           {/* Operations Table */}
           <div>
             <div className="section-title" style={{ marginBottom: "10px" }}>Active Operations</div>
-            {allOpenPositions.length === 0 ? (
-              <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "40px 20px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
+            {allOpenPositions.length === 0 && !showAddRow ? (
+              <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "32px 20px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
                 <div style={{ fontSize: "32px", marginBottom: "10px", opacity: 0.4 }}>⚔️</div>
                 <p>No open positions yet.</p>
-                <small>Log a buy in the Tracker (without a sell price) to open a position.</small>
+                <small>Log a buy in the Tracker, or add one directly below.</small>
+                <div style={{ marginTop: "14px" }}>
+                  <button className="ops-add-btn" style={{ margin: "0 auto" }} onClick={() => setShowAddRow(true)}>
+                    <span style={{ fontSize: "16px", lineHeight: 1 }}>+</span> Add Position
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="ops-table">
                 <div className="ops-header">
-                  <span>Item</span><span>GP In</span><span>Qty</span><span>Buy Price</span><span>Live P&L</span><span>Margin Health</span><span>Action</span>
+                  <span>Item</span><span>Investment</span><span>Qty</span><span>Avg Buy</span><span>Sell Now</span><span>Live P&L</span><span>Margin Health</span><span>Action</span>
                 </div>
                 {allOpenPositions.map(pos => {
                   const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
@@ -1656,6 +1677,9 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                       <span style={{ fontSize: "12px" }}>{formatGP(pos.gpIn)}</span>
                       <span style={{ fontSize: "12px" }}>{pos.qty.toLocaleString()}</span>
                       <span style={{ fontSize: "12px" }}>{formatGP(pos.buyPrice)}</span>
+                      <span style={{ fontSize: "12px", color: liveItem ? "var(--text)" : "var(--text-dim)" }}>
+                        {liveItem ? formatGP(liveItem.high) : "—"}
+                      </span>
                       <div>
                         <div style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>
                           {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
@@ -1675,7 +1699,52 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                     </div>
                   );
                 })}
+                {/* Inline add-position row */}
+                {showAddRow && (
+                  <div className="add-pos-row">
+                    <div style={{ paddingRight: "8px" }}>
+                      <input className="add-pos-input" placeholder="Item name..." value={addForm.item}
+                        onChange={e => setAddForm(f => ({ ...f, item: e.target.value }))} />
+                    </div>
+                    <div style={{ paddingRight: "6px" }}>
+                      <input className="add-pos-input" placeholder="Total GP..." value={addForm.totalGp}
+                        onChange={e => setAddForm(f => ({ ...f, totalGp: e.target.value }))} />
+                    </div>
+                    <div style={{ paddingRight: "6px" }}>
+                      <input className="add-pos-input" placeholder="Qty" value={addForm.qty}
+                        onChange={e => setAddForm(f => ({ ...f, qty: e.target.value }))} />
+                    </div>
+                    <div style={{ paddingRight: "6px" }}>
+                      <input className="add-pos-input" placeholder="Buy price ea." value={addForm.buyPrice}
+                        onChange={e => setAddForm(f => ({ ...f, buyPrice: e.target.value }))} />
+                    </div>
+                    <div style={{ color: "var(--text-dim)", fontSize: "11px", paddingTop: "4px" }}>Live</div>
+                    <div style={{ color: "var(--text-dim)", fontSize: "11px", paddingTop: "4px" }}>—</div>
+                    <div style={{ color: "var(--text-dim)", fontSize: "11px", paddingTop: "4px" }}>—</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <button className="add-pos-confirm" disabled={addingPos}
+                        onClick={async e => {
+                          e.stopPropagation();
+                          if (!addForm.item || !addForm.buyPrice) return;
+                          const buy = parseInt(addForm.buyPrice.replace(/[^0-9]/g, ""));
+                          const qty = parseInt(addForm.qty) || 1;
+                          if (isNaN(buy)) return;
+                          setAddingPos(true);
+                          await onAddPosition({ item: addForm.item, buyPrice: buy, qty });
+                          setAddForm({ item: "", buyPrice: "", qty: "1", totalGp: "" });
+                          setShowAddRow(false);
+                          setAddingPos(false);
+                        }}>
+                        {addingPos ? "..." : "Add"}
+                      </button>
+                      <button className="add-pos-cancel" onClick={e => { e.stopPropagation(); setShowAddRow(false); setAddForm({ item: "", buyPrice: "", qty: "1", totalGp: "" }); }}>✕</button>
+                    </div>
+                  </div>
+                )}
               </div>
+              <button className="ops-add-btn" onClick={() => setShowAddRow(r => !r)}>
+                <span style={{ fontSize: "16px", lineHeight: 1 }}>+</span> Add Position
+              </button>
             )}
           </div>
         </div>
@@ -1773,6 +1842,111 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
             <button className="op-action-btn" style={{ width: "100%", textAlign: "center", padding: "8px" }} onClick={onUpdateCapital}>
               💰 Update Total Capital
             </button>
+          </div>
+
+          {/* Session Intel — fills remaining right panel space */}
+          <div className="m-panel-section" style={{ flex: 1 }}>
+            <div className="m-panel-title">📊 Session Intel</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+
+              {/* Best performer */}
+              {allOpenPositions.length > 0 && (() => {
+                const withPnl = allOpenPositions.map(pos => {
+                  const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
+                  const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
+                  const pnlEach = liveItem ? liveItem.high - tax - pos.buyPrice : 0;
+                  return { ...pos, pnlEach, pnlTotal: pnlEach * pos.qty };
+                }).sort((a, b) => b.pnlTotal - a.pnlTotal);
+                const best = withPnl[0];
+                const worst = withPnl[withPnl.length - 1];
+                return (
+                  <>
+                    <div style={{ background: "var(--bg3)", borderRadius: "8px", padding: "10px 12px", border: "1px solid var(--border)" }}>
+                      <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>🏆 Best Position</div>
+                      <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{best.name.length > 22 ? best.name.slice(0, 21) + "…" : best.name}</div>
+                      <div style={{ fontSize: "12px", color: best.pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, marginTop: "2px" }}>
+                        {best.pnlTotal >= 0 ? "+" : ""}{formatGP(best.pnlTotal)} unrealised
+                      </div>
+                    </div>
+                    {withPnl.length > 1 && worst.pnlTotal < 0 && (
+                      <div style={{ background: "rgba(231,76,60,0.06)", borderRadius: "8px", padding: "10px 12px", border: "1px solid rgba(231,76,60,0.2)" }}>
+                        <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>⚠️ Needs Attention</div>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{worst.name.length > 22 ? worst.name.slice(0, 21) + "…" : worst.name}</div>
+                        <div style={{ fontSize: "12px", color: "var(--red)", fontWeight: 600, marginTop: "2px" }}>
+                          {formatGP(worst.pnlTotal)} unrealised
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
+
+              {/* Capital breakdown */}
+              <div style={{ background: "var(--bg3)", borderRadius: "8px", padding: "10px 12px", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>💼 Capital Breakdown</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  {[
+                    { label: "Deployed", val: totalDeployed, color: "var(--blue)", pct: efficiencyPct },
+                    { label: "Idle", val: idleGP, color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text-dim)", pct: merchantCapital > 0 ? Math.round((idleGP / merchantCapital) * 100) : 0 },
+                    { label: "Unrealised P&L", val: unrealisedTotal, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)", pct: null },
+                  ].map(row => (
+                    <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{row.label}</span>
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: row.color }}>
+                        {row.pct !== null ? `${row.pct}% · ` : (unrealisedTotal >= 0 ? "+" : "")}{formatGP(row.val)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {merchantCapital > 0 && (
+                  <div style={{ marginTop: "8px", background: "var(--bg4)", borderRadius: "4px", overflow: "hidden", height: "4px" }}>
+                    <div style={{ height: "100%", width: `${efficiencyPct}%`, background: "var(--blue)", borderRadius: "4px", transition: "width 0.5s" }} />
+                  </div>
+                )}
+              </div>
+
+              {/* Avg hold time */}
+              {allOpenPositions.length > 0 && (() => {
+                const avgMs = allOpenPositions.reduce((s, p) => s + (Date.now() - new Date(p.openedAt).getTime()), 0) / allOpenPositions.length;
+                const h = Math.floor(avgMs / 3600000), m = Math.floor((avgMs % 3600000) / 60000);
+                const longestPos = [...allOpenPositions].sort((a, b) => new Date(a.openedAt) - new Date(b.openedAt))[0];
+                const longestMs = Date.now() - new Date(longestPos.openedAt).getTime();
+                const lh = Math.floor(longestMs / 3600000), lm = Math.floor((longestMs % 3600000) / 60000);
+                return (
+                  <div style={{ background: "var(--bg3)", borderRadius: "8px", padding: "10px 12px", border: "1px solid var(--border)" }}>
+                    <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>⏱ Hold Times</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Avg hold</span>
+                        <span style={{ fontSize: "12px", fontWeight: 600 }}>{h > 0 ? `${h}h ${m}m` : `${m}m`}</span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Oldest: {longestPos.name.length > 14 ? longestPos.name.slice(0, 13) + "…" : longestPos.name}</span>
+                        <span style={{ fontSize: "12px", fontWeight: 600, color: lh >= 4 ? "#f39c12" : "var(--text)" }}>{lh > 0 ? `${lh}h ${lm}m` : `${lm}m`}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Today's trade summary */}
+              <div style={{ background: "var(--bg3)", borderRadius: "8px", padding: "10px 12px", border: "1px solid var(--border)" }}>
+                <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "8px" }}>📅 Today's Summary</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
+                  {[
+                    { label: "Flips closed", val: todayFlips.length, color: "var(--text)" },
+                    { label: "Realised profit", val: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
+                    { label: "Return on capital", val: `${merchantCapital > 0 ? ((realisedToday / merchantCapital) * 100).toFixed(2) : "0.00"}%`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
+                  ].map(row => (
+                    <div key={row.label} style={{ display: "flex", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{row.label}</span>
+                      <span style={{ fontSize: "12px", fontWeight: 600, color: row.color }}>{row.val}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
           </div>
 
         </div>
@@ -1917,6 +2091,17 @@ export default function RuneTrader() {
     if (!user || !merchantMode) return;
     supabase.from("positions").select("*").then(({ data }) => setMerchantPositions(data || []));
   }, [user, merchantMode]); // eslint-disable-line
+
+  async function addPositionFromMerchant({ item, buyPrice, qty }) {
+    if (!user) return;
+    const itemMatch = items.find(i => i.name.toLowerCase() === item.toLowerCase());
+    const { data, error } = await supabase.from("positions").insert({
+      user_id: user.id, item_id: itemMatch?.id || 0, item_name: item, buy_price: buyPrice, qty
+    }).select().single();
+    if (error) { showToast("Failed to add position.", "error"); return; }
+    setMerchantPositions(prev => [data, ...prev]);
+    showToast(`Position opened: ${item}`, "success");
+  }
 
 
 
@@ -2879,6 +3064,7 @@ RULES:
               supabase={supabase}
               user={user}
               onUpdateCapital={() => setShowCapitalSetup(true)}
+              onAddPosition={addPositionFromMerchant}
             />
           ) : (
           <>
