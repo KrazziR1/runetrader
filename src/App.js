@@ -1779,7 +1779,7 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabas
                       );
                     }
                     if (!pos) return (
-                      <div key={i} className="ge-slot empty" onClick={() => setShowAddRow(true)} title="Empty slot — click to add position">
+                      <div key={i} className="ge-slot empty" title="Empty slot">
                         <div style={{ fontSize: "20px", color: "var(--border)", lineHeight: 1 }}>+</div>
                         <div style={{ fontSize: "8px", color: "var(--border)", marginTop: "2px" }}>Empty</div>
                       </div>
