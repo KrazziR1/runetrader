@@ -3084,9 +3084,9 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
               </div>
             </div>
           </div>
+          </>
+          )}
         </div>
-        </>
-        )}
       </div>
     </>
   );
