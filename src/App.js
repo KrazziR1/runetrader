@@ -919,8 +919,11 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, 
             { label: "Margin (after tax)", value: formatGP(item.adjMargin ?? item.margin), color: (item.adjMargin ?? item.margin) > 0 ? "var(--green)" : "var(--red)" },
             { label: "ROI", value: item.roi + "%", color: "var(--gold)" },
             { label: "Vol / Day", value: item.volume > 0 ? item.volume.toLocaleString() : "—", color: "var(--text-dim)" },
+            { label: "GP / Fill", value: item.buyLimit > 0 ? formatGP((item.adjMargin ?? item.margin) * item.buyLimit) : "—", color: "var(--gold)", title: "Max profit per 4hr buy limit window" },
+            { label: "Cycles / Day", value: item.buyLimit > 0 && item.volume > 0 ? (item.volume / item.buyLimit).toFixed(1) + "×" : "—", color: item.buyLimit > 0 && item.volume / item.buyLimit >= 5 ? "var(--green)" : item.buyLimit > 0 && item.volume / item.buyLimit >= 2 ? "var(--gold)" : "var(--red)", title: "How many times the market refills your buy limit per day" },
+            { label: "Last Trade", value: item.lastTradeTime ? formatTime(item.lastTradeTime * 1000) : "—", color: "var(--text-dim)", title: "When this item last traded on the GE" },
           ].map((s, i) => (
-            <div key={i} className="modal-stat">
+            <div key={i} className="modal-stat" title={s.title || ""}>
               <div className="modal-stat-label">{s.label}</div>
               <div className="modal-stat-value" style={{ color: s.color }}>{s.value}</div>
             </div>
@@ -2147,6 +2150,8 @@ export default function RuneTrader() {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshCooldown, setRefreshCooldown] = useState(0); // seconds remaining
   const cooldownRef = useRef(null);
+  const mappingCacheRef = useRef(null);   // static — only fetched once
+  const volumeCacheRef = useRef(null);    // daily — refetched every 10 min
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [allItemsMap, setAllItemsMap] = useState({});
@@ -2559,25 +2564,44 @@ export default function RuneTrader() {
   }
 
   // ── Fetch market prices ──
-  useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 60 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
+  // /mapping is static (item metadata — never changes), cached for the session
+  // /volumes updates daily, refreshed every 10 min
+  // /latest updates every ~60s on wiki's end — poll every 30s to catch it fast
+  const volumeCacheTimeRef = useRef(0);
+  useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 30 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
 
   async function fetchPrices(isManualRefresh = false) {
     try {
       if (isManualRefresh) setRefreshing(true);
       else setLoading(true);
       setError(null);
-      const [latestRes, mappingRes, volumeRes] = await Promise.all([
-        fetch("https://prices.runescape.wiki/api/v1/osrs/latest", { headers: { "User-Agent": "RuneTrader/1.0" } }),
-        fetch("https://prices.runescape.wiki/api/v1/osrs/mapping", { headers: { "User-Agent": "RuneTrader/1.0" } }),
-        fetch("https://prices.runescape.wiki/api/v1/osrs/volumes", { headers: { "User-Agent": "RuneTrader/1.0" } }),
-      ]);
-      const [latestData, mappingData, volumeData] = await Promise.all([latestRes.json(), mappingRes.json(), volumeRes.json()]);
-      const mappingMap = {};
-      mappingData.forEach(item => { mappingMap[item.id] = item; });
-      const nameMap = {};
-      mappingData.forEach(item => { nameMap[item.id] = item.name; });
-      setAllItemsMap(nameMap);
-      const volumeMap = volumeData.data || {};
+
+      // Always fetch latest prices
+      const latestRes = await fetch("https://prices.runescape.wiki/api/v1/osrs/latest", { headers: { "User-Agent": "RuneTrader/1.0" } });
+      const latestData = await latestRes.json();
+
+      // Fetch mapping once per session (it never changes)
+      if (!mappingCacheRef.current) {
+        const mappingRes = await fetch("https://prices.runescape.wiki/api/v1/osrs/mapping", { headers: { "User-Agent": "RuneTrader/1.0" } });
+        const mappingData = await mappingRes.json();
+        const mappingMap = {};
+        const nameMap = {};
+        mappingData.forEach(item => { mappingMap[item.id] = item; nameMap[item.id] = item.name; });
+        mappingCacheRef.current = mappingMap;
+        setAllItemsMap(nameMap);
+      }
+
+      // Fetch volumes at most once every 10 minutes (updates daily)
+      const now = Date.now();
+      if (!volumeCacheRef.current || now - volumeCacheTimeRef.current > 10 * 60 * 1000) {
+        const volumeRes = await fetch("https://prices.runescape.wiki/api/v1/osrs/volumes", { headers: { "User-Agent": "RuneTrader/1.0" } });
+        const volumeData = await volumeRes.json();
+        volumeCacheRef.current = volumeData.data || {};
+        volumeCacheTimeRef.current = now;
+      }
+
+      const mappingMap = mappingCacheRef.current;
+      const volumeMap = volumeCacheRef.current;
       const TAX_EXEMPT_IDS = [13190, 13191, 13192];
       const flips = [];
       for (const [idStr, prices] of Object.entries(latestData.data)) {
@@ -2605,7 +2629,7 @@ export default function RuneTrader() {
       setLastUpdate(new Date());
       if (isManualRefresh) {
         showToast("Prices refreshed!", "success");
-        setRefreshCooldown(30);
+        setRefreshCooldown(15);
         clearInterval(cooldownRef.current);
         cooldownRef.current = setInterval(() => {
           setRefreshCooldown(prev => {
