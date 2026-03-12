@@ -303,7 +303,7 @@ const STYLES = `
   /* MERCHANT MODE */
   .merchant-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; width: 100%; }
   .merchant-layout { display: grid; grid-template-columns: 1fr 340px 320px; flex: 1; min-height: 0; overflow: hidden; width: 100%; height: 100%; }
-  .merchant-left { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .merchant-left { overflow-y: auto; overflow-x: visible; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
   .merchant-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
   .merchant-far-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
   .capital-bar { display: grid; grid-template-columns: repeat(5,1fr); background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
@@ -327,7 +327,7 @@ const STYLES = `
   .slot-dot.selling { background: var(--blue); animation: pulse 1.5s infinite; }
   .slot-dot.holding { background: var(--green); }
   .slot-dot.danger { background: var(--red); animation: pulse 0.8s infinite; }
-  .ops-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .ops-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
   .ops-header { display: grid; grid-template-columns: 2.2fr 1fr 0.7fr 1fr 1fr 1fr 120px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); }
   .op-row { display: grid; grid-template-columns: 2.2fr 1fr 0.7fr 1fr 1fr 1fr 120px 80px; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; cursor: pointer; position: relative; }
   .op-row:last-child { border-bottom: none; }
@@ -358,7 +358,7 @@ const STYLES = `
   .ops-add-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 7px; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; margin: 10px 16px; }
   .ops-add-btn:hover { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.05); }
   .merchant-ac-wrap { position: relative; width: 100%; }
-  .merchant-ac-list { position: absolute; top: calc(100% + 2px); left: 0; right: 0; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 6px; z-index: 200; max-height: 160px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .merchant-ac-list { position: absolute; top: calc(100% + 2px); left: 0; min-width: 280px; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 6px; z-index: 9999; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
   .merchant-ac-item { padding: 7px 10px; font-size: 12px; color: var(--text); cursor: pointer; transition: background 0.1s; }
   .merchant-ac-item:hover, .merchant-ac-item.highlighted { background: var(--bg4); color: var(--gold); }
   .m-panel-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
