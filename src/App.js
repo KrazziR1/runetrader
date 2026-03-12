@@ -897,7 +897,7 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, 
         <div className="modal-header">
           <div>
             <div className="modal-title">{item.name}</div>
-            <div className="modal-meta">{item.category} · Buy limit: {item.buyLimit?.toLocaleString() || "Unknown"} · Score: {item.score}/100</div>
+            <div className="modal-meta">{item.category} · Buy limit: {item.buyLimit > 0 ? item.buyLimit.toLocaleString() : "Unknown"} · Score: {item.score}/100</div>
           </div>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <button
@@ -918,6 +918,7 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, 
             { label: "Sell Price", value: formatGP(item.adjHigh ?? item.high), color: "var(--text)" },
             { label: "Margin (after tax)", value: formatGP(item.adjMargin ?? item.margin), color: (item.adjMargin ?? item.margin) > 0 ? "var(--green)" : "var(--red)" },
             { label: "ROI", value: item.roi + "%", color: "var(--gold)" },
+            { label: "Vol / Day", value: item.volume > 0 ? item.volume.toLocaleString() : "—", color: "var(--text-dim)" },
           ].map((s, i) => (
             <div key={i} className="modal-stat">
               <div className="modal-stat-label">{s.label}</div>
