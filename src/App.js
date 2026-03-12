@@ -2054,6 +2054,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
 }
 
 
+export default function RuneTrader() {
   const [showApp, setShowApp] = useState(false);
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
