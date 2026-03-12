@@ -1759,11 +1759,11 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabas
               <div className="merchant-section">
                 <div className="merchant-section-header">
                   <span className="merchant-section-title">GE Slots</span>
-                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{Math.max(geOffers.filter(o => o.status === "BUYING" || o.status === "SELLING").length, allOpenPositions.length)} / 8 occupied</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{Math.max(geOffers.filter(o => o.status !== "EMPTY").length, allOpenPositions.length)} / 8 occupied</span>
                 </div>
                 <div className="slots-grid">
                   {Array.from({ length: 8 }).map((_, i) => {
-                    const liveOffer = geOffers.find(o => o.slot === i && (o.status === "BUYING" || o.status === "SELLING"));
+                    const liveOffer = geOffers.find(o => o.slot === i && ["BUYING","BOUGHT","SELLING","SOLD"].includes(o.status));
                     const pos = allOpenPositions[i];
                     if (liveOffer) {
                       const slotColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[liveOffer.status] || "var(--border)";
@@ -2584,14 +2584,14 @@ function LiveGESlots({ user, supabase: sb }) {
   const slotLabel = s => !s || s === "EMPTY" ? "Empty" : s.charAt(0) + s.slice(1).toLowerCase().replace("_", " ");
   const fmtGP = n => { if (!n && n !== 0) return "—"; if (n >= 1e6) return (n/1e6).toFixed(1)+"M"; if (n >= 1e3) return (n/1e3).toFixed(1)+"K"; return n.toLocaleString(); };
   const pct = o => o.qty_total > 0 ? Math.round((o.qty_filled / o.qty_total) * 100) : 0;
-  const activeOffers = offers.filter(o => o.status === "BUYING" || o.status === "SELLING");
+  const activeOffers = offers.filter(o => o.status !== "EMPTY" && o.status !== "CANCELLED_BUY" && o.status !== "CANCELLED_SELL");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
           <span style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px" }}>🔴 Live GE Slots</span>
-          <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{activeOffers.length} / 8 active</span>
+          <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{activeOffers.length} / 8 slots</span>
         </div>
         {loading ? (
           <div style={{ color: "var(--text-dim)", fontSize: "13px", padding: "20px 0" }}>Loading slots...</div>
