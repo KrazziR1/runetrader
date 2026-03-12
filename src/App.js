@@ -810,7 +810,7 @@ const MERCHANT_TOUR_STEPS = [
   { title: "Capital Efficiency", desc: "The ring gauge shows what % of your stack is actively working. Aim for 70%+ for best returns. Below 50% means too much idle GP sitting unused.", target: ".gauge-ring", placement: "left", view: "operations" },
   { title: "🎯 Daily GP Goal", desc: "Set a daily GP target and track your progress in real time. The bar fills as you close flips, and gives you an ETA based on your current GP/hr rate.", target: "#tour-daily-goal", placement: "left", view: "operations" },
   { title: "⚡ Rotation Picks", desc: "Items suggested to fill your idle GP right now — filtered to fit your budget and ranked by score. Click any card to open the price chart and decide if it's worth a flip.", target: ".rotation-picks-section", placement: "left", view: "operations" },
-  { title: "📋 Flip Queue", desc: "A wishlist of items you want to flip next. Add anything here, and the live margin updates automatically. When a slot opens up, your queue tells you exactly what to buy.", target: "#tour-flip-queue", placement: "left", view: "operations" },
+  { title: "📋 Flip Queue", desc: "A wishlist of items you want to flip next. Add anything here, and the live margin updates automatically. When a slot opens up, your queue tells you exactly what to buy.", target: "#tour-flip-queue", placement: "top", view: "operations" },
   // ── Analytics tab ──
   { title: "📊 Session Intel", desc: "A full breakdown of your current session: duration, GP/hr rate, flips closed, return on capital, and more. All updated live as you trade.", target: "#tour-session-intel", placement: "right", view: "analytics" },
   { title: "⚠️ Risk Exposure", desc: "See how concentrated your capital is across items. Any position above 40% of your stack triggers a warning — over-concentration is one of the biggest risks in GE flipping.", target: "#tour-risk-exposure", placement: "right", view: "analytics" },
@@ -3414,47 +3414,38 @@ RULES:
         const isCenter = step.placement === "center" || !merchantTourRect;
         const pad = 10;
         const hl = merchantTourRect || {};
-        const ttHeight = 220; // approx tooltip height
-        const ttWidth = 300;
+        const ttHeight = 240;
+        const ttWidth = 320;
         const vp = window.innerHeight;
         const leftPos = Math.max(8, Math.min((hl.left || 0), window.innerWidth - ttWidth - 8));
+        // Helper: clamp top so tooltip is always fully on screen
+        const clampTop = (t) => Math.max(8, Math.min(t, vp - ttHeight - 8));
         let ttStyle = {};
         if (isCenter) {
           ttStyle = { top: "50%", left: "50%", transform: "translate(-50%,-50%)" };
         } else if (step.placement === "bottom") {
-          const wouldOverflow = (hl.top + hl.height + pad + 12 + ttHeight) > vp;
-          if (wouldOverflow) {
-            ttStyle = { bottom: vp - hl.top + pad + 8, left: leftPos };
-          } else {
-            ttStyle = { top: hl.top + hl.height + pad + 12, left: leftPos };
-          }
+          const belowTop = hl.top + (hl.height || 0) + pad + 12;
+          const wouldOverflow = belowTop + ttHeight > vp;
+          ttStyle = wouldOverflow
+            ? { top: clampTop(hl.top - ttHeight - pad - 12), left: leftPos }
+            : { top: clampTop(belowTop), left: leftPos };
         } else if (step.placement === "top") {
-          const topPos = hl.top - pad - ttHeight;
-          if (topPos < 8) {
-            ttStyle = { top: hl.top + hl.height + pad + 12, left: leftPos };
-          } else {
-            ttStyle = { top: topPos, left: leftPos };
-          }
+          const aboveTop = hl.top - pad - ttHeight;
+          ttStyle = aboveTop < 8
+            ? { top: clampTop(hl.top + (hl.height || 0) + pad + 12), left: leftPos }
+            : { top: clampTop(aboveTop), left: leftPos };
         } else if (step.placement === "left") {
-          // If element is in the right sidebar, prefer showing tooltip to its left
-          // Clamp vertically so it never goes off screen
-          const topPos = Math.max(8, Math.min(hl.top, vp - ttHeight - 8));
-          const rightSidebar = hl.left > window.innerWidth * 0.5;
-          if (rightSidebar) {
-            ttStyle = { top: topPos, right: window.innerWidth - hl.left + pad + 8, left: "auto" };
-          } else {
-            // Fall back to above if left placement doesn't make sense
-            const abovePos = hl.top - ttHeight - pad;
-            ttStyle = abovePos > 8
-              ? { top: abovePos, left: leftPos }
-              : { top: hl.top + hl.height + pad + 8, left: leftPos };
-          }
+          const rightOfCenter = (hl.left || 0) > window.innerWidth * 0.5;
+          const topPos = clampTop(hl.top || 0);
+          ttStyle = rightOfCenter
+            ? { top: topPos, right: window.innerWidth - (hl.left || 0) + pad + 8, left: "auto" }
+            : { top: topPos, left: leftPos };
         }
         return (
           <>
             <div className="tour-backdrop" onClick={endMerchantTour} />
             {!isCenter && merchantTourRect && <div className="tour-highlight" style={{ top: hl.top - pad, left: hl.left - pad, width: hl.width + pad * 2, height: hl.height + pad * 2 }} />}
-            <div className="tour-tooltip" style={ttStyle}>
+            <div className="tour-tooltip" style={{ ...ttStyle, ...(ttStyle.top !== undefined && typeof ttStyle.top === "number" && ttStyle.top + ttHeight > vp ? { top: "auto", bottom: 8 } : {}) }}>
               <div className="tour-step-label">Step {merchantTourStep + 1} of {MERCHANT_TOUR_STEPS.length}</div>
               <div className="tour-title">{step.title}</div>
               <div className="tour-desc">{step.desc}</div>
@@ -3511,7 +3502,7 @@ RULES:
           <>
             <div className="tour-backdrop" onClick={endTour} />
             {!isCenter && <div className="tour-highlight" style={{ top: hl.top - pad, left: hl.left - pad, width: hl.width + pad * 2, height: hl.height + pad * 2 }} />}
-            <div className="tour-tooltip" style={ttStyle}>
+            <div className="tour-tooltip" style={{ ...ttStyle, ...(ttStyle.top !== undefined && typeof ttStyle.top === "number" && ttStyle.top + ttHeight > vp ? { top: "auto", bottom: 8 } : {}) }}>
               <div className="tour-step-label">Step {tourStep + 1} of {TOUR_STEPS.length}</div>
               <div className="tour-title">{step.title}</div>
               <div className="tour-desc">{step.desc}</div>
