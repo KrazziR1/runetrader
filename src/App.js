@@ -1647,6 +1647,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
                 </div>
               </div>
             ) : (
+              <>
               <div className="ops-table">
                 <div className="ops-header">
                   <span>Item</span><span>Investment</span><span>Qty</span><span>Avg Buy</span><span>Sell Now</span><span>Live P&L</span><span>Margin Health</span><span>Action</span>
@@ -1745,6 +1746,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
               <button className="ops-add-btn" onClick={() => setShowAddRow(r => !r)}>
                 <span style={{ fontSize: "16px", lineHeight: 1 }}>+</span> Add Position
               </button>
+              </>
             )}
           </div>
         </div>
