@@ -941,94 +941,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
   const chartRef = useRef(null);
   const flipsLoadedRef = useRef(false);
 
-  // ── Merchant Mode ──
-  const [merchantMode, setMerchantMode] = useState(false);
-  const [merchantCapital, setMerchantCapital] = useState(0);
-  const [merchantCapitalInput, setMerchantCapitalInput] = useState("");
-  const [showCapitalSetup, setShowCapitalSetup] = useState(false);
-  const [merchantLoading, setMerchantLoading] = useState(false);
-  const [pnlHistory, setPnlHistory] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("runetrader_pnl_history") || "[]"); } catch { return []; }
-  });
-  const pnlCanvasRef = useRef(null);
-
-  async function loadMerchantSettings() {
-    if (!user) return;
-    const { data } = await supabase.from("merchant_settings").select("*").eq("user_id", user.id).single();
-    if (data) {
-      setMerchantCapital(data.total_capital || 0);
-      if (data.mode_enabled) setMerchantMode(true);
-    }
-  }
-
-  async function saveMerchantCapital(val) {
-    const gp = parseInt(val.replace(/[^0-9]/g, ""));
-    if (isNaN(gp) || gp <= 0) return;
-    setMerchantLoading(true);
-    await supabase.from("merchant_settings").upsert({ user_id: user.id, total_capital: gp, mode_enabled: true, updated_at: new Date().toISOString() });
-    setMerchantCapital(gp);
-    setMerchantMode(true);
-    setShowCapitalSetup(false);
-    setMerchantLoading(false);
-    showToast("Merchant Mode activated!", "success");
-  }
-
-  async function toggleMerchantMode() {
-    if (!user) { setShowAuth(true); return; }
-    if (!merchantMode) {
-      if (merchantCapital === 0) { setShowCapitalSetup(true); return; }
-      setMerchantMode(true);
-      await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
-    } else {
-      setMerchantMode(false);
-      await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
-    }
-  }
-
-  // Track daily P&L snapshots
-  useEffect(() => {
-    if (!merchantMode) return;
-    const totalRealised = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.totalProfit || 0), 0);
-    const snap = { time: Date.now(), value: totalRealised };
-    setPnlHistory(prev => {
-      const today = prev.filter(p => new Date(p.time).toDateString() === new Date().toDateString());
-      const updated = [...today.slice(-48), snap];
-      localStorage.setItem("runetrader_pnl_history", JSON.stringify(updated));
-      return updated;
-    });
-  }, [flipsLog, merchantMode]); // eslint-disable-line
-
-  useEffect(() => { if (user) loadMerchantSettings(); }, [user]); // eslint-disable-line
-
-  // Draw P&L chart
-  useEffect(() => {
-    if (!merchantMode || !pnlCanvasRef.current || pnlHistory.length < 2) return;
-    const canvas = pnlCanvasRef.current;
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
-    const ctx = canvas.getContext("2d");
-    ctx.scale(dpr, dpr);
-    const W = rect.width, H = rect.height, pad = { top: 6, right: 6, bottom: 6, left: 6 };
-    const vals = pnlHistory.map(p => p.value);
-    const minV = Math.min(0, ...vals), maxV = Math.max(...vals) * 1.1 || 1;
-    const xPos = i => pad.left + (i / (pnlHistory.length - 1)) * (W - pad.left - pad.right);
-    const yPos = v => pad.top + (1 - (v - minV) / (maxV - minV)) * (H - pad.top - pad.bottom);
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, "rgba(46,204,113,0.3)"); grad.addColorStop(1, "rgba(46,204,113,0)");
-    ctx.beginPath(); ctx.moveTo(xPos(0), yPos(vals[0]));
-    vals.forEach((v, i) => ctx.lineTo(xPos(i), yPos(v)));
-    ctx.lineTo(xPos(vals.length - 1), H); ctx.lineTo(xPos(0), H);
-    ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(xPos(0), yPos(vals[0]));
-    vals.forEach((v, i) => ctx.lineTo(xPos(i), yPos(v)));
-    ctx.strokeStyle = "var(--green)"; ctx.lineWidth = 2; ctx.stroke();
-    const lx = xPos(vals.length - 1), ly = yPos(vals[vals.length - 1]);
-    ctx.beginPath(); ctx.arc(lx, ly, 3, 0, Math.PI * 2); ctx.fillStyle = "var(--green)"; ctx.fill();
-  }, [pnlHistory, merchantMode]);
-
-
-
   useEffect(() => {
     if (!user) return;
     loadManualPositions();
@@ -1773,6 +1685,99 @@ export default function RuneTrader() {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [allItemsMap, setAllItemsMap] = useState({});
+
+  // ── Merchant Mode ──
+  const [merchantMode, setMerchantMode] = useState(false);
+  const [merchantCapital, setMerchantCapital] = useState(0);
+  const [merchantCapitalInput, setMerchantCapitalInput] = useState("");
+  const [showCapitalSetup, setShowCapitalSetup] = useState(false);
+  const [merchantLoading, setMerchantLoading] = useState(false);
+  const [pnlHistory, setPnlHistory] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("runetrader_pnl_history") || "[]"); } catch { return []; }
+  });
+  const pnlCanvasRef = useRef(null);
+
+  async function loadMerchantSettings() {
+    if (!user) return;
+    const { data } = await supabase.from("merchant_settings").select("*").eq("user_id", user.id).single();
+    if (data) {
+      setMerchantCapital(data.total_capital || 0);
+      if (data.mode_enabled) setMerchantMode(true);
+    }
+  }
+
+  async function saveMerchantCapital(val) {
+    const gp = parseInt(val.replace(/[^0-9]/g, ""));
+    if (isNaN(gp) || gp <= 0) return;
+    setMerchantLoading(true);
+    await supabase.from("merchant_settings").upsert({ user_id: user.id, total_capital: gp, mode_enabled: true, updated_at: new Date().toISOString() });
+    setMerchantCapital(gp);
+    setMerchantMode(true);
+    setShowCapitalSetup(false);
+    setMerchantLoading(false);
+    showToast("Merchant Mode activated!", "success");
+  }
+
+  async function toggleMerchantMode() {
+    if (!user) { setShowAuth(true); return; }
+    if (!merchantMode) {
+      if (merchantCapital === 0) { setShowCapitalSetup(true); return; }
+      setMerchantMode(true);
+      await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
+    } else {
+      setMerchantMode(false);
+      await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
+    }
+  }
+
+  useEffect(() => { if (user) loadMerchantSettings(); }, [user]); // eslint-disable-line
+
+  // Load manual positions for Merchant Mode (read-only copy)
+  const [merchantPositions, setMerchantPositions] = useState([]);
+  useEffect(() => {
+    if (!user || !merchantMode) return;
+    supabase.from("positions").select("*").then(({ data }) => setMerchantPositions(data || []));
+  }, [user, merchantMode]); // eslint-disable-line
+
+  useEffect(() => {
+    if (!merchantMode) return;
+    const totalRealised = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.totalProfit || 0), 0);
+    const snap = { time: Date.now(), value: totalRealised };
+    setPnlHistory(prev => {
+      const today = prev.filter(p => new Date(p.time).toDateString() === new Date().toDateString());
+      const updated = [...today.slice(-48), snap];
+      localStorage.setItem("runetrader_pnl_history", JSON.stringify(updated));
+      return updated;
+    });
+  }, [flipsLog, merchantMode]); // eslint-disable-line
+
+  useEffect(() => {
+    if (!merchantMode || !pnlCanvasRef.current || pnlHistory.length < 2) return;
+    const canvas = pnlCanvasRef.current;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr, dpr);
+    const W = rect.width, H = rect.height, pad = { top: 6, right: 6, bottom: 6, left: 6 };
+    const vals = pnlHistory.map(p => p.value);
+    const minV = Math.min(0, ...vals), maxV = Math.max(...vals) * 1.1 || 1;
+    const xPos = i => pad.left + (i / (pnlHistory.length - 1)) * (W - pad.left - pad.right);
+    const yPos = v => pad.top + (1 - (v - minV) / (maxV - minV)) * (H - pad.top - pad.bottom);
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "rgba(46,204,113,0.3)"); grad.addColorStop(1, "rgba(46,204,113,0)");
+    ctx.beginPath(); ctx.moveTo(xPos(0), yPos(vals[0]));
+    vals.forEach((v, i) => ctx.lineTo(xPos(i), yPos(v)));
+    ctx.lineTo(xPos(vals.length - 1), H); ctx.lineTo(xPos(0), H);
+    ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(xPos(0), yPos(vals[0]));
+    vals.forEach((v, i) => ctx.lineTo(xPos(i), yPos(v)));
+    ctx.strokeStyle = "var(--green)"; ctx.lineWidth = 2; ctx.stroke();
+    const lx = xPos(vals.length - 1), ly = yPos(vals[vals.length - 1]);
+    ctx.beginPath(); ctx.arc(lx, ly, 3, 0, Math.PI * 2); ctx.fillStyle = "var(--green)"; ctx.fill();
+  }, [pnlHistory, merchantMode]); // eslint-disable-line
+
+
 
   // ── Prefs ──
   const [prefs, setPrefs] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}"); } catch { return {}; } });
@@ -2589,7 +2594,7 @@ NEVER recommend ROI >200% or volume <50/day. Best flips: ROI 5-50%, volume 200+/
             <MerchantMode
               items={items}
               flipsLog={flipsLog}
-              manualPositions={manualPositions}
+              manualPositions={merchantPositions}
               merchantCapital={merchantCapital}
               setMerchantCapital={setMerchantCapital}
               pnlHistory={pnlHistory}
