@@ -797,7 +797,7 @@ const MERCHANT_TOUR_STEPS = [
   { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips and Portfolio positions. Dot colours: 🟡 Buying · 🔵 Selling · 🟢 Holding · 🔴 Needs attention. Click any slot to view the item chart.", target: ".slots-grid", placement: "bottom" },
   { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Green = strong margin. Amber = fading. Red = consider cutting. Click any row to view the item chart.", target: ".ops-table", placement: "top" },
   { title: "Capital Efficiency", desc: "The gauge shows what % of your stack is actively working. Aim for 70%+ for best returns. Below 50% means too much idle GP.", target: ".gauge-ring", placement: "left" },
-  { title: "Rotation Picks", desc: "AI-suggested items that fit your idle GP and aren't already in your slots. Ranked by score. Click any card to view the chart and decide if it's worth flipping.", target: ".m-panel-title", placement: "left" },
+  { title: "Rotation Picks", desc: "AI-suggested items that fit your idle GP and aren't already in your slots. Ranked by score. Click any card to view the chart and decide if it's worth flipping.", target: ".rotation-picks-section", placement: "left" },
   { title: "You're set! ⚔️", desc: "Log a buy in the Tracker without a sell price to open a position. It'll appear here automatically. Good luck on the GE.", target: null, placement: "center" },
 ];
 
@@ -1502,7 +1502,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, resetThreshold, ThresholdPopover, smartEvents, setSmartEvents }) {
+function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMerchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, showToast, supabase, user, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, resetThreshold, ThresholdPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown }) {
   const allOpenPositions = [
     ...flipsLog.filter(f => f.status === "open").map(f => ({
       id: f.id, name: f.item, gpIn: f.buyPrice * (f.qty || 1),
@@ -1587,6 +1587,11 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
           {/* Capital Overview */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px" }}>⚔️ Merchant Mode</div>
+            <button className="refresh-btn" disabled={refreshing || refreshCooldown > 0} onClick={onRefresh}
+              style={{ fontSize: "12px" }}>
+              <span className={refreshing ? "refresh-spin" : ""}>↻</span>
+              {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh Prices"}
+            </button>
           </div>
           <div className="capital-bar">
             {[
@@ -1843,7 +1848,7 @@ function MerchantMode({ items, flipsLog, manualPositions, merchantCapital, setMe
           )}
 
           {/* Rotation Picks */}
-          <div className="m-panel-section">
+          <div className="m-panel-section rotation-picks-section">
             <div className="m-panel-title">⚡ Rotation Picks</div>
             <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "10px" }}>Top picks for your {formatGP(idleGP)} idle GP:</div>
             {rotationPicks.length === 0 ? (
@@ -3135,6 +3140,9 @@ RULES:
               ThresholdPopover={ThresholdPopover}
               smartEvents={smartEvents}
               setSmartEvents={setSmartEvents}
+              onRefresh={() => fetchPrices(true)}
+              refreshing={refreshing}
+              refreshCooldown={refreshCooldown}
             />
           ) : (
           <>
