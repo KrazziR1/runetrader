@@ -331,7 +331,7 @@ const STYLES = `
   .merchant-nav-pill.active { background: rgba(201,168,76,0.15); border-color: var(--gold); color: var(--gold); font-weight: 600; }
   .merchant-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
   .merchant-layout { display: grid; grid-template-columns: 1fr 320px; flex: 1; min-height: 0; overflow: hidden; width: 100%; }
-  .merchant-left { overflow-y: auto; overflow-x: visible; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .merchant-left { overflow-y: auto; overflow-x: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
   .merchant-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
   .merchant-section { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
   .merchant-section-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); }
@@ -1790,7 +1790,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
             <span style={{ fontFamily: "'Cinzel', serif", fontSize: "14px", fontWeight: 700, color: "var(--gold)", letterSpacing: "1.5px" }}>MERCHANT MODE</span>
           </div>
           <div className="merchant-header-pills">
-            {[["operations", "⚔️ Operations"], ["analytics", "📊 Analytics"], ["alerts", "⚡ Alerts"], ["market", "📈 Market"]].map(([v, l]) => (
+            {[["operations", "⚔️ Operations"], ["analytics", "📊 Analytics"], ["market", "📈 Market"], ["alerts", "⚡ Alerts"]].map(([v, l]) => (
               <button key={v} className={`merchant-nav-pill${activeView === v ? " active" : ""}`} onClick={() => setActiveView(v)}>{l}</button>
             ))}
           </div>
@@ -2455,7 +2455,8 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
         )}
 
         {activeView === "market" && (
-          <div style={{ padding: "0 0 24px 0" }}>
+          <div className="merchant-layout">
+            <div className="merchant-left" style={{ paddingTop: "20px" }}>
 
             {/* Filter bar */}
             <div className="filter-bar" style={{ marginBottom: "12px" }}>
@@ -2633,6 +2634,22 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                 </button>
               </div>
             )}
+            </div>{/* end merchant-left */}
+            <div className="merchant-right" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: "12px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "4px" }}>Active Positions</div>
+              {(() => { const open = (manualPositions || []).filter(p => p.status !== "closed"); return open.length === 0 ? (
+                <div style={{ fontSize: "12px", color: "var(--text-dim)", textAlign: "center", padding: "24px 0" }}>No open positions</div>
+              ) : open.map(p => (
+                <div key={p.id} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 12px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{p.item_name}</span>
+                    <span style={{ fontSize: "12px", color: p.pnl >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>{p.pnl >= 0 ? "+" : ""}{formatGP(p.pnl || 0)}</span>
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {(p.slot||0)+1} · {p.status} · {p.qty} qty</div>
+                </div>
+              )); })()
+              }
+            </div>{/* end merchant-right */}
           </div>
         )}
 
