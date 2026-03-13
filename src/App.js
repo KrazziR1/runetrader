@@ -1769,7 +1769,8 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabas
                 </div>
                 <div className="slots-grid">
                   {Array.from({ length: 8 }).map((_, i) => {
-                    const liveOffer = geOffers.find(o => o.slot === i && ["BUYING","BOUGHT","SELLING"].includes(o.status));
+                    // SOLD = item sold but not yet collected, still occupies slot
+                    const liveOffer = geOffers.find(o => o.slot === i && ["BUYING","BOUGHT","SELLING","SOLD"].includes(o.status));
                     const pos = allOpenPositions[i];
                     if (liveOffer) {
                       const slotColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[liveOffer.status] || "var(--border)";
@@ -2596,7 +2597,8 @@ function LiveGESlots({ user, supabase: sb }) {
   const slotLabel = s => !s || s === "EMPTY" ? "Empty" : s.charAt(0) + s.slice(1).toLowerCase().replace("_", " ");
   const fmtGP = n => { if (!n && n !== 0) return "—"; if (n >= 1e6) return (n/1e6).toFixed(1)+"M"; if (n >= 1e3) return (n/1e3).toFixed(1)+"K"; return n.toLocaleString(); };
   const pct = o => o.qty_total > 0 ? Math.round((o.qty_filled / o.qty_total) * 100) : 0;
-  const activeOffers = offers.filter(o => o.status !== "EMPTY" && o.status !== "CANCELLED_BUY" && o.status !== "CANCELLED_SELL");
+  // SOLD stays visible — item is in slot waiting to be collected. Only EMPTY means truly gone.
+  const activeOffers = offers.filter(o => !["EMPTY","CANCELLED_BUY","CANCELLED_SELL"].includes(o.status));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>

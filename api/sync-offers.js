@@ -74,7 +74,8 @@ export default async function handler(req, res) {
 
   // ── 3. ge_offers (Live GE Slots display) ─────────────────────
   // Terminal statuses: delete from ge_offers immediately so slots clear.
-  const terminalStatuses = ['EMPTY', 'SOLD', 'CANCELLED_BUY', 'CANCELLED_SELL'];
+  // SOLD is NOT terminal for ge_offers — item stays in slot until player collects (EMPTY).
+  const terminalStatuses = ['EMPTY', 'CANCELLED_BUY', 'CANCELLED_SELL'];
   const terminalSlots = body.filter(o => terminalStatuses.includes(o.status)).map(o => o.slot);
   const activeOffers  = body.filter(o => !terminalStatuses.includes(o.status));
 
@@ -126,12 +127,15 @@ export default async function handler(req, res) {
         o.slot === slot && o !== offer && ['BUYING','BOUGHT','SELLING'].includes(o.status)
       );
       if (!slotIsActiveElsewhere) {
+        // Only delete BUYING rows on EMPTY (cancelled unfilled buy = no item, no flip).
+        // BOUGHT rows = player has the item and hasn't sold yet — keep the open flip alive.
+        // SOLD rows are never deleted (preserved as history).
         await supabase
           .from('ge_flips_live')
           .delete()
           .eq('user_id', userId)
           .eq('slot', slot)
-          .neq('status', 'SOLD');
+          .in('status', ['BUYING']); // only delete unfilled/cancelled buys
       }
       continue;
     }
@@ -152,7 +156,7 @@ export default async function handler(req, res) {
       // Find the open flip for this slot
       const { data: openFlip } = await supabase
         .from('ge_flips_live')
-        .select('id, buy_price, quantity')
+        .select('id, buy_price, buy_spent, quantity')
         .eq('user_id', userId)
         .eq('slot', slot)
         .in('status', ['BUYING', 'BOUGHT', 'SELLING'])
@@ -165,7 +169,12 @@ export default async function handler(req, res) {
       const quantity  = offer.qtyFilled || offer.qtyTotal;
       const sellPrice = offer.offerPrice;
 
-      const buyPrice = openFlip?.buy_price ?? null;
+      // Prefer recalculating buy_price from raw buy_spent if available —
+      // more accurate than stored buy_price which may have been set during BUYING (listed price).
+      const buyQty = openFlip?.quantity || quantity;
+      const buyPrice = (openFlip?.buy_spent && buyQty > 0)
+        ? Math.round(openFlip.buy_spent / buyQty)
+        : (openFlip?.buy_price ?? null);
       let profit = null, roi = null;
       let tax = null;
       if (buyPrice && sellPrice) {
@@ -180,6 +189,7 @@ export default async function handler(req, res) {
           .from('ge_flips_live')
           .update({
             status: 'SOLD', sell_price: sellPrice,
+            buy_price: buyPrice,  // lock in accurate buy_price at close time
             profit, roi, tax, quantity, sell_completed_at: syncedAt,
           })
           .eq('id', openFlip.id)
@@ -227,6 +237,7 @@ export default async function handler(req, res) {
             status:    offer.status,
             quantity:  offer.qtyFilled || offer.qtyTotal,
             buy_price: offer.offerPrice,
+            buy_spent: offer.spent || 0,   // raw GP spent — recalculate at SOLD if needed
           })
           .eq('id', openRow.id);
       } else {
@@ -241,6 +252,7 @@ export default async function handler(req, res) {
           item_name: offer.itemName.trim(),
           status: offer.status,
           buy_price: insertBuyPrice,
+          buy_spent: offer.spent || 0,   // raw GP spent
           quantity: offer.qtyFilled || offer.qtyTotal,
           buy_started_at: syncedAt,
         });
