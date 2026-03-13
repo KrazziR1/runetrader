@@ -1244,86 +1244,39 @@ function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }
 
 // ─── PORTFOLIO PAGE ───────────────────────────────────────────────────────────
 
-function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, autoFlipsLog = [], items, onSignIn, showToast, supabase: sb }) {
-  const [manualPositions, setManualPositions] = useState([]);
-  const [posLoading, setPosLoading] = useState(false);
-  const [openForm, setOpenForm] = useState({ item: "", buyPrice: "", qty: "1" });
-  const [openAc, setOpenAc] = useState([]);
-  const [showOpenAc, setShowOpenAc] = useState(false);
-  const [closingPos, setClosingPos] = useState(null);
-  const [closeSellPrice, setCloseSellPrice] = useState("");
-  const [closingLoading, setClosingLoading] = useState(false);
-  useEffect(() => {
-    if (!user) return;
-    loadManualPositions();
-  }, [user]); // eslint-disable-line
-
-  async function loadManualPositions() {
-    setPosLoading(true);
-    const { data } = await sb.from("positions").select("*").order("date_opened", { ascending: false });
-    setManualPositions(data || []);
-    setPosLoading(false);
-  }
-
-  async function openPosition() {
-    const buy = parseInt(openForm.buyPrice.replace(/,/g, ""));
-    const qty = parseInt(openForm.qty) || 1;
-    if (!openForm.item || isNaN(buy)) return;
-    const itemMatch = items.find(i => i.name.toLowerCase() === openForm.item.toLowerCase());
-    const { data, error } = await sb.from("positions").insert({ user_id: user.id, item_id: itemMatch?.id || 0, item_name: openForm.item, buy_price: buy, qty }).select().single();
-    if (error) { showToast("Failed to open position.", "error"); return; }
-    setManualPositions(prev => [data, ...prev]);
-    setOpenForm({ item: "", buyPrice: "", qty: "1" });
-    showToast("Position opened!", "success");
-  }
-
-  async function closeManualPosition(pos, sellPrice) {
-    const sell = parseInt(sellPrice.replace(/,/g, ""));
-    if (isNaN(sell)) return;
-    setClosingLoading(true);
-    const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
-    const profitEach = sell - pos.buy_price - tax;
-    const totalProfit = profitEach * pos.qty;
-    const roi = parseFloat(((profitEach / pos.buy_price) * 100).toFixed(1));
-    const { data: flipData, error: flipErr } = await sb.from("flips").insert({ user_id: user.id, item: pos.item_name, buy_price: pos.buy_price, sell_price: sell, qty: pos.qty, tax, profit_each: profitEach, total_profit: totalProfit, roi, status: "closed" }).select().single();
-    if (flipErr) { showToast("Failed to log flip.", "error"); setClosingLoading(false); return; }
-    if (flipData && mapFlipRow) setFlipsLog(prev => [mapFlipRow(flipData), ...prev]);
-    await sb.from("positions").delete().eq("id", pos.id);
-    setManualPositions(prev => prev.filter(p => p.id !== pos.id));
-    setClosingPos(null);
-    setCloseSellPrice("");
-    setClosingLoading(false);
-    showToast(`Closed! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
-  }
-
-  const allNames = Object.values(items).map(i => i.name);
-  function handleOpenInput(val) {
-    setOpenForm(f => ({ ...f, item: val }));
-    if (val.length < 2) { setShowOpenAc(false); return; }
-    const matches = allNames.filter(n => n.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
-    setOpenAc(matches); setShowOpenAc(matches.length > 0);
-  }
+function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
+  const [portPeriod, setPortPeriod] = useState("month"); // "week" | "month" | "all"
 
   if (!user) {
     return (
       <div className="portfolio-login-prompt">
         <div className="icon">📊</div>
         <p>Portfolio tracking requires an account</p>
-        <small>Sign in to open positions, track holdings, and view your performance over time.</small>
+        <small>Sign up and connect the RuneLite plugin to start tracking your flips.</small>
         <button className="portfolio-signin-btn" onClick={onSignIn}>Sign In / Create Account</button>
       </div>
     );
   }
 
-  // ── Derived stats from closed flips ──
+  // ── Helper: get date cutoff for period ──
+  function getPeriodCutoff(period) {
+    const now = new Date();
+    if (period === "week") { const d = new Date(now); d.setDate(d.getDate() - 7); return d; }
+    if (period === "month") { const d = new Date(now); d.setMonth(d.getMonth() - 1); return d; }
+    return null; // all time
+  }
+
+  // ── All closed flips (plugin + tracker) ──
   const allClosed = [
-    ...flipsLog.filter(f => f.status !== "open"),
-    ...autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, roi: f.roi || 0, qty: f.quantity || 1, buyPrice: f.buy_price || 0 })),
+    ...flipsLog.filter(f => f.status !== "open").map(f => ({ ...f, _date: f.date ? new Date(f.date) : null })),
+    ...autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, roi: f.roi || 0, qty: f.quantity || 1, buyPrice: f.buy_price || 0, _date: f.sell_completed_at ? new Date(f.sell_completed_at) : null })),
   ];
+
+  // ── Open positions (tracker open flips only — no manual entry) ──
   const trackerOpenFlips = flipsLog.filter(f => f.status === "open");
-  const totalOpenValue =
-    trackerOpenFlips.reduce((s, f) => s + (f.buyPrice || 0) * (f.qty || 1), 0) +
-    manualPositions.reduce((s, p) => s + p.buy_price * p.qty, 0);
+  const totalOpenValue = trackerOpenFlips.reduce((s, f) => s + (f.buyPrice || 0) * (f.qty || 1), 0);
+
+  // ── All-time stats (always shown in summary cards) ──
   const totalProfit = allClosed.reduce((s, f) => s + (f.totalProfit || 0), 0);
   const totalFlips = allClosed.length;
   const wins = allClosed.filter(f => (f.totalProfit || 0) > 0).length;
@@ -1343,53 +1296,87 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, autoFlipsLog =
   const bestItems = itemStats.slice(0, 5);
   const worstItems = [...itemStats].sort((a, b) => a.totalProfit - b.totalProfit).slice(0, 3);
 
-  // Capital allocation
-  const allOpen = [
-    ...trackerOpenFlips.map(f => ({ name: f.item, value: (f.buyPrice || 0) * (f.qty || 1) })),
-    ...manualPositions.map(p => ({ name: p.item_name, value: p.buy_price * p.qty })),
-  ];
+  // Capital allocation — open tracker flips only
+  const allOpen = trackerOpenFlips.map(f => ({ name: f.item, value: (f.buyPrice || 0) * (f.qty || 1) }));
   const maxAlloc = Math.max(...allOpen.map(p => p.value), 1);
+
+  // ── Period-filtered stats (for tables) ──
+  const cutoff = getPeriodCutoff(portPeriod);
+  const periodClosed = cutoff ? allClosed.filter(f => f._date && f._date >= cutoff) : allClosed;
+  const periodProfit = periodClosed.reduce((s, f) => s + (f.totalProfit || 0), 0);
+  const periodFlips = periodClosed.length;
+  const periodWins = periodClosed.filter(f => (f.totalProfit || 0) > 0).length;
+  const periodWinRate = periodFlips > 0 ? Math.round((periodWins / periodFlips) * 100) : null;
+  const periodAvgProfit = periodFlips > 0 ? Math.round(periodProfit / periodFlips) : 0;
+
+  // Per-item aggregation for selected period
+  const periodItemMap = {};
+  periodClosed.forEach(f => {
+    const key = f.item || "Unknown";
+    if (!periodItemMap[key]) periodItemMap[key] = { name: key, totalProfit: 0, flips: 0, wins: 0 };
+    periodItemMap[key].totalProfit += f.totalProfit || 0;
+    periodItemMap[key].flips += 1;
+    if ((f.totalProfit || 0) > 0) periodItemMap[key].wins += 1;
+  });
+  const periodItemStats = Object.values(periodItemMap).sort((a, b) => b.totalProfit - a.totalProfit);
+  const periodBestItems = periodItemStats.slice(0, 5);
+  const periodWorstItems = [...periodItemStats].sort((a, b) => a.totalProfit - b.totalProfit).filter(i => i.totalProfit < 0).slice(0, 3);
+
+  const periodLabel = portPeriod === "week" ? "This Week" : portPeriod === "month" ? "This Month" : "All Time";
 
   return (
     <div className="portfolio-wrap">
 
-      {/* ── SUMMARY STATS ── */}
+      {/* ── PERIOD SELECTOR ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        {[["week","This Week"],["month","This Month"],["all","All Time"]].map(([v,l]) => (
+          <button key={v}
+            onClick={() => setPortPeriod(v)}
+            style={{ padding: "6px 16px", borderRadius: "6px", border: `1px solid ${portPeriod === v ? "var(--gold-dim)" : "var(--border)"}`, background: portPeriod === v ? "var(--bg3)" : "transparent", color: portPeriod === v ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+          >{l}</button>
+        ))}
+        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>
+          {periodFlips > 0 ? `${periodFlips} flips · ${formatGP(periodProfit)} profit` : "No flips in this period"}
+        </span>
+      </div>
+
+      {/* ── PERIOD STAT CARDS ── */}
       <div className="port-stats">
         <div className="port-stat">
-          <span className="port-stat-label">Total Profit</span>
-          <span className="port-stat-value" style={{ color: totalProfit >= 0 ? "var(--green)" : "var(--red)" }}>{formatGP(totalProfit)}</span>
-          <span className="port-stat-sub">{totalFlips} flips logged</span>
+          <span className="port-stat-label">Profit</span>
+          <span className="port-stat-value" style={{ color: periodProfit >= 0 ? "var(--green)" : "var(--red)" }}>{periodFlips > 0 ? formatGP(periodProfit) : "—"}</span>
+          <span className="port-stat-sub">{periodLabel}</span>
         </div>
         <div className="port-stat">
           <span className="port-stat-label">Win Rate</span>
-          <span className="port-stat-value" style={{ color: winRate === null ? "var(--text-dim)" : winRate >= 60 ? "var(--green)" : winRate >= 40 ? "var(--gold)" : "var(--red)" }}>
-            {winRate === null ? "—" : `${winRate}%`}
+          <span className="port-stat-value" style={{ color: periodWinRate === null ? "var(--text-dim)" : periodWinRate >= 60 ? "var(--green)" : periodWinRate >= 40 ? "var(--gold)" : "var(--red)" }}>
+            {periodWinRate === null ? "—" : `${periodWinRate}%`}
           </span>
-          <span className="port-stat-sub">{wins} wins / {totalFlips - wins} losses</span>
+          <span className="port-stat-sub">{periodWins}W / {periodFlips - periodWins}L</span>
         </div>
         <div className="port-stat">
-          <span className="port-stat-label">Avg Profit / Flip</span>
-          <span className="port-stat-value" style={{ color: avgProfit >= 0 ? "var(--gold)" : "var(--red)" }}>{totalFlips > 0 ? formatGP(avgProfit) : "—"}</span>
+          <span className="port-stat-label">Avg / Flip</span>
+          <span className="port-stat-value" style={{ color: periodAvgProfit >= 0 ? "var(--gold)" : "var(--red)" }}>{periodFlips > 0 ? formatGP(periodAvgProfit) : "—"}</span>
           <span className="port-stat-sub">after 2% GE tax</span>
         </div>
         <div className="port-stat">
           <span className="port-stat-label">Capital Deployed</span>
           <span className="port-stat-value">{formatGP(totalOpenValue)}</span>
-          <span className="port-stat-sub">{allOpen.length} open position{allOpen.length !== 1 ? "s" : ""}</span>
+          <span className="port-stat-sub">{trackerOpenFlips.length} open slot{trackerOpenFlips.length !== 1 ? "s" : ""}</span>
         </div>
         <div className="port-stat">
           <span className="port-stat-label">Items Traded</span>
-          <span className="port-stat-value">{itemStats.length}</span>
-          <span className="port-stat-sub">unique items flipped</span>
+          <span className="port-stat-value">{periodItemStats.length}</span>
+          <span className="port-stat-sub">unique · {periodLabel}</span>
         </div>
       </div>
 
-      {/* ── TWO COL: CAPITAL ALLOCATION + WIN RATE BREAKDOWN ── */}
+      {/* ── TWO COL: CAPITAL ALLOCATION + WIN RATE ── */}
       <div className="port-two-col">
         <div className="port-card">
           <div className="port-card-title">💰 Capital Allocation</div>
           {allOpen.length === 0 ? (
-            <div className="alloc-empty">No open positions</div>
+            <div className="alloc-empty">No open GE slots — connect the RuneLite plugin to see live positions</div>
           ) : (
             <div className="alloc-bar-wrap">
               {allOpen.sort((a, b) => b.value - a.value).map((pos, i) => (
@@ -1406,38 +1393,38 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, autoFlipsLog =
         </div>
 
         <div className="port-card">
-          <div className="port-card-title">🏆 Win Rate Breakdown</div>
-          {totalFlips === 0 ? (
-            <div className="alloc-empty">No closed flips yet</div>
+          <div className="port-card-title">🏆 Win Rate — {periodLabel}</div>
+          {periodFlips === 0 ? (
+            <div className="alloc-empty">No closed flips in this period</div>
           ) : (
             <div className="winrate-ring-wrap">
               <svg width="100" height="100" viewBox="0 0 100 100">
                 {(() => {
                   const r = 38; const cx = 50; const cy = 50;
                   const circ = 2 * Math.PI * r;
-                  const winPct = wins / totalFlips;
-                  const lossPct = 1 - winPct;
-                  const winDash = winPct * circ;
-                  const lossDash = lossPct * circ;
+                  const winDash = (periodWins / periodFlips) * circ;
+                  const lossDash = circ - winDash;
                   return (
                     <>
                       <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--bg4)" strokeWidth="12" />
                       <circle cx={cx} cy={cy} r={r} fill="none" stroke="#2ecc71" strokeWidth="12"
                         strokeDasharray={`${winDash} ${circ - winDash}`}
                         strokeDashoffset={circ / 4} strokeLinecap="butt" />
-                      {lossPct > 0 && <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e74c3c" strokeWidth="12"
+                      {lossDash > 0 && <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e74c3c" strokeWidth="12"
                         strokeDasharray={`${lossDash} ${circ - lossDash}`}
                         strokeDashoffset={circ / 4 - winDash} strokeLinecap="butt" />}
-                      <text x={cx} y={cy - 4} textAnchor="middle" fill="var(--text)" fontSize="16" fontWeight="700" fontFamily="Cinzel, serif">{winRate}%</text>
+                      <text x={cx} y={cy - 4} textAnchor="middle" fill="var(--text)" fontSize="16" fontWeight="700" fontFamily="Cinzel, serif">{periodWinRate}%</text>
                       <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--text-dim)" fontSize="9" fontFamily="Inter, sans-serif">WIN RATE</text>
                     </>
                   );
                 })()}
               </svg>
               <div className="winrate-legend">
-                <div className="winrate-legend-row"><div className="winrate-dot" style={{ background: "var(--green)" }} />{wins} profitable flips</div>
-                <div className="winrate-legend-row"><div className="winrate-dot" style={{ background: "var(--red)" }} />{totalFlips - wins} losing flips</div>
-                <div className="winrate-legend-row" style={{ marginTop: "4px", color: "var(--text-dim)", fontSize: "11px" }}>Avg profit: <span style={{ color: avgProfit >= 0 ? "var(--gold)" : "var(--red)", marginLeft: "4px" }}>{formatGP(avgProfit)} gp</span></div>
+                <div className="winrate-legend-row"><div className="winrate-dot" style={{ background: "var(--green)" }} />{periodWins} profitable</div>
+                <div className="winrate-legend-row"><div className="winrate-dot" style={{ background: "var(--red)" }} />{periodFlips - periodWins} losing</div>
+                <div className="winrate-legend-row" style={{ marginTop: "4px", fontSize: "11px", color: "var(--text-dim)" }}>
+                  Avg: <span style={{ color: periodAvgProfit >= 0 ? "var(--gold)" : "var(--red)", marginLeft: "4px" }}>{formatGP(periodAvgProfit)} gp</span>
+                </div>
               </div>
             </div>
           )}
@@ -1447,13 +1434,13 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, autoFlipsLog =
       {/* ── TWO COL: PER-ITEM P&L + BEST/WORST ── */}
       <div className="port-two-col">
         <div className="port-card">
-          <div className="port-card-title">📊 Per-Item P&amp;L</div>
-          {itemStats.length === 0 ? (
-            <div className="alloc-empty">No flips logged yet</div>
+          <div className="port-card-title">📊 Per-Item P&amp;L — {periodLabel}</div>
+          {periodItemStats.length === 0 ? (
+            <div className="alloc-empty">No flips in this period</div>
           ) : (
             <div className="pnl-table">
               <div className="pnl-header"><span>Item</span><span>Flips</span><span>Win %</span><span>Total P&amp;L</span></div>
-              {itemStats.slice(0, 10).map((item, i) => (
+              {periodItemStats.slice(0, 10).map((item, i) => (
                 <div key={i} className="pnl-row">
                   <span style={{ color: "var(--text)", fontWeight: 500 }}>{item.name}</span>
                   <span style={{ color: "var(--text-dim)" }}>{item.flips}</span>
@@ -1470,26 +1457,26 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, autoFlipsLog =
         </div>
 
         <div className="port-card">
-          <div className="port-card-title">⚡ Best &amp; Worst Items</div>
-          {itemStats.length === 0 ? (
-            <div className="alloc-empty">No flips logged yet</div>
+          <div className="port-card-title">⚡ Best &amp; Worst — {periodLabel}</div>
+          {periodItemStats.length === 0 ? (
+            <div className="alloc-empty">No flips in this period</div>
           ) : (
             <div className="bw-table">
-              <div className="bw-header"><span>Item</span><span>Flips</span><span>Win %</span><span>Total P&amp;L</span></div>
+              <div className="bw-header"><span>Item</span><span>Flips</span><span>Win %</span><span>P&amp;L</span></div>
               <div className="bw-section-label">🏆 Best performers</div>
-              {bestItems.map((item, i) => (
-                <div key={`best-${i}`} className="bw-row">
+              {periodBestItems.map((item, i) => (
+                <div key={`b${i}`} className="bw-row">
                   <span style={{ color: "var(--text)" }}>{item.name}</span>
                   <span style={{ color: "var(--text-dim)" }}>{item.flips}</span>
                   <span style={{ color: "var(--green)" }}>{Math.round((item.wins / item.flips) * 100)}%</span>
                   <span style={{ fontWeight: 600, color: "var(--green)" }}>+{formatGP(item.totalProfit)}</span>
                 </div>
               ))}
-              {worstItems.length > 0 && worstItems[0].totalProfit < 0 && (
+              {periodWorstItems.length > 0 && (
                 <>
                   <div className="bw-section-label">📉 Worst performers</div>
-                  {worstItems.filter(i => i.totalProfit < 0).map((item, i) => (
-                    <div key={`worst-${i}`} className="bw-row">
+                  {periodWorstItems.map((item, i) => (
+                    <div key={`w${i}`} className="bw-row">
                       <span style={{ color: "var(--text)" }}>{item.name}</span>
                       <span style={{ color: "var(--text-dim)" }}>{item.flips}</span>
                       <span style={{ color: "var(--red)" }}>{Math.round((item.wins / item.flips) * 100)}%</span>
@@ -1503,166 +1490,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, autoFlipsLog =
         </div>
       </div>
 
-      {/* ── OPEN POSITION FORM ── */}
-      <div className="open-pos-form">
-        <div className="open-pos-title">📂 Open a Position</div>
-        <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
-          Tip: Open flips logged in the Tracker automatically appear below.
-        </div>
-        <div className="open-pos-row">
-          <div className="tracker-field">
-            <label className="tracker-label">Item Name</label>
-            <input className="tracker-input" placeholder="e.g. Abyssal whip" value={openForm.item}
-              onChange={e => handleOpenInput(e.target.value)}
-              onBlur={() => setTimeout(() => setShowOpenAc(false), 150)}
-              autoComplete="off" />
-            {showOpenAc && (
-              <div className="autocomplete-list">
-                {openAc.map(name => {
-                  const liveItem = items.find(i => i.name === name);
-                  return (
-                    <div key={name} className="autocomplete-item" onMouseDown={() => {
-                      setOpenForm(f => ({ ...f, item: name, buyPrice: liveItem ? String(liveItem.low) : f.buyPrice }));
-                      setShowOpenAc(false);
-                    }}>{name}</div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          <div className="tracker-field">
-            <label className="tracker-label">Buy Price (gp)</label>
-            <input className="tracker-input" placeholder="e.g. 1500000" value={openForm.buyPrice} onChange={e => setOpenForm(f => ({ ...f, buyPrice: e.target.value }))} />
-          </div>
-          <div className="tracker-field">
-            <label className="tracker-label">Quantity</label>
-            <input className="tracker-input" placeholder="1" value={openForm.qty} onChange={e => setOpenForm(f => ({ ...f, qty: e.target.value }))} />
-          </div>
-          <button className="log-btn" disabled={!openForm.item || !openForm.buyPrice} onClick={openPosition}>+ Open</button>
-        </div>
-      </div>
-
-      <div>
-        <div className="section-title">
-          Open Positions
-          {totalOpenValue > 0 && <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, marginLeft: "8px" }}>· {formatGP(totalOpenValue)} gp invested</span>}
-        </div>
-        <div className="positions-table">
-          <div className="positions-header">
-            <span>Item</span><span>Buy Price</span><span>Qty</span><span>Total Cost</span><span>Live Price</span><span>Action</span>
-          </div>
-          {posLoading ? (
-            <div style={{ textAlign: "center", color: "var(--text-dim)", padding: "40px" }}>Loading positions...</div>
-          ) : trackerOpenFlips.length === 0 && manualPositions.length === 0 ? (
-            <div className="tracker-empty">
-              <div className="icon">📂</div>
-              <p>No open positions</p>
-              <small>Log a buy in the Tracker (without a sell price) or open a position above</small>
-            </div>
-          ) : (
-            <>
-              {/* Tracker open flips */}
-              {trackerOpenFlips.map(flip => {
-                const liveItem = items.find(i => i.name.toLowerCase() === flip.item.toLowerCase());
-                const livePrice = liveItem?.high;
-                const tax = livePrice ? Math.min(Math.floor(livePrice * 0.02), 5_000_000) : 0;
-                const unrealisedEach = livePrice ? livePrice - flip.buyPrice - tax : null;
-                const unrealised = unrealisedEach !== null ? unrealisedEach * (flip.qty || 1) : null;
-                return (
-                  <div key={`tracker-${flip.id}`} className="position-row">
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <img src={itemIconUrl(flip.item)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                      <div>
-                        <div className="log-item-name">{flip.item}</div>
-                        <div className="from-tracker-badge">⚔️ From Tracker</div>
-                      </div>
-                    </div>
-                    <span>{formatGP(flip.buyPrice)}</span>
-                    <span>{(flip.qty || 1).toLocaleString()}</span>
-                    <span style={{ color: "var(--text-dim)" }}>{formatGP(flip.buyPrice * (flip.qty || 1))}</span>
-                    <div>
-                      <div>{livePrice ? formatGP(livePrice) : "—"}</div>
-                      {unrealised !== null && (
-                        <div className={"unrealised-pnl " + (unrealised >= 0 ? "pos" : "neg")}>
-                          {unrealised >= 0 ? "+" : ""}{formatGP(unrealised)} gp
-                        </div>
-                      )}
-                    </div>
-                    <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Close in Tracker</span>
-                  </div>
-                );
-              })}
-              {/* Manual positions */}
-              {manualPositions.map(pos => {
-                const liveItem = items.find(i => i.name.toLowerCase() === pos.item_name.toLowerCase());
-                const livePrice = liveItem?.high;
-                const tax = livePrice ? Math.min(Math.floor(livePrice * 0.02), 5_000_000) : 0;
-                const unrealisedEach = livePrice ? livePrice - pos.buy_price - tax : null;
-                const unrealised = unrealisedEach !== null ? unrealisedEach * pos.qty : null;
-                return (
-                  <div key={pos.id} className="position-row">
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <img src={itemIconUrl(pos.item_name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                      <div>
-                        <div className="log-item-name">{pos.item_name}</div>
-                        <div className="log-date">{new Date(pos.date_opened).toLocaleDateString([], { month: "short", day: "numeric" })}</div>
-                      </div>
-                    </div>
-                    <span>{formatGP(pos.buy_price)}</span>
-                    <span>{pos.qty.toLocaleString()}</span>
-                    <span style={{ color: "var(--text-dim)" }}>{formatGP(pos.buy_price * pos.qty)}</span>
-                    <div>
-                      <div>{livePrice ? formatGP(livePrice) : "—"}</div>
-                      {unrealised !== null && (
-                        <div className={"unrealised-pnl " + (unrealised >= 0 ? "pos" : "neg")}>
-                          {unrealised >= 0 ? "+" : ""}{formatGP(unrealised)} gp
-                        </div>
-                      )}
-                    </div>
-                    <button className="close-pos-btn" onClick={() => { setClosingPos(pos); setCloseSellPrice(livePrice ? String(livePrice) : ""); }}>
-                      Close Position
-                    </button>
-                  </div>
-                );
-              })}
-            </>
-          )}
-        </div>
-      </div>
-
-      {closingPos && (
-        <div className="close-pos-modal" onClick={e => e.target === e.currentTarget && setClosingPos(null)}>
-          <div className="close-pos-inner">
-            <div className="close-pos-title">Close: {closingPos.item_name}</div>
-            <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>
-              Bought {closingPos.qty.toLocaleString()}x at {formatGP(closingPos.buy_price)} gp each
-            </div>
-            <div className="close-pos-field">
-              <label className="close-pos-label">Sell Price (gp)</label>
-              <input className="close-pos-input" value={closeSellPrice} onChange={e => setCloseSellPrice(e.target.value)} placeholder="Enter your actual sell price" autoFocus />
-            </div>
-            {closeSellPrice && !isNaN(parseInt(closeSellPrice.replace(/,/g, ""))) && (() => {
-              const sell = parseInt(closeSellPrice.replace(/,/g, ""));
-              const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
-              const profit = (sell - closingPos.buy_price - tax) * closingPos.qty;
-              return (
-                <div style={{ background: "var(--bg4)", borderRadius: "8px", padding: "12px 14px", fontSize: "13px" }}>
-                  <span style={{ color: "var(--text-dim)" }}>Estimated profit: </span>
-                  <span style={{ fontWeight: 700, color: profit >= 0 ? "var(--green)" : "var(--red)" }}>
-                    {profit >= 0 ? "+" : ""}{formatGP(profit)} gp
-                  </span>
-                </div>
-              );
-            })()}
-            <div className="close-pos-btns">
-              <button className="close-pos-cancel" onClick={() => setClosingPos(null)} disabled={closingLoading}>Cancel</button>
-              <button className="close-pos-confirm" disabled={!closeSellPrice || closingLoading} onClick={() => closeManualPosition(closingPos, closeSellPrice)}>
-                {closingLoading ? "Saving..." : "Confirm & Log Flip"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -5060,7 +4887,8 @@ RULES:
                   ))}
                 </div>
 
-                {/* ── AUTOPILOT ALERT SETTINGS ── */}
+                {/* ── AUTOPILOT ALERT SETTINGS — Merchant Mode only ── */}
+                {merchantMode && (
                 <div className="smart-alert-toggles">
                   <div className="smart-alert-toggle-title">🤖 Autopilot Alerts</div>
                   <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
@@ -5087,6 +4915,7 @@ RULES:
                     </label>
                   </div>
                 </div>
+                )} {/* end merchantMode autopilot alerts */}
 
                 {/* ── PRICE ALERT FORM ── */}
                 <div className="alert-info">ℹ️ Price alerts check every 5 minutes. Triggered alerts won&apos;t fire again — delete and re-add to reset.</div>
@@ -5242,13 +5071,9 @@ RULES:
               <PortfolioPage
                 user={user}
                 flipsLog={flipsLog}
-                setFlipsLog={setFlipsLog}
-                mapFlipRow={mapFlipRow}
                 autoFlipsLog={autoFlipsLog}
                 items={items}
                 onSignIn={() => setShowAuth(true)}
-                showToast={showToast}
-                supabase={supabase}
               />
             )}
 
