@@ -3778,8 +3778,10 @@ export default function RuneTrader() {
   const [natureRunePrice, setNatureRunePrice] = useState(0);
   const [alchShowLosses, setAlchShowLosses] = useState(false);
   const [alchSearch, setAlchSearch] = useState("");
+  const [alchSortState, setAlchSortState] = useState({ col: "alchProfit", dir: "desc" });
   const [cofferTarget, setCofferTarget] = useState("");
   const [cofferSearch, setCofferSearch] = useState("");
+  const [cofferSortState, setCofferSortState] = useState({ col: "potentialSavings", dir: "desc" });
   function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } }
   useEffect(() => { setMarketRowsShown(200); }, [filter, search]);
 
@@ -5225,12 +5227,32 @@ RULES:
 
                 {/* ── HIGH ALCH TAB ── */}
                 {marketSubTab === "alch" && (() => {
+                  const alchSortCol = alchSortState.col;
+                  const alchSortDir = alchSortState.dir;
+                  const handleAlchSort = col => setAlchSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
                   const alchItems = (allItems || [])
                     .filter(item => item.highalch > 0 && item.hasPrice && item.low > 0)
                     .map(item => ({ ...item, alchProfit: item.highalch - item.low - natureRunePrice }))
                     .filter(item => alchShowLosses || item.alchProfit > 0)
                     .filter(item => !alchSearch || item.name.toLowerCase().includes(alchSearch.toLowerCase()))
-                    .sort((a, b) => b.alchProfit - a.alchProfit);
+                    .sort((a, b) => {
+                      const dir = alchSortDir === "asc" ? 1 : -1;
+                      if (alchSortCol === "name") return dir * a.name.localeCompare(b.name);
+                      if (alchSortCol === "low") return dir * (a.low - b.low);
+                      if (alchSortCol === "highalch") return dir * (a.highalch - b.highalch);
+                      if (alchSortCol === "alchProfit") return dir * (a.alchProfit - b.alchProfit);
+                      if (alchSortCol === "buyLimit") return dir * (a.buyLimit - b.buyLimit);
+                      if (alchSortCol === "lastTradeTime") return dir * ((a.lastTradeTime || 0) - (b.lastTradeTime || 0));
+                      return dir * (a.alchProfit - b.alchProfit);
+                    });
+                  const ALCH_COLS = [
+                    ["name",          "Item",          "The tradeable item name."],
+                    ["low",           "GE Buy Price",  "Current cheapest buy price on the Grand Exchange."],
+                    ["highalch",      "Alch Value",    "GP received when casting High Alchemy on this item. Includes the 60% value calculation automatically."],
+                    ["alchProfit",    "Profit / Cast", "Alch Value minus GE Buy Price minus the current market price of one Nature Rune. Updates live as nature rune price changes."],
+                    ["buyLimit",      "Buy Limit",     "Max quantity you can buy in a 4-hour GE window."],
+                    ["lastTradeTime", "Last Updated",  "How recently this item's GE price was recorded. Stale prices may not reflect current market."],
+                  ];
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                       <div className="filter-bar">
@@ -5242,8 +5264,16 @@ RULES:
                         <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>{alchItems.length.toLocaleString()} items</span>
                       </div>
                       <div className="alch-table">
-                        <div className="alch-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr" }}>
-                          <span>Item</span><span>GE Buy Price</span><span>Alch Value</span><span>Profit / Cast</span><span>Buy Limit</span><span>Last Updated</span>
+                        <div className="alch-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", display: "grid" }}>
+                          {ALCH_COLS.map(([col, label, tip]) => (
+                            <button key={col} className={`sort-btn ${alchSortCol === col ? "active" : ""}`} onClick={() => handleAlchSort(col)}>
+                              {label} {alchSortCol === col && <span className="sort-arrow">{alchSortDir === "desc" ? "▼" : "▲"}</span>}
+                              <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
+                                <span className="stat-help">?</span>
+                                <span className="stat-tooltip">{tip}</span>
+                              </span>
+                            </button>
+                          ))}
                         </div>
                         {alchItems.length === 0 ? (
                           <div style={{ padding: "40px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
@@ -5264,9 +5294,7 @@ RULES:
                               {item.alchProfit >= 0 ? "+" : ""}{formatGP(item.alchProfit)}
                             </span>
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
-                            <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
-                              {item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}
-                            </span>
+                            <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
                           </div>
                         ))}
                       </div>
@@ -5276,18 +5304,38 @@ RULES:
 
                 {/* ── DEATH'S COFFER TAB ── */}
                 {marketSubTab === "coffer" && (() => {
+                  const handleCofferSort = col => setCofferSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
+                  const cofferSortCol = cofferSortState.col;
+                  const cofferSortDir = cofferSortState.dir;
                   const targetGP = parseFloat((cofferTarget || "").replace(/[^0-9.]/g, "")) * (cofferTarget.toLowerCase().includes("m") ? 1_000_000 : cofferTarget.toLowerCase().includes("k") ? 1_000 : 1) || 0;
                   const cofferItems = (allItems || [])
-                    .filter(item => item.hasPrice && item.high > 0 && item.low > 0)
+                    .filter(item => item.hasPrice && item.high > 0 && item.low > 0 && item.volume > 100)
                     .filter(item => !cofferSearch || item.name.toLowerCase().includes(cofferSearch.toLowerCase()))
                     .map(item => {
-                      const efficiency = item.high / item.low;
+                      const savings = item.high - item.low;
+                      const potentialSavings = savings * (item.buyLimit || 0);
                       const qtyNeeded = targetGP > 0 ? Math.ceil(targetGP / item.high) : null;
                       const totalCost = qtyNeeded ? qtyNeeded * item.low : null;
-                      return { ...item, efficiency, qtyNeeded, totalCost };
+                      return { ...item, savings, potentialSavings, qtyNeeded, totalCost };
                     })
-                    .sort((a, b) => b.efficiency - a.efficiency)
-                    .filter(item => item.volume > 100);
+                    .sort((a, b) => {
+                      const dir = cofferSortDir === "asc" ? 1 : -1;
+                      if (cofferSortCol === "name") return dir * a.name.localeCompare(b.name);
+                      if (cofferSortCol === "low") return dir * (a.low - b.low);
+                      if (cofferSortCol === "high") return dir * (a.high - b.high);
+                      if (cofferSortCol === "savings") return dir * (a.savings - b.savings);
+                      if (cofferSortCol === "buyLimit") return dir * (a.buyLimit - b.buyLimit);
+                      if (cofferSortCol === "potentialSavings") return dir * (a.potentialSavings - b.potentialSavings);
+                      return dir * (a.potentialSavings - b.potentialSavings);
+                    });
+                  const COFFER_COLS = [
+                    ["name",              "Item",               "The tradeable item you sacrifice to Death's Coffer."],
+                    ["low",               "GE Buy Price",       "What you pay on the Grand Exchange to acquire this item."],
+                    ["high",              "Coffer Value",       "The GE value Jagex credits to your Death's Coffer when you sacrifice this item. Based on current GE high price."],
+                    ["savings",           "Savings",            "Coffer Value minus GE Buy Price. How much GP you save compared to paying the coffer directly in gold."],
+                    ["buyLimit",          "Buy Limit",          "Max quantity you can buy in a 4-hour GE window."],
+                    ["potentialSavings",  "Potential Savings",  "Savings per item × Buy Limit. The maximum GP you could save in a single 4-hour buying window."],
+                  ];
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                       <div className="coffer-target-bar">
@@ -5299,42 +5347,50 @@ RULES:
                           onChange={e => setCofferTarget(e.target.value)}
                         />
                         {targetGP > 0 && (
-                          <span className="coffer-target-summary">
-                            Showing cheapest items to reach {formatGP(targetGP)} in coffer
-                          </span>
+                          <span className="coffer-target-summary">Showing qty + cost to reach {formatGP(targetGP)}</span>
                         )}
                         <input className="filter-input" placeholder="Search items..." value={cofferSearch} onChange={e => setCofferSearch(e.target.value)} style={{ marginLeft: "auto", width: "200px" }} />
                         <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>{cofferItems.length.toLocaleString()} items</span>
                       </div>
                       <div className="alch-table">
-                        <div className="alch-header" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr" }}>
-                          <span>Item</span><span>GE Buy Price</span><span>Coffer Value</span><span>Efficiency</span><span>Buy Limit</span>
-                          {targetGP > 0 && <span>To reach target</span>}
+                        <div className="alch-header" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 1fr", display: "grid" }}>
+                          {COFFER_COLS.map(([col, label, tip]) => (
+                            <button key={col} className={`sort-btn ${cofferSortCol === col ? "active" : ""}`} onClick={() => handleCofferSort(col)}>
+                              {label} {cofferSortCol === col && <span className="sort-arrow">{cofferSortDir === "desc" ? "▼" : "▲"}</span>}
+                              <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
+                                <span className="stat-help">?</span>
+                                <span className="stat-tooltip">{tip}</span>
+                              </span>
+                            </button>
+                          ))}
+                          {targetGP > 0 && <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>To Reach Target</span>}
                         </div>
-                        {cofferItems.slice(0, 300).map(item => {
-                          const effClass = item.efficiency >= 0.99 ? "coffer-efficiency-great" : item.efficiency >= 0.95 ? "coffer-efficiency-ok" : "coffer-efficiency-poor";
-                          return (
-                            <div key={item.id} className="alch-row" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr" }} onClick={() => setSelectedItem(item)}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                                <div>
-                                  <div className="item-name">{item.name}</div>
-                                  <div className="item-category">{item.category}</div>
-                                </div>
+                        {cofferItems.slice(0, 300).map(item => (
+                          <div key={item.id} className="alch-row" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 1fr" }} onClick={() => setSelectedItem(item)}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
+                              <div>
+                                <div className="item-name">{item.name}</div>
+                                <div className="item-category">{item.category}</div>
                               </div>
-                              <span className="price">{formatGP(item.low)}</span>
-                              <span className="price">{formatGP(item.high)}</span>
-                              <span className={effClass}>{item.efficiency.toFixed(2)}x</span>
-                              <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
-                              {targetGP > 0 && (
-                                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                  <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}>×{item.qtyNeeded?.toLocaleString()}</span>
-                                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Cost: {formatGP(item.totalCost)}</span>
-                                </div>
-                              )}
                             </div>
-                          );
-                        })}
+                            <span className="price">{formatGP(item.low)}</span>
+                            <span className="price">{formatGP(item.high)}</span>
+                            <span className={item.savings >= 0 ? "profit-positive" : "profit-negative"}>
+                              {item.savings >= 0 ? "+" : ""}{formatGP(item.savings)}
+                            </span>
+                            <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
+                            <span style={{ fontSize: "13px", fontWeight: 600, color: item.potentialSavings > 1_000_000 ? "var(--green)" : item.potentialSavings > 100_000 ? "var(--gold)" : "var(--text-dim)" }}>
+                              {item.buyLimit ? formatGP(item.potentialSavings) : "—"}
+                            </span>
+                            {targetGP > 0 && (
+                              <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}>×{item.qtyNeeded?.toLocaleString()}</span>
+                                <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Cost: {formatGP(item.totalCost)}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   );
