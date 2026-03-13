@@ -1536,7 +1536,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView }) {
+function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView }) {
 
   // ── Build open positions ──
   const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
@@ -1563,7 +1563,8 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabas
   const circumference = 2 * Math.PI * 32;
   const dashOffset = circumference - (efficiencyPct / 100) * circumference;
   const todayFlips = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString());
-  const realisedToday = todayFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
+  const autoTodayFlips = (autoFlipsLog || []).filter(f => f.sell_completed_at && new Date(f.sell_completed_at).toDateString() === new Date().toDateString());
+  const realisedToday = todayFlips.reduce((s, f) => s + (f.totalProfit || 0), 0) + autoTodayFlips.reduce((s, f) => s + (f.profit || 0), 0);
   const unrealisedTotal = allOpenPositions.reduce((s, pos) => {
     const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
     if (!liveItem) return s;
@@ -2883,11 +2884,14 @@ export default function RuneTrader() {
   const [flipsLog, setFlipsLog] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch { return []; } });
   // eslint-disable-next-line no-unused-vars
   const [flipsLoading, setFlipsLoading] = useState(false); // eslint-disable-line no-unused-vars
+  const [autoFlipsLog, setAutoFlipsLog] = useState([]);
 
   // ── Merchant P&L tracking (after flipsLog is declared) ──
   useEffect(() => {
     if (!merchantMode) return;
-    const totalRealised = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.totalProfit || 0), 0);
+    const todayManual = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.totalProfit || 0), 0);
+    const todayAuto = autoFlipsLog.filter(f => f.sell_completed_at && new Date(f.sell_completed_at).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.profit || 0), 0);
+    const totalRealised = todayManual + todayAuto;
     const snap = { time: Date.now(), value: totalRealised };
     setPnlHistory(prev => {
       const today = prev.filter(p => new Date(p.time).toDateString() === new Date().toDateString());
@@ -3131,6 +3135,20 @@ export default function RuneTrader() {
   useEffect(() => {
     if (user) { loadAndMergeFlips(); }
     else { try { setFlipsLog(JSON.parse(localStorage.getItem("runetrader_flips") || "[]")); } catch { setFlipsLog([]); } }
+  }, [user]); // eslint-disable-line
+
+  useEffect(() => { // eslint-disable-line
+    if (!user) { setAutoFlipsLog([]); return; }
+    supabase.from("ge_flips_live").select("*").eq("user_id", user.id)
+      .eq("status", "SOLD").order("sell_completed_at", { ascending: false }).limit(200)
+      .then(({ data }) => setAutoFlipsLog(data || []));
+    const ch = supabase.channel("auto-flips-stats-" + user.id)
+      .on("postgres_changes", { event: "*", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, () => {
+        supabase.from("ge_flips_live").select("*").eq("user_id", user.id)
+          .eq("status", "SOLD").order("sell_completed_at", { ascending: false }).limit(200)
+          .then(({ data }) => setAutoFlipsLog(data || []));
+      }).subscribe();
+    return () => supabase.removeChannel(ch);
   }, [user]); // eslint-disable-line
 
   async function loadAndMergeFlips() {
@@ -3584,13 +3602,15 @@ RULES:
     return sortDir === "asc" ? a[sortCol] - b[sortCol] : b[sortCol] - a[sortCol];
   });
 
-  // ── Tracker stats (closed flips only) ──
+  // ── Tracker stats (manual + auto-tracked flips combined) ──
   const closedFlips = flipsLog.filter(f => f.status !== "open");
   const openFlips = flipsLog.filter(f => f.status === "open");
-  const totalProfit = closedFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
-  const totalFlips = closedFlips.length;
+  const autoClosedFlips = autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, date: f.sell_completed_at }));
+  const allClosedFlips = [...closedFlips, ...autoClosedFlips];
+  const totalProfit = allClosedFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
+  const totalFlips = allClosedFlips.length;
   const avgProfit = totalFlips ? Math.round(totalProfit / totalFlips) : 0;
-  const bestItem = closedFlips.length ? closedFlips.reduce((best, f) => (f.totalProfit || 0) > (best.totalProfit || 0) ? f : best, closedFlips[0]) : null;
+  const bestItem = allClosedFlips.length ? allClosedFlips.reduce((best, f) => (f.totalProfit || 0) > (best.totalProfit || 0) ? f : best, allClosedFlips[0]) : null;
 
   if (!showApp) return <LandingPage onEnterApp={() => setShowApp(true)} />;
 
@@ -3846,6 +3866,7 @@ RULES:
             <MerchantMode
               items={items}
               flipsLog={flipsLog}
+              autoFlipsLog={autoFlipsLog}
               manualPositions={merchantPositions}
               geOffers={geOffers}
               merchantCapital={merchantCapital}
