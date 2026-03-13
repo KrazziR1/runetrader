@@ -3300,7 +3300,7 @@ export default function RuneTrader() {
         }
       }).subscribe();
     return () => supabase.removeChannel(ch);
-  }, [user]); // eslint-disable-line — geOffers loads for all tabs so AI always has slot context
+  }, [user]); // eslint-disable-line
 
   async function addPositionFromMerchant({ item, buyPrice, qty }) {
     if (!user) return;
