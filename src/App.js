@@ -48,6 +48,21 @@ const STYLES = `
   .filter-label { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
   .filter-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
   .filter-input:focus { border-color: var(--gold-dim); }
+  .adv-filters-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); font-size: 12px; padding: 5px 12px; cursor: pointer; font-family: Inter, sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .adv-filters-btn:hover, .adv-filters-btn.active { border-color: var(--gold-dim); color: var(--gold); }
+  .adv-filter-badge { background: var(--gold); color: #000; border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 700; }
+  .adv-filter-panel { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 4px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+  .adv-filter-group { display: flex; flex-direction: column; gap: 6px; }
+  .adv-filter-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .adv-filter-row { display: flex; gap: 6px; align-items: center; }
+  .adv-filter-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; padding: 5px 8px; width: 100%; font-family: Inter, sans-serif; transition: border-color 0.15s; }
+  .adv-filter-input:focus { outline: none; border-color: var(--gold-dim); }
+  .adv-filter-input::placeholder { color: var(--text-dim); opacity: 0.6; }
+  .adv-filter-sep { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+  .adv-filter-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: var(--text-dim); user-select: none; padding: 4px 0; }
+  .adv-filter-toggle input { accent-color: var(--gold); width: 14px; height: 14px; cursor: pointer; }
+  .adv-filter-toggle.active { color: var(--gold); }
+  .adv-filter-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); }
   .filter-input::placeholder { color: var(--text-dim); }
   .filter-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
   .filter-btn:hover, .filter-btn.active { background: var(--bg4); color: var(--gold); border-color: var(--gold-dim); }
@@ -3393,6 +3408,22 @@ export default function RuneTrader() {
   function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } }
   useEffect(() => { setMarketRowsShown(200); }, [filter, search]);
 
+  // ── Advanced filters ──
+  const [showAdvFilters, setShowAdvFilters] = useState(false);
+  const [advFilters, setAdvFilters] = useState({
+    minMargin: "", maxMargin: "",
+    minRoi: "", maxRoi: "",
+    minVolume: "", maxVolume: "",
+    minPrice: "", maxPrice: "",
+    minGpFill: "",
+    maxLastTrade: "", // hours, e.g. "1", "6", "24"
+    positiveOnly: false,
+    priceDataOnly: false,
+  });
+  function setAdv(key, val) { setAdvFilters(f => ({ ...f, [key]: val })); setMarketRowsShown(200); }
+  function resetAdvFilters() { setAdvFilters({ minMargin: "", maxMargin: "", minRoi: "", maxRoi: "", minVolume: "", maxVolume: "", minPrice: "", maxPrice: "", minGpFill: "", maxLastTrade: "", positiveOnly: false, priceDataOnly: false }); }
+  const advFilterCount = Object.entries(advFilters).filter(([, v]) => v !== "" && v !== false).length;
+
   // ── AI Chat ──
   const [messages, setMessages] = useState([WELCOME_MSG]);
   const [input, setInput] = useState("");
@@ -4114,6 +4145,33 @@ RULES:
     if (filter === "f2p") return item.category === "F2P";
     if (filter === "members") return item.category === "Members";
     if (filter === "highvol") return item.volume > 500;
+    // Advanced filters
+    if (advFilters.priceDataOnly && !item.hasPrice) return false;
+    if (advFilters.positiveOnly && item.margin <= 0) return false;
+    if (advFilters.minMargin !== "" && item.margin < parseFloat(advFilters.minMargin)) return false;
+    if (advFilters.maxMargin !== "" && item.margin > parseFloat(advFilters.maxMargin)) return false;
+    if (advFilters.minRoi !== "" && item.roi < parseFloat(advFilters.minRoi)) return false;
+    if (advFilters.maxRoi !== "" && item.roi > parseFloat(advFilters.maxRoi)) return false;
+    if (advFilters.minVolume !== "" && item.volume < parseFloat(advFilters.minVolume)) return false;
+    if (advFilters.maxVolume !== "" && item.volume > parseFloat(advFilters.maxVolume)) return false;
+    if (advFilters.minPrice !== "" && (item.low || 0) < parseFloat(advFilters.minPrice)) return false;
+    if (advFilters.maxPrice !== "" && (item.low || 0) > parseFloat(advFilters.maxPrice)) return false;
+    if (advFilters.minGpFill !== "") {
+      const lim = item.buyLimit > 0 ? item.buyLimit : 500;
+      const mkt4hr = item.volume / 6;
+      let expFill;
+      if      (item.volume >= 500_000) expFill = Math.min(lim, mkt4hr);
+      else if (item.volume >= 100_000) expFill = Math.min(lim, mkt4hr * 0.6);
+      else if (item.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
+      else if (item.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
+      else                             expFill = Math.min(lim, mkt4hr * 0.03);
+      const gpPerFill = item.margin * Math.max(expFill, 1);
+      if (gpPerFill < parseFloat(advFilters.minGpFill)) return false;
+    }
+    if (advFilters.maxLastTrade !== "") {
+      const cutoff = Date.now() / 1000 - parseFloat(advFilters.maxLastTrade) * 3600;
+      if (!item.lastTradeTime || item.lastTradeTime < cutoff) return false;
+    }
     return true;
   }).sort((a, b) => {
     // Always push no-price items to the bottom
@@ -4727,6 +4785,12 @@ RULES:
                   ))}
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
                   <button
+                    className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
+                    onClick={() => setShowAdvFilters(v => !v)}
+                  >
+                    ⚙ Filters {advFilterCount > 0 && <span className="adv-filter-badge">{advFilterCount}</span>}
+                  </button>
+                  <button
                     className="refresh-btn"
                     onClick={() => fetchPrices(true)}
                     disabled={refreshing || loading || refreshCooldown > 0}
@@ -4736,6 +4800,74 @@ RULES:
                     {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh"}
                   </button>
                 </div>
+
+                {showAdvFilters && (
+                  <div className="adv-filter-panel">
+                    <div className="adv-filter-group">
+                      <div className="adv-filter-label">Margin (gp)</div>
+                      <div className="adv-filter-row">
+                        <input className="adv-filter-input" placeholder="Min" value={advFilters.minMargin} onChange={e => setAdv("minMargin", e.target.value)} type="number" />
+                        <span className="adv-filter-sep">–</span>
+                        <input className="adv-filter-input" placeholder="Max" value={advFilters.maxMargin} onChange={e => setAdv("maxMargin", e.target.value)} type="number" />
+                      </div>
+                    </div>
+                    <div className="adv-filter-group">
+                      <div className="adv-filter-label">ROI (%)</div>
+                      <div className="adv-filter-row">
+                        <input className="adv-filter-input" placeholder="Min" value={advFilters.minRoi} onChange={e => setAdv("minRoi", e.target.value)} type="number" step="0.1" />
+                        <span className="adv-filter-sep">–</span>
+                        <input className="adv-filter-input" placeholder="Max" value={advFilters.maxRoi} onChange={e => setAdv("maxRoi", e.target.value)} type="number" step="0.1" />
+                      </div>
+                    </div>
+                    <div className="adv-filter-group">
+                      <div className="adv-filter-label">Vol/Day</div>
+                      <div className="adv-filter-row">
+                        <input className="adv-filter-input" placeholder="Min" value={advFilters.minVolume} onChange={e => setAdv("minVolume", e.target.value)} type="number" />
+                        <span className="adv-filter-sep">–</span>
+                        <input className="adv-filter-input" placeholder="Max" value={advFilters.maxVolume} onChange={e => setAdv("maxVolume", e.target.value)} type="number" />
+                      </div>
+                    </div>
+                    <div className="adv-filter-group">
+                      <div className="adv-filter-label">Buy Price (gp)</div>
+                      <div className="adv-filter-row">
+                        <input className="adv-filter-input" placeholder="Min" value={advFilters.minPrice} onChange={e => setAdv("minPrice", e.target.value)} type="number" />
+                        <span className="adv-filter-sep">–</span>
+                        <input className="adv-filter-input" placeholder="Max" value={advFilters.maxPrice} onChange={e => setAdv("maxPrice", e.target.value)} type="number" />
+                      </div>
+                    </div>
+                    <div className="adv-filter-group">
+                      <div className="adv-filter-label">Min GP/Fill</div>
+                      <input className="adv-filter-input" placeholder="e.g. 500000" value={advFilters.minGpFill} onChange={e => setAdv("minGpFill", e.target.value)} type="number" />
+                    </div>
+                    <div className="adv-filter-group">
+                      <div className="adv-filter-label">Last Traded Within</div>
+                      <div className="adv-filter-row" style={{ flexWrap: "wrap", gap: "6px" }}>
+                        {[["1", "1hr"], ["6", "6hr"], ["24", "24hr"], ["168", "7d"]].map(([val, label]) => (
+                          <button key={val}
+                            className={`filter-btn${advFilters.maxLastTrade === val ? " active" : ""}`}
+                            style={{ fontSize: "11px", padding: "4px 10px" }}
+                            onClick={() => setAdv("maxLastTrade", advFilters.maxLastTrade === val ? "" : val)}>
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="adv-filter-group" style={{ justifyContent: "center", gap: "8px" }}>
+                      <label className={`adv-filter-toggle${advFilters.positiveOnly ? " active" : ""}`}>
+                        <input type="checkbox" checked={advFilters.positiveOnly} onChange={e => setAdv("positiveOnly", e.target.checked)} />
+                        Positive margin only
+                      </label>
+                      <label className={`adv-filter-toggle${advFilters.priceDataOnly ? " active" : ""}`}>
+                        <input type="checkbox" checked={advFilters.priceDataOnly} onChange={e => setAdv("priceDataOnly", e.target.checked)} />
+                        Has live price data
+                      </label>
+                    </div>
+                    <div className="adv-filter-footer">
+                      <span>{filtered.length.toLocaleString()} items match</span>
+                      {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>✕ Clear all filters</button>}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
