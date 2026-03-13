@@ -4454,6 +4454,7 @@ RULES:
 
         <div className="main">
           {merchantMode && user ? (
+            <>
             <MerchantMode
               items={items}
               flipsLog={flipsLog}
@@ -4488,7 +4489,7 @@ RULES:
               setActiveView={setMerchantView}
             />
 
-            {/* ── MERCHANT AI BUBBLE ── */}
+            {/* MERCHANT AI BUBBLE */}
             {showMerchantAIBubble && !merchantAIOpen && (
               <div className="merchant-ai-bubble" onClick={() => setMerchantAIOpen(true)} title="AI Advisor">
                 <div className="bubble-ping" />
