@@ -786,7 +786,7 @@ function isValidFlip(item) {
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 
-const QUICK_PROMPTS = ["Best flips under 1M gp?", "High volume items?", "Explain margins to me", "What's trending now?"];
+const QUICK_PROMPTS = ["What should I flip with my budget?", "Why isn't my offer filling?", "Check my active slots", "Best flips right now?"];
 
 const TIME_RANGES = [
   { label: "24H", seconds: 86400 }, { label: "3D", seconds: 259200 },
@@ -2615,7 +2615,7 @@ const getRelistPrice = (offerType, wikiData) => {
 };
 
 // ─── UPGRADED LiveGESlots COMPONENT ──────────────────────────────────────────
-function LiveGESlots({ user, supabase: sb, items }) {
+function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
   const [offers, setOffers]         = useState([]);
   const [autoFlips, setAutoFlips]   = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -2690,6 +2690,7 @@ function LiveGESlots({ user, supabase: sb, items }) {
       if (!res.ok) return;
       const json = await res.json();
       setLiveWiki(json.data || {});
+      if (onLiveWiki) onLiveWiki(json.data || {});
     } catch (e) {
       console.warn("[drift] prices-live fetch failed:", e.message);
     } finally {
@@ -3277,6 +3278,7 @@ export default function RuneTrader() {
   // Load manual positions for Merchant Mode (read-only copy)
   const [merchantPositions, setMerchantPositions] = useState([]);
   const [geOffers, setGeOffers] = useState([]);
+  const [liveWikiPrices, setLiveWikiPrices] = useState({}); // item_id → {high,low} — populated by LiveGESlots poll
   useEffect(() => {
     if (!user || !merchantMode) return;
     supabase.from("positions").select("*").then(({ data }) => setMerchantPositions(data || []));
@@ -3976,10 +3978,44 @@ export default function RuneTrader() {
     const mentionedItems = itemsRef.current.filter(i => text.toLowerCase().includes(i.name.toLowerCase())).map(i => `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, volume ${i.volume.toLocaleString()}/day, score ${i.score}`).join("\n");
     const riskMap = { Low: "only high-volume safe items (volume 500+/day, ROI 2-15%)", Med: "balance margin and volume (volume 100+/day, ROI 5-40%)", High: "higher margin items OK (volume 50+/day, ROI up to 100%)" };
     const speedMap = { Fast: "only items with very high daily volume (500+)", Med: "items that fill within 1-2 hours (volume 100+/day)", Slow: "slower filling items with bigger margins acceptable" };
+
+    // ── Build slot context from live GE offers + drift data ──────────────────
+    const activeSlots = geOffers.filter(o => ["BUYING", "BOUGHT", "SELLING", "SOLD"].includes(o.status));
+    const slotContext = activeSlots.length === 0 ? "No active GE offers right now." : activeSlots.map(o => {
+      const itemId    = (items || []).find(i => i.name?.toLowerCase() === o.item_name?.toLowerCase())?.id;
+      const wikiNow   = itemId ? liveWikiPrices[itemId] : null;
+      const marketPrice = wikiNow ? (o.offer_type === "BUY" ? wikiNow.high : wikiNow.low) : null;
+      const drift     = marketPrice && o.offer_price
+        ? ((o.offer_type === "BUY"
+            ? (marketPrice - o.offer_price)
+            : (o.offer_price - marketPrice)) / o.offer_price * 100).toFixed(1)
+        : null;
+      const fillPct   = o.qty_total > 0 ? Math.round((o.qty_filled / o.qty_total) * 100) : 0;
+      const ageMin    = o.buy_started_at
+        ? Math.round((Date.now() - new Date(o.buy_started_at).getTime()) / 60000) : null;
+      const relistAt  = wikiNow
+        ? (o.offer_type === "BUY" ? wikiNow.high + 1 : wikiNow.low - 1) : null;
+
+      let driftNote = "";
+      if (drift !== null) {
+        const driftNum = parseFloat(drift);
+        if (driftNum >= 5)       driftNote = ` ⚠ CANCEL & RELIST — ${drift}% off market, relist at ${relistAt?.toLocaleString()} gp`;
+        else if (driftNum >= 2)  driftNote = ` ⚡ Consider adjusting — ${drift}% off market, relist at ${relistAt?.toLocaleString()} gp`;
+        else if (driftNum > 0)   driftNote = ` ✓ Slightly off market (${drift}%) — within tolerance`;
+        else                     driftNote = ` ✓ Competitive`;
+      }
+
+      return `Slot ${o.slot + 1}: ${o.item_name} | ${o.offer_type} @ ${o.offer_price?.toLocaleString()} gp | ${fillPct}% filled${ageMin !== null ? ` | ${ageMin}min old` : ""}${marketPrice ? ` | Market now: ${marketPrice.toLocaleString()} gp` : " | No live price"}${driftNote}`;
+    }).join("\n");
+
     const systemPrompt = `You are the RuneTrader AI assistant — an expert OSRS Grand Exchange flipping advisor with live GE data.
 ${budget ? `User cash stack: ${parseInt(budget.replace(/,/g,"")).toLocaleString()} gp — only recommend items they can afford (buy price must fit their stack, ideally with room for 5+ flips)` : "Cash stack not set — ask before recommending specific items."}
 ${prefs.risk ? `Risk tolerance: ${prefs.risk} — ${riskMap[prefs.risk]}` : "Risk not set."}
 ${prefs.speed ? `Flip speed: ${prefs.speed} — ${speedMap[prefs.speed]}` : "Speed not set."}
+
+PLAYER'S ACTIVE GE SLOTS (real-time):
+${slotContext}
+If the user asks why something isn't filling, refer to their slot data above — check drift, age, and fill % before answering. If a slot shows ⚠ CANCEL & RELIST, proactively mention it even if they didn't ask. Never make up slot data — only use what's shown above.
 
 SCORING SYSTEM (explain if asked):
 - Score 0–100. Three components multiplied by a freshness multiplier.
@@ -4004,7 +4040,7 @@ RULES:
 - High ROI (>40%) on a GE flip is a red flag, not a green one. It usually means thin market, slow fill, or a one-sided margin snapshot. Say so.
 - Be concise, honest, and specific. If something looks sketchy, say it.`;
     try {
-      const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 400, system: systemPrompt, messages: [...messages.filter(m => m.role !== "system").slice(-6).map(m => ({ role: m.role, content: m.content })), { role: "user", content: text }] }) });
+      const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 700, system: systemPrompt, messages: [...messages.filter(m => m.role !== "system").slice(-6).map(m => ({ role: m.role, content: m.content })), { role: "user", content: text }] }) });
       const data = await res.json();
       const reply = data.error ? `API Error: ${data.error.message || data.error.type}` : (data.content?.[0]?.text || "Sorry, no response.");
       setMessages(prev => [...prev, { role: "assistant", content: reply, time: new Date() }]);
@@ -4383,7 +4419,7 @@ RULES:
 
                 <ProfitChart flipsLog={flipsLog} autoFlipsLog={autoFlipsLog} />
 
-                <LiveGESlots user={user} supabase={supabase} items={items} />
+                <LiveGESlots user={user} supabase={supabase} items={items} onLiveWiki={setLiveWikiPrices} />
 
                 <AutoFlipHistory user={user} supabase={supabase} formatGP={formatGP} />
               </div>
