@@ -984,10 +984,10 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, 
 
 // ─── PROFIT CHART ────────────────────────────────────────────────────────────
 
-function ProfitChart({ flipsLog }) {
+function ProfitChart({ flipsLog, autoFlipsLog = [] }) {
   const canvasRef = useRef(null);
   useEffect(() => {
-    if (!canvasRef.current || flipsLog.length < 2) return;
+    if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
@@ -996,12 +996,14 @@ function ProfitChart({ flipsLog }) {
     ctx.scale(dpr, dpr);
     const W = rect.width, H = rect.height, pad = { top: 10, right: 10, bottom: 30, left: 60 };
     ctx.clearRect(0, 0, W, H);
-    // Only include closed flips in profit chart
-    const closedFlips = flipsLog.filter(f => f.status !== "open");
+    // Merge manual closed flips + auto closed flips, sorted by date
+    const manualClosed = flipsLog.filter(f => f.status !== "open").map(f => ({ profit: f.totalProfit || 0, date: f.date }));
+    const autoClosed = autoFlipsLog.map(f => ({ profit: f.profit || 0, date: f.sell_completed_at }));
+    const closedFlips = [...manualClosed, ...autoClosed];
     if (closedFlips.length < 2) return;
     const sorted = [...closedFlips].sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
     let cum = 0;
-    const points = sorted.map(f => { cum += f.totalProfit; return cum; });
+    const points = sorted.map(f => { cum += f.profit; return cum; });
     const minV = Math.min(0, ...points), maxV = Math.max(0, ...points);
     const range = maxV - minV || 1;
     const xPos = i => pad.left + (i / (points.length - 1)) * (W - pad.left - pad.right);
@@ -1031,9 +1033,9 @@ function ProfitChart({ flipsLog }) {
     ctx.beginPath(); ctx.moveTo(xPos(0), yPos(points[0]));
     points.forEach((p, i) => ctx.lineTo(xPos(i), yPos(p)));
     ctx.strokeStyle = isPositive ? "#2ecc71" : "#e74c3c"; ctx.lineWidth = 2; ctx.stroke();
-  }, [flipsLog]);
+  }, [flipsLog, autoFlipsLog]);
 
-  const closedCount = flipsLog.filter(f => f.status !== "open").length;
+  const closedCount = flipsLog.filter(f => f.status !== "open").length + autoFlipsLog.length;
   if (closedCount < 2) return null;
   return (
     <div className="profit-chart-wrap">
@@ -1135,7 +1137,7 @@ function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }
 
 const PORT_RANGES = ["24H", "3D", "7D", "1M", "3M", "All"];
 
-function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignIn, showToast, supabase: sb }) {
+function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, autoFlipsLog = [], items, onSignIn, showToast, supabase: sb }) {
   const [manualPositions, setManualPositions] = useState([]);
   const [posLoading, setPosLoading] = useState(false);
   const [snapshots, setSnapshots] = useState([]);
@@ -1175,9 +1177,11 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, items, onSignI
 
   async function upsertSnapshot() {
     const closedFlips = flipsLog.filter(f => f.status !== "open");
-    const totalProfit = closedFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
+    const autoProfit = autoFlipsLog.reduce((s, f) => s + (f.profit || 0), 0);
+    const totalProfit = closedFlips.reduce((s, f) => s + (f.totalProfit || 0), 0) + autoProfit;
+    const totalFlipsCount = closedFlips.length + autoFlipsLog.length;
     const today = new Date().toISOString().slice(0, 10);
-    await sb.from("portfolio_snapshots").upsert({ user_id: user.id, snapshot_date: today, total_profit: totalProfit, total_flips: closedFlips.length }, { onConflict: "user_id,snapshot_date" });
+    await sb.from("portfolio_snapshots").upsert({ user_id: user.id, snapshot_date: today, total_profit: totalProfit, total_flips: totalFlipsCount }, { onConflict: "user_id,snapshot_date" });
     loadSnapshots();
   }
 
@@ -2158,32 +2162,41 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
 
               {/* Today Closed Flips */}
               <div id="tour-closed-today" className="merchant-section" style={{ flex: 1 }}>
-                <div className="merchant-section-header">
-                  <span className="merchant-section-title">✅ Closed Today</span>
-                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{todayFlips.length} flips</span>
-                </div>
-                {todayFlips.length === 0 ? (
-                  <div style={{ fontSize: "12px", color: "var(--text-dim)", padding: "12px 16px" }}>No flips closed today yet.</div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", padding: "8px 12px" }}>
-                    {todayFlips.slice(0, 10).map(f => (
-                      <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "var(--bg3)", borderRadius: "6px", border: "1px solid var(--border)" }}>
-                        <div>
-                          <div style={{ fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>{f.item}</div>
-                          <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "1px" }}>
-                            {f.qty?.toLocaleString()}x · Buy {formatGP(f.buyPrice)} → Sell {formatGP(f.sellPrice)}
+                {(() => {
+                  // Merge manual + auto flips into one normalised list, sorted by date desc
+                  const allTodayFlips = [
+                    ...todayFlips.map(f => ({ id: f.id, item: f.item, qty: f.qty, buyPrice: f.buyPrice, sellPrice: f.sellPrice, profit: f.totalProfit || 0, roi: f.roi, date: f.date })),
+                    ...autoTodayFlips.map(f => ({ id: f.id, item: f.item_name, qty: f.quantity, buyPrice: f.buy_price, sellPrice: f.sell_price, profit: f.profit || 0, roi: f.roi, date: f.sell_completed_at })),
+                  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+                  return (<>
+                    <div className="merchant-section-header">
+                      <span className="merchant-section-title">✅ Closed Today</span>
+                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{allTodayFlips.length} flips</span>
+                    </div>
+                    {allTodayFlips.length === 0 ? (
+                      <div style={{ fontSize: "12px", color: "var(--text-dim)", padding: "12px 16px" }}>No flips closed today yet.</div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px", padding: "8px 12px" }}>
+                        {allTodayFlips.slice(0, 10).map(f => (
+                          <div key={f.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "var(--bg3)", borderRadius: "6px", border: "1px solid var(--border)" }}>
+                            <div>
+                              <div style={{ fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>{f.item}</div>
+                              <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "1px" }}>
+                                {f.qty?.toLocaleString()}x · Buy {formatGP(f.buyPrice)} → Sell {formatGP(f.sellPrice)}
+                              </div>
+                            </div>
+                            <div style={{ textAlign: "right" }}>
+                              <div style={{ fontSize: "12px", fontWeight: 600, color: f.profit >= 0 ? "var(--green)" : "var(--red)" }}>
+                                {f.profit >= 0 ? "+" : ""}{formatGP(f.profit)}
+                              </div>
+                              <div style={{ fontSize: "10px", color: "var(--text-dim)" }}>{Number(f.roi || 0).toFixed(1)}% ROI</div>
+                            </div>
                           </div>
-                        </div>
-                        <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: "12px", fontWeight: 600, color: (f.totalProfit || 0) >= 0 ? "var(--green)" : "var(--red)" }}>
-                            {(f.totalProfit || 0) >= 0 ? "+" : ""}{formatGP(f.totalProfit || 0)}
-                          </div>
-                          <div style={{ fontSize: "10px", color: "var(--text-dim)" }}>{f.roi}% ROI</div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    )}
+                  </>);
+                })()}
               </div>
             </div>
 
@@ -2582,7 +2595,7 @@ function LiveGESlots({ user, supabase: sb }) {
     setLoading(true);
     Promise.all([
       sb.from("ge_offers").select("*").eq("user_id", user.id).order("slot"),
-      sb.from("ge_flips_auto").select("*").eq("user_id", user.id).order("sell_completed_at", { ascending: false }).limit(20),
+      sb.from("ge_flips_live").select("*").eq("user_id", user.id).eq("status", "SOLD").order("sell_completed_at", { ascending: false }).limit(20),
     ]).then(([{ data: offersData }, { data: flipsData }]) => {
       setOffers(offersData || []);
       setAutoFlips(flipsData || []);
@@ -2603,7 +2616,8 @@ function LiveGESlots({ user, supabase: sb }) {
         }
       }).subscribe();
     const flipsChannel = sb.channel("live-ge-flips-" + user.id)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "ge_flips_auto", filter: `user_id=eq.${user.id}` }, payload => {
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
+        if (payload.new?.status !== "SOLD") return;
         setAutoFlips(prev => [payload.new, ...prev].slice(0, 20));
       }).subscribe();
     return () => { sb.removeChannel(offersChannel); sb.removeChannel(flipsChannel); };
@@ -2915,7 +2929,7 @@ export default function RuneTrader() {
       localStorage.setItem("runetrader_pnl_history", JSON.stringify(updated));
       return updated;
     });
-  }, [flipsLog, merchantMode]); // eslint-disable-line
+  }, [flipsLog, autoFlipsLog, merchantMode]); // eslint-disable-line
 
   useEffect(() => {
     if (!merchantMode || !pnlCanvasRef.current || pnlHistory.length < 2) return;
@@ -3216,13 +3230,13 @@ export default function RuneTrader() {
       else setLoading(true);
       setError(null);
 
-      // Always fetch latest prices
-      const latestRes = await fetch("https://prices.runescape.wiki/api/v1/osrs/latest", { headers: { "User-Agent": "RuneTrader/1.0" } });
+      // Always fetch latest prices — via our server cache (hits Wiki at most once/min)
+      const latestRes = await fetch("/api/prices?type=latest");
       const latestData = await latestRes.json();
 
-      // Fetch mapping once per session (it never changes)
+      // Fetch mapping once per session (cached 24h server-side)
       if (!mappingCacheRef.current) {
-        const mappingRes = await fetch("https://prices.runescape.wiki/api/v1/osrs/mapping", { headers: { "User-Agent": "RuneTrader/1.0" } });
+        const mappingRes = await fetch("/api/prices?type=mapping");
         const mappingData = await mappingRes.json();
         const mappingMap = {};
         const nameMap = {};
@@ -3231,10 +3245,10 @@ export default function RuneTrader() {
         setAllItemsMap(nameMap);
       }
 
-      // Fetch volumes at most once every 10 minutes (updates daily)
+      // Fetch volumes at most once every 10 minutes (cached server-side)
       const now = Date.now();
       if (!volumeCacheRef.current || now - volumeCacheTimeRef.current > 10 * 60 * 1000) {
-        const volumeRes = await fetch("https://prices.runescape.wiki/api/v1/osrs/volumes", { headers: { "User-Agent": "RuneTrader/1.0" } });
+        const volumeRes = await fetch("/api/prices?type=volumes");
         const volumeData = await volumeRes.json();
         volumeCacheRef.current = volumeData.data || {};
         volumeCacheTimeRef.current = now;
@@ -3831,9 +3845,9 @@ RULES:
             {!merchantMode && ["flips", "tracker", "alerts", ...(user ? ["portfolio", "settings"] : [])].map(t => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
-                {t === "tracker" && openFlips.length > 0 && (
+                {t === "tracker" && (openFlips.length + (autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length)) > 0 && (
                   <span style={{ marginLeft: "6px", background: "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
-                    {openFlips.length}
+                    {openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length}
                   </span>
                 )}
                 {t === "alerts" && (alerts.filter(a => a.triggered).length + smartEvents.length) > 0 && (
@@ -3922,7 +3936,7 @@ RULES:
                 <div className="tracker-summary">
                   {[
                     { label: "Total Profit", value: formatGP(totalProfit), color: totalProfit >= 0 ? "var(--green)" : "var(--red)", sub: "Closed flips only" },
-                    { label: "Flips Logged", value: totalFlips.toLocaleString(), color: "var(--gold)", sub: `${openFlips.length} open` },
+                    { label: "Flips Logged", value: totalFlips.toLocaleString(), color: "var(--gold)", sub: `${openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length} open` },
                     { label: "Avg Profit/Flip", value: formatGP(avgProfit), color: "var(--text)", sub: "Per closed flip" },
                     { label: "Best Item", value: bestItem?.item || "—", color: "var(--gold)", sub: bestItem ? formatGP(bestItem.totalProfit) + " profit" : "Log a flip first" },
                   ].map((s, i) => (
@@ -3934,7 +3948,7 @@ RULES:
                   ))}
                 </div>
 
-                <ProfitChart flipsLog={flipsLog} />
+                <ProfitChart flipsLog={flipsLog} autoFlipsLog={autoFlipsLog} />
 
                 <LiveGESlots user={user} supabase={supabase} />
 
@@ -4158,6 +4172,7 @@ RULES:
                 flipsLog={flipsLog}
                 setFlipsLog={setFlipsLog}
                 mapFlipRow={mapFlipRow}
+                autoFlipsLog={autoFlipsLog}
                 items={items}
                 onSignIn={() => setShowAuth(true)}
                 showToast={showToast}
