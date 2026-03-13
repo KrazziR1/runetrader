@@ -825,8 +825,6 @@ function isValidFlip(item) {
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 
-const QUICK_PROMPTS = ["What should I flip with my budget?", "Why isn't my offer filling?", "Check my active slots", "Best flips right now?"];
-
 const TIME_RANGES = [
   { label: "24H", seconds: 86400 }, { label: "3D", seconds: 259200 },
   { label: "7D", seconds: 604800 }, { label: "1M", seconds: 2592000 },
@@ -859,9 +857,9 @@ const MERCHANT_TOUR_STEPS = [
   { title: "⚡ Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the ⚙️ gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
   { title: "📡 Live Feed", desc: "Every alert that's fired this session lands here in real time. Filter by type, click any alert to jump straight to that item's chart, and clear the feed whenever you like.", target: "#tour-live-feed", placement: "right", view: "alerts" },
   // ── AI Bubble ──
-  { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold ⚔️ bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "top", view: "operations" },
+  { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold ⚔️ bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "left", view: "operations" },
   // ── Done ──
-  { title: "You're fully set up ⚔️", desc: "Log a buy in the Tracker without a sell price — it opens a position here automatically. Close it from Merchant Mode and it goes straight to your Flip History. Good luck on the GE.", target: null, placement: "center", view: "operations" },
+  { title: "You're fully set up ⚔️", desc: "Start a buy offer in the GE in-game — the RuneTrader plugin picks it up automatically and opens a position here. Close or sell in-game and it updates in real time. Good luck on the GE.", target: null, placement: "center", view: "operations" },
 ];
 
 // ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
@@ -3247,18 +3245,15 @@ export default function RuneTrader() {
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
   const [showMerchantShutdown, setShowMerchantShutdown] = useState(false);
   const [merchantTransitioning, setMerchantTransitioning] = useState(false);
-  const [showMerchantAIBubble, setShowMerchantAIBubble] = useState(false);
   const [merchantAIOpen, setMerchantAIOpen] = useState(false);
   const merchantAIMessagesEndRef = useRef(null);
 
   function activateMerchantWithAnim(cb) {
     setMerchantTransitioning(true);
     setShowMerchantAnim('active');
-    setShowMerchantAIBubble(false);
     setTimeout(() => { if (cb) cb(); }, 5600);
     setTimeout(() => setShowMerchantAnim('fading'), 5800);
     setTimeout(() => { setShowMerchantAnim('done'); setMerchantTransitioning(false); }, 6400);
-    setTimeout(() => setShowMerchantAIBubble(true), 6500);
   }
   const [merchantCapital, setMerchantCapital] = useState(0);
   const [merchantCapitalInput, setMerchantCapitalInput] = useState("");
@@ -3277,7 +3272,7 @@ export default function RuneTrader() {
     const { data } = await supabase.from("merchant_settings").select("*").eq("user_id", user.id).single();
     if (data) {
       setMerchantCapital(data.total_capital || 0);
-      if (data.mode_enabled) { setMerchantMode(true); setShowMerchantAIBubble(true); }
+      if (data.mode_enabled) { setMerchantMode(true); }
     }
   }
 
@@ -3327,11 +3322,10 @@ export default function RuneTrader() {
     if (!merchantMode) {
       if (merchantCapital === 0) { setShowCapitalSetup(true); return; }
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
-      activateMerchantWithAnim(() => { setMerchantMode(true); setTimeout(() => setShowMerchantAIBubble(true), 400); });
+      activateMerchantWithAnim(() => { setMerchantMode(true); });
     } else {
       setMerchantTransitioning(true);
       setShowMerchantShutdown('active');
-      setShowMerchantAIBubble(false);
       setMerchantAIOpen(false);
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
       setTimeout(() => setShowMerchantShutdown('fading'), 2400);
