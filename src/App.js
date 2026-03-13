@@ -3750,20 +3750,21 @@ export default function RuneTrader() {
       const volumeMap = volumeCacheRef.current;
       const TAX_EXEMPT_IDS = [13190, 13191, 13192];
       const flips = [];
-      for (const [idStr, prices] of Object.entries(latestData.data)) {
+
+      // Build from full mapping catalog — show all items, even those with no live price
+      for (const [idStr, meta] of Object.entries(mappingMap)) {
         const id = parseInt(idStr);
-        const meta = mappingMap[id];
-        if (!meta) continue;
+        const prices = latestData.data[idStr] || {};
         const { high, low, highTime, lowTime } = prices;
-        if (!high || !low) continue;
-        const rawTax = Math.floor(high * 0.02);
-        const TAX = TAX_EXEMPT_IDS.includes(id) ? 0 : (high < 50 ? 0 : Math.min(rawTax, 5_000_000));
-        const margin = high - low - TAX;
-        const roi = parseFloat(((margin / low) * 100).toFixed(1));
+        const hasPrice = high && low;
+        const rawTax = high ? Math.floor(high * 0.02) : 0;
+        const TAX = TAX_EXEMPT_IDS.includes(id) ? 0 : (!high || high < 50 ? 0 : Math.min(rawTax, 5_000_000));
+        const margin = hasPrice ? high - low - TAX : 0;
+        const roi = hasPrice ? parseFloat(((margin / low) * 100).toFixed(1)) : 0;
         const volume = volumeMap[id] || 0;
         const lastTradeTime = Math.max(highTime || 0, lowTime || 0);
-        const score = getScore(margin, volume, roi, null, null, meta.limit || 0, lastTradeTime);
-        const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high, low, margin, roi, volume, score, lastTradeTime };
+        const score = hasPrice ? getScore(margin, volume, roi, null, null, meta.limit || 0, lastTradeTime) : 0;
+        const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high: high || null, low: low || null, margin, roi, volume, score, lastTradeTime, hasPrice };
         flips.push(flip);
       }
       const validFlips = flips.filter(isValidFlip);
@@ -4115,6 +4116,9 @@ RULES:
     if (filter === "highvol") return item.volume > 500;
     return true;
   }).sort((a, b) => {
+    // Always push no-price items to the bottom
+    if (!a.hasPrice && b.hasPrice) return 1;
+    if (a.hasPrice && !b.hasPrice) return -1;
     if (sortCol === "name") return sortDir === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
     if (sortCol === "volume") return sortDir === "asc" ? a.volume - b.volume : b.volume - a.volume;
     if (sortCol === "buylimit") return sortDir === "asc" ? a.buyLimit - b.buyLimit : b.buyLimit - a.buyLimit;
@@ -4793,23 +4797,27 @@ RULES:
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                               <div className="item-name">{item.name}</div>
                             </div>
-                            <span className="price">{formatGP(item.low)}</span>
-                            <span className="price">{formatGP(item.high)}</span>
-                            <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{formatGP(item.margin)}</span>
-                            <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.roi}%</span>
+                            <span className="price">{item.hasPrice ? formatGP(item.low) : "—"}</span>
+                            <span className="price">{item.hasPrice ? formatGP(item.high) : "—"}</span>
+                            <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
+                            <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "—"}</span>
                             <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
                               {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
                               {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit — hard to fill">⚠</span>}
                             </span>
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
                             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                              <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1_000_000 ? "var(--green)" : gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}
-                                title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case (full limit): ${formatGP(gpPerFillMax)} GP`}>
-                                {formatGP(gpPerFill)}
-                              </span>
-                              {fillConf && <span style={{ fontSize: "10px", color: fillConfColor }}>{fillConf}</span>}
+                              {item.hasPrice ? (
+                                <>
+                                  <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1_000_000 ? "var(--green)" : gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}
+                                    title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case (full limit): ${formatGP(gpPerFillMax)} GP`}>
+                                    {formatGP(gpPerFill)}
+                                  </span>
+                                  {fillConf && <span style={{ fontSize: "10px", color: fillConfColor }}>{fillConf}</span>}
+                                </>
+                              ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
                             </div>
-                            <span style={{ fontSize: "11px", color: tradeColor }}>{timeAgo(item.lastTradeTime)}</span>
+                            <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
                           </div>
                         );
                       })
