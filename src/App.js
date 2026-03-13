@@ -1594,7 +1594,7 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView }) {
+function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView, filter, setFilter, search, setSearch, favourites, toggleFavourite, sortCol, sortDir, handleSort, filtered, marketRowsShown, setMarketRowsShown, showAdvFilters, setShowAdvFilters, advFilters, advFilterCount, setAdv, resetAdvFilters, loading }) {
 
   // liveOps must be declared before allOpenPositions calculation below
   const [liveOps, setLiveOps] = useState([]);
@@ -4667,6 +4667,7 @@ RULES:
             <>
             <MerchantMode
               items={items}
+              allItems={allItems}
               flipsLog={flipsLog}
               autoFlipsLog={autoFlipsLog}
               manualPositions={merchantPositions}
@@ -4697,6 +4698,25 @@ RULES:
               onClosePortfolioPos={merchantClosePortfolioPos}
               activeView={merchantView}
               setActiveView={setMerchantView}
+              filter={filter}
+              setFilter={setFilter}
+              search={search}
+              setSearch={setSearch}
+              favourites={favourites}
+              toggleFavourite={toggleFavourite}
+              sortCol={sortCol}
+              sortDir={sortDir}
+              handleSort={handleSort}
+              filtered={filtered}
+              marketRowsShown={marketRowsShown}
+              setMarketRowsShown={setMarketRowsShown}
+              showAdvFilters={showAdvFilters}
+              setShowAdvFilters={setShowAdvFilters}
+              advFilters={advFilters}
+              advFilterCount={advFilterCount}
+              setAdv={setAdv}
+              resetAdvFilters={resetAdvFilters}
+              loading={loading}
             />
 
           </>) : (
