@@ -153,6 +153,7 @@ export default async function handler(req, res) {
 
     // ── SOLD ─────────────────────────────────────────────────
     if (offer.status === 'SOLD') {
+      console.log('[SOLD] slot:', slot, 'userId:', userId, 'item:', offer.itemName);
       // Find the open flip for this slot — try all non-SOLD statuses.
       // Also catches edge cases where SELLING update hadn't fired yet (still BOUGHT).
       let { data: openFlip } = await supabase
@@ -165,21 +166,24 @@ export default async function handler(req, res) {
         .limit(1)
         .maybeSingle();
 
-      // Last-resort fallback: find any non-SOLD row for this slot
-      // (handles case where status got into an unexpected state)
+      // Log what the primary lookup found
+      console.log('[SOLD] primary lookup result:', openFlip ? `id=${openFlip.id} status found` : 'NOT FOUND');
+
+      // Last-resort fallback: find ANY row for this slot regardless of status
       if (!openFlip) {
-        const { data: fallback } = await supabase
+        const { data: allRows } = await supabase
           .from('ge_flips_live')
-          .select('id, buy_price, buy_spent, quantity')
+          .select('id, status, buy_price, buy_spent, quantity, slot')
           .eq('user_id', userId)
           .eq('slot', slot)
-          .neq('status', 'SOLD')
           .order('buy_started_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          .limit(5);
+        console.log('[SOLD] all rows for slot', slot, ':', JSON.stringify(allRows));
+
+        const fallback = allRows?.find(r => r.status !== 'SOLD');
         if (fallback) {
           openFlip = fallback;
-          console.log('[sync-offers] SOLD fallback found row with status outside expected set for slot', slot);
+          console.log('[SOLD] using fallback row id:', fallback.id, 'status:', fallback.status);
         }
       }
 
