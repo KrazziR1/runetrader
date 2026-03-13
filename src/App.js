@@ -333,8 +333,9 @@ const STYLES = `
   .ge-slot.active:hover { border-color: var(--gold-dim); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
   .ge-slot.empty { border-style: dashed; opacity: 0.3; cursor: pointer; }
   .ge-slot.empty:hover { opacity: 0.6; border-color: var(--gold-dim); }
-  .slot-name { font-size: 9px; color: var(--text-dim); text-align: center; line-height: 1.2; padding: 0 3px; }
-  .slot-pnl { font-size: 10px; font-weight: 600; }
+  .slot-name { font-size: 11px; color: var(--text-dim); text-align: center; line-height: 1.2; padding: 0 4px; word-break: break-word; }
+  .slot-pnl { font-size: 12px; font-weight: 600; }
+  .slot-status-label { font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; }
   .slot-dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; }
   .ops-table { overflow: visible; }
   .ops-header { display: grid; grid-template-columns: 2fr 100px 1fr 0.7fr 1fr 1fr 1fr 110px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); border-radius: 0; }
@@ -1801,8 +1802,9 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
                           onClick={() => { const it = items.find(x => x.name.toLowerCase() === liveOffer.item_name.toLowerCase()); if (it) setSelectedItem(it); }}>
                           <div className="slot-dot" style={{ background: slotColor }} />
                           <img src={itemIconUrl(liveOffer.item_name)} alt="" style={{ width: 52, height: 52, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
-                          <div className="slot-name">{liveOffer.item_name.length > 12 ? liveOffer.item_name.slice(0, 11) + "…" : liveOffer.item_name}</div>
-                          <div className="slot-pnl" style={{ color: "var(--text-dim)", fontSize: "10px" }}>{pct}%</div>
+                          <div className="slot-name">{liveOffer.item_name.length > 14 ? liveOffer.item_name.slice(0, 13) + "…" : liveOffer.item_name}</div>
+                          <div className="slot-status-label" style={{ color: slotColor }}>{liveOffer.status}</div>
+                          <div className="slot-pnl" style={{ color: "var(--text-dim)", fontSize: "11px" }}>{pct}% filled</div>
                         </div>
                       );
                     }
@@ -1823,7 +1825,8 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
                         <div className={`slot-dot`} style={{ background: STATUS_COLORS[status] }} />
                         <img src={itemIconUrl(pos.name)} alt="" style={{ width: 52, height: 52, objectFit: "contain", imageRendering: "pixelated" }}
                           onError={e => { e.target.style.display = "none"; }} />
-                        <div className="slot-name">{pos.name.length > 12 ? pos.name.slice(0, 11) + "…" : pos.name}</div>
+                        <div className="slot-name">{pos.name.length > 14 ? pos.name.slice(0, 13) + "…" : pos.name}</div>
+                        <div className="slot-status-label" style={{ color: STATUS_COLORS[status] }}>{STATUS_LABELS[status]}</div>
                         <div className="slot-pnl" style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
                           {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
                         </div>
