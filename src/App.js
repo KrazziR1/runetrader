@@ -1276,10 +1276,6 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
   const trackerOpenFlips = flipsLog.filter(f => f.status === "open");
   const totalOpenValue = trackerOpenFlips.reduce((s, f) => s + (f.buyPrice || 0) * (f.qty || 1), 0);
 
-  // ── All-time totals (used in summary cards) ──
-  const totalProfit = allClosed.reduce((s, f) => s + (f.totalProfit || 0), 0);
-  const totalFlips = allClosed.length;
-
   // Capital allocation — open tracker flips only
   const allOpen = trackerOpenFlips.map(f => ({ name: f.item, value: (f.buyPrice || 0) * (f.qty || 1) }));
   const maxAlloc = Math.max(...allOpen.map(p => p.value), 1);
