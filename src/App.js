@@ -3779,7 +3779,7 @@ export default function RuneTrader() {
   const [customNatureRunePrice, setCustomNatureRunePrice] = useState(""); // empty = use live price
   const [alchShowLosses, setAlchShowLosses] = useState(false);
   const [alchSearch, setAlchSearch] = useState("");
-  const [alchSortState, setAlchSortState] = useState({ col: "maxProfit4hr", dir: "desc" });
+  const [alchSortState, setAlchSortState] = useState({ col: "alchProfit", dir: "desc" });
   const [alchRowsShown, setAlchRowsShown] = useState(200);
   const [cofferTarget, setCofferTarget] = useState("");
   const [cofferSearch, setCofferSearch] = useState("");
@@ -5327,7 +5327,7 @@ RULES:
                               {item.alchProfit >= 0 ? "+" : ""}{formatGP(item.alchProfit)}
                             </span>
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
-                            <span style={{ fontSize: "13px", fontWeight: 600, color: item.maxProfit4hr >= 1_000_000 ? "var(--green)" : item.maxProfit4hr >= 100_000 ? "var(--gold)" : "var(--text-dim)" }}>
+                            <span style={{ fontSize: "13px", fontWeight: 600, color: item.maxProfit4hr >= 0 ? "var(--green)" : "var(--red)" }}>
                               {item.buyLimit ? formatGP(item.maxProfit4hr) : "—"}
                             </span>
                             <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
@@ -5474,29 +5474,7 @@ RULES:
                       {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `⭐ Favourites${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                     </button>
                   ))}
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "auto", background: "var(--bg3)", border: `1px solid ${customNatureRunePrice !== "" ? "var(--gold-dim)" : "var(--border)"}`, borderRadius: "8px", padding: "4px 10px" }}>
-                    <span style={{ fontSize: "12px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>🌿 Nature rune:</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={customNatureRunePrice !== "" ? customNatureRunePrice : natureRunePrice}
-                      onChange={e => setCustomNatureRunePrice(e.target.value)}
-                      onFocus={e => { if (customNatureRunePrice === "") setCustomNatureRunePrice(String(natureRunePrice)); }}
-                      title="Edit to override the live nature rune price used in High Alch calculations"
-                      style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "60px", fontFamily: "Inter, sans-serif" }}
-                    />
-                    <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>gp</span>
-                    {customNatureRunePrice !== "" && (
-                      <button
-                        onClick={() => setCustomNatureRunePrice("")}
-                        title="Reset to live market price"
-                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "11px", padding: "0 2px", fontFamily: "Inter, sans-serif", transition: "color 0.15s" }}
-                        onMouseOver={e => e.currentTarget.style.color = "var(--gold)"}
-                        onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}
-                      >↺ live</button>
-                    )}
-                  </div>
-                  <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} />
+                  <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
                   <button
                     className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
                     onClick={() => setShowAdvFilters(v => !v)}
