@@ -4527,8 +4527,7 @@ RULES:
                 </div>
               </div>
             )}
-
-          ) : (
+          </>) : (
           <>
           <div className="left-panel">
 
