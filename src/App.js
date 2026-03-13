@@ -416,17 +416,17 @@ const STYLES = `
   .merchant-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
   .merchant-anim-overlay { position: fixed; inset: 0; z-index: 99999; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 40px; animation: merchantFadeIn 0.4s ease; }
   @keyframes merchantFadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .merchant-anim-scan { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold), transparent); animation: scanLine 2.4s ease-in-out forwards; box-shadow: 0 0 24px var(--gold), 0 0 60px rgba(201,168,76,0.5); }
+  .merchant-anim-scan { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold), transparent); animation: scanLine 3.8s ease-in-out forwards; box-shadow: 0 0 24px var(--gold), 0 0 60px rgba(201,168,76,0.5); }
   @keyframes scanLine { 0% { top: 0; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-  .merchant-anim-logo { font-size: 17px; letter-spacing: 8px; color: var(--gold-dim); text-transform: uppercase; font-weight: 600; animation: fadeInUp 0.7s ease 0.4s both; }
-  .merchant-anim-title { font-size: 64px; font-weight: 800; letter-spacing: 6px; color: var(--gold); text-transform: uppercase; animation: fadeInUp 0.7s ease 0.7s both; font-family: Inter, sans-serif; text-shadow: 0 0 40px rgba(201,168,76,0.4); }
+  .merchant-anim-logo { font-size: 17px; letter-spacing: 8px; color: var(--gold-dim); text-transform: uppercase; font-weight: 600; animation: fadeInUp 0.7s ease 0.6s both; }
+  .merchant-anim-title { font-size: 64px; font-weight: 800; letter-spacing: 6px; color: var(--gold); text-transform: uppercase; animation: fadeInUp 0.7s ease 1.1s both; font-family: Inter, sans-serif; text-shadow: 0 0 40px rgba(201,168,76,0.4); }
   .merchant-anim-subtitle { font-size: 17px; letter-spacing: 6px; color: var(--text-dim); text-transform: uppercase; animation: fadeInUp 0.7s ease 1.1s both; }
   .merchant-anim-bars { display: flex; gap: 8px; align-items: flex-end; height: 48px; animation: fadeInUp 0.7s ease 1.4s both; }
   .merchant-anim-bar { width: 5px; background: var(--gold); border-radius: 2px; animation: barPulse 0.9s ease-in-out infinite alternate; }
   @keyframes barPulse { from { opacity: 0.2; transform: scaleY(0.3); } to { opacity: 1; transform: scaleY(1); } }
-  .merchant-anim-status { font-size: 15px; letter-spacing: 5px; color: var(--green); text-transform: uppercase; animation: fadeInUp 0.5s ease 2.6s both; }
+  .merchant-anim-status { font-size: 15px; letter-spacing: 5px; color: var(--green); text-transform: uppercase; animation: fadeInUp 0.5s ease 3.8s both; }
   @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  .merchant-anim-exit { animation: merchantFadeOut 0.5s ease 3.6s both; }
+  .merchant-anim-exit { animation: merchantFadeOut 0.5s ease 5.2s both; }
   @keyframes merchantFadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
 
 
@@ -3222,7 +3222,7 @@ export default function RuneTrader() {
 
   function activateMerchantWithAnim(cb) {
     setShowMerchantAnim(true);
-    setTimeout(() => { setShowMerchantAnim(false); if (cb) cb(); }, 4200);
+    setTimeout(() => { setShowMerchantAnim(false); if (cb) cb(); }, 5800);
   }
   const [merchantCapital, setMerchantCapital] = useState(0);
   const [merchantCapitalInput, setMerchantCapitalInput] = useState("");
