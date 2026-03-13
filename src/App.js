@@ -3253,10 +3253,10 @@ export default function RuneTrader() {
   function activateMerchantWithAnim(cb) {
     setShowMerchantAnim('active');
     setShowMerchantAIBubble(false);
-    setTimeout(() => { if (cb) cb(); }, 5600);          // render merchant mode underneath first
-    setTimeout(() => setShowMerchantAnim('fading'), 5800); // start CSS fade
-    setTimeout(() => setShowMerchantAnim(false), 6300);    // remove from DOM after fade completes
-    setTimeout(() => setShowMerchantAIBubble(true), 6400);
+    setTimeout(() => { if (cb) cb(); }, 5600);             // render merchant mode underneath
+    setTimeout(() => setShowMerchantAnim('fading'), 5800); // fade overlay out
+    setTimeout(() => { setShowMerchantAnim('done'); }, 6400); // hide but keep mounted
+    setTimeout(() => setShowMerchantAIBubble(true), 6500);
   }
   const [merchantCapital, setMerchantCapital] = useState(0);
   const [merchantCapitalInput, setMerchantCapitalInput] = useState("");
@@ -3331,8 +3331,9 @@ export default function RuneTrader() {
       setShowMerchantAIBubble(false);
       setMerchantAIOpen(false);
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
-      setTimeout(() => setShowMerchantShutdown('fading'), 2400); // start CSS fade
-      setTimeout(() => { setMerchantMode(false); setShowMerchantShutdown(false); }, 2900); // remove after fade
+      setTimeout(() => setShowMerchantShutdown('fading'), 2400);  // fade out
+      setTimeout(() => { setMerchantMode(false); }, 2850);        // switch content while overlay still covers
+      setTimeout(() => setShowMerchantShutdown('done'), 2950);    // hide overlay after content switched
     }
   }
 
@@ -4217,8 +4218,7 @@ RULES:
       )}
 
       {/* MERCHANT SHUTDOWN ANIMATION */}
-      {showMerchantShutdown && (
-        <div className={`merchant-shutdown-overlay${showMerchantShutdown === 'fading' ? ' merchant-shutdown-exit' : ''}`}>
+      <div className={`merchant-shutdown-overlay${showMerchantShutdown === 'fading' ? ' merchant-shutdown-exit' : ''}`} style={{ display: showMerchantShutdown && showMerchantShutdown !== 'done' ? 'flex' : 'none' }}>
           <div className="merchant-shutdown-title">Merchant Mode</div>
           <div className="merchant-shutdown-sub">Closing trading terminal</div>
           <div className="merchant-shutdown-bars">
@@ -4228,11 +4228,9 @@ RULES:
           </div>
           <div className="merchant-shutdown-status">● Terminal Offline</div>
         </div>
-      )}
 
       {/* MERCHANT ACTIVATION ANIMATION */}
-      {showMerchantAnim && (
-        <div className={`merchant-anim-overlay${showMerchantAnim === 'fading' ? ' merchant-anim-exit' : ''}`}>
+      <div className={`merchant-anim-overlay${showMerchantAnim === 'fading' ? ' merchant-anim-exit' : ''}`} style={{ display: showMerchantAnim && showMerchantAnim !== 'done' ? 'flex' : 'none' }}>
           <div className="merchant-anim-scan" />
           <div className="merchant-anim-logo">RuneTrader.gg</div>
           <div className="merchant-anim-title">Merchant Mode</div>
@@ -4244,7 +4242,6 @@ RULES:
           </div>
           <div className="merchant-anim-status">● System Ready</div>
         </div>
-      )}
 
       {/* MERCHANT TOUR */}
       {merchantTourStep >= 0 && (() => {
