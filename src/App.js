@@ -3780,10 +3780,12 @@ export default function RuneTrader() {
   const [alchShowLosses, setAlchShowLosses] = useState(false);
   const [alchSearch, setAlchSearch] = useState("");
   const [alchSortState, setAlchSortState] = useState({ col: "maxProfit4hr", dir: "desc" });
+  const [alchRowsShown, setAlchRowsShown] = useState(200);
   const [cofferTarget, setCofferTarget] = useState("");
   const [cofferSearch, setCofferSearch] = useState("");
   const [cofferShowLosses, setCofferShowLosses] = useState(false);
   const [cofferSortState, setCofferSortState] = useState({ col: "potentialSavings", dir: "desc" });
+  const [cofferRowsShown, setCofferRowsShown] = useState(200);
   function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } }
   useEffect(() => { setMarketRowsShown(200); }, [filter, search]);
 
@@ -5255,7 +5257,6 @@ RULES:
                     ["maxProfit4hr",  "Max Profit / 4hr", "Profit per cast × Buy Limit. Maximum GP you can make in one 4-hour GE window buying at the limit."],
                     ["lastTradeTime", "Last Updated",     "How recently this item's GE price was recorded. Stale data may not reflect current market."],
                   ];
-                  const [alchRowsShown, setAlchRowsShown] = React.useState(200);
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                       <div className="filter-bar">
@@ -5358,7 +5359,6 @@ RULES:
                   const rawTarget = (cofferTarget || "").trim().toLowerCase().replace(/,/g, "");
                   const targetMult = rawTarget.endsWith("m") ? 1_000_000 : rawTarget.endsWith("k") ? 1_000 : 1;
                   const targetGP = parseFloat(rawTarget) * targetMult || 0;
-                  const [cofferRowsShown, setCofferRowsShown] = React.useState(200);
                   const cofferItems = (allItems || [])
                     .filter(item => item.hasPrice && item.itemValue > 0 && item.low > 0 && item.volume > 100 && (item.buyLimit || 0) > 0)
                     .map(item => {
