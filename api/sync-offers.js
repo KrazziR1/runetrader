@@ -153,38 +153,44 @@ export default async function handler(req, res) {
 
     // ── SOLD ─────────────────────────────────────────────────
     if (offer.status === 'SOLD') {
-      console.log('[SOLD] slot:', slot, 'userId:', userId, 'item:', offer.itemName);
-      // Find the open flip for this slot — try all non-SOLD statuses.
-      // Also catches edge cases where SELLING update hadn't fired yet (still BOUGHT).
+      // Match by item_id — OSRS GE assigns a different slot for sell vs buy.
+      // The SELLING update already synced the slot, but item_id is always stable.
       let { data: openFlip } = await supabase
         .from('ge_flips_live')
-        .select('id, buy_price, buy_spent, quantity')
+        .select('id, buy_price, buy_spent, quantity, slot')
         .eq('user_id', userId)
-        .eq('slot', slot)
+        .eq('item_id', offer.itemId)
         .in('status', ['BUYING', 'BOUGHT', 'SELLING'])
         .order('buy_started_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      // Log what the primary lookup found
-      console.log('[SOLD] primary lookup result:', openFlip ? `id=${openFlip.id} status found` : 'NOT FOUND');
-
-      // Last-resort fallback: find ANY row for this slot regardless of status
+      // Fallback 1: slot-based lookup (in case SELLING update already ran)
       if (!openFlip) {
-        const { data: allRows } = await supabase
+        const { data: slotRow } = await supabase
           .from('ge_flips_live')
-          .select('id, status, buy_price, buy_spent, quantity, slot')
+          .select('id, buy_price, buy_spent, quantity, slot')
           .eq('user_id', userId)
           .eq('slot', slot)
+          .in('status', ['BUYING', 'BOUGHT', 'SELLING'])
           .order('buy_started_at', { ascending: false })
-          .limit(5);
-        console.log('[SOLD] all rows for slot', slot, ':', JSON.stringify(allRows));
+          .limit(1)
+          .maybeSingle();
+        if (slotRow) openFlip = slotRow;
+      }
 
-        const fallback = allRows?.find(r => r.status !== 'SOLD');
-        if (fallback) {
-          openFlip = fallback;
-          console.log('[SOLD] using fallback row id:', fallback.id, 'status:', fallback.status);
-        }
+      // Fallback 2: any non-SOLD row for this item regardless of slot
+      if (!openFlip) {
+        const { data: anyRow } = await supabase
+          .from('ge_flips_live')
+          .select('id, buy_price, buy_spent, quantity, slot')
+          .eq('user_id', userId)
+          .eq('item_id', offer.itemId)
+          .neq('status', 'SOLD')
+          .order('buy_started_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (anyRow) openFlip = anyRow;
       }
 
       // sellPrice: plugin computes getSpent()/getQuantitySold() and sends it as offerPrice.
@@ -215,8 +221,7 @@ export default async function handler(req, res) {
             buy_price: buyPrice,  // lock in accurate buy_price at close time
             profit, roi, tax, quantity, sell_completed_at: syncedAt,
           })
-          .eq('id', openFlip.id)
-          .eq('slot', slot); // double-check slot matches for safety
+          .eq('id', openFlip.id);
         if (soldErr) {
           console.error('ge_flips_live SOLD update error:', soldErr);
         } else {
