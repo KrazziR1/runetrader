@@ -1800,7 +1800,7 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
                         <div key={i} className="ge-slot active" title={`${liveOffer.item_name} · ${liveOffer.status} · ${pct}% filled`}
                           onClick={() => { const it = items.find(x => x.name.toLowerCase() === liveOffer.item_name.toLowerCase()); if (it) setSelectedItem(it); }}>
                           <div className="slot-dot" style={{ background: slotColor }} />
-                          <img src={itemIconUrl(liveOffer.item_name)} alt="" style={{ width: 28, height: 28, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
+                          <img src={itemIconUrl(liveOffer.item_name)} alt="" style={{ width: 52, height: 52, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
                           <div className="slot-name">{liveOffer.item_name.length > 12 ? liveOffer.item_name.slice(0, 11) + "…" : liveOffer.item_name}</div>
                           <div className="slot-pnl" style={{ color: "var(--text-dim)", fontSize: "10px" }}>{pct}%</div>
                         </div>
@@ -1821,7 +1821,7 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
                         onClick={() => liveItem && setSelectedItem(liveItem)}
                         title={`${pos.name} · ${STATUS_LABELS[status]} · Click to view chart`}>
                         <div className={`slot-dot`} style={{ background: STATUS_COLORS[status] }} />
-                        <img src={itemIconUrl(pos.name)} alt="" style={{ width: 28, height: 28, objectFit: "contain", imageRendering: "pixelated" }}
+                        <img src={itemIconUrl(pos.name)} alt="" style={{ width: 52, height: 52, objectFit: "contain", imageRendering: "pixelated" }}
                           onError={e => { e.target.style.display = "none"; }} />
                         <div className="slot-name">{pos.name.length > 12 ? pos.name.slice(0, 11) + "…" : pos.name}</div>
                         <div className="slot-pnl" style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
@@ -1856,7 +1856,7 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
                 ) : (
                   <div className="ops-table">
                     <div className="ops-header">
-                      <span>Item</span><span>Status</span><span>Investment</span><span>Qty</span><span>Buy Price</span><span>Sell Now</span><span>Live P&amp;L</span><span>Progress</span>
+                      <span>Item</span><span>Status</span><span>Investment</span><span>Qty</span><span>Buy Price</span><span>Market Value</span><span>Live P&amp;L</span><span>Progress</span>
                     </div>
                     {liveOps.map(op => {
                       const liveItem = items.find(i => i.name.toLowerCase() === op.item_name.toLowerCase());
