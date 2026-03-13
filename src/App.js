@@ -1676,7 +1676,8 @@ function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct
           </div>
         </div>
       )}
-    </>;
+    </>
+  );
 }
 
 function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView, filter, setFilter, search, setSearch, favourites, toggleFavourite, sortCol, sortDir, handleSort, filtered, marketRowsShown, setMarketRowsShown, showAdvFilters, setShowAdvFilters, advFilters, advFilterCount, setAdv, resetAdvFilters, loading }) {
