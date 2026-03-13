@@ -1244,54 +1244,25 @@ function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }
 
 // ─── PORTFOLIO PAGE ───────────────────────────────────────────────────────────
 
-const PORT_RANGES = ["24H", "3D", "7D", "1M", "3M", "All"];
-
 function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, autoFlipsLog = [], items, onSignIn, showToast, supabase: sb }) {
   const [manualPositions, setManualPositions] = useState([]);
   const [posLoading, setPosLoading] = useState(false);
-  const [snapshots, setSnapshots] = useState([]);
-  const [range, setRange] = useState("1M");
   const [openForm, setOpenForm] = useState({ item: "", buyPrice: "", qty: "1" });
   const [openAc, setOpenAc] = useState([]);
   const [showOpenAc, setShowOpenAc] = useState(false);
   const [closingPos, setClosingPos] = useState(null);
   const [closeSellPrice, setCloseSellPrice] = useState("");
   const [closingLoading, setClosingLoading] = useState(false);
-  const chartRef = useRef(null);
-  const flipsLoadedRef = useRef(false);
-
   useEffect(() => {
     if (!user) return;
     loadManualPositions();
-    loadSnapshots();
-    setTimeout(() => { flipsLoadedRef.current = true; }, 1000);
   }, [user]); // eslint-disable-line
-
-  useEffect(() => {
-    if (!user || !flipsLog.length || !flipsLoadedRef.current) return;
-    upsertSnapshot();
-  }, [flipsLog, user]); // eslint-disable-line
 
   async function loadManualPositions() {
     setPosLoading(true);
     const { data } = await sb.from("positions").select("*").order("date_opened", { ascending: false });
     setManualPositions(data || []);
     setPosLoading(false);
-  }
-
-  async function loadSnapshots() {
-    const { data } = await sb.from("portfolio_snapshots").select("*").order("snapshot_date", { ascending: true });
-    setSnapshots(data || []);
-  }
-
-  async function upsertSnapshot() {
-    const closedFlips = flipsLog.filter(f => f.status !== "open");
-    const autoProfit = autoFlipsLog.reduce((s, f) => s + (f.profit || 0), 0);
-    const totalProfit = closedFlips.reduce((s, f) => s + (f.totalProfit || 0), 0) + autoProfit;
-    const totalFlipsCount = closedFlips.length + autoFlipsLog.length;
-    const today = new Date().toISOString().slice(0, 10);
-    await sb.from("portfolio_snapshots").upsert({ user_id: user.id, snapshot_date: today, total_profit: totalProfit, total_flips: totalFlipsCount }, { onConflict: "user_id,snapshot_date" });
-    loadSnapshots();
   }
 
   async function openPosition() {
@@ -1324,91 +1295,6 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, autoFlipsLog =
     setClosingLoading(false);
     showToast(`Closed! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
   }
-
-  useEffect(() => {
-    if (!chartRef.current || snapshots.length < 2) return;
-    const canvas = chartRef.current;
-    function draw() {
-      const ctx = canvas.getContext("2d");
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
-      canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-      const W = rect.width, H = rect.height, pad = { top: 10, right: 10, bottom: 30, left: 70 };
-      const now = new Date();
-      const cutoff = new Date(now);
-      if (range === "24H") cutoff.setDate(now.getDate() - 1);
-      else if (range === "3D") cutoff.setDate(now.getDate() - 3);
-      else if (range === "7D") cutoff.setDate(now.getDate() - 7);
-      else if (range === "1M") cutoff.setMonth(now.getMonth() - 1);
-      else if (range === "3M") cutoff.setMonth(now.getMonth() - 3);
-      else cutoff.setFullYear(2000);
-      const filtered = snapshots.filter(s => new Date(s.snapshot_date) >= cutoff);
-      ctx.clearRect(0, 0, W, H);
-      if (filtered.length < 2) {
-        ctx.fillStyle = "#4a5a6a"; ctx.font = "12px Inter"; ctx.textAlign = "center";
-        ctx.fillText("Not enough data for this range", W / 2, H / 2);
-        return;
-      }
-      const profits = filtered.map(s => s.total_profit);
-      const times = filtered.map(s => new Date(s.snapshot_date).getTime());
-      const minV = Math.min(0, ...profits), maxV = Math.max(0, ...profits);
-      const minT = times[0], maxT = times[times.length - 1];
-      const range2 = maxV - minV || 1;
-      const xPos = t => pad.left + ((t - minT) / Math.max(maxT - minT, 1)) * (W - pad.left - pad.right);
-      const yPos = v => pad.top + (1 - (v - minV) / range2) * (H - pad.top - pad.bottom);
-      ctx.strokeStyle = "rgba(42,51,64,0.6)"; ctx.lineWidth = 1;
-      [0, 0.5, 1].forEach(t => {
-        const y = pad.top + t * (H - pad.top - pad.bottom);
-        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
-        const val = maxV - t * range2;
-        ctx.fillStyle = "#4a5a6a"; ctx.font = "10px Inter"; ctx.textAlign = "right";
-        ctx.fillText((val >= 0 ? "+" : "") + formatGP(Math.round(val)), pad.left - 4, y + 4);
-      });
-      const isPos = profits[profits.length - 1] >= profits[0];
-      ctx.beginPath(); ctx.moveTo(xPos(times[0]), yPos(profits[0]));
-      profits.forEach((p, i) => ctx.lineTo(xPos(times[i]), yPos(p)));
-      const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-      grad.addColorStop(0, isPos ? "rgba(46,204,113,0.2)" : "rgba(231,76,60,0.2)");
-      grad.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.lineTo(xPos(times[times.length - 1]), H - pad.bottom);
-      ctx.lineTo(xPos(times[0]), H - pad.bottom);
-      ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
-      ctx.beginPath(); ctx.moveTo(xPos(times[0]), yPos(profits[0]));
-      profits.forEach((p, i) => ctx.lineTo(xPos(times[i]), yPos(p)));
-      ctx.strokeStyle = isPos ? "#2ecc71" : "#e74c3c"; ctx.lineWidth = 2.5; ctx.stroke();
-      ctx.fillStyle = "#4a5a6a"; ctx.font = "10px Inter"; ctx.textAlign = "center";
-      [0, 0.5, 1].forEach(t => {
-        const ts = minT + t * (maxT - minT);
-        ctx.fillText(new Date(ts).toLocaleDateString([], { month: "short", day: "numeric" }), xPos(ts), H - pad.bottom + 14);
-      });
-    }
-    const ro = new ResizeObserver(() => draw());
-    ro.observe(canvas);
-    draw();
-    return () => ro.disconnect();
-  }, [snapshots, range]);
-
-  function getPerfVs(daysAgo) {
-    if (snapshots.length < 2) return null;
-    const now = new Date();
-    const cutoff = new Date(now);
-    cutoff.setDate(now.getDate() - daysAgo);
-    const past = [...snapshots].reverse().find(s => new Date(s.snapshot_date) <= cutoff);
-    const current = snapshots[snapshots.length - 1];
-    if (!past || past.id === current.id) return null;
-    const diff = current.total_profit - past.total_profit;
-    const pct = past.total_profit !== 0 ? ((diff / Math.abs(past.total_profit)) * 100).toFixed(1) : null;
-    return { diff, pct };
-  }
-
-  const perfCards = [
-    { label: "1D Change", data: getPerfVs(1) },
-    { label: "1W Change", data: getPerfVs(7) },
-    { label: "1M Change", data: getPerfVs(30) },
-    { label: "3M Change", data: getPerfVs(90) },
-  ];
 
   const allNames = Object.values(items).map(i => i.name);
   function handleOpenInput(val) {
