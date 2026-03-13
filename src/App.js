@@ -3379,15 +3379,8 @@ export default function RuneTrader() {
 
 
   // ── Prefs ──
-  const [prefs, setPrefs] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}"); } catch { return {}; } });
-  const [budget, setBudget] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}").budget || ""; } catch { return ""; } });
-  function savePref(key, val) {
-    const u = { ...prefs, [key]: val };
-    setPrefs(u);
-    localStorage.setItem("runetrader_prefs", JSON.stringify(u));
-    setSortCol("score");
-    setSortDir("desc");
-  }
+  const [prefs] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}"); } catch { return {}; } });
+  const [budget] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}").budget || ""; } catch { return ""; } });
 
   // ── UI state ──
   const [filter, setFilter] = useState("all");
