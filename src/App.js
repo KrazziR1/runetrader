@@ -5568,6 +5568,7 @@ RULES:
                     </div>
                   )}
                 </div>
+                </div>
                 )} {/* end flips sub-tab */}
               </>
             )}
