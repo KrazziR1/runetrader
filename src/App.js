@@ -4492,7 +4492,7 @@ RULES:
             {showMerchantAIBubble && !merchantAIOpen && (
               <div className="merchant-ai-bubble" onClick={() => setMerchantAIOpen(true)} title="AI Advisor">
                 <div className="bubble-ping" />
-                ⚔️
+                <span>⚔️</span>
               </div>
             )}
             {merchantAIOpen && (
