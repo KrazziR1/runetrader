@@ -1538,6 +1538,9 @@ const WELCOME_MSG = {
 // ── MERCHANT MODE COMPONENT ──
 function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView }) {
 
+  // liveOps must be declared before allOpenPositions calculation below
+  const [liveOps, setLiveOps] = useState([]);
+
   // ── Build open positions ──
   const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
     id: f.id, name: f.item, gpIn: (f.buyPrice || 0) * (f.qty || 1),
@@ -1554,7 +1557,19 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
       openedAt: p.date_opened ? new Date(p.date_opened) : new Date(),
       posStatus: p.pos_status || "buying",
     }));
-  const allOpenPositions = [...trackerOpen, ...portfolioOnly];
+  // Include auto-tracked open positions from ge_flips_live
+  // Exclude items already tracked manually to avoid double-counting
+  const allManualNames = new Set([...trackerNames, ...manualPositions.map(p => p.item_name.toLowerCase())]);
+  const autoOpen = liveOps
+    .filter(op => !allManualNames.has(op.item_name.toLowerCase()))
+    .map(op => ({
+      id: op.id, name: op.item_name,
+      gpIn: (op.buy_price || 0) * (op.quantity || 1),
+      qty: op.quantity || 1, buyPrice: op.buy_price || 0, source: "auto",
+      openedAt: op.buy_started_at ? new Date(op.buy_started_at) : new Date(),
+      posStatus: op.status === "BUYING" ? "buying" : op.status === "SELLING" ? "selling" : "holding",
+    }));
+  const allOpenPositions = [...trackerOpen, ...portfolioOnly, ...autoOpen];
 
   // ── Core metrics ──
   const totalDeployed = allOpenPositions.reduce((s, p) => s + p.gpIn, 0);
@@ -1573,8 +1588,6 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
   }, 0);
 
   // ── State ──
-  const [liveOps, setLiveOps] = useState([]);
-
   useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
     if (!user || !sb) return;
     sb.from("ge_flips_live")
@@ -1643,7 +1656,7 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
 
   function getGPHr() {
     const hrs = (now - sessionStart) / 3600000;
-    if (hrs < 0.05 || realisedToday === 0) return null;
+    if (hrs < 0.01 || realisedToday === 0) return null;
     return Math.round(realisedToday / hrs);
   }
 
@@ -1744,7 +1757,7 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
           { label: "Deployed", value: formatGP(totalDeployed), color: "var(--blue)", sub: `${efficiencyPct}% of stack` },
           { label: "Idle GP", value: formatGP(idleGP), color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text)", sub: idleGP > merchantCapital * 0.3 ? <span style={{ color: "#f39c12" }}>⚠ Sitting unused</span> : "Available" },
           { label: "Unrealised P&L", value: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)", sub: `${allOpenPositions.length} open positions` },
-          { label: "Realised Today", value: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)", sub: `${todayFlips.length} flips closed` },
+          { label: "Realised Today", value: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)", sub: `${todayFlips.length + autoTodayFlips.length} flips closed` },
         ].map((c, i) => (
           <div key={i} className="cap-cell">
             <span className="cap-label">{c.label}</span>
@@ -2087,7 +2100,7 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
                   {[
                     { label: "Session Duration", val: getSessionTime(), color: "var(--text)" },
                     { label: "GP / Hour", val: gpHr !== null ? `${gpHr >= 0 ? "+" : ""}${formatGP(gpHr)}` : "—", color: gpHr !== null ? (gpHr >= 0 ? "var(--green)" : "var(--red)") : "var(--text-dim)" },
-                    { label: "Flips Closed Today", val: todayFlips.length, color: "var(--text)" },
+                    { label: "Flips Closed Today", val: todayFlips.length + autoTodayFlips.length, color: "var(--text)" },
                     { label: "Realised Today", val: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
                     { label: "Unrealised P&L", val: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)" },
                     { label: "Return on Capital", val: merchantCapital > 0 ? `${((realisedToday / merchantCapital) * 100).toFixed(2)}%` : "—", color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
