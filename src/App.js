@@ -296,6 +296,7 @@ const STYLES = `
   .smart-event-time { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
   .smart-badge-spike { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(46,204,113,0.15); color: var(--green); border: 1px solid var(--green-dim); }
   .smart-badge-surge { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(52,152,219,0.15); color: var(--blue); border: 1px solid rgba(52,152,219,0.4); }
+  .smart-badge-autopilot { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.4); }
   .smart-badge-dump { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(231,76,60,0.15); color: var(--red); border: 1px solid var(--red-dim); }
   .smart-badge-crash { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid var(--gold-dim); }
   .smart-empty { padding: 40px 20px; text-align: center; color: var(--text-dim); font-size: 13px; }
@@ -353,8 +354,22 @@ const STYLES = `
   .slot-status-label { font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; }
   .slot-dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; }
   .ops-table { overflow: visible; }
-  .ops-header { display: grid; grid-template-columns: 2fr 100px 1fr 0.7fr 1fr 1fr 1fr 110px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); border-radius: 0; }
-  .op-row { display: grid; grid-template-columns: 2fr 100px 1fr 0.7fr 1fr 1fr 1fr 110px 80px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; cursor: pointer; position: relative; }
+  .autopilot-btn { background: none; border: 1px solid var(--border); border-radius: 5px; color: var(--text-dim); font-size: 12px; padding: 3px 7px; cursor: pointer; transition: all 0.15s; line-height: 1; }
+  .autopilot-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .autopilot-btn.active { border-color: var(--gold); color: var(--gold); background: #c9a84c18; }
+  .autopilot-panel { grid-column: 1 / -1; background: var(--bg2); border-top: 1px solid var(--border); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .autopilot-panel-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .autopilot-label { font-size: 11px; color: var(--text-dim); min-width: 140px; }
+  .autopilot-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 12px; padding: 4px 8px; width: 90px; outline: none; }
+  .autopilot-input:focus { border-color: var(--gold); }
+  .autopilot-unit { font-size: 11px; color: var(--text-dim); }
+  .autopilot-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 6px; border-top: 1px solid var(--border); margin-top: 2px; }
+  .autopilot-save { background: var(--gold); color: #0a0a0a; border: none; border-radius: 5px; font-size: 11px; font-weight: 700; padding: 5px 14px; cursor: pointer; }
+  .autopilot-save:hover { opacity: 0.85; }
+  .autopilot-clear { background: none; border: none; color: var(--text-dim); font-size: 11px; cursor: pointer; text-decoration: underline; }
+  .autopilot-hint { font-size: 10px; color: var(--text-dim); opacity: 0.7; }
+  .ops-header { display: grid; grid-template-columns: 2fr 100px 1fr 0.7fr 1fr 1fr 1fr 110px 80px 60px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); border-radius: 0; }
+  .op-row { display: grid; grid-template-columns: 2fr 100px 1fr 0.7fr 1fr 1fr 1fr 110px 80px 60px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; cursor: pointer; position: relative; }
   .op-row:last-child { border-bottom: none; }
   .op-row:hover { background: var(--bg4); }
   .op-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 0; }
@@ -859,7 +874,7 @@ const MERCHANT_TOUR_STEPS = [
   { title: "Welcome to Merchant Mode ⚔️", desc: "Your war room for managing multiple GE positions at once. Four tabs cover everything: Operations, Analytics, Alerts, and Market. Let's walk through each one.", target: null, placement: "center", view: "operations" },
   { title: "Capital Overview", desc: "Tracks your full GP stack at a glance. Deployed = GP locked in open positions. Idle = unused GP ready to put to work. Realised = profit closed today. Click 'Update' any time to adjust your stack.", target: ".capital-bar", placement: "bottom", view: "operations" },
   { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips. Dot colours show each position's status: 🟡 Buying · 🟢 Holding · 🔵 Selling · 🔴 Danger. Click any slot to view that item's price chart.", target: ".slots-grid", placement: "bottom", view: "operations" },
-  { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Use the status dropdown to mark each flip: Buying → Holding → Selling. Red health bar means consider cutting the position.", target: "#active-operations-section", placement: "top", view: "operations" },
+  { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Use the status dropdown to mark each flip: Buying → Holding → Selling. Hit ⚙ on any row to set Autopilot rules — margin floor, hold time limit, or price drop alert — personalised per position. Rules are stored on this device.", target: "#active-operations-section", placement: "top", view: "operations" },
   { title: "Capital Efficiency", desc: "The ring gauge shows what % of your stack is actively working. Aim for 70%+ for best returns. Below 50% means too much idle GP sitting unused.", target: ".gauge-ring", placement: "left", view: "operations" },
   { title: "🎯 Daily GP Goal", desc: "Set a daily GP target and track your progress in real time. The bar fills as you close flips, and gives you an ETA based on your current GP/hr rate.", target: "#tour-daily-goal", placement: "left", view: "operations" },
   { title: "⚡ Rotation Picks", desc: "Items suggested to fill your idle GP right now — filtered to fit your budget and ranked by score. Click any card to open the price chart and decide if it's worth a flip.", target: ".rotation-picks-section", placement: "left", view: "operations" },
@@ -1594,10 +1609,167 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
+function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct, fillPct, hasRules, isAutopilotOpen, autopilotRules, setAutopilotOpen, saveAutopilotRules, clearAutopilotRules, formatGP, setSelectedItem }) {
+  const saved = autopilotRules[op.item_name] || { marginFloor: "", holdHours: "", priceDrop: "" };
+  const [apMargin, setApMargin] = React.useState(saved.marginFloor);
+  const [apHold, setApHold] = React.useState(saved.holdHours);
+  const [apDrop, setApDrop] = React.useState(saved.priceDrop);
+  React.useEffect(() => {
+    const s = autopilotRules[op.item_name] || { marginFloor: "", holdHours: "", priceDrop: "" };
+    setApMargin(s.marginFloor); setApHold(s.holdHours); setApDrop(s.priceDrop);
+  }, [autopilotRules, op.item_name]);
+  return (
+    <React.Fragment>
+      <div className="op-row op-row-healthy" onClick={(e) => { if (e.target.closest(".autopilot-btn")) return; liveItem && setSelectedItem(liveItem); }}>
+        <div>
+          <div className="op-item-name">{op.item_name}</div>
+          <div className="op-item-sub">Slot {op.slot + 1} · {op.buy_started_at ? getHoldTime(op.buy_started_at) : ""}</div>
+        </div>
+        <span style={{ fontSize: "12px", color: statusColor }}>{statusLabel}</span>
+        <span style={{ fontSize: "12px" }}>{op.buy_price && op.quantity ? formatGP(op.buy_price * op.quantity) : "—"}</span>
+        <span style={{ fontSize: "12px" }}>{(op.quantity || 0).toLocaleString()}</span>
+        <span style={{ fontSize: "12px" }}>{op.buy_price ? formatGP(op.buy_price) : "—"}</span>
+        <span style={{ fontSize: "12px", color: liveItem ? "var(--text)" : "var(--text-dim)" }}>{liveItem ? formatGP(liveItem.high) : "—"}</span>
+        <div>
+          {op.status === "SOLD" ? (
+            <><div style={{ color: (op.profit || 0) >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>{(op.profit || 0) >= 0 ? "+" : ""}{formatGP(op.profit || 0)}</div><div style={{ fontSize: "10px", color: (op.roi || 0) >= 0 ? "var(--green)" : "var(--red)" }}>{op.roi}% ROI</div></>
+          ) : op.buy_price ? (
+            <><div style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>{pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}</div><div style={{ fontSize: "10px", color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>{pnlPct}%</div></>
+          ) : <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>—</span>}
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+          <div style={{ background: "var(--bg4)", borderRadius: "3px", height: "4px", overflow: "hidden" }}>
+            <div style={{ background: statusColor, height: "100%", width: fillPct + "%", borderRadius: "3px" }} />
+          </div>
+          <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>{fillPct}% filled</span>
+        </div>
+        <span />
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          {hasRules && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--gold)", flexShrink: 0 }} title="Autopilot active" />}
+          <button className={`autopilot-btn${isAutopilotOpen ? " active" : ""}`} onClick={e => { e.stopPropagation(); setAutopilotOpen(isAutopilotOpen ? null : op.item_name); }}>⚙</button>
+        </div>
+      </div>
+      {isAutopilotOpen && (
+        <div className="autopilot-panel">
+          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gold)", marginBottom: "4px" }}>Autopilot — {op.item_name}</div>
+          <div className="autopilot-panel-row">
+            <span className="autopilot-label">Margin drops below</span>
+            <input className="autopilot-input" type="number" placeholder="e.g. 50" value={apMargin} onChange={e => setApMargin(e.target.value)} />
+            <span className="autopilot-unit">gp → alert</span>
+          </div>
+          <div className="autopilot-panel-row">
+            <span className="autopilot-label">Held longer than</span>
+            <input className="autopilot-input" type="number" placeholder="e.g. 24" value={apHold} onChange={e => setApHold(e.target.value)} />
+            <span className="autopilot-unit">hours → alert</span>
+          </div>
+          <div className="autopilot-panel-row">
+            <span className="autopilot-label">Sell price drops by</span>
+            <input className="autopilot-input" type="number" placeholder="e.g. 10" value={apDrop} onChange={e => setApDrop(e.target.value)} />
+            <span className="autopilot-unit">% since buy → alert</span>
+          </div>
+          <div className="autopilot-footer">
+            <span className="autopilot-hint">Saved locally — cleared if you clear browser data.</span>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <button className="autopilot-clear" onClick={() => { clearAutopilotRules(op.item_name); setAutopilotOpen(null); }}>Clear rules</button>
+              <button className="autopilot-save" onClick={() => { saveAutopilotRules(op.item_name, { marginFloor: apMargin, holdHours: apHold, priceDrop: apDrop }); setAutopilotOpen(null); }}>Save</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </React.Fragment>
+  );
+}
+
 function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView, filter, setFilter, search, setSearch, favourites, toggleFavourite, sortCol, sortDir, handleSort, filtered, marketRowsShown, setMarketRowsShown, showAdvFilters, setShowAdvFilters, advFilters, advFilterCount, setAdv, resetAdvFilters, loading }) {
 
   // liveOps must be declared before allOpenPositions calculation below
   const [liveOps, setLiveOps] = useState([]);
+
+  // ── Position Autopilot ──
+  const [autopilotRules, setAutopilotRules] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("runetrader_autopilot") || "{}"); } catch { return {}; }
+  });
+  const [autopilotOpen, setAutopilotOpen] = useState(null); // item_name of open rule panel
+  const autopilotFiredRef = useRef({});
+
+  function saveAutopilotRules(itemName, rules) {
+    const updated = { ...autopilotRules, [itemName]: rules };
+    setAutopilotRules(updated);
+    localStorage.setItem("runetrader_autopilot", JSON.stringify(updated));
+  }
+  function getAutopilotRules(itemName) {
+    return autopilotRules[itemName] || { marginFloor: "", holdHours: "", priceDrop: "" };
+  }
+  function clearAutopilotRules(itemName) {
+    const updated = { ...autopilotRules };
+    delete updated[itemName];
+    setAutopilotRules(updated);
+    localStorage.setItem("runetrader_autopilot", JSON.stringify(updated));
+  }
+
+  // Check autopilot rules on each items update
+  const autopilotCheckRef = useRef({});
+  useEffect(() => {
+    if (!liveOps.length) return;
+    const now = Date.now();
+    const COOLDOWN = 15 * 60 * 1000; // 15 min per rule per item
+    liveOps.forEach(op => {
+      const rules = autopilotRules[op.item_name];
+      if (!rules) return;
+      const liveItem = items.find(i => i.name.toLowerCase() === op.item_name.toLowerCase());
+      const holdMs = op.buy_started_at ? now - new Date(op.buy_started_at).getTime() : 0;
+      const holdHrs = holdMs / 3600000;
+
+      function canFire(key) {
+        const k = `${op.item_name}_${key}`;
+        if (autopilotCheckRef.current[k] && now - autopilotCheckRef.current[k] < COOLDOWN) return false;
+        autopilotCheckRef.current[k] = now;
+        return true;
+      }
+      function fire(key, message) {
+        if (!canFire(key)) return;
+        const event = {
+          id: `autopilot_${op.item_name}_${key}_${now}`,
+          itemId: op.id, itemName: op.item_name,
+          type: "autopilot", icon: "🤖", badge: "autopilot",
+          message, time: new Date(),
+        };
+        setSmartEvents(prev => [event, ...prev]);
+        // Sound alert
+        if (smartAlertSettings?.autopilotSound !== false) {
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.4);
+          } catch {}
+        }
+        // Push notification
+        if (smartAlertSettings?.autopilotPush !== false && typeof Notification !== "undefined" && Notification.permission === "granted") {
+          try { new Notification(`RuneTrader Autopilot: ${op.item_name}`, { body: message, icon: "/icons/icon-192.png" }); } catch {}
+        }
+      }
+
+      if (rules.marginFloor !== "" && liveItem && liveItem.margin < parseFloat(rules.marginFloor)) {
+        fire("marginFloor", `${op.item_name}: margin dropped to ${formatGP(liveItem.margin)} gp (floor: ${formatGP(parseFloat(rules.marginFloor))} gp)`);
+      }
+      if (rules.holdHours !== "" && holdHrs > parseFloat(rules.holdHours)) {
+        fire("holdHours", `${op.item_name}: held for ${holdHrs.toFixed(1)}hrs (limit: ${rules.holdHours}hrs)`);
+      }
+      if (rules.priceDrop !== "" && liveItem && op.buy_price > 0) {
+        const dropPct = ((op.buy_price - liveItem.high) / op.buy_price) * 100;
+        if (dropPct >= parseFloat(rules.priceDrop)) {
+          fire("priceDrop", `${op.item_name}: sell price dropped ${dropPct.toFixed(1)}% since buy (limit: ${rules.priceDrop}%)`);
+        }
+      }
+    });
+  }, [liveOps, items, smartAlertSettings]); // eslint-disable-line
 
   // ── Build open positions ──
   const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
@@ -1912,7 +2084,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                 ) : (
                   <div className="ops-table">
                     <div className="ops-header">
-                      <span>Item</span><span>Status</span><span>Investment</span><span>Qty</span><span>Buy Price</span><span>Market Value</span><span>Live P&amp;L</span><span>Progress</span>
+                      <span>Item</span><span>Status</span><span>Investment</span><span>Qty</span><span>Buy Price</span><span>Market Value</span><span>Live P&amp;L</span><span>Progress</span><span></span><span>Auto</span>
                     </div>
                     {liveOps.map(op => {
                       const liveItem = items.find(i => i.name.toLowerCase() === op.item_name.toLowerCase());
@@ -1923,43 +2095,19 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       const fillPct = op.quantity > 0 ? Math.round(((op.status === "BUYING" ? op.qty_filled_buy : op.qty_filled_sell) || 0) / op.quantity * 100) : 0;
                       const statusColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[op.status] || "var(--text-dim)";
                       const statusLabel = { BUYING: "🟡 Buying", BOUGHT: "🟢 Holding", SELLING: "🔵 Selling", SOLD: "✅ Sold" }[op.status] || op.status;
+                      const hasRules = autopilotRules[op.item_name] && Object.values(autopilotRules[op.item_name]).some(v => v !== "");
+                      const isAutopilotOpen = autopilotOpen === op.item_name;
                       return (
-                        <div key={op.id} className="op-row op-row-healthy" onClick={() => liveItem && setSelectedItem(liveItem)}>
-                          <div>
-                            <div className="op-item-name">{op.item_name}</div>
-                            <div className="op-item-sub">Slot {op.slot + 1} · {op.buy_started_at ? getHoldTime(op.buy_started_at) : ""}</div>
-                          </div>
-                          <span style={{ fontSize: "12px", color: statusColor }}>{statusLabel}</span>
-                          <span style={{ fontSize: "12px" }}>{op.buy_price && op.quantity ? formatGP(op.buy_price * op.quantity) : "—"}</span>
-                          <span style={{ fontSize: "12px" }}>{(op.quantity || 0).toLocaleString()}</span>
-                          <span style={{ fontSize: "12px" }}>{op.buy_price ? formatGP(op.buy_price) : "—"}</span>
-                          <span style={{ fontSize: "12px", color: liveItem ? "var(--text)" : "var(--text-dim)" }}>
-                            {liveItem ? formatGP(liveItem.high) : "—"}
-                          </span>
-                          <div>
-                            {op.status === "SOLD" ? (
-                              <>
-                                <div style={{ color: (op.profit || 0) >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>
-                                  {(op.profit || 0) >= 0 ? "+" : ""}{formatGP(op.profit || 0)}
-                                </div>
-                                <div style={{ fontSize: "10px", color: (op.roi || 0) >= 0 ? "var(--green)" : "var(--red)" }}>{op.roi}% ROI</div>
-                              </>
-                            ) : op.buy_price ? (
-                              <>
-                                <div style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>
-                                  {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
-                                </div>
-                                <div style={{ fontSize: "10px", color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>{pnlPct}%</div>
-                              </>
-                            ) : <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>—</span>}
-                          </div>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                            <div style={{ background: "var(--bg4)", borderRadius: "3px", height: "4px", overflow: "hidden" }}>
-                              <div style={{ background: statusColor, height: "100%", width: fillPct + "%", borderRadius: "3px" }} />
-                            </div>
-                            <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>{fillPct}% filled</span>
-                          </div>
-                        </div>
+                        <AutopilotRow key={op.id}
+                          op={op} liveItem={liveItem} statusColor={statusColor} statusLabel={statusLabel}
+                          pnlTotal={pnlTotal} pnlPct={pnlPct} fillPct={fillPct}
+                          hasRules={hasRules} isAutopilotOpen={isAutopilotOpen}
+                          autopilotRules={autopilotRules}
+                          setAutopilotOpen={setAutopilotOpen}
+                          saveAutopilotRules={saveAutopilotRules}
+                          clearAutopilotRules={clearAutopilotRules}
+                          formatGP={formatGP} setSelectedItem={setSelectedItem}
+                        />
                       );
                     })}
                   </div>
@@ -2381,10 +2529,10 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                 </div>
                 {smartEvents?.length > 0 && (
                   <div style={{ display: "flex", gap: "6px", marginBottom: "10px", flexWrap: "wrap" }}>
-                    {["all","spike","surge","dump","crash"].map(f => (
+                    {["all","spike","surge","dump","crash","autopilot"].map(f => (
                       <button key={f} onClick={() => setMerchantFeedFilter(f)}
                         style={{ padding: "3px 9px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === f ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === f ? "var(--gold)" : "var(--text-dim)", fontSize: "10px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
-                        {f === "all" ? "All" : f === "spike" ? "📈" : f === "surge" ? "🔥" : f === "dump" ? "⚠️" : "💥"}
+                        {f === "all" ? "All" : f === "spike" ? "📈" : f === "surge" ? "🔥" : f === "dump" ? "⚠️" : f === "autopilot" ? "🤖" : "💥"}
                       </button>
                     ))}
                   </div>
@@ -3738,8 +3886,8 @@ export default function RuneTrader() {
 
   // ── Smart Alerts ──
   const [smartAlertSettings, setSmartAlertSettings] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("runetrader_smart_alerts") || '{"marginSpike":true,"volumeSurge":true,"dumpDetected":true,"priceCrash":true}'); }
-    catch { return { marginSpike: true, volumeSurge: true, dumpDetected: true, priceCrash: true }; }
+    try { return JSON.parse(localStorage.getItem("runetrader_smart_alerts") || '{"marginSpike":true,"volumeSurge":true,"dumpDetected":true,"priceCrash":true,"autopilotSound":true,"autopilotPush":true}'); }
+    catch { return { marginSpike: true, volumeSurge: true, dumpDetected: true, priceCrash: true, autopilotSound: true, autopilotPush: true }; }
   });
   const [smartEvents, setSmartEvents] = useState([]);
   const [smartFeedFilter, setSmartFeedFilter] = useState("all"); // all | spike | surge | dump | crash
@@ -4825,6 +4973,34 @@ RULES:
                       </div>
                     </div>
                   ))}
+                </div>
+
+                {/* ── AUTOPILOT ALERT SETTINGS ── */}
+                <div className="smart-alert-toggles">
+                  <div className="smart-alert-toggle-title">🤖 Autopilot Alerts</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
+                    Fires when your per-position rules are triggered in Active Operations.
+                  </div>
+                  <div className="smart-alert-toggle-row">
+                    <div className="smart-alert-toggle-info">
+                      <div className="smart-alert-toggle-name">🔊 Sound Alert</div>
+                      <div className="smart-alert-toggle-desc">Play a chime in-browser when an autopilot rule fires</div>
+                    </div>
+                    <label className="toggle-switch">
+                      <input type="checkbox" checked={smartAlertSettings.autopilotSound ?? true} onChange={e => saveSmartAlertSettings("autopilotSound", e.target.checked)} />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div className="smart-alert-toggle-row">
+                    <div className="smart-alert-toggle-info">
+                      <div className="smart-alert-toggle-name">🔔 Push Notification</div>
+                      <div className="smart-alert-toggle-desc">Fire a browser push notification — works even if RuneTrader is in the background</div>
+                    </div>
+                    <label className="toggle-switch">
+                      <input type="checkbox" checked={smartAlertSettings.autopilotPush ?? true} onChange={e => saveSmartAlertSettings("autopilotPush", e.target.checked)} />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
                 </div>
 
                 {/* ── PRICE ALERT FORM ── */}
