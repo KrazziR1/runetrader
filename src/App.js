@@ -3246,16 +3246,18 @@ export default function RuneTrader() {
   const [merchantMode, setMerchantMode] = useState(false);
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
   const [showMerchantShutdown, setShowMerchantShutdown] = useState(false);
+  const [merchantTransitioning, setMerchantTransitioning] = useState(false);
   const [showMerchantAIBubble, setShowMerchantAIBubble] = useState(false);
   const [merchantAIOpen, setMerchantAIOpen] = useState(false);
   const merchantAIMessagesEndRef = useRef(null);
 
   function activateMerchantWithAnim(cb) {
+    setMerchantTransitioning(true);
     setShowMerchantAnim('active');
     setShowMerchantAIBubble(false);
-    setTimeout(() => { if (cb) cb(); }, 5600);             // render merchant mode underneath
-    setTimeout(() => setShowMerchantAnim('fading'), 5800); // fade overlay out
-    setTimeout(() => { setShowMerchantAnim('done'); }, 6400); // hide but keep mounted
+    setTimeout(() => { if (cb) cb(); }, 5600);
+    setTimeout(() => setShowMerchantAnim('fading'), 5800);
+    setTimeout(() => { setShowMerchantAnim('done'); setMerchantTransitioning(false); }, 6400);
     setTimeout(() => setShowMerchantAIBubble(true), 6500);
   }
   const [merchantCapital, setMerchantCapital] = useState(0);
@@ -3327,13 +3329,14 @@ export default function RuneTrader() {
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
       activateMerchantWithAnim(() => { setMerchantMode(true); setTimeout(() => setShowMerchantAIBubble(true), 400); });
     } else {
+      setMerchantTransitioning(true);
       setShowMerchantShutdown('active');
       setShowMerchantAIBubble(false);
       setMerchantAIOpen(false);
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
-      setTimeout(() => setShowMerchantShutdown('fading'), 2400);  // fade out
-      setTimeout(() => { setMerchantMode(false); }, 2850);        // switch content while overlay still covers
-      setTimeout(() => setShowMerchantShutdown('done'), 2950);    // hide overlay after content switched
+      setTimeout(() => setShowMerchantShutdown('fading'), 2400);
+      setTimeout(() => { setMerchantMode(false); }, 2850);
+      setTimeout(() => { setShowMerchantShutdown('done'); setMerchantTransitioning(false); }, 2950);
     }
   }
 
@@ -4215,6 +4218,11 @@ RULES:
             </button>
           </div>
         </div>
+      )}
+
+      {/* MERCHANT TRANSITION BACKDROP - prevents any flash between states */}
+      {merchantTransitioning && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 99998, background: '#0a0a0a', pointerEvents: 'all' }} />
       )}
 
       {/* MERCHANT SHUTDOWN ANIMATION */}
