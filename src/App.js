@@ -4808,13 +4808,10 @@ RULES:
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
                             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                               {item.hasPrice ? (
-                                <>
-                                  <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1_000_000 ? "var(--green)" : gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}
-                                    title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case (full limit): ${formatGP(gpPerFillMax)} GP`}>
-                                    {formatGP(gpPerFill)}
-                                  </span>
-                                  {fillConf && <span style={{ fontSize: "10px", color: fillConfColor }}>{fillConf}</span>}
-                                </>
+                                <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1_000_000 ? "var(--green)" : gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}
+                                  title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case (full limit): ${formatGP(gpPerFillMax)} GP`}>
+                                  {formatGP(gpPerFill)}
+                                </span>
                               ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
                             </div>
                             <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
