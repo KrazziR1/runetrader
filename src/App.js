@@ -836,7 +836,7 @@ const TIME_RANGES = [
 const TOUR_STEPS = [
   { id: "flips-table", title: "Live Flip Scanner", desc: "Every tradeable OSRS item ranked by score. Score factors in margin, volume, and ROI — higher is safer and more profitable. Click any item to see its price history.", target: ".flips-table", placement: "top" },
   { id: "prefs-bar", title: "Set Your Preferences", desc: "Enter your cash stack to filter flips you can afford. Set risk tolerance and flip speed to personalise the list for your playstyle.", target: ".prefs-bar", placement: "bottom" },
-  { id: "ai-advisor", title: "AI Flip Advisor", desc: "Ask the AI anything — best flips for your budget, what's trending, or whether a specific item is worth flipping. It has live GE data.", target: ".right-panel", placement: "left" },
+  { id: "ai-advisor", title: "AI Flip Advisor", desc: "Ask the AI anything — best flips for your budget, what's trending, or whether a specific item is worth flipping. It has live GE data.", target: ".merchant-ai-bubble", placement: "left" },
   { id: "tracker-tab", title: "Track Your Flips", desc: "Log every flip to track total profit, best items, and average returns. Your history syncs across all your devices automatically.", target: ".nav-tabs", placement: "bottom" },
   { id: "done", title: "You're Ready to Flip! ⚔️", desc: "That's everything. Start by setting your cash stack, then check the top flips list. Good luck on the Grand Exchange!", target: null, placement: "center" },
 ];
@@ -859,9 +859,9 @@ const MERCHANT_TOUR_STEPS = [
   { title: "⚡ Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the ⚙️ gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
   { title: "📡 Live Feed", desc: "Every alert that's fired this session lands here in real time. Filter by type, click any alert to jump straight to that item's chart, and clear the feed whenever you like.", target: "#tour-live-feed", placement: "right", view: "alerts" },
   // ── AI Bubble ──
-  { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold ⚔️ bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "left", view: "operations" },
+  { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold ⚔️ bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "top", view: "operations" },
   // ── Done ──
-  { title: "You're fully set up ⚔️", desc: "Start a buy offer in the GE in-game — the RuneTrader plugin picks it up automatically and opens a position here. Close or sell in-game and it updates in real time. Good luck on the GE.", target: null, placement: "center", view: "operations" },
+  { title: "You're fully set up ⚔️", desc: "Log a buy in the Tracker without a sell price — it opens a position here automatically. Close it from Merchant Mode and it goes straight to your Flip History. Good luck on the GE.", target: null, placement: "center", view: "operations" },
 ];
 
 // ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
@@ -4496,45 +4496,6 @@ RULES:
               setActiveView={setMerchantView}
             />
 
-            {/* MERCHANT AI BUBBLE */}
-            {showMerchantAIBubble && !merchantAIOpen && (
-              <div className="merchant-ai-bubble" onClick={() => setMerchantAIOpen(true)} title="AI Advisor">
-                <div className="bubble-ping" />
-                <span>⚔️</span>
-              </div>
-            )}
-            {merchantAIOpen && (
-              <div className="merchant-ai-modal">
-                <div className="merchant-ai-modal-header">
-                  <span style={{ fontSize: 20 }}>⚔️</span>
-                  <div><h4>AI Advisor</h4><p>Live GE data · Powered by Claude</p></div>
-                  <button className="merchant-ai-close" onClick={() => setMerchantAIOpen(false)}>✕</button>
-                </div>
-                <div className="merchant-ai-modal-body">
-                  {messages.map((msg, i) => (
-                    <div key={i} className={`msg ${msg.role}`}>
-                      <div className="msg-bubble">
-                        {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
-                      </div>
-                      <span className="msg-time">{formatTime(msg.time)}</span>
-                    </div>
-                  ))}
-                  {aiLoading && (
-                    <div className="msg assistant"><div className="msg-bubble"><div className="typing"><div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" /></div></div></div>
-                  )}
-                  <div ref={merchantAIMessagesEndRef} />
-                </div>
-                <div className="merchant-ai-modal-input">
-                  <textarea
-                    placeholder="Ask about your positions..."
-                    value={input}
-                    onChange={e => { setInput(e.target.value); e.target.style.height = "36px"; e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px"; }}
-                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (input.trim()) sendMessage(input.trim()); } }}
-                  />
-                  <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>➤</button>
-                </div>
-              </div>
-            )}
           </>) : (
           <>
           <div className="left-panel">
@@ -4939,46 +4900,49 @@ RULES:
               </>
             )}
           </div>
-
-          {/* ── AI CHAT PANEL ── */}
-          <div className="right-panel">
-            <div className="chat-header">
-              <div className="chat-header-icon">⚔️</div>
-              <div className="chat-header-text"><h3>AI Advisor</h3><p>Live GE data · Powered by Claude</p></div>
-            </div>
-            <div className="chat-body">
-              <div className="chat-messages">
-                {messages.map((msg, i) => (
-                  <div key={i} className={`msg ${msg.role}`}>
-                    <div className="msg-bubble">
-                      {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
-                    </div>
-                    <span className="msg-time">{formatTime(msg.time)}</span>
-                  </div>
-                ))}
-                {aiLoading && <div className="msg assistant"><div className="msg-bubble"><div className="typing"><div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" /></div></div></div>}
-                <div ref={messagesEndRef} />
-              </div>
-              <div className="chat-float-input">
-                <div className="quick-prompts-row">
-                  {QUICK_PROMPTS.map(p => <button key={p} className="quick-prompt" onClick={() => sendMessage(p)}>{p}</button>)}
-                </div>
-                <div className="chat-input-row">
-                  <textarea className="chat-input" placeholder="Ask anything about flipping..." value={input}
-                    onChange={e => {
-                      setInput(e.target.value);
-                      e.target.style.height = "24px";
-                      e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px";
-                    }}
-                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (input.trim()) sendMessage(input.trim()); } }} />
-                  <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>➤</button>
-                </div>
-              </div>
-            </div>
-          </div>
           </>
           )}
         </div>
+
+        {/* ── GLOBAL AI BUBBLE (all pages) ── */}
+        {!merchantAIOpen && (
+          <div className="merchant-ai-bubble" onClick={() => setMerchantAIOpen(true)} title="AI Advisor">
+            <div className="bubble-ping" />
+            <span>⚔️</span>
+          </div>
+        )}
+        {merchantAIOpen && (
+          <div className="merchant-ai-modal">
+            <div className="merchant-ai-modal-header">
+              <span style={{ fontSize: 20 }}>⚔️</span>
+              <div><h4>AI Advisor</h4><p>Live GE data · Powered by Claude</p></div>
+              <button className="merchant-ai-close" onClick={() => setMerchantAIOpen(false)}>✕</button>
+            </div>
+            <div className="merchant-ai-modal-body">
+              {messages.map((msg, i) => (
+                <div key={i} className={`msg ${msg.role}`}>
+                  <div className="msg-bubble">
+                    {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
+                  </div>
+                  <span className="msg-time">{formatTime(msg.time)}</span>
+                </div>
+              ))}
+              {aiLoading && (
+                <div className="msg assistant"><div className="msg-bubble"><div className="typing"><div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" /></div></div></div>
+              )}
+              <div ref={merchantAIMessagesEndRef} />
+            </div>
+            <div className="merchant-ai-modal-input">
+              <textarea
+                placeholder={merchantMode ? "Ask about your positions..." : "Ask anything about flipping..."}
+                value={input}
+                onChange={e => { setInput(e.target.value); e.target.style.height = "36px"; e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px"; }}
+                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (input.trim()) sendMessage(input.trim()); } }}
+              />
+              <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>➤</button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
