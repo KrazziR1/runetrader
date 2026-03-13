@@ -349,9 +349,9 @@ const STYLES = `
   .ge-slot.active:hover { border-color: var(--gold-dim); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
   .ge-slot.empty { border-style: dashed; opacity: 0.3; cursor: pointer; }
   .ge-slot.empty:hover { opacity: 0.6; border-color: var(--gold-dim); }
-  .slot-name { font-size: 11px; color: var(--text-dim); text-align: center; line-height: 1.2; padding: 0 4px; word-break: break-word; }
+  .slot-name { font-size: 13px; font-weight: 500; color: var(--text); text-align: center; line-height: 1.2; padding: 0 4px; word-break: break-word; }
   .slot-pnl { font-size: 12px; font-weight: 600; }
-  .slot-status-label { font-size: 9px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; }
+  .slot-status-label { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
   .slot-dot { position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; }
   .ops-table { overflow: visible; }
   .autopilot-btn { background: none; border: 1px solid var(--border); border-radius: 5px; color: var(--text-dim); font-size: 12px; padding: 3px 7px; cursor: pointer; transition: all 0.15s; line-height: 1; }
@@ -581,7 +581,7 @@ const STYLES = `
   .tour-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 300; pointer-events: all; }
   .tour-highlight { position: fixed; z-index: 301; border-radius: 10px; box-shadow: 0 0 0 3px var(--gold), 0 0 0 6px rgba(201,168,76,0.2), 0 0 40px rgba(201,168,76,0.15); pointer-events: none; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); animation: tourPulse 2s ease-in-out infinite; }
   @keyframes tourPulse { 0%,100%{box-shadow:0 0 0 3px var(--gold),0 0 0 6px rgba(201,168,76,0.2),0 0 40px rgba(201,168,76,0.15)} 50%{box-shadow:0 0 0 3px var(--gold-light),0 0 0 10px rgba(201,168,76,0.15),0 0 60px rgba(201,168,76,0.25)} }
-  .tour-tooltip { position: fixed; z-index: 302; pointer-events: all; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 14px; padding: 26px 28px; width: 320px; max-width: calc(100vw - 24px); max-height: calc(100vh - 24px); overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: tooltipIn 0.25s cubic-bezier(0.4,0,0.2,1); }
+  .tour-tooltip { position: fixed; z-index: 302; pointer-events: all; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 14px; padding: 26px 28px; width: 320px; max-width: calc(100vw - 24px); max-height: calc(100vh - 120px); overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.6); animation: tooltipIn 0.25s cubic-bezier(0.4,0,0.2,1); }
   @keyframes tooltipIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   .tour-step-label { font-size: 11px; color: var(--gold-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
   .tour-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); margin-bottom: 12px; }
@@ -2022,7 +2022,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                         <div key={i} className="ge-slot active" title={`${liveOffer.item_name} · ${liveOffer.status} · ${pct}% filled`}
                           onClick={() => { const it = items.find(x => x.name.toLowerCase() === liveOffer.item_name.toLowerCase()); if (it) setSelectedItem(it); }}>
                           <div className="slot-dot" style={{ background: slotColor }} />
-                          <img src={itemIconUrl(liveOffer.item_name)} alt="" style={{ width: 52, height: 52, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
+                          <img src={itemIconUrl(liveOffer.item_name)} alt="" style={{ width: 64, height: 64, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
                           <div className="slot-name">{liveOffer.item_name.length > 14 ? liveOffer.item_name.slice(0, 13) + "…" : liveOffer.item_name}</div>
                           <div className="slot-status-label" style={{ color: slotColor }}>{liveOffer.status}</div>
                           <div className="slot-pnl" style={{ color: "var(--text-dim)", fontSize: "11px" }}>{pct}% filled</div>
@@ -2044,7 +2044,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                         onClick={() => liveItem && setSelectedItem(liveItem)}
                         title={`${pos.name} · ${STATUS_LABELS[status]} · Click to view chart`}>
                         <div className={`slot-dot`} style={{ background: STATUS_COLORS[status] }} />
-                        <img src={itemIconUrl(pos.name)} alt="" style={{ width: 52, height: 52, objectFit: "contain", imageRendering: "pixelated" }}
+                        <img src={itemIconUrl(pos.name)} alt="" style={{ width: 64, height: 64, objectFit: "contain", imageRendering: "pixelated" }}
                           onError={e => { e.target.style.display = "none"; }} />
                         <div className="slot-name">{pos.name.length > 14 ? pos.name.slice(0, 13) + "…" : pos.name}</div>
                         <div className="slot-status-label" style={{ color: STATUS_COLORS[status] }}>{STATUS_LABELS[status]}</div>
@@ -2528,8 +2528,8 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   <div style={{ display: "flex", gap: "6px", marginBottom: "10px", flexWrap: "wrap" }}>
                     {["all","spike","surge","dump","crash","autopilot"].map(f => (
                       <button key={f} onClick={() => setMerchantFeedFilter(f)}
-                        style={{ padding: "3px 9px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === f ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === f ? "var(--gold)" : "var(--text-dim)", fontSize: "10px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
-                        {f === "all" ? "All" : f === "spike" ? "📈" : f === "surge" ? "🔥" : f === "dump" ? "⚠️" : f === "autopilot" ? "🤖" : "💥"}
+                        style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === f ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === f ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "4px" }}>
+                        {f === "all" ? "All" : f === "spike" ? <>📈 Margin</> : f === "surge" ? <>🔥 Volume</> : f === "dump" ? <>⚠️ Dump</> : f === "autopilot" ? <>🤖 Autopilot</> : <>💥 Crash</>}
                       </button>
                     ))}
                   </div>
@@ -4622,12 +4622,12 @@ RULES:
         const isCenter = step.placement === "center" || !merchantTourRect;
         const pad = 10;
         const hl = merchantTourRect || {};
-        const ttHeight = 240;
+        const ttHeight = 300;
         const ttWidth = 320;
         const vp = window.innerHeight;
         const leftPos = Math.max(8, Math.min((hl.left || 0), window.innerWidth - ttWidth - 8));
         // Helper: clamp top so tooltip is always fully on screen
-        const clampTop = (t) => Math.max(8, Math.min(t, vp - ttHeight - 8));
+        const clampTop = (t) => Math.max(8, Math.min(t, vp - ttHeight - 90));
         let ttStyle = {};
         if (isCenter) {
           ttStyle = { top: "50%", left: "50%", transform: "translate(-50%,-50%)" };
@@ -5076,10 +5076,11 @@ RULES:
                       <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Filter:</span>
                       <select className="smart-feed-select" value={smartFeedFilter} onChange={e => setSmartFeedFilter(e.target.value)}>
                         <option value="all">All types</option>
-                        <option value="spike">📈 Spike only</option>
-                        <option value="surge">🔥 Surge only</option>
-                        <option value="dump">⚠️ Dump only</option>
-                        <option value="crash">💥 Crash only</option>
+                        <option value="spike">📈 Margin Spike</option>
+                        <option value="surge">🔥 Volume Surge</option>
+                        <option value="dump">⚠️ Dump Detected</option>
+                        <option value="crash">💥 Price Crash</option>
+                        <option value="autopilot">🤖 Autopilot</option>
                       </select>
                       <span style={{ fontSize: "11px", color: "var(--text-dim)", marginLeft: "8px" }}>Sort:</span>
                       <select className="smart-feed-select" value={smartFeedSort} onChange={e => setSmartFeedSort(e.target.value)}>
