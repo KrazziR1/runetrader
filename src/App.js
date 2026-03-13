@@ -4013,9 +4013,9 @@ ${budget ? `User cash stack: ${parseInt(budget.replace(/,/g,"")).toLocaleString(
 ${prefs.risk ? `Risk tolerance: ${prefs.risk} — ${riskMap[prefs.risk]}` : "Risk not set."}
 ${prefs.speed ? `Flip speed: ${prefs.speed} — ${speedMap[prefs.speed]}` : "Speed not set."}
 
-PLAYER'S ACTIVE GE SLOTS (real-time):
+PLAYER'S ACTIVE GE SLOTS (synced live from RuneTrader plugin):
 ${slotContext}
-If the user asks why something isn't filling, refer to their slot data above — check drift, age, and fill % before answering. If a slot shows ⚠ CANCEL & RELIST, proactively mention it even if they didn't ask. Never make up slot data — only use what's shown above.
+CRITICAL: You DO have access to the player's GE slots via the RuneTrader plugin — NEVER say you don't have access to their slots. The data above is real and current. If it says 'No active GE offers right now' it means they have nothing in the GE at this moment OR they are not currently logged in-game — tell them that directly. If slots are listed, use them to give specific advice. If a slot shows ⚠ CANCEL & RELIST, mention it proactively even if they didn't ask. Never invent slot data beyond what is shown above.
 
 SCORING SYSTEM (explain if asked):
 - Score 0–100. Three components multiplied by a freshness multiplier.
