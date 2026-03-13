@@ -2433,7 +2433,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
     sb.from("ge_flips_live")
       .select("*")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
+      .order("buy_started_at", { ascending: false })
       .limit(50)
       .then(({ data }) => { setFlips(data || []); setLoading(false); });
 

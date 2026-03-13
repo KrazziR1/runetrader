@@ -23,8 +23,8 @@ function validateOffer(offer, index) {
     errors.push(`[${index}] itemName must be a non-empty string`);
   if (!VALID_TYPES.has(offer.offerType))
     errors.push(`[${index}] offerType must be BUY or SELL`);
-  if (typeof offer.offerPrice !== 'number' || offer.offerPrice <= 0)
-    errors.push(`[${index}] offerPrice must be a positive integer`);
+  if (typeof offer.offerPrice !== 'number' || offer.offerPrice < 0)
+    errors.push(`[${index}] offerPrice must be a non-negative integer`);
   if (typeof offer.qtyTotal !== 'number' || offer.qtyTotal <= 0)
     errors.push(`[${index}] qtyTotal must be a positive integer`);
   if (typeof offer.qtyFilled !== 'number' || offer.qtyFilled < 0)
@@ -157,17 +157,19 @@ export default async function handler(req, res) {
       // otherwise fall back to offerPrice (listed price).
       // spentAmount = total GP received for the sell order.
       const quantity  = offer.qtyFilled || offer.qtyTotal;
-      const sellPrice = (offer.spentAmount && quantity > 0)
-        ? Math.round(offer.spentAmount / quantity)   // actual fill price
-        : offer.offerPrice;                           // listed price (fallback)
+      // Plugin sends actual fill price as offerPrice (getSpent()/getQuantitySold()).
+      // Use it directly. offer.spent is also sent for verification but offerPrice
+      // is already the computed fill price.
+      const sellPrice = offer.offerPrice;
 
       const buyPrice = openFlip?.buy_price ?? null;
       let profit = null, roi = null;
+      let tax = null;
       if (buyPrice && sellPrice) {
-        const tax    = Math.min(Math.floor(sellPrice * 0.02), 5_000_000);
-        const margin = sellPrice - buyPrice - tax;
-        profit = margin * quantity;
-        roi    = parseFloat(((margin / buyPrice) * 100).toFixed(2));
+        tax            = Math.min(Math.floor(sellPrice * 0.02), 5_000_000);
+        const margin   = sellPrice - buyPrice - tax;
+        profit         = margin * quantity;
+        roi            = parseFloat(((margin / buyPrice) * 100).toFixed(2));
       }
 
       if (openFlip) {
@@ -175,7 +177,7 @@ export default async function handler(req, res) {
           .from('ge_flips_live')
           .update({
             status: 'SOLD', sell_price: sellPrice,
-            profit, roi, quantity, sell_completed_at: syncedAt,
+            profit, roi, tax, quantity, sell_completed_at: syncedAt,
           })
           .eq('id', openFlip.id);
       } else {
@@ -183,7 +185,7 @@ export default async function handler(req, res) {
         await supabase.from('ge_flips_live').insert({
           user_id: userId, slot, item_id: offer.itemId,
           item_name: offer.itemName.trim(), status: 'SOLD',
-          sell_price: sellPrice, profit, roi, quantity,
+          sell_price: sellPrice, profit, roi, tax, quantity,
           buy_started_at: syncedAt, sell_completed_at: syncedAt,
         });
       }
@@ -197,19 +199,6 @@ export default async function handler(req, res) {
     // overwrite a SOLD row. This is idempotent — every poll hitting the same
     // BOUGHT state will update the existing row, not insert a new one.
     if (offer.offerType === 'BUY') {
-      // Check if a SOLD row already occupies this slot
-      // (we don't want to overwrite history, and a new buy on same slot
-      //  should INSERT fresh, not update the SOLD row)
-      const { data: soldRow } = await supabase
-        .from('ge_flips_live')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('slot', slot)
-        .eq('status', 'SOLD')
-        .order('sell_completed_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
       const { data: openRow } = await supabase
         .from('ge_flips_live')
         .select('id, buy_price')
@@ -221,25 +210,30 @@ export default async function handler(req, res) {
         .maybeSingle();
 
       if (openRow) {
-        // Update existing open row — idempotent on every poll
+        // Update existing open row — idempotent on every poll.
+        // Always update buy_price: offer.offerPrice is now the actual fill price
+        // (getSpent()/getQuantitySold()) from the fixed plugin, so we always want
+        // the latest value — it gets more accurate as more of the order fills.
         await supabase
           .from('ge_flips_live')
           .update({
-            status:   offer.status,
-            quantity: offer.qtyFilled || offer.qtyTotal,
-            // Lock in buy_price once filled (BUYING may come through with 0)
-            ...(openRow.buy_price ? {} : { buy_price: offer.offerPrice }),
+            status:    offer.status,
+            quantity:  offer.qtyFilled || offer.qtyTotal,
+            buy_price: offer.offerPrice,
           })
           .eq('id', openRow.id);
       } else {
-        // No open row exists — fresh insert (even if soldRow exists for same slot,
-        // that's history and we insert a new open row alongside it)
+        // No open row exists — fresh insert.
+        // Use actual fill price if available (spent / qtyFilled), else listed price.
+        const insertBuyPrice = (offer.spent && offer.qtyFilled > 0)
+          ? Math.round(offer.spent / offer.qtyFilled)
+          : offer.offerPrice;
         await supabase.from('ge_flips_live').insert({
           user_id: userId, slot,
           item_id: offer.itemId,
           item_name: offer.itemName.trim(),
           status: offer.status,
-          buy_price: offer.offerPrice,
+          buy_price: insertBuyPrice,
           quantity: offer.qtyFilled || offer.qtyTotal,
           buy_started_at: syncedAt,
         });
