@@ -1276,25 +1276,9 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
   const trackerOpenFlips = flipsLog.filter(f => f.status === "open");
   const totalOpenValue = trackerOpenFlips.reduce((s, f) => s + (f.buyPrice || 0) * (f.qty || 1), 0);
 
-  // ── All-time stats (always shown in summary cards) ──
+  // ── All-time totals (used in summary cards) ──
   const totalProfit = allClosed.reduce((s, f) => s + (f.totalProfit || 0), 0);
   const totalFlips = allClosed.length;
-  const wins = allClosed.filter(f => (f.totalProfit || 0) > 0).length;
-  const winRate = totalFlips > 0 ? Math.round((wins / totalFlips) * 100) : null;
-  const avgProfit = totalFlips > 0 ? Math.round(totalProfit / totalFlips) : 0;
-
-  // Per-item aggregation
-  const itemMap = {};
-  allClosed.forEach(f => {
-    const key = f.item || f.item_name || "Unknown";
-    if (!itemMap[key]) itemMap[key] = { name: key, totalProfit: 0, flips: 0, wins: 0 };
-    itemMap[key].totalProfit += f.totalProfit || 0;
-    itemMap[key].flips += 1;
-    if ((f.totalProfit || 0) > 0) itemMap[key].wins += 1;
-  });
-  const itemStats = Object.values(itemMap).sort((a, b) => b.totalProfit - a.totalProfit);
-  const bestItems = itemStats.slice(0, 5);
-  const worstItems = [...itemStats].sort((a, b) => a.totalProfit - b.totalProfit).slice(0, 3);
 
   // Capital allocation — open tracker flips only
   const allOpen = trackerOpenFlips.map(f => ({ name: f.item, value: (f.buyPrice || 0) * (f.qty || 1) }));
