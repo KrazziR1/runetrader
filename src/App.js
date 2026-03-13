@@ -1586,15 +1586,20 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabas
     const ch = sb.channel("merchant-live-ops-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          // payload.old.slot is reliable; payload.old.id requires REPLICA IDENTITY FULL
-          setLiveOps(prev => prev.filter(o => o.slot !== payload.old.slot));
+          // Re-fetch on DELETE — don't rely on payload.old which requires REPLICA IDENTITY FULL
+          sb.from("ge_flips_live").select("*").eq("user_id", user.id)
+            .not("status", "in", "(SOLD,CANCELLED)")
+            .order("buy_started_at", { ascending: false })
+            .then(({ data }) => setLiveOps(data || []));
         } else {
           const op = payload.new;
           if (["SOLD", "CANCELLED"].includes(op.status)) {
-            setLiveOps(prev => prev.filter(o => o.id !== op.id));
+            // Remove by slot — more reliable than id without REPLICA IDENTITY FULL
+            setLiveOps(prev => prev.filter(o => o.slot !== op.slot));
           } else {
             setLiveOps(prev => {
-              const idx = prev.findIndex(o => o.id === op.id);
+              // Try matching by id first, fall back to slot for reliability
+              const idx = prev.findIndex(o => o.id === op.id || o.slot === op.slot);
               if (idx >= 0) { const next = [...prev]; next[idx] = op; return next; }
               return [op, ...prev];
             });
@@ -1764,7 +1769,7 @@ function MerchantMode({ items, flipsLog, manualPositions, geOffers = [], supabas
                 </div>
                 <div className="slots-grid">
                   {Array.from({ length: 8 }).map((_, i) => {
-                    const liveOffer = geOffers.find(o => o.slot === i && ["BUYING","BOUGHT","SELLING","SOLD"].includes(o.status));
+                    const liveOffer = geOffers.find(o => o.slot === i && ["BUYING","BOUGHT","SELLING"].includes(o.status));
                     const pos = allOpenPositions[i];
                     if (liveOffer) {
                       const slotColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[liveOffer.status] || "var(--border)";
@@ -2440,11 +2445,14 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
     const ch = sb.channel("auto-flip-history-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          // payload.old.slot is reliable; payload.old.id requires REPLICA IDENTITY FULL
-          setFlips(prev => prev.filter(f => f.slot !== payload.old.slot));
+          // Re-fetch on DELETE — don't rely on payload.old which requires REPLICA IDENTITY FULL
+          sb.from("ge_flips_live").select("*").eq("user_id", user.id)
+            .order("buy_started_at", { ascending: false }).limit(50)
+            .then(({ data }) => setFlips(data || []));
         } else {
           setFlips(prev => {
-            const idx = prev.findIndex(f => f.id === payload.new.id);
+            // Try matching by id first, fall back to slot for reliability
+            const idx = prev.findIndex(f => f.id === payload.new.id || f.slot === payload.new.slot);
             if (idx >= 0) { const next = [...prev]; next[idx] = payload.new; return next; }
             return [payload.new, ...prev].slice(0, 50);
           });
@@ -2565,8 +2573,9 @@ function LiveGESlots({ user, supabase: sb }) {
     const offersChannel = sb.channel("live-ge-offers-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_offers", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          // payload.old.slot is reliable; payload.old.id requires REPLICA IDENTITY FULL
-          setOffers(prev => prev.filter(o => o.slot !== payload.old.slot));
+          // Re-fetch on DELETE — don't rely on payload.old.slot which requires REPLICA IDENTITY FULL
+          sb.from("ge_offers").select("*").eq("user_id", user.id).order("slot")
+            .then(({ data }) => setOffers(data || []));
         } else {
           setOffers(prev => {
             const idx = prev.findIndex(o => o.slot === payload.new.slot);
@@ -2809,13 +2818,18 @@ export default function RuneTrader() {
       .then(({ data }) => setGeOffers(data || []));
     const ch = supabase.channel("merchant-ge-offers-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_offers", filter: `user_id=eq.${user.id}` }, payload => {
-        setGeOffers(prev => {
-          if (payload.eventType === "DELETE") return prev.filter(o => o.slot !== payload.old.slot);
-          const o = payload.new;
-          const idx = prev.findIndex(x => x.slot === o.slot);
-          if (idx >= 0) { const next = [...prev]; next[idx] = o; return next; }
-          return [...prev, o].sort((a, b) => a.slot - b.slot);
-        });
+        if (payload.eventType === "DELETE") {
+          // Re-fetch on DELETE — don't rely on payload.old.slot which requires REPLICA IDENTITY FULL
+          supabase.from("ge_offers").select("*").eq("user_id", user.id).order("slot")
+            .then(({ data }) => setGeOffers(data || []));
+        } else {
+          setGeOffers(prev => {
+            const o = payload.new;
+            const idx = prev.findIndex(x => x.slot === o.slot);
+            if (idx >= 0) { const next = [...prev]; next[idx] = o; return next; }
+            return [...prev, o].sort((a, b) => a.slot - b.slot);
+          });
+        }
       }).subscribe();
     return () => supabase.removeChannel(ch);
   }, [user, merchantMode]); // eslint-disable-line

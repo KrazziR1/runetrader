@@ -120,12 +120,19 @@ export default async function handler(req, res) {
 
     // ── EMPTY or CANCELLED_BUY: clean up open row ────────────
     if (offer.status === 'EMPTY' || offer.status === 'CANCELLED_BUY') {
-      await supabase
-        .from('ge_flips_live')
-        .delete()
-        .eq('user_id', userId)
-        .eq('slot', slot)
-        .neq('status', 'SOLD');
+      // Safety guard: don't delete if another offer in this same batch is active for
+      // this slot (prevents race where EMPTY and BUYING arrive in same payload).
+      const slotIsActiveElsewhere = body.some(o =>
+        o.slot === slot && o !== offer && ['BUYING','BOUGHT','SELLING'].includes(o.status)
+      );
+      if (!slotIsActiveElsewhere) {
+        await supabase
+          .from('ge_flips_live')
+          .delete()
+          .eq('user_id', userId)
+          .eq('slot', slot)
+          .neq('status', 'SOLD');
+      }
       continue;
     }
 
@@ -153,13 +160,9 @@ export default async function handler(req, res) {
         .limit(1)
         .maybeSingle();
 
-      // FIX: use spentAmount/qtyFilled for actual sell price if plugin sends it,
-      // otherwise fall back to offerPrice (listed price).
-      // spentAmount = total GP received for the sell order.
+      // sellPrice: plugin computes getSpent()/getQuantitySold() and sends it as offerPrice.
+      // offer.spent is also sent raw for cross-checking.
       const quantity  = offer.qtyFilled || offer.qtyTotal;
-      // Plugin sends actual fill price as offerPrice (getSpent()/getQuantitySold()).
-      // Use it directly. offer.spent is also sent for verification but offerPrice
-      // is already the computed fill price.
       const sellPrice = offer.offerPrice;
 
       const buyPrice = openFlip?.buy_price ?? null;
@@ -173,21 +176,25 @@ export default async function handler(req, res) {
       }
 
       if (openFlip) {
-        await supabase
+        const { error: soldErr } = await supabase
           .from('ge_flips_live')
           .update({
             status: 'SOLD', sell_price: sellPrice,
             profit, roi, tax, quantity, sell_completed_at: syncedAt,
           })
-          .eq('id', openFlip.id);
+          .eq('id', openFlip.id)
+          .eq('slot', slot); // double-check slot matches for safety
+        if (soldErr) console.error('ge_flips_live SOLD update error:', soldErr);
       } else {
-        // Plugin restarted mid-flip — insert closed record with what we know
-        await supabase.from('ge_flips_live').insert({
+        // No open flip found (plugin restarted mid-flip, or SOLD fired before BUYING)
+        // Insert a closed record with what we know
+        const { error: soldInsertErr } = await supabase.from('ge_flips_live').insert({
           user_id: userId, slot, item_id: offer.itemId,
           item_name: offer.itemName.trim(), status: 'SOLD',
           sell_price: sellPrice, profit, roi, tax, quantity,
           buy_started_at: syncedAt, sell_completed_at: syncedAt,
         });
+        if (soldInsertErr) console.error('ge_flips_live SOLD insert error:', soldInsertErr);
       }
       continue;
     }
@@ -228,7 +235,7 @@ export default async function handler(req, res) {
         const insertBuyPrice = (offer.spent && offer.qtyFilled > 0)
           ? Math.round(offer.spent / offer.qtyFilled)
           : offer.offerPrice;
-        await supabase.from('ge_flips_live').insert({
+        const { error: insertErr } = await supabase.from('ge_flips_live').insert({
           user_id: userId, slot,
           item_id: offer.itemId,
           item_name: offer.itemName.trim(),
@@ -237,6 +244,7 @@ export default async function handler(req, res) {
           quantity: offer.qtyFilled || offer.qtyTotal,
           buy_started_at: syncedAt,
         });
+        if (insertErr) console.error('ge_flips_live INSERT error:', insertErr);
       }
     } else {
       // SELL offer (offerType=SELL, status=SELLING)
