@@ -856,7 +856,7 @@ const TOUR_STEPS = [
 
 const MERCHANT_TOUR_STEPS = [
   // ── Operations tab ──
-  { title: "Welcome to Merchant Mode ⚔️", desc: "Your war room for managing multiple GE positions at once. Three tabs cover everything: Operations, Analytics, and Alerts. Let's walk through each one.", target: null, placement: "center", view: "operations" },
+  { title: "Welcome to Merchant Mode ⚔️", desc: "Your war room for managing multiple GE positions at once. Four tabs cover everything: Operations, Analytics, Alerts, and Market. Let's walk through each one.", target: null, placement: "center", view: "operations" },
   { title: "Capital Overview", desc: "Tracks your full GP stack at a glance. Deployed = GP locked in open positions. Idle = unused GP ready to put to work. Realised = profit closed today. Click 'Update' any time to adjust your stack.", target: ".capital-bar", placement: "bottom", view: "operations" },
   { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips. Dot colours show each position's status: 🟡 Buying · 🟢 Holding · 🔵 Selling · 🔴 Danger. Click any slot to view that item's price chart.", target: ".slots-grid", placement: "bottom", view: "operations" },
   { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Use the status dropdown to mark each flip: Buying → Holding → Selling. Red health bar means consider cutting the position.", target: "#active-operations-section", placement: "top", view: "operations" },
@@ -1790,7 +1790,7 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
             <span style={{ fontFamily: "'Cinzel', serif", fontSize: "14px", fontWeight: 700, color: "var(--gold)", letterSpacing: "1.5px" }}>MERCHANT MODE</span>
           </div>
           <div className="merchant-header-pills">
-            {[["operations", "⚔️ Operations"], ["analytics", "📊 Analytics"], ["alerts", "⚡ Alerts"]].map(([v, l]) => (
+            {[["operations", "⚔️ Operations"], ["analytics", "📊 Analytics"], ["alerts", "⚡ Alerts"], ["market", "📈 Market"]].map(([v, l]) => (
               <button key={v} className={`merchant-nav-pill${activeView === v ? " active" : ""}`} onClick={() => setActiveView(v)}>{l}</button>
             ))}
           </div>
@@ -2453,6 +2453,189 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
             </div>
           </div>
         )}
+
+        {activeView === "market" && (
+          <div style={{ padding: "0 0 24px 0" }}>
+
+            {/* Filter bar */}
+            <div className="filter-bar" style={{ marginBottom: "12px" }}>
+              <span className="filter-label">Filter:</span>
+              {["all", "f2p", "members", "highvol", "favourites"].map(f => (
+                <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
+                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `⭐ Favourites${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
+                </button>
+              ))}
+              <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
+              <button
+                className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
+                onClick={() => setShowAdvFilters(v => !v)}
+              >
+                ⚙ Filters {advFilterCount > 0 && <span className="adv-filter-badge">{advFilterCount}</span>}
+              </button>
+            </div>
+
+            {/* Advanced filter panel */}
+            {showAdvFilters && (
+              <div className="adv-filter-panel" style={{ marginBottom: "12px" }}>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">Margin (gp)</div>
+                  <div className="adv-filter-row">
+                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minMargin} onChange={e => setAdv("minMargin", e.target.value)} type="number" />
+                    <span className="adv-filter-sep">–</span>
+                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxMargin} onChange={e => setAdv("maxMargin", e.target.value)} type="number" />
+                  </div>
+                </div>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">ROI (%)</div>
+                  <div className="adv-filter-row">
+                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minRoi} onChange={e => setAdv("minRoi", e.target.value)} type="number" step="0.1" />
+                    <span className="adv-filter-sep">–</span>
+                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxRoi} onChange={e => setAdv("maxRoi", e.target.value)} type="number" step="0.1" />
+                  </div>
+                </div>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">Vol/Day</div>
+                  <div className="adv-filter-row">
+                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minVolume} onChange={e => setAdv("minVolume", e.target.value)} type="number" />
+                    <span className="adv-filter-sep">–</span>
+                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxVolume} onChange={e => setAdv("maxVolume", e.target.value)} type="number" />
+                  </div>
+                </div>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">Buy Price (gp)</div>
+                  <div className="adv-filter-row">
+                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minPrice} onChange={e => setAdv("minPrice", e.target.value)} type="number" />
+                    <span className="adv-filter-sep">–</span>
+                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxPrice} onChange={e => setAdv("maxPrice", e.target.value)} type="number" />
+                  </div>
+                </div>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">Min GP/Fill</div>
+                  <input className="adv-filter-input" placeholder="e.g. 500000" value={advFilters.minGpFill} onChange={e => setAdv("minGpFill", e.target.value)} type="number" />
+                </div>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">Last Traded Within</div>
+                  <div className="adv-filter-row" style={{ flexWrap: "wrap", gap: "6px" }}>
+                    {[["1", "1hr"], ["6", "6hr"], ["24", "24hr"], ["168", "7d"]].map(([val, label]) => (
+                      <button key={val}
+                        className={`filter-btn${advFilters.maxLastTrade === val ? " active" : ""}`}
+                        style={{ fontSize: "11px", padding: "4px 10px" }}
+                        onClick={() => setAdv("maxLastTrade", advFilters.maxLastTrade === val ? "" : val)}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="adv-filter-group" style={{ justifyContent: "center", gap: "8px" }}>
+                  <label className={`adv-filter-toggle${advFilters.positiveOnly ? " active" : ""}`}>
+                    <input type="checkbox" checked={advFilters.positiveOnly} onChange={e => setAdv("positiveOnly", e.target.checked)} />
+                    Positive margin only
+                  </label>
+                  <label className={`adv-filter-toggle${advFilters.priceDataOnly ? " active" : ""}`}>
+                    <input type="checkbox" checked={advFilters.priceDataOnly} onChange={e => setAdv("priceDataOnly", e.target.checked)} />
+                    Has live price data
+                  </label>
+                </div>
+                <div className="adv-filter-footer">
+                  <span>{filtered.length.toLocaleString()} items match</span>
+                  {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>✕ Clear all filters</button>}
+                </div>
+              </div>
+            )}
+
+            {/* Table */}
+            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
+            <div className="flips-table">
+              <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>
+                {[
+                  ["name", "Item", null],
+                  ["low", "Buy Price", "Lowest current buy offer on the GE"],
+                  ["high", "Sell Price", "Highest current sell offer on the GE"],
+                  ["margin", "Margin", "Sell price minus buy price minus GE tax."],
+                  ["roi", "ROI", "Margin ÷ buy price."],
+                  ["volume", "Vol/Day", "Total items traded per day."],
+                  ["buylimit", "Limit", "Max items you can buy every 4 hours"],
+                  ["gpPerFill", "GP/Fill", "Realistic GP profit per 4hr window"],
+                  ["lastTradeTime", "Last Trade", "When this item last traded."],
+                ].map(([col, label, tip]) => (
+                  <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
+                    {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
+                    {tip && (
+                      <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
+                        <span className="stat-help">?</span>
+                        <span className="stat-tooltip">{tip}</span>
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              {loading ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>
+                    {Array.from({ length: 9 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}
+                  </div>
+                ))
+              ) : filtered.length === 0 ? (
+                <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
+              ) : (
+                filtered.slice(0, marketRowsShown).map(item => {
+                  const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
+                  const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
+                  const lim = item.buyLimit > 0 ? item.buyLimit : 500;
+                  const mkt4hr = item.volume / 6;
+                  let expFill;
+                  if      (item.volume >= 500_000) expFill = Math.min(lim, mkt4hr);
+                  else if (item.volume >= 100_000) expFill = Math.min(lim, mkt4hr * 0.6);
+                  else if (item.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
+                  else if (item.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
+                  else                             expFill = Math.min(lim, mkt4hr * 0.03);
+                  const gpPerFill = Math.round(item.margin * Math.max(expFill, 1));
+                  const gpPerFillMax = Math.round(item.margin * Math.min(lim, mkt4hr));
+                  return (
+                    <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }} onClick={() => setSelectedItem(item)}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }}>⭐</button>
+                        <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
+                        <div className="item-name">{item.name}</div>
+                      </div>
+                      <span className="price">{item.hasPrice ? formatGP(item.low) : "—"}</span>
+                      <span className="price">{item.hasPrice ? formatGP(item.high) : "—"}</span>
+                      <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
+                      <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "—"}</span>
+                      <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
+                        {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
+                        {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }}>⚠</span>}
+                      </span>
+                      <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
+                      <div>
+                        {item.hasPrice ? (
+                          <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1_000_000 ? "var(--green)" : gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}
+                            title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case: ${formatGP(gpPerFillMax)} GP`}>
+                            {formatGP(gpPerFill)}
+                          </span>
+                        ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
+                      </div>
+                      <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            {!loading && filtered.length > marketRowsShown && (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <button
+                  onClick={() => setMarketRowsShown(n => n + 200)}
+                  style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                  onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
+                  onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
+                >
+                  Load more ({filtered.length - marketRowsShown} remaining)
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
     </div>
 
@@ -4798,6 +4981,48 @@ RULES:
                   >
                     <span className={refreshing ? "refresh-spin" : ""}>↻</span>
                     {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh"}
+                  </button>
+                  <button
+                    className="refresh-btn"
+                    title="Export current view to CSV"
+                    onClick={() => {
+                      const rows = filtered.slice(0, marketRowsShown);
+                      const headers = ["Name", "Category", "Buy Price", "Sell Price", "Margin", "ROI %", "Vol/Day", "Buy Limit", "GP/Fill", "Last Trade"];
+                      const csvRows = rows.map(item => {
+                        const lim = item.buyLimit > 0 ? item.buyLimit : 500;
+                        const mkt4hr = item.volume / 6;
+                        let expFill;
+                        if      (item.volume >= 500_000) expFill = Math.min(lim, mkt4hr);
+                        else if (item.volume >= 100_000) expFill = Math.min(lim, mkt4hr * 0.6);
+                        else if (item.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
+                        else if (item.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
+                        else                             expFill = Math.min(lim, mkt4hr * 0.03);
+                        const gpPerFill = item.hasPrice ? Math.round(item.margin * Math.max(expFill, 1)) : "";
+                        const lastTrade = item.lastTradeTime ? new Date(item.lastTradeTime * 1000).toISOString() : "";
+                        return [
+                          `"${item.name}"`,
+                          item.category,
+                          item.hasPrice ? item.low : "",
+                          item.hasPrice ? item.high : "",
+                          item.hasPrice ? item.margin : "",
+                          item.hasPrice ? item.roi : "",
+                          item.volume,
+                          item.buyLimit || "",
+                          gpPerFill,
+                          lastTrade,
+                        ].join(",");
+                      });
+                      const csv = [headers.join(","), ...csvRows].join("\n");
+                      const blob = new Blob([csv], { type: "text/csv" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `runetrader-market-${new Date().toISOString().slice(0,10)}.csv`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    ↓ Export
                   </button>
                 </div>
 
