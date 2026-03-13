@@ -153,14 +153,6 @@ export default async function handler(req, res) {
 
     // ── SOLD ─────────────────────────────────────────────────
     if (offer.status === 'SOLD') {
-      // Log full state for diagnosis
-      const { data: allUserRows } = await supabase
-        .from('ge_flips_live')
-        .select('id, slot, item_id, item_name, status, buy_price')
-        .eq('user_id', userId);
-      console.log('[SOLD] ALL rows in DB:', JSON.stringify(allUserRows));
-      console.log('[SOLD] Looking for item_id:', offer.itemId, 'slot:', slot);
-
       // Match by item_id — OSRS GE assigns a different slot for sell vs buy.
       // The SELLING update already synced the slot, but item_id is always stable.
       let { data: openFlip } = await supabase
@@ -241,15 +233,32 @@ export default async function handler(req, res) {
             .neq('id', openFlip.id);
         }
       } else {
-        // No open flip found (plugin restarted mid-flip, or SOLD fired before BUYING)
-        // Insert a closed record with what we know
-        const { error: soldInsertErr } = await supabase.from('ge_flips_live').insert({
-          user_id: userId, slot, item_id: offer.itemId,
-          item_name: offer.itemName.trim(), status: 'SOLD',
-          sell_price: sellPrice, profit, roi, tax, quantity,
-          buy_started_at: syncedAt, sell_completed_at: syncedAt,
-        });
-        if (soldInsertErr) console.error('ge_flips_live SOLD insert error:', soldInsertErr);
+        // No open flip found — check if a SOLD row for this item was already
+        // inserted recently (duplicate SOLD event from plugin firing multiple times).
+        const recentCutoff = new Date(Date.now() - 30_000).toISOString(); // 30 seconds
+        const { data: recentSold } = await supabase
+          .from('ge_flips_live')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('item_id', offer.itemId)
+          .eq('status', 'SOLD')
+          .gte('sell_completed_at', recentCutoff)
+          .limit(1)
+          .maybeSingle();
+
+        if (recentSold) {
+          // Duplicate SOLD event — already processed, skip silently
+          console.log('[sync-offers] duplicate SOLD event skipped for item_id:', offer.itemId);
+        } else {
+          // Genuinely no open flip (plugin restarted mid-flip)
+          const { error: soldInsertErr } = await supabase.from('ge_flips_live').insert({
+            user_id: userId, slot, item_id: offer.itemId,
+            item_name: offer.itemName.trim(), status: 'SOLD',
+            sell_price: sellPrice, profit, roi, tax, quantity,
+            buy_started_at: syncedAt, sell_completed_at: syncedAt,
+          });
+          if (soldInsertErr) console.error('ge_flips_live SOLD insert error:', soldInsertErr);
+        }
       }
       continue;
     }
