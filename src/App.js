@@ -3776,11 +3776,13 @@ export default function RuneTrader() {
   const [marketRowsShown, setMarketRowsShown] = useState(200);
   const [marketSubTab, setMarketSubTab] = useState("flips");
   const [natureRunePrice, setNatureRunePrice] = useState(0);
+  const [customNatureRunePrice, setCustomNatureRunePrice] = useState(""); // empty = use live price
   const [alchShowLosses, setAlchShowLosses] = useState(false);
   const [alchSearch, setAlchSearch] = useState("");
-  const [alchSortState, setAlchSortState] = useState({ col: "alchProfit", dir: "desc" });
+  const [alchSortState, setAlchSortState] = useState({ col: "maxProfit4hr", dir: "desc" });
   const [cofferTarget, setCofferTarget] = useState("");
   const [cofferSearch, setCofferSearch] = useState("");
+  const [cofferShowLosses, setCofferShowLosses] = useState(false);
   const [cofferSortState, setCofferSortState] = useState({ col: "potentialSavings", dir: "desc" });
   function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } }
   useEffect(() => { setMarketRowsShown(200); }, [filter, search]);
@@ -4161,6 +4163,7 @@ export default function RuneTrader() {
       // Capture nature rune price (ID 561) — used for High Alch profit calc
       const natureRuneData = latestData.data["561"];
       if (natureRuneData && natureRuneData.low) setNatureRunePrice(natureRuneData.low);
+      else if (natureRunePrice === 0) setNatureRunePrice(200); // fallback if no live data
 
       const flips = [];
 
@@ -4177,7 +4180,7 @@ export default function RuneTrader() {
         const volume = volumeMap[id] || 0;
         const lastTradeTime = Math.max(highTime || 0, lowTime || 0);
         const score = hasPrice ? getScore(margin, volume, roi, null, null, meta.limit || 0, lastTradeTime) : 0;
-        const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high: high || null, low: low || null, margin, roi, volume, score, lastTradeTime, hasPrice, highalch: meta.highalch || 0 };
+        const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high: high || null, low: low || null, margin, roi, volume, score, lastTradeTime, hasPrice, highalch: meta.highalch || 0, itemValue: meta.value || 0 };
         flips.push(flip);
       }
       const validFlips = flips.filter(isValidFlip);
@@ -5213,16 +5216,7 @@ RULES:
                       {l}{v !== "flips" && <span className="sub-tab-badge">new</span>}
                     </button>
                   ))}
-                  {marketSubTab === "flips" && natureRunePrice > 0 && (
-                    <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>
-                      Nature rune: <span style={{ color: "var(--gold)" }}>{natureRunePrice.toLocaleString()}gp</span>
-                    </span>
-                  )}
-                  {marketSubTab === "alch" && (
-                    <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>
-                      Nature rune: <span style={{ color: natureRunePrice > 0 ? "var(--gold)" : "var(--text-dim)" }}>{natureRunePrice > 0 ? `${natureRunePrice.toLocaleString()}gp` : "loading..."}</span>
-                    </span>
-                  )}
+                  {/* nature rune shown inline in each tab's filter bar, not here */}
                 </div>
 
                 {/* ── HIGH ALCH TAB ── */}
@@ -5230,9 +5224,15 @@ RULES:
                   const alchSortCol = alchSortState.col;
                   const alchSortDir = alchSortState.dir;
                   const handleAlchSort = col => setAlchSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
+                  const effectiveNaturePrice = customNatureRunePrice !== "" ? (parseInt(customNatureRunePrice) || 0) : natureRunePrice;
+                  const isCustomPrice = customNatureRunePrice !== "";
                   const alchItems = (allItems || [])
                     .filter(item => item.highalch > 0 && item.hasPrice && item.low > 0)
-                    .map(item => ({ ...item, alchProfit: item.highalch - item.low - natureRunePrice }))
+                    .map(item => ({
+                      ...item,
+                      alchProfit: item.highalch - item.low - effectiveNaturePrice,
+                      maxProfit4hr: (item.highalch - item.low - effectiveNaturePrice) * (item.buyLimit || 0),
+                    }))
                     .filter(item => alchShowLosses || item.alchProfit > 0)
                     .filter(item => !alchSearch || item.name.toLowerCase().includes(alchSearch.toLowerCase()))
                     .sort((a, b) => {
@@ -5242,17 +5242,20 @@ RULES:
                       if (alchSortCol === "highalch") return dir * (a.highalch - b.highalch);
                       if (alchSortCol === "alchProfit") return dir * (a.alchProfit - b.alchProfit);
                       if (alchSortCol === "buyLimit") return dir * (a.buyLimit - b.buyLimit);
+                      if (alchSortCol === "maxProfit4hr") return dir * (a.maxProfit4hr - b.maxProfit4hr);
                       if (alchSortCol === "lastTradeTime") return dir * ((a.lastTradeTime || 0) - (b.lastTradeTime || 0));
-                      return dir * (a.alchProfit - b.alchProfit);
+                      return dir * (a.maxProfit4hr - b.maxProfit4hr);
                     });
                   const ALCH_COLS = [
-                    ["name",          "Item",          "The tradeable item name."],
-                    ["low",           "GE Buy Price",  "Current cheapest buy price on the Grand Exchange."],
-                    ["highalch",      "Alch Value",    "GP received when casting High Alchemy on this item. Includes the 60% value calculation automatically."],
-                    ["alchProfit",    "Profit / Cast", "Alch Value minus GE Buy Price minus the current market price of one Nature Rune. Updates live as nature rune price changes."],
-                    ["buyLimit",      "Buy Limit",     "Max quantity you can buy in a 4-hour GE window."],
-                    ["lastTradeTime", "Last Updated",  "How recently this item's GE price was recorded. Stale prices may not reflect current market."],
+                    ["name",          "Item",             "The tradeable item name."],
+                    ["low",           "GE Buy Price",     "Current cheapest buy price on the Grand Exchange."],
+                    ["highalch",      "Alch Value",       "GP received when casting High Alchemy on this item."],
+                    ["alchProfit",    "Profit / Cast",    "Alch Value minus GE Buy Price minus your nature rune cost. Adjust the nature rune price in the filter bar to match what you actually paid."],
+                    ["buyLimit",      "Buy Limit",        "Max quantity you can buy in a 4-hour GE window."],
+                    ["maxProfit4hr",  "Max Profit / 4hr", "Profit per cast × Buy Limit. Maximum GP you can make in one 4-hour GE window buying at the limit."],
+                    ["lastTradeTime", "Last Updated",     "How recently this item's GE price was recorded. Stale data may not reflect current market."],
                   ];
+                  const [alchRowsShown, setAlchRowsShown] = React.useState(200);
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                       <div className="filter-bar">
@@ -5261,10 +5264,39 @@ RULES:
                           <input type="checkbox" checked={alchShowLosses} onChange={e => setAlchShowLosses(e.target.checked)} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
                           Show unprofitable
                         </label>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "8px", background: "var(--bg3)", border: `1px solid ${isCustomPrice ? "var(--gold-dim)" : "var(--border)"}`, borderRadius: "8px", padding: "4px 10px" }}>
+                          <span style={{ fontSize: "12px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>🌿 Nature rune:</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={customNatureRunePrice !== "" ? customNatureRunePrice : natureRunePrice}
+                            onChange={e => setCustomNatureRunePrice(e.target.value)}
+                            onFocus={e => { if (customNatureRunePrice === "") setCustomNatureRunePrice(String(natureRunePrice)); }}
+                            style={{ background: "transparent", border: "none", outline: "none", color: isCustomPrice ? "var(--gold)" : "var(--gold)", fontWeight: 600, fontSize: "12px", width: "60px", fontFamily: "Inter, sans-serif" }}
+                          />
+                          <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>gp</span>
+                          {isCustomPrice && (
+                            <button
+                              onClick={() => setCustomNatureRunePrice("")}
+                              title="Reset to live market price"
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "11px", padding: "0 2px", fontFamily: "Inter, sans-serif", transition: "color 0.15s" }}
+                              onMouseOver={e => e.currentTarget.style.color = "var(--gold)"}
+                              onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}
+                            >↺ live</button>
+                          )}
+                          {!isCustomPrice && natureRunePrice === 200 && (
+                            <span style={{ color: "var(--red)", fontSize: "10px" }}>(fallback)</span>
+                          )}
+                        </div>
+                        {isCustomPrice && (
+                          <span style={{ fontSize: "11px", color: "var(--gold-dim)" }}>
+                            Using custom price · Live: {natureRunePrice.toLocaleString()}gp
+                          </span>
+                        )}
                         <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>{alchItems.length.toLocaleString()} items</span>
                       </div>
                       <div className="alch-table">
-                        <div className="alch-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr", display: "grid" }}>
+                        <div className="alch-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", display: "grid" }}>
                           {ALCH_COLS.map(([col, label, tip]) => (
                             <button key={col} className={`sort-btn ${alchSortCol === col ? "active" : ""}`} onClick={() => handleAlchSort(col)}>
                               {label} {alchSortCol === col && <span className="sort-arrow">{alchSortDir === "desc" ? "▼" : "▲"}</span>}
@@ -5277,10 +5309,10 @@ RULES:
                         </div>
                         {alchItems.length === 0 ? (
                           <div style={{ padding: "40px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
-                            {natureRunePrice === 0 ? "Loading nature rune price..." : "No profitable alch items found"}
+                            No profitable alch items found
                           </div>
-                        ) : alchItems.slice(0, 300).map(item => (
-                          <div key={item.id} className="alch-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr" }} onClick={() => setSelectedItem(item)}>
+                        ) : alchItems.slice(0, alchRowsShown).map(item => (
+                          <div key={item.id} className="alch-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr" }} onClick={() => setSelectedItem(item)}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                               <div>
@@ -5294,10 +5326,25 @@ RULES:
                               {item.alchProfit >= 0 ? "+" : ""}{formatGP(item.alchProfit)}
                             </span>
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
+                            <span style={{ fontSize: "13px", fontWeight: 600, color: item.maxProfit4hr >= 1_000_000 ? "var(--green)" : item.maxProfit4hr >= 100_000 ? "var(--gold)" : "var(--text-dim)" }}>
+                              {item.buyLimit ? formatGP(item.maxProfit4hr) : "—"}
+                            </span>
                             <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
                           </div>
                         ))}
                       </div>
+                      {alchItems.length > alchRowsShown && (
+                        <div style={{ textAlign: "center", padding: "8px 0" }}>
+                          <button
+                            onClick={() => setAlchRowsShown(n => n + 200)}
+                            style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                            onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
+                            onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
+                          >
+                            Load more ({alchItems.length - alchRowsShown} remaining)
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
@@ -5307,34 +5354,39 @@ RULES:
                   const handleCofferSort = col => setCofferSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
                   const cofferSortCol = cofferSortState.col;
                   const cofferSortDir = cofferSortState.dir;
-                  const targetGP = parseFloat((cofferTarget || "").replace(/[^0-9.]/g, "")) * (cofferTarget.toLowerCase().includes("m") ? 1_000_000 : cofferTarget.toLowerCase().includes("k") ? 1_000 : 1) || 0;
+                  // Robust target parser: handles 2.5m, 500k, 1,000,000, plain numbers
+                  const rawTarget = (cofferTarget || "").trim().toLowerCase().replace(/,/g, "");
+                  const targetMult = rawTarget.endsWith("m") ? 1_000_000 : rawTarget.endsWith("k") ? 1_000 : 1;
+                  const targetGP = parseFloat(rawTarget) * targetMult || 0;
+                  const [cofferRowsShown, setCofferRowsShown] = React.useState(200);
                   const cofferItems = (allItems || [])
-                    .filter(item => item.hasPrice && item.high > 0 && item.low > 0 && item.volume > 100)
-                    .filter(item => !cofferSearch || item.name.toLowerCase().includes(cofferSearch.toLowerCase()))
+                    .filter(item => item.hasPrice && item.itemValue > 0 && item.low > 0 && item.volume > 100 && (item.buyLimit || 0) > 0)
                     .map(item => {
-                      const savings = item.high - item.low;
+                      const savings = item.itemValue - item.low;
                       const potentialSavings = savings * (item.buyLimit || 0);
-                      const qtyNeeded = targetGP > 0 ? Math.ceil(targetGP / item.high) : null;
+                      const qtyNeeded = targetGP > 0 ? Math.ceil(targetGP / item.itemValue) : null;
                       const totalCost = qtyNeeded ? qtyNeeded * item.low : null;
                       return { ...item, savings, potentialSavings, qtyNeeded, totalCost };
                     })
+                    .filter(item => cofferShowLosses || item.savings > 0)
+                    .filter(item => !cofferSearch || item.name.toLowerCase().includes(cofferSearch.toLowerCase()))
                     .sort((a, b) => {
                       const dir = cofferSortDir === "asc" ? 1 : -1;
                       if (cofferSortCol === "name") return dir * a.name.localeCompare(b.name);
                       if (cofferSortCol === "low") return dir * (a.low - b.low);
-                      if (cofferSortCol === "high") return dir * (a.high - b.high);
+                      if (cofferSortCol === "high") return dir * (a.itemValue - b.itemValue);
                       if (cofferSortCol === "savings") return dir * (a.savings - b.savings);
                       if (cofferSortCol === "buyLimit") return dir * (a.buyLimit - b.buyLimit);
                       if (cofferSortCol === "potentialSavings") return dir * (a.potentialSavings - b.potentialSavings);
                       return dir * (a.potentialSavings - b.potentialSavings);
                     });
                   const COFFER_COLS = [
-                    ["name",              "Item",               "The tradeable item you sacrifice to Death's Coffer."],
-                    ["low",               "GE Buy Price",       "What you pay on the Grand Exchange to acquire this item."],
-                    ["high",              "Coffer Value",       "The GE value Jagex credits to your Death's Coffer when you sacrifice this item. Based on current GE high price."],
-                    ["savings",           "Savings",            "Coffer Value minus GE Buy Price. How much GP you save compared to paying the coffer directly in gold."],
-                    ["buyLimit",          "Buy Limit",          "Max quantity you can buy in a 4-hour GE window."],
-                    ["potentialSavings",  "Potential Savings",  "Savings per item × Buy Limit. The maximum GP you could save in a single 4-hour buying window."],
+                    ["name",             "Item",              "The tradeable item you sacrifice to Death's Coffer."],
+                    ["low",              "GE Buy Price",      "What you pay on the Grand Exchange to acquire this item."],
+                    ["high",             "Coffer Value",      "The fixed base value Jagex credits to your Death's Coffer when you sacrifice this item. This is the game's internal item value, not the GE price."],
+                    ["savings",          "Savings",           "Coffer Value minus GE Buy Price. Positive means you're funding your coffer for less than face value."],
+                    ["buyLimit",         "Buy Limit",         "Max quantity you can buy in a 4-hour GE window."],
+                    ["potentialSavings", "Potential Savings", "Savings per item × Buy Limit. Maximum GP saved in one 4-hour buying window."],
                   ];
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -5342,13 +5394,15 @@ RULES:
                         <span className="coffer-target-label">💀 Target coffer amount:</span>
                         <input
                           className="coffer-target-input"
-                          placeholder="e.g. 5m or 500k"
+                          placeholder="e.g. 5m, 2.5m, 500k"
                           value={cofferTarget}
                           onChange={e => setCofferTarget(e.target.value)}
                         />
-                        {targetGP > 0 && (
-                          <span className="coffer-target-summary">Showing qty + cost to reach {formatGP(targetGP)}</span>
-                        )}
+                        {targetGP > 0 && <span className="coffer-target-summary">Qty + cost to reach {formatGP(targetGP)}</span>}
+                        <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none", marginLeft: "8px" }}>
+                          <input type="checkbox" checked={cofferShowLosses} onChange={e => setCofferShowLosses(e.target.checked)} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
+                          Show negative savings
+                        </label>
                         <input className="filter-input" placeholder="Search items..." value={cofferSearch} onChange={e => setCofferSearch(e.target.value)} style={{ marginLeft: "auto", width: "200px" }} />
                         <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>{cofferItems.length.toLocaleString()} items</span>
                       </div>
@@ -5363,9 +5417,11 @@ RULES:
                               </span>
                             </button>
                           ))}
-                          {targetGP > 0 && <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>To Reach Target</span>}
+                          {targetGP > 0 && <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", alignItems: "center" }}>To Reach Target</span>}
                         </div>
-                        {cofferItems.slice(0, 300).map(item => (
+                        {cofferItems.length === 0 ? (
+                          <div style={{ padding: "40px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>No items found</div>
+                        ) : cofferItems.slice(0, cofferRowsShown).map(item => (
                           <div key={item.id} className="alch-row" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 1fr" }} onClick={() => setSelectedItem(item)}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
@@ -5375,13 +5431,13 @@ RULES:
                               </div>
                             </div>
                             <span className="price">{formatGP(item.low)}</span>
-                            <span className="price">{formatGP(item.high)}</span>
+                            <span className="price">{formatGP(item.itemValue)}</span>
                             <span className={item.savings >= 0 ? "profit-positive" : "profit-negative"}>
                               {item.savings >= 0 ? "+" : ""}{formatGP(item.savings)}
                             </span>
-                            <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
-                            <span style={{ fontSize: "13px", fontWeight: 600, color: item.potentialSavings > 1_000_000 ? "var(--green)" : item.potentialSavings > 100_000 ? "var(--gold)" : "var(--text-dim)" }}>
-                              {item.buyLimit ? formatGP(item.potentialSavings) : "—"}
+                            <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit.toLocaleString()}</span>
+                            <span style={{ fontSize: "13px", fontWeight: 600, color: item.potentialSavings >= 1_000_000 ? "var(--green)" : item.potentialSavings >= 100_000 ? "var(--gold)" : "var(--text-dim)" }}>
+                              {formatGP(item.potentialSavings)}
                             </span>
                             {targetGP > 0 && (
                               <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
@@ -5392,6 +5448,18 @@ RULES:
                           </div>
                         ))}
                       </div>
+                      {cofferItems.length > cofferRowsShown && (
+                        <div style={{ textAlign: "center", padding: "8px 0" }}>
+                          <button
+                            onClick={() => setCofferRowsShown(n => n + 200)}
+                            style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                            onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
+                            onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
+                          >
+                            Load more ({cofferItems.length - cofferRowsShown} remaining)
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
@@ -5406,7 +5474,29 @@ RULES:
                       {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `⭐ Favourites${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                     </button>
                   ))}
-                  <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "auto", background: "var(--bg3)", border: `1px solid ${customNatureRunePrice !== "" ? "var(--gold-dim)" : "var(--border)"}`, borderRadius: "8px", padding: "4px 10px" }}>
+                    <span style={{ fontSize: "12px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>🌿 Nature rune:</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={customNatureRunePrice !== "" ? customNatureRunePrice : natureRunePrice}
+                      onChange={e => setCustomNatureRunePrice(e.target.value)}
+                      onFocus={e => { if (customNatureRunePrice === "") setCustomNatureRunePrice(String(natureRunePrice)); }}
+                      title="Edit to override the live nature rune price used in High Alch calculations"
+                      style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "60px", fontFamily: "Inter, sans-serif" }}
+                    />
+                    <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>gp</span>
+                    {customNatureRunePrice !== "" && (
+                      <button
+                        onClick={() => setCustomNatureRunePrice("")}
+                        title="Reset to live market price"
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "11px", padding: "0 2px", fontFamily: "Inter, sans-serif", transition: "color 0.15s" }}
+                        onMouseOver={e => e.currentTarget.style.color = "var(--gold)"}
+                        onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}
+                      >↺ live</button>
+                    )}
+                  </div>
+                  <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} />
                   <button
                     className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
                     onClick={() => setShowAdvFilters(v => !v)}
