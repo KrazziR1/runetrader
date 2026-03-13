@@ -2696,7 +2696,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
     } finally {
       setWikiLoading(false);
     }
-  }, [nameToId]);
+  }, [nameToId, onLiveWiki]);
 
   // Set up polling whenever offers change
   useEffect(() => {
