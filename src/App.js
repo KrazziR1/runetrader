@@ -3090,8 +3090,9 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
       const res = await fetch(`/api/prices-live?ids=${ids.join(",")}`);
       if (!res.ok) return;
       const json = await res.json();
-      setLiveWiki(json.data || {});
-      if (onLiveWiki) onLiveWiki(json.data || {});
+      const fresh = json.data || {};
+      setLiveWiki(prev => Object.keys(fresh).length > 0 ? { ...prev, ...fresh } : prev);
+      if (onLiveWiki) onLiveWiki(fresh);
     } catch (e) {
       console.warn("[drift] prices-live fetch failed:", e.message);
     } finally {
