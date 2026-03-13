@@ -153,8 +153,9 @@ export default async function handler(req, res) {
 
     // ── SOLD ─────────────────────────────────────────────────
     if (offer.status === 'SOLD') {
-      // Find the open flip for this slot
-      const { data: openFlip } = await supabase
+      // Find the open flip for this slot — try all non-SOLD statuses.
+      // Also catches edge cases where SELLING update hadn't fired yet (still BOUGHT).
+      let { data: openFlip } = await supabase
         .from('ge_flips_live')
         .select('id, buy_price, buy_spent, quantity')
         .eq('user_id', userId)
@@ -163,6 +164,24 @@ export default async function handler(req, res) {
         .order('buy_started_at', { ascending: false })
         .limit(1)
         .maybeSingle();
+
+      // Last-resort fallback: find any non-SOLD row for this slot
+      // (handles case where status got into an unexpected state)
+      if (!openFlip) {
+        const { data: fallback } = await supabase
+          .from('ge_flips_live')
+          .select('id, buy_price, buy_spent, quantity')
+          .eq('user_id', userId)
+          .eq('slot', slot)
+          .neq('status', 'SOLD')
+          .order('buy_started_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (fallback) {
+          openFlip = fallback;
+          console.log('[sync-offers] SOLD fallback found row with status outside expected set for slot', slot);
+        }
+      }
 
       // sellPrice: plugin computes getSpent()/getQuantitySold() and sends it as offerPrice.
       // offer.spent is also sent raw for cross-checking.
@@ -194,7 +213,14 @@ export default async function handler(req, res) {
           })
           .eq('id', openFlip.id)
           .eq('slot', slot); // double-check slot matches for safety
-        if (soldErr) console.error('ge_flips_live SOLD update error:', soldErr);
+        if (soldErr) {
+          console.error('ge_flips_live SOLD update error:', soldErr);
+        } else {
+          // Clean up any duplicate open rows that may exist for this slot
+          await supabase.from('ge_flips_live').delete()
+            .eq('user_id', userId).eq('slot', slot)
+            .in('status', ['BUYING', 'BOUGHT', 'SELLING']);
+        }
       } else {
         // No open flip found (plugin restarted mid-flip, or SOLD fired before BUYING)
         // Insert a closed record with what we know
