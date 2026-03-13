@@ -3280,7 +3280,7 @@ export default function RuneTrader() {
   const [geOffers, setGeOffers] = useState([]);
   const [liveWikiPrices, setLiveWikiPrices] = useState({}); // item_id → {high,low} — populated by LiveGESlots poll
   useEffect(() => {
-    if (!user || !merchantMode) return;
+    if (!user) return;
     supabase.from("positions").select("*").then(({ data }) => setMerchantPositions(data || []));
     supabase.from("ge_offers").select("*").eq("user_id", user.id).order("slot")
       .then(({ data }) => setGeOffers(data || []));
@@ -3300,7 +3300,7 @@ export default function RuneTrader() {
         }
       }).subscribe();
     return () => supabase.removeChannel(ch);
-  }, [user, merchantMode]); // eslint-disable-line
+  }, [user]); // eslint-disable-line — geOffers loads for all tabs so AI always has slot context
 
   async function addPositionFromMerchant({ item, buyPrice, qty }) {
     if (!user) return;
