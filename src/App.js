@@ -414,6 +414,20 @@ const STYLES = `
   .capital-setup-btn:hover { opacity: 0.85; }
   .capital-setup-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .merchant-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  .merchant-anim-overlay { position: fixed; inset: 0; z-index: 99999; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; animation: merchantFadeIn 0.3s ease; }
+  @keyframes merchantFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .merchant-anim-scan { position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); animation: scanLine 1.8s ease-in-out forwards; box-shadow: 0 0 20px var(--gold), 0 0 40px rgba(201,168,76,0.4); }
+  @keyframes scanLine { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+  .merchant-anim-logo { font-size: 13px; letter-spacing: 6px; color: var(--gold-dim); text-transform: uppercase; font-weight: 600; animation: fadeInUp 0.6s ease 0.3s both; }
+  .merchant-anim-title { font-size: 42px; font-weight: 800; letter-spacing: 3px; color: var(--gold); text-transform: uppercase; animation: fadeInUp 0.6s ease 0.5s both; font-family: Inter, sans-serif; }
+  .merchant-anim-subtitle { font-size: 13px; letter-spacing: 4px; color: var(--text-dim); text-transform: uppercase; animation: fadeInUp 0.6s ease 0.7s both; }
+  .merchant-anim-bars { display: flex; gap: 6px; align-items: flex-end; height: 32px; animation: fadeInUp 0.6s ease 0.9s both; }
+  .merchant-anim-bar { width: 4px; background: var(--gold); border-radius: 2px; animation: barPulse 0.8s ease-in-out infinite alternate; }
+  @keyframes barPulse { from { opacity: 0.3; transform: scaleY(0.4); } to { opacity: 1; transform: scaleY(1); } }
+  .merchant-anim-status { font-size: 11px; letter-spacing: 3px; color: var(--green); text-transform: uppercase; animation: fadeInUp 0.4s ease 1.4s both; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  .merchant-anim-exit { animation: merchantFadeOut 0.4s ease 2.2s both; }
+  @keyframes merchantFadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
 
 
   .alerts-wrap { display: flex; flex-direction: column; gap: 20px; }
@@ -3204,6 +3218,12 @@ export default function RuneTrader() {
 
   // ── Merchant Mode ──
   const [merchantMode, setMerchantMode] = useState(false);
+  const [showMerchantAnim, setShowMerchantAnim] = useState(false);
+
+  function activateMerchantWithAnim(cb) {
+    setShowMerchantAnim(true);
+    setTimeout(() => { setShowMerchantAnim(false); if (cb) cb(); }, 2600);
+  }
   const [merchantCapital, setMerchantCapital] = useState(0);
   const [merchantCapitalInput, setMerchantCapitalInput] = useState("");
   const [showCapitalSetup, setShowCapitalSetup] = useState(false);
@@ -3231,10 +3251,12 @@ export default function RuneTrader() {
     setMerchantLoading(true);
     await supabase.from("merchant_settings").upsert({ user_id: user.id, total_capital: gp, mode_enabled: true, updated_at: new Date().toISOString() });
     setMerchantCapital(gp);
-    setMerchantMode(true);
     setShowCapitalSetup(false);
     setMerchantLoading(false);
-    showToast("Merchant Mode activated!", "success");
+    activateMerchantWithAnim(() => {
+      setMerchantMode(true);
+      showToast("Merchant Mode activated!", "success");
+    });
     const tourKey = `runetrader_merchant_tour_seen_${user.id}`;
     if (!localStorage.getItem(tourKey)) {
       localStorage.setItem(tourKey, "1");
@@ -3268,8 +3290,8 @@ export default function RuneTrader() {
     if (!user) { setShowAuth(true); return; }
     if (!merchantMode) {
       if (merchantCapital === 0) { setShowCapitalSetup(true); return; }
-      setMerchantMode(true);
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
+      activateMerchantWithAnim(() => setMerchantMode(true));
     } else {
       setMerchantMode(false);
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
@@ -4152,6 +4174,22 @@ RULES:
               {merchantLoading ? "Activating..." : "Activate Merchant Mode →"}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* MERCHANT ACTIVATION ANIMATION */}
+      {showMerchantAnim && (
+        <div className="merchant-anim-overlay merchant-anim-exit">
+          <div className="merchant-anim-scan" />
+          <div className="merchant-anim-logo">RuneTrader.gg</div>
+          <div className="merchant-anim-title">Merchant Mode</div>
+          <div className="merchant-anim-subtitle">Initialising trading terminal</div>
+          <div className="merchant-anim-bars">
+            {[1,1.6,0.7,1.3,0.5,1.8,1,0.9,1.5,0.6].map((h,i) => (
+              <div key={i} className="merchant-anim-bar" style={{ height: `${h * 20}px`, animationDelay: `${i * 0.08}s` }} />
+            ))}
+          </div>
+          <div className="merchant-anim-status">● System Ready</div>
         </div>
       )}
 
