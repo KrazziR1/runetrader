@@ -428,6 +428,22 @@ const STYLES = `
   @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   .merchant-anim-exit { animation: merchantFadeOut 0.5s ease 5.2s both; }
   @keyframes merchantFadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
+  .merchant-ai-bubble { position: fixed; bottom: 28px; right: 28px; z-index: 9000; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #c9a84c, #a06c20); border: 2px solid var(--gold); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 20px rgba(201,168,76,0.4); animation: bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; transition: transform 0.2s, box-shadow 0.2s; }
+  .merchant-ai-bubble:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(201,168,76,0.6); }
+  .merchant-ai-bubble .bubble-ping { position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--gold); animation: bubblePing 2s ease-out infinite; opacity: 0; }
+  @keyframes bubblePing { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.6); opacity: 0; } }
+  @keyframes bubblePop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .merchant-ai-modal { position: fixed; bottom: 92px; right: 28px; z-index: 9001; width: 380px; height: 520px; background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 16px; display: flex; flex-direction: column; box-shadow: 0 8px 40px rgba(0,0,0,0.6); animation: modalSlideUp 0.3s cubic-bezier(0.34,1.56,0.64,1) both; overflow: hidden; }
+  @keyframes modalSlideUp { from { transform: translateY(20px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+  .merchant-ai-modal-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); background: rgba(201,168,76,0.06); flex-shrink: 0; }
+  .merchant-ai-modal-header h4 { margin: 0; font-size: 14px; color: var(--gold); font-weight: 700; }
+  .merchant-ai-modal-header p { margin: 0; font-size: 11px; color: var(--text-dim); }
+  .merchant-ai-modal-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .merchant-ai-modal-input { padding: 10px 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; background: var(--bg2); }
+  .merchant-ai-modal-input textarea { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; padding: 8px 10px; resize: none; font-family: Inter, sans-serif; height: 36px; }
+  .merchant-ai-modal-input textarea:focus { outline: none; border-color: var(--gold-dim); }
+  .merchant-ai-close { margin-left: auto; background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 18px; padding: 0 4px; line-height: 1; }
+  .merchant-ai-close:hover { color: var(--text); }
 
 
   .alerts-wrap { display: flex; flex-direction: column; gap: 20px; }
@@ -834,6 +850,8 @@ const MERCHANT_TOUR_STEPS = [
   // ── Alerts tab ──
   { title: "⚡ Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the ⚙️ gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
   { title: "📡 Live Feed", desc: "Every alert that's fired this session lands here in real time. Filter by type, click any alert to jump straight to that item's chart, and clear the feed whenever you like.", target: "#tour-live-feed", placement: "right", view: "alerts" },
+  // ── AI Bubble ──
+  { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold ⚔️ bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "top", view: "operations" },
   // ── Done ──
   { title: "You're fully set up ⚔️", desc: "Log a buy in the Tracker without a sell price — it opens a position here automatically. Close it from Merchant Mode and it goes straight to your Flip History. Good luck on the GE.", target: null, placement: "center", view: "operations" },
 ];
@@ -3219,10 +3237,15 @@ export default function RuneTrader() {
   // ── Merchant Mode ──
   const [merchantMode, setMerchantMode] = useState(false);
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
+  const [showMerchantAIBubble, setShowMerchantAIBubble] = useState(false);
+  const [merchantAIOpen, setMerchantAIOpen] = useState(false);
+  const merchantAIMessagesEndRef = useRef(null);
 
   function activateMerchantWithAnim(cb) {
     setShowMerchantAnim(true);
+    setShowMerchantAIBubble(false);
     setTimeout(() => { setShowMerchantAnim(false); if (cb) cb(); }, 5800);
+    setTimeout(() => setShowMerchantAIBubble(true), 6200);
   }
   const [merchantCapital, setMerchantCapital] = useState(0);
   const [merchantCapitalInput, setMerchantCapitalInput] = useState("");
@@ -3241,7 +3264,7 @@ export default function RuneTrader() {
     const { data } = await supabase.from("merchant_settings").select("*").eq("user_id", user.id).single();
     if (data) {
       setMerchantCapital(data.total_capital || 0);
-      if (data.mode_enabled) setMerchantMode(true);
+      if (data.mode_enabled) { setMerchantMode(true); setShowMerchantAIBubble(true); }
     }
   }
 
@@ -3291,9 +3314,11 @@ export default function RuneTrader() {
     if (!merchantMode) {
       if (merchantCapital === 0) { setShowCapitalSetup(true); return; }
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
-      activateMerchantWithAnim(() => setMerchantMode(true));
+      activateMerchantWithAnim(() => { setMerchantMode(true); setTimeout(() => setShowMerchantAIBubble(true), 400); });
     } else {
       setMerchantMode(false);
+      setShowMerchantAIBubble(false);
+      setMerchantAIOpen(false);
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
     }
   }
@@ -3369,6 +3394,7 @@ export default function RuneTrader() {
   const messagesEndRef = useRef(null);
   const itemsRef = useRef([]);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { merchantAIMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, merchantAIOpen]);
 
   // ── Tracker ──
   const [flipsLog, setFlipsLog] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch { return []; } });
@@ -4436,6 +4462,47 @@ RULES:
               activeView={merchantView}
               setActiveView={setMerchantView}
             />
+
+            {/* ── MERCHANT AI BUBBLE ── */}
+            {showMerchantAIBubble && !merchantAIOpen && (
+              <div className="merchant-ai-bubble" onClick={() => setMerchantAIOpen(true)} title="AI Advisor">
+                <div className="bubble-ping" />
+                ⚔️
+              </div>
+            )}
+            {merchantAIOpen && (
+              <div className="merchant-ai-modal">
+                <div className="merchant-ai-modal-header">
+                  <span style={{ fontSize: 20 }}>⚔️</span>
+                  <div><h4>AI Advisor</h4><p>Live GE data · Powered by Claude</p></div>
+                  <button className="merchant-ai-close" onClick={() => setMerchantAIOpen(false)}>✕</button>
+                </div>
+                <div className="merchant-ai-modal-body">
+                  {messages.map((msg, i) => (
+                    <div key={i} className={`msg ${msg.role}`}>
+                      <div className="msg-bubble">
+                        {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
+                      </div>
+                      <span className="msg-time">{formatTime(msg.time)}</span>
+                    </div>
+                  ))}
+                  {aiLoading && (
+                    <div className="msg assistant"><div className="msg-bubble"><div className="typing"><div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" /></div></div></div>
+                  )}
+                  <div ref={merchantAIMessagesEndRef} />
+                </div>
+                <div className="merchant-ai-modal-input">
+                  <textarea
+                    placeholder="Ask about your positions..."
+                    value={input}
+                    onChange={e => { setInput(e.target.value); e.target.style.height = "36px"; e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px"; }}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (input.trim()) sendMessage(input.trim()); } }}
+                  />
+                  <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>➤</button>
+                </div>
+              </div>
+            )}
+
           ) : (
           <>
           <div className="left-panel">
