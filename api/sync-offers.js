@@ -220,10 +220,12 @@ export default async function handler(req, res) {
         if (soldErr) {
           console.error('ge_flips_live SOLD update error:', soldErr);
         } else {
-          // Clean up any duplicate open rows that may exist for this slot
+          // Clean up any other open rows for this item (different slot, duplicates)
           await supabase.from('ge_flips_live').delete()
-            .eq('user_id', userId).eq('slot', slot)
-            .in('status', ['BUYING', 'BOUGHT', 'SELLING']);
+            .eq('user_id', userId)
+            .eq('item_id', offer.itemId)
+            .in('status', ['BUYING', 'BOUGHT', 'SELLING'])
+            .neq('id', openFlip.id);
         }
       } else {
         // No open flip found (plugin restarted mid-flip, or SOLD fired before BUYING)
@@ -290,12 +292,15 @@ export default async function handler(req, res) {
       }
     } else {
       // SELL offer (offerType=SELL, status=SELLING)
-      await supabase
+      // Match by item_id — sell slot may differ from buy slot in OSRS GE.
+      // Also update slot to the current sell slot so SOLD lookup finds it.
+      const { error: sellingErr } = await supabase
         .from('ge_flips_live')
-        .update({ status: 'SELLING' })
+        .update({ status: 'SELLING', slot })
         .eq('user_id', userId)
-        .eq('slot', slot)
+        .eq('item_id', offer.itemId)
         .in('status', ['BUYING', 'BOUGHT']);
+      if (sellingErr) console.error('ge_flips_live SELLING update error:', sellingErr);
     }
   }
 
