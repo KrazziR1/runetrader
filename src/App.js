@@ -56,7 +56,7 @@ const STYLES = `
   .section-title { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
-  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
   .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-family: "Inter", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; }
   .sort-btn:hover { color: var(--gold); }
   .sort-btn.active { color: var(--gold); }
@@ -832,8 +832,8 @@ const TIME_RANGES = [
 ];
 
 const TOUR_STEPS = [
-  { id: "flips-table", title: "Live Flip Scanner", desc: "Every tradeable OSRS item ranked by score. Score factors in margin, volume, and ROI — higher is safer and more profitable. Click any item to see its price history.", target: ".flips-table", placement: "top" },
-  { id: "filter-bar", title: "Filter & Search", desc: "Filter by F2P, Members, or High Volume items. Star items to save them as favourites. Use the search box to find any item instantly.", target: ".filter-bar", placement: "bottom" },
+  { id: "flips-table", title: "Live Market", desc: "Every tradeable OSRS item sorted by volume. Click any item to see its price history and margin. Use column headers to sort by margin, ROI, GP/Fill, and more.", target: ".flips-table", placement: "top" },
+  { id: "filter-bar", title: "Filter & Search", desc: "Filter by F2P, Members, or High Volume. Star items to save them as favourites. Use the search box to find any item instantly.", target: ".filter-bar", placement: "bottom" },
   { id: "ai-advisor", title: "AI Flip Advisor", desc: "Ask the AI anything — best flips for your budget, what's trending, or whether a specific item is worth flipping. It has live GE data.", target: ".merchant-ai-bubble", placement: "left" },
   { id: "tracker-tab", title: "Track Your Flips", desc: "Log every flip to track total profit, best items, and average returns. Your history syncs across all your devices automatically.", target: ".nav-tabs", placement: "bottom" },
   { id: "done", title: "You're Ready to Flip! ⚔️", desc: "That's everything. Start by setting your cash stack, then check the top flips list. Good luck on the Grand Exchange!", target: null, placement: "center" },
@@ -3392,11 +3392,13 @@ export default function RuneTrader() {
   // ── UI state ──
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("flips");
+  const [activeTab, setActiveTab] = useState("market");
   const [selectedItem, setSelectedItem] = useState(null);
-  const [sortCol, setSortCol] = useState("score");
+  const [sortCol, setSortCol] = useState("volume");
   const [sortDir, setSortDir] = useState("desc");
+  const [marketRowsShown, setMarketRowsShown] = useState(200);
   function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } }
+  useEffect(() => { setMarketRowsShown(200); }, [filter, search]);
 
   // ── AI Chat ──
   const [messages, setMessages] = useState([WELCOME_MSG]);
@@ -3800,7 +3802,7 @@ export default function RuneTrader() {
     setFlipsLog([]);
     setAlerts([]);
     localStorage.removeItem("runetrader_alerts");
-    setActiveTab("flips");
+    setActiveTab("market");
   }
 
   // ── Check alerts against live prices ──
@@ -4111,50 +4113,19 @@ RULES:
     } finally { setAiLoading(false); }
   }
 
-  const sourceItems = search.trim() ? allItems : items;
-  const scoredItems = sourceItems.map(item => ({
-    ...item,
-    prefScore: getScore(item.margin, item.volume, item.roi, prefs.speed, prefs.risk, item.buyLimit, item.lastTradeTime),
-  }));
-
-  const filtered = scoredItems.filter(item => {
-    if (search.trim()) {
-      const matched = item.name.toLowerCase().includes(search.toLowerCase());
-      // When searching, show all matching items but mark invalid ones visually
-      return matched;
-    }
-    const budgetGp = budget ? parseInt(budget.replace(/[^0-9]/g, "")) * (budget.toLowerCase().includes("m") ? 1_000_000 : budget.toLowerCase().includes("k") ? 1_000 : 1) : null;
-    const { adjLow, adjHigh } = applyOffset(item.low, item.high, prefs.speed);
-    const adjMargin = item.margin - (adjLow - item.low) - (item.high - adjHigh);
-
-    // Speed filter: Fast needs genuinely high volume to fill quickly
-    const passesSpeed = !prefs.speed ||
-      (prefs.speed === "Fast"  && item.volume >= 50_000) ||
-      (prefs.speed === "Med"   && item.volume >= 5_000)  ||
-      prefs.speed === "Slow";
-
-    // Risk filter: Low risk = only high-volume, low-ROI items; High = relax everything
-    const passesRisk = !prefs.risk ||
-      (prefs.risk === "Low"  && item.volume >= 20_000 && item.roi <= 20) ||
-      (prefs.risk === "Med"  && item.volume >= 2_000  && item.roi <= 60) ||
-      prefs.risk === "High";
-
-    // Always: must have positive adjusted margin, valid price, pass budget & tab filter
-    return (!budgetGp || item.low <= budgetGp) &&
-      (filter === "all" || (filter === "f2p" && item.category === "F2P") || (filter === "members" && item.category === "Members") || (filter === "highvol" && item.volume > 500)) &&
-      passesRisk && passesSpeed &&
-      adjMargin > 0 &&
-      item.high >= item.low &&
-      (filter !== "favourites" || favourites.includes(item.id));
+  const sourceItems = allItems.length ? allItems : items;
+  const filtered = sourceItems.filter(item => {
+    if (search.trim()) return item.name.toLowerCase().includes(search.toLowerCase());
+    if (filter === "favourites") return favourites.includes(item.id);
+    if (filter === "f2p") return item.category === "F2P";
+    if (filter === "members") return item.category === "Members";
+    if (filter === "highvol") return item.volume > 500;
+    return true;
   }).sort((a, b) => {
     if (sortCol === "name") return sortDir === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
     if (sortCol === "volume") return sortDir === "asc" ? a.volume - b.volume : b.volume - a.volume;
     if (sortCol === "buylimit") return sortDir === "asc" ? a.buyLimit - b.buyLimit : b.buyLimit - a.buyLimit;
-    if (sortCol === "margin") {
-      const adj = i => { const { adjLow, adjHigh } = applyOffset(i.low, i.high, prefs.speed); return i.margin - (adjLow - i.low) - (i.high - adjHigh); };
-      return sortDir === "asc" ? adj(a) - adj(b) : adj(b) - adj(a);
-    }
-    if (sortCol === "score") return sortDir === "asc" ? a.prefScore - b.prefScore : b.prefScore - a.prefScore;
+    if (sortCol === "margin") return sortDir === "asc" ? a.margin - b.margin : b.margin - a.margin;
     if (sortCol === "gpPerFill") {
       const calc = i => { const lim = i.buyLimit > 0 ? i.buyLimit : 500; return i.margin * Math.min(lim, i.volume / 6); };
       return sortDir === "asc" ? calc(a) - calc(b) : calc(b) - calc(a);
@@ -4278,11 +4249,10 @@ RULES:
             ? { top: topPos, right: window.innerWidth - (hl.left || 0) + pad + 8, left: "auto" }
             : { top: topPos, left: leftPos };
         }
-        const isBubbleStep = step.target === ".merchant-ai-bubble";
         return (
           <>
             <div className="tour-backdrop" onClick={endMerchantTour} />
-            {!isCenter && merchantTourRect && <div className="tour-highlight" style={{ top: hl.top - pad, left: hl.left - pad, width: hl.width + pad * 2, height: hl.height + pad * 2, zIndex: isBubbleStep ? 10001 : undefined }} />}
+            {!isCenter && merchantTourRect && <div className="tour-highlight" style={{ top: hl.top - pad, left: hl.left - pad, width: hl.width + pad * 2, height: hl.height + pad * 2, zIndex: step.target === ".merchant-ai-bubble" ? 10001 : undefined }} />}
             <div className="tour-tooltip" style={ttStyle}>
               <div className="tour-step-label">Step {merchantTourStep + 1} of {MERCHANT_TOUR_STEPS.length}</div>
               <div className="tour-title">{step.title}</div>
@@ -4405,9 +4375,9 @@ RULES:
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {!merchantMode && ["flips", "tracker", "alerts", ...(user ? ["portfolio", "settings"] : [])].map(t => (
+            {!merchantMode && ["market", "tracker", "alerts", ...(user ? ["portfolio", "settings"] : [])].map(t => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
+                {t === "market" ? "Market" : t.charAt(0).toUpperCase() + t.slice(1)}
                 {t === "tracker" && (openFlips.length + (autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length)) > 0 && (
                   <span style={{ marginLeft: "6px", background: "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
                     {openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length}
@@ -4746,36 +4716,8 @@ RULES:
             )}
 
             {/* ── FLIPS TAB ── */}
-            {activeTab === "flips" && (
+            {activeTab === "market" && (
               <>
-                <div className="prefs-bar">
-                  <div className="pref-card">
-                    <span className="pref-label">Cash Stack</span>
-                    <input className="pref-input" placeholder="e.g. 50000000" value={budget} onChange={e => { setBudget(e.target.value); savePref("budget", e.target.value); }} />
-                    <span className="pref-sub">Filters flips by buy price</span>
-                  </div>
-                  <div className="pref-card">
-                    <span className="pref-label">Risk Tolerance</span>
-                    <div className="toggle-group">
-                      {["Low", "Med", "High"].map(r => <button key={r} className={`toggle-btn ${prefs.risk === r ? (r === "Low" ? "active-low" : r === "Med" ? "active-med" : "active-high") : ""}`} onClick={() => savePref("risk", r)}>{r}</button>)}
-                    </div>
-                    <span className="pref-sub">{prefs.risk === "Low" ? "Safe, high-volume only" : prefs.risk === "High" ? "Higher margins, less liquid" : "Balanced risk/reward"}</span>
-                  </div>
-                  <div className="pref-card">
-                    <span className="pref-label">Flip Speed</span>
-                    <div className="toggle-group">
-                      {[{ label: "Fast", sub: "<30m" }, { label: "Med", sub: "1-2h" }, { label: "Slow", sub: "4h+" }].map(s => <button key={s.label} className={`toggle-btn ${prefs.speed === s.label ? (s.label === "Fast" ? "active-fast" : s.label === "Med" ? "active-med-speed" : "active-slow") : ""}`} onClick={() => savePref("speed", s.label)}>{s.label} <span style={{ opacity: 0.6, fontSize: "10px" }}>{s.sub}</span></button>)}
-                    </div>
-                    <span className="pref-sub">{prefs.speed === "Fast" ? "High volume, quick fills" : prefs.speed === "Slow" ? "Bigger margins, patient" : "Mix of speed and margin"}</span>
-                  </div>
-                  <div className="pref-card">
-                    <span className="pref-label">Market Right Now</span>
-                    <span className="stat-value" style={{ fontSize: "20px", color: "var(--gold)", fontFamily: "Cinzel, serif" }}>
-                      {loading ? "—" : items.length.toLocaleString()} <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400 }}>valid flips</span>
-                    </span>
-                    <span className="pref-sub">{(() => { const best = [...items].sort((a, b) => b.margin - a.margin)[0]; return loading ? "—" : `Best: ${best?.name || "—"} · ${formatGP(best?.margin)} gp`; })()}</span>
-                  </div>
-                </div>
 
                 {error && <div className="error-banner">⚠️ {error}</div>}
 
@@ -4799,9 +4741,9 @@ RULES:
                 </div>
 
                 <div>
-                  <div className="section-title">Top Flips</div>
+                  <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
                   <div className="flips-table">
-                    <div className="table-header">
+                    <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>
                       {[
                         ["name", "Item", null],
                         ["low", "Buy Price", "Lowest current buy offer on the GE"],
@@ -4812,7 +4754,6 @@ RULES:
                         ["buylimit", "Limit", "Max items you can buy every 4 hours"],
                         ["gpPerFill", "GP/Fill", "Realistic GP profit per 4hr window, scaled by market volume"],
                         ["lastTradeTime", "Last Trade", "When this item last traded. Stale = low activity."],
-                        ["score", "Score", "RuneTrader score 0–100. Combines margin, volume, ROI, liquidity, and trade freshness."],
                       ].map(([col, label, tip]) => (
                         <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
                           {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
@@ -4827,17 +4768,14 @@ RULES:
                     </div>
                     {loading ? (
                       Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="flip-row">{Array.from({ length: 10 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
+                        <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>{Array.from({ length: 9 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
                       ))
                     ) : filtered.length === 0 ? (
                       <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
                     ) : (
-                      filtered.slice(0, search.trim() ? 200 : 100).map(item => {
-                        const { adjLow, adjHigh } = applyOffset(item.low, item.high, prefs.speed);
-                        const adjMargin = item.margin - (adjLow - item.low) - (item.high - adjHigh);
+                      filtered.slice(0, marketRowsShown).map(item => {
                         const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
                         const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
-                        // GP/Fill: volume-scaled realistic profit per 4hr window
                         const lim = item.buyLimit > 0 ? item.buyLimit : 500;
                         const mkt4hr = item.volume / 6;
                         let expFill;
@@ -4846,33 +4784,27 @@ RULES:
                         else if (item.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
                         else if (item.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
                         else                             expFill = Math.min(lim, mkt4hr * 0.03);
-                        const gpPerFill = Math.round(adjMargin * Math.max(expFill, 1));
-                        const gpPerFillMax = Math.round(adjMargin * Math.min(lim, mkt4hr));
-                        // Confidence label: can the market supply your buy limit in 4hrs?
-                        // This is the RIGHT question — 5k/day vol with limit=15 is fine (333/4hr >> 15)
-                        // but 5k/day vol with limit=5000 is terrible (333/4hr << 5000)
+                        const gpPerFill = Math.round(item.margin * Math.max(expFill, 1));
+                        const gpPerFillMax = Math.round(item.margin * Math.min(lim, mkt4hr));
                         const liqRatio = mkt4hr / Math.max(lim, 1);
                         let fillConf, fillConfColor;
-                        if      (liqRatio >= 5)  { fillConf = null;           fillConfColor = "var(--green)"; }  // market supplies 5x limit — fills easily
-                        else if (liqRatio >= 2)  { fillConf = "likely fills"; fillConfColor = "var(--green)"; }  // market supplies 2x limit — good odds
-                        else if (liqRatio >= 0.8){ fillConf = "~competitive"; fillConfColor = "var(--gold)"; }   // market roughly matches limit — competition matters
-                        else if (liqRatio >= 0.3){ fillConf = "~partial";     fillConfColor = "#f39c12"; }       // market can't fully supply limit
-                        else                     { fillConf = "low liq";       fillConfColor = "var(--red)"; }   // market way under limit
+                        if      (liqRatio >= 5)  { fillConf = null;           fillConfColor = "var(--green)"; }
+                        else if (liqRatio >= 2)  { fillConf = "likely fills"; fillConfColor = "var(--green)"; }
+                        else if (liqRatio >= 0.8){ fillConf = "~competitive"; fillConfColor = "var(--gold)"; }
+                        else if (liqRatio >= 0.3){ fillConf = "~partial";     fillConfColor = "#f39c12"; }
+                        else                     { fillConf = "low liq";       fillConfColor = "var(--red)"; }
                         return (
-                          <div key={item.id} className="flip-row" onClick={() => setSelectedItem({ ...item, adjLow, adjHigh, adjMargin })}>
+                          <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }} onClick={() => setSelectedItem(item)}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={favourites.includes(item.id) ? "Remove favourite" : "Add to favourites"}>⭐</button>
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                              <div>
-                                <div className="item-name">{item.name}</div>
-                                {search.trim() && !isValidFlip(item) && <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "2px" }}>no margin right now</div>}
-                              </div>
+                              <div className="item-name">{item.name}</div>
                             </div>
-                            <span className="price">{formatGP(adjLow)}</span>
-                            <span className="price">{formatGP(adjHigh)}</span>
-                            <span className={`margin ${adjMargin < 0 ? "neg" : ""}`}>{formatGP(adjMargin)}</span>
+                            <span className="price">{formatGP(item.low)}</span>
+                            <span className="price">{formatGP(item.high)}</span>
+                            <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{formatGP(item.margin)}</span>
                             <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.roi}%</span>
-                            <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }} title={item.buyLimit > 0 ? `${(item.volume/Math.max(item.buyLimit,1)).toFixed(1)}x daily vol vs limit` : "No buy limit data"}>
+                            <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
                               {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
                               {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit — hard to fill">⚠</span>}
                             </span>
@@ -4885,12 +4817,23 @@ RULES:
                               {fillConf && <span style={{ fontSize: "10px", color: fillConfColor }}>{fillConf}</span>}
                             </div>
                             <span style={{ fontSize: "11px", color: tradeColor }}>{timeAgo(item.lastTradeTime)}</span>
-                            <span className={`score-badge ${item.prefScore >= 70 ? "score-high" : item.prefScore >= 40 ? "score-med" : "score-low"}`}>{item.prefScore}</span>
                           </div>
                         );
                       })
                     )}
                   </div>
+                  {!loading && filtered.length > marketRowsShown && (
+                    <div style={{ textAlign: "center", padding: "16px 0" }}>
+                      <button
+                        onClick={() => setMarketRowsShown(n => n + 200)}
+                        style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                        onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
+                        onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
+                      >
+                        Load more ({filtered.length - marketRowsShown} remaining)
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             )}
