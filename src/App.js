@@ -3398,7 +3398,7 @@ export default function RuneTrader() {
   // ── UI state ──
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("flips");
+  const [activeTab, setActiveTab] = useState("market");
   const [selectedItem, setSelectedItem] = useState(null);
   const [sortCol, setSortCol] = useState("score");
   const [sortDir, setSortDir] = useState("desc");
@@ -3806,7 +3806,7 @@ export default function RuneTrader() {
     setFlipsLog([]);
     setAlerts([]);
     localStorage.removeItem("runetrader_alerts");
-    setActiveTab("flips");
+    setActiveTab("market");
   }
 
   // ── Check alerts against live prices ──
@@ -4021,6 +4021,20 @@ export default function RuneTrader() {
       localStorage.setItem("runetrader_alerts", JSON.stringify(next));
       return next;
     });
+  }
+  function addQuickAlert(e, item) {
+    e.stopPropagation();
+    const already = alerts.find(a => a.item.toLowerCase() === item.name.toLowerCase());
+    if (already) { showToast(`Alert already set for ${item.name}`, "info"); return; }
+    const targetPrice = item.high;
+    const newAlert = { id: Date.now(), item: item.name, price: targetPrice, type: "above", currentPrice: item.high, triggered: false };
+    setAlerts(prev => {
+      const next = [newAlert, ...prev];
+      localStorage.setItem("runetrader_alerts", JSON.stringify(next));
+      return next;
+    });
+    showToast(`🔔 Alert set: ${item.name} above ${formatGP(targetPrice)} gp`, "success");
+    setActiveTab("alerts");
   }
 
   // ── AI sendMessage ──
@@ -4410,9 +4424,9 @@ RULES:
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {!merchantMode && ["flips", "tracker", "alerts", ...(user ? ["portfolio", "settings"] : [])].map(t => (
+            {!merchantMode && ["market", "tracker", "alerts", ...(user ? ["portfolio", "settings"] : [])].map(t => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
+                {t === "market" ? "Market" : t.charAt(0).toUpperCase() + t.slice(1)}
                 {t === "tracker" && (openFlips.length + (autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length)) > 0 && (
                   <span style={{ marginLeft: "6px", background: "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
                     {openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length}
@@ -4789,8 +4803,8 @@ RULES:
               />
             )}
 
-            {/* ── FLIPS TAB ── */}
-            {activeTab === "flips" && (
+            {/* ── MARKET TAB ── */}
+            {activeTab === "market" && (
               <>
                 <div className="prefs-bar">
                   <div className="pref-card">
@@ -4929,7 +4943,16 @@ RULES:
                               {fillConf && <span style={{ fontSize: "10px", color: fillConfColor }}>{fillConf}</span>}
                             </div>
                             <span style={{ fontSize: "11px", color: tradeColor }}>{timeAgo(item.lastTradeTime)}</span>
-                            <span className={`score-badge ${item.prefScore >= 70 ? "score-high" : item.prefScore >= 40 ? "score-med" : "score-low"}`}>{item.prefScore}</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                              <span className={`score-badge ${item.prefScore >= 70 ? "score-high" : item.prefScore >= 40 ? "score-med" : "score-low"}`}>{item.prefScore}</span>
+                              <button
+                                onClick={e => addQuickAlert(e, item)}
+                                title={alerts.find(a => a.item.toLowerCase() === item.name.toLowerCase()) ? "Alert already set" : "Set price alert"}
+                                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", opacity: alerts.find(a => a.item.toLowerCase() === item.name.toLowerCase()) ? 1 : 0.2, transition: "opacity 0.15s", padding: "0", flexShrink: 0, lineHeight: 1 }}
+                                onMouseEnter={e => e.currentTarget.style.opacity = "1"}
+                                onMouseLeave={e => { const set = alerts.find(a => a.item.toLowerCase() === item.name.toLowerCase()); e.currentTarget.style.opacity = set ? "1" : "0.2"; }}
+                              >🔔</button>
+                            </div>
                           </div>
                         );
                       })
