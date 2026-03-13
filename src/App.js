@@ -545,19 +545,36 @@ const STYLES = `
   .notif-active-banner { display: flex; align-items: center; gap: 8px; background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--green); }
 
   /* PORTFOLIO */
-  .portfolio-wrap { display: flex; flex-direction: column; gap: 24px; }
-  .perf-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .perf-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
-  .perf-card-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-  .perf-card-value { font-size: 20px; font-weight: 700; font-family: "Cinzel", serif; }
-  .perf-card-sub { font-size: 11px; color: var(--text-dim); }
-  .portfolio-chart-wrap { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
-  .portfolio-chart-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
-  .portfolio-canvas-wrap { width: 100%; height: 200px; position: relative; }
-  .portfolio-range-tabs { display: flex; gap: 4px; }
-  .portfolio-range-tab { padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
-  .portfolio-range-tab:hover { color: var(--text); }
-  .portfolio-range-tab.active { background: var(--bg4); color: var(--gold); border-color: var(--gold-dim); }
+  .portfolio-wrap { display: flex; flex-direction: column; gap: 20px; }
+  .port-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .port-stat { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
+  .port-stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+  .port-stat-value { font-size: 20px; font-weight: 700; font-family: "Cinzel", serif; color: var(--gold); }
+  .port-stat-sub { font-size: 11px; color: var(--text-dim); }
+  .port-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .port-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .port-card-title { font-family: "Cinzel", serif; font-size: 12px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .alloc-bar-wrap { display: flex; flex-direction: column; gap: 8px; }
+  .alloc-bar-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .alloc-bar-label { width: 130px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+  .alloc-bar-track { flex: 1; height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden; }
+  .alloc-bar-fill { height: 100%; border-radius: 3px; background: var(--gold); transition: width 0.4s ease; }
+  .alloc-bar-val { width: 70px; text-align: right; color: var(--text-dim); flex-shrink: 0; }
+  .alloc-empty { font-size: 13px; color: var(--text-dim); text-align: center; padding: 24px 0; }
+  .pnl-table { display: flex; flex-direction: column; }
+  .pnl-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 8px 12px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-radius: 6px 6px 0 0; }
+  .pnl-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 12px; align-items: center; transition: background 0.15s; }
+  .pnl-row:last-child { border-bottom: none; }
+  .pnl-row:hover { background: var(--bg4); }
+  .winrate-ring-wrap { display: flex; align-items: center; gap: 20px; }
+  .winrate-legend { display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
+  .winrate-legend-row { display: flex; align-items: center; gap: 8px; color: var(--text-dim); }
+  .winrate-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .bw-table { display: flex; flex-direction: column; }
+  .bw-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 8px 12px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-radius: 6px 6px 0 0; }
+  .bw-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; padding: 9px 12px; border-bottom: 1px solid var(--border); font-size: 12px; align-items: center; }
+  .bw-row:last-child { border-bottom: none; }
+  .bw-section-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; padding: 6px 12px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); }
   .positions-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .positions-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 120px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
   .position-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 120px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; }
@@ -1412,52 +1429,195 @@ function PortfolioPage({ user, flipsLog, setFlipsLog, mapFlipRow, autoFlipsLog =
     );
   }
 
-  // Combine: open flips from tracker + manual positions
+  // ── Derived stats from closed flips ──
+  const allClosed = [
+    ...flipsLog.filter(f => f.status !== "open"),
+    ...autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, roi: f.roi || 0, qty: f.quantity || 1, buyPrice: f.buy_price || 0 })),
+  ];
   const trackerOpenFlips = flipsLog.filter(f => f.status === "open");
   const totalOpenValue =
     trackerOpenFlips.reduce((s, f) => s + (f.buyPrice || 0) * (f.qty || 1), 0) +
     manualPositions.reduce((s, p) => s + p.buy_price * p.qty, 0);
+  const totalProfit = allClosed.reduce((s, f) => s + (f.totalProfit || 0), 0);
+  const totalFlips = allClosed.length;
+  const wins = allClosed.filter(f => (f.totalProfit || 0) > 0).length;
+  const winRate = totalFlips > 0 ? Math.round((wins / totalFlips) * 100) : null;
+  const avgProfit = totalFlips > 0 ? Math.round(totalProfit / totalFlips) : 0;
+
+  // Per-item aggregation
+  const itemMap = {};
+  allClosed.forEach(f => {
+    const key = f.item || f.item_name || "Unknown";
+    if (!itemMap[key]) itemMap[key] = { name: key, totalProfit: 0, flips: 0, wins: 0 };
+    itemMap[key].totalProfit += f.totalProfit || 0;
+    itemMap[key].flips += 1;
+    if ((f.totalProfit || 0) > 0) itemMap[key].wins += 1;
+  });
+  const itemStats = Object.values(itemMap).sort((a, b) => b.totalProfit - a.totalProfit);
+  const bestItems = itemStats.slice(0, 5);
+  const worstItems = [...itemStats].sort((a, b) => a.totalProfit - b.totalProfit).slice(0, 3);
+
+  // Capital allocation
+  const allOpen = [
+    ...trackerOpenFlips.map(f => ({ name: f.item, value: (f.buyPrice || 0) * (f.qty || 1) })),
+    ...manualPositions.map(p => ({ name: p.item_name, value: p.buy_price * p.qty })),
+  ];
+  const maxAlloc = Math.max(...allOpen.map(p => p.value), 1);
 
   return (
     <div className="portfolio-wrap">
-      <div className="perf-cards">
-        {perfCards.map(({ label, data }) => (
-          <div key={label} className="perf-card">
-            <span className="perf-card-label">{label}</span>
-            {data ? (
-              <>
-                <span className="perf-card-value" style={{ color: data.diff >= 0 ? "var(--green)" : "var(--red)" }}>
-                  {data.diff >= 0 ? "+" : ""}{formatGP(data.diff)} gp
-                </span>
-                {data.pct !== null && <span className="perf-card-sub" style={{ color: data.diff >= 0 ? "var(--green)" : "var(--red)" }}>{data.diff >= 0 ? "+" : ""}{data.pct}%</span>}
-              </>
-            ) : (
-              <span className="perf-card-value" style={{ color: "var(--text-dim)", fontSize: "14px" }}>Not enough data</span>
-            )}
-          </div>
-        ))}
-      </div>
 
-      <div className="portfolio-chart-wrap">
-        <div className="portfolio-chart-title">
-          <span>📈 Portfolio Performance</span>
-          <div className="portfolio-range-tabs">
-            {PORT_RANGES.map(r => (
-              <button key={r} className={"portfolio-range-tab" + (range === r ? " active" : "")} onClick={() => setRange(r)}>{r}</button>
-            ))}
-          </div>
+      {/* ── SUMMARY STATS ── */}
+      <div className="port-stats">
+        <div className="port-stat">
+          <span className="port-stat-label">Total Profit</span>
+          <span className="port-stat-value" style={{ color: totalProfit >= 0 ? "var(--green)" : "var(--red)" }}>{formatGP(totalProfit)}</span>
+          <span className="port-stat-sub">{totalFlips} flips logged</span>
         </div>
-        {snapshots.length < 2 ? (
-          <div style={{ textAlign: "center", color: "var(--text-dim)", padding: "60px 0", fontSize: "13px" }}>
-            Log more flips to see your portfolio chart
-          </div>
-        ) : (
-          <div className="portfolio-canvas-wrap">
-            <canvas ref={chartRef} style={{ width: "100%", height: "100%" }} />
-          </div>
-        )}
+        <div className="port-stat">
+          <span className="port-stat-label">Win Rate</span>
+          <span className="port-stat-value" style={{ color: winRate === null ? "var(--text-dim)" : winRate >= 60 ? "var(--green)" : winRate >= 40 ? "var(--gold)" : "var(--red)" }}>
+            {winRate === null ? "—" : `${winRate}%`}
+          </span>
+          <span className="port-stat-sub">{wins} wins / {totalFlips - wins} losses</span>
+        </div>
+        <div className="port-stat">
+          <span className="port-stat-label">Avg Profit / Flip</span>
+          <span className="port-stat-value" style={{ color: avgProfit >= 0 ? "var(--gold)" : "var(--red)" }}>{totalFlips > 0 ? formatGP(avgProfit) : "—"}</span>
+          <span className="port-stat-sub">after 2% GE tax</span>
+        </div>
+        <div className="port-stat">
+          <span className="port-stat-label">Capital Deployed</span>
+          <span className="port-stat-value">{formatGP(totalOpenValue)}</span>
+          <span className="port-stat-sub">{allOpen.length} open position{allOpen.length !== 1 ? "s" : ""}</span>
+        </div>
+        <div className="port-stat">
+          <span className="port-stat-label">Items Traded</span>
+          <span className="port-stat-value">{itemStats.length}</span>
+          <span className="port-stat-sub">unique items flipped</span>
+        </div>
       </div>
 
+      {/* ── TWO COL: CAPITAL ALLOCATION + WIN RATE BREAKDOWN ── */}
+      <div className="port-two-col">
+        <div className="port-card">
+          <div className="port-card-title">💰 Capital Allocation</div>
+          {allOpen.length === 0 ? (
+            <div className="alloc-empty">No open positions</div>
+          ) : (
+            <div className="alloc-bar-wrap">
+              {allOpen.sort((a, b) => b.value - a.value).map((pos, i) => (
+                <div key={i} className="alloc-bar-row">
+                  <div className="alloc-bar-label" title={pos.name}>{pos.name}</div>
+                  <div className="alloc-bar-track">
+                    <div className="alloc-bar-fill" style={{ width: `${Math.round((pos.value / maxAlloc) * 100)}%` }} />
+                  </div>
+                  <div className="alloc-bar-val">{formatGP(pos.value)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="port-card">
+          <div className="port-card-title">🏆 Win Rate Breakdown</div>
+          {totalFlips === 0 ? (
+            <div className="alloc-empty">No closed flips yet</div>
+          ) : (
+            <div className="winrate-ring-wrap">
+              <svg width="100" height="100" viewBox="0 0 100 100">
+                {(() => {
+                  const r = 38; const cx = 50; const cy = 50;
+                  const circ = 2 * Math.PI * r;
+                  const winPct = wins / totalFlips;
+                  const lossPct = 1 - winPct;
+                  const winDash = winPct * circ;
+                  const lossDash = lossPct * circ;
+                  return (
+                    <>
+                      <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--bg4)" strokeWidth="12" />
+                      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#2ecc71" strokeWidth="12"
+                        strokeDasharray={`${winDash} ${circ - winDash}`}
+                        strokeDashoffset={circ / 4} strokeLinecap="butt" />
+                      {lossPct > 0 && <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e74c3c" strokeWidth="12"
+                        strokeDasharray={`${lossDash} ${circ - lossDash}`}
+                        strokeDashoffset={circ / 4 - winDash} strokeLinecap="butt" />}
+                      <text x={cx} y={cy - 4} textAnchor="middle" fill="var(--text)" fontSize="16" fontWeight="700" fontFamily="Cinzel, serif">{winRate}%</text>
+                      <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--text-dim)" fontSize="9" fontFamily="Inter, sans-serif">WIN RATE</text>
+                    </>
+                  );
+                })()}
+              </svg>
+              <div className="winrate-legend">
+                <div className="winrate-legend-row"><div className="winrate-dot" style={{ background: "var(--green)" }} />{wins} profitable flips</div>
+                <div className="winrate-legend-row"><div className="winrate-dot" style={{ background: "var(--red)" }} />{totalFlips - wins} losing flips</div>
+                <div className="winrate-legend-row" style={{ marginTop: "4px", color: "var(--text-dim)", fontSize: "11px" }}>Avg profit: <span style={{ color: avgProfit >= 0 ? "var(--gold)" : "var(--red)", marginLeft: "4px" }}>{formatGP(avgProfit)} gp</span></div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── TWO COL: PER-ITEM P&L + BEST/WORST ── */}
+      <div className="port-two-col">
+        <div className="port-card">
+          <div className="port-card-title">📊 Per-Item P&amp;L</div>
+          {itemStats.length === 0 ? (
+            <div className="alloc-empty">No flips logged yet</div>
+          ) : (
+            <div className="pnl-table">
+              <div className="pnl-header"><span>Item</span><span>Flips</span><span>Win %</span><span>Total P&amp;L</span></div>
+              {itemStats.slice(0, 10).map((item, i) => (
+                <div key={i} className="pnl-row">
+                  <span style={{ color: "var(--text)", fontWeight: 500 }}>{item.name}</span>
+                  <span style={{ color: "var(--text-dim)" }}>{item.flips}</span>
+                  <span style={{ color: item.wins / item.flips >= 0.6 ? "var(--green)" : item.wins / item.flips >= 0.4 ? "var(--gold)" : "var(--red)" }}>
+                    {Math.round((item.wins / item.flips) * 100)}%
+                  </span>
+                  <span style={{ fontWeight: 600, color: item.totalProfit >= 0 ? "var(--green)" : "var(--red)" }}>
+                    {item.totalProfit >= 0 ? "+" : ""}{formatGP(item.totalProfit)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="port-card">
+          <div className="port-card-title">⚡ Best &amp; Worst Items</div>
+          {itemStats.length === 0 ? (
+            <div className="alloc-empty">No flips logged yet</div>
+          ) : (
+            <div className="bw-table">
+              <div className="bw-header"><span>Item</span><span>Flips</span><span>Win %</span><span>Total P&amp;L</span></div>
+              <div className="bw-section-label">🏆 Best performers</div>
+              {bestItems.map((item, i) => (
+                <div key={`best-${i}`} className="bw-row">
+                  <span style={{ color: "var(--text)" }}>{item.name}</span>
+                  <span style={{ color: "var(--text-dim)" }}>{item.flips}</span>
+                  <span style={{ color: "var(--green)" }}>{Math.round((item.wins / item.flips) * 100)}%</span>
+                  <span style={{ fontWeight: 600, color: "var(--green)" }}>+{formatGP(item.totalProfit)}</span>
+                </div>
+              ))}
+              {worstItems.length > 0 && worstItems[0].totalProfit < 0 && (
+                <>
+                  <div className="bw-section-label">📉 Worst performers</div>
+                  {worstItems.filter(i => i.totalProfit < 0).map((item, i) => (
+                    <div key={`worst-${i}`} className="bw-row">
+                      <span style={{ color: "var(--text)" }}>{item.name}</span>
+                      <span style={{ color: "var(--text-dim)" }}>{item.flips}</span>
+                      <span style={{ color: "var(--red)" }}>{Math.round((item.wins / item.flips) * 100)}%</span>
+                      <span style={{ fontWeight: 600, color: "var(--red)" }}>{formatGP(item.totalProfit)}</span>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── OPEN POSITION FORM ── */}
       <div className="open-pos-form">
         <div className="open-pos-title">📂 Open a Position</div>
         <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
