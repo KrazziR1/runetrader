@@ -468,7 +468,7 @@ const STYLES = `
   .add-alert-btn:hover { opacity: 0.85; }
   .add-alert-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .alerts-list { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .alert-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 40px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; }
+  .alert-row { display: grid; grid-template-columns: 2fr 130px 1fr 1fr 40px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; }
   .alert-row:last-child { border-bottom: none; }
   .alert-row:hover { background: var(--bg4); }
   .alert-item-name { font-weight: 500; color: var(--text); }
@@ -477,7 +477,7 @@ const STYLES = `
   .alert-badge.below { background: rgba(231,76,60,0.15); color: var(--red); border: 1px solid var(--red-dim); }
   .alert-triggered { background: rgba(201,168,76,0.1); border-left: 3px solid var(--gold); }
   .alert-triggered-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; background: rgba(201,168,76,0.2); color: var(--gold); border: 1px solid var(--gold-dim); }
-  .alert-header-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 40px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .alert-header-row { display: grid; grid-template-columns: 2fr 130px 1fr 1fr 40px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
   .alerts-empty { padding: 60px 20px; text-align: center; color: var(--text-dim); }
   .alerts-empty .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
   .alert-info { background: rgba(52,152,219,0.08); border: 1px solid rgba(52,152,219,0.2); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
@@ -4022,19 +4022,18 @@ export default function RuneTrader() {
       return next;
     });
   }
+  // Pre-fills the alert form and switches to Alerts tab so user can review/adjust before saving
   function addQuickAlert(e, item) {
     e.stopPropagation();
     const already = alerts.find(a => a.item.toLowerCase() === item.name.toLowerCase());
-    if (already) { showToast(`Alert already set for ${item.name}`, "info"); return; }
-    const targetPrice = item.high;
-    const newAlert = { id: Date.now(), item: item.name, price: targetPrice, type: "above", currentPrice: item.high, triggered: false };
-    setAlerts(prev => {
-      const next = [newAlert, ...prev];
-      localStorage.setItem("runetrader_alerts", JSON.stringify(next));
-      return next;
-    });
-    showToast(`🔔 Alert set: ${item.name} above ${formatGP(targetPrice)} gp`, "success");
+    if (already) {
+      showToast(`Alert already set for ${item.name}`, "info");
+      setActiveTab("alerts");
+      return;
+    }
+    setAlertForm({ item: item.name, price: String(item.high), type: "above" });
     setActiveTab("alerts");
+    showToast(`🔔 Pre-filled alert for ${item.name} — adjust & save`, "info");
   }
 
   // ── AI sendMessage ──
@@ -4947,7 +4946,7 @@ RULES:
                               <span className={`score-badge ${item.prefScore >= 70 ? "score-high" : item.prefScore >= 40 ? "score-med" : "score-low"}`}>{item.prefScore}</span>
                               <button
                                 onClick={e => addQuickAlert(e, item)}
-                                title={alerts.find(a => a.item.toLowerCase() === item.name.toLowerCase()) ? "Alert already set" : "Set price alert"}
+                                title={alerts.find(a => a.item.toLowerCase() === item.name.toLowerCase()) ? "Alert already set — click to view" : "Set price alert"}
                                 style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", opacity: alerts.find(a => a.item.toLowerCase() === item.name.toLowerCase()) ? 1 : 0.2, transition: "opacity 0.15s", padding: "0", flexShrink: 0, lineHeight: 1 }}
                                 onMouseEnter={e => e.currentTarget.style.opacity = "1"}
                                 onMouseLeave={e => { const set = alerts.find(a => a.item.toLowerCase() === item.name.toLowerCase()); e.currentTarget.style.opacity = set ? "1" : "0.2"; }}
