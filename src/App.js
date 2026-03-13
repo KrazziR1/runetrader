@@ -43,6 +43,29 @@ const STYLES = `
   .stat-value { font-size: 22px; font-weight: 600; color: var(--gold); font-family: 'Cinzel', serif; }
   .stat-sub { font-size: 11px; color: var(--text-dim); }
 
+  /* MARKET SUB-TABS */
+  .market-sub-tabs { display: flex; gap: 4px; padding: 0 0 16px 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .market-sub-tab { padding: 6px 16px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.2s; }
+  .market-sub-tab:hover { color: var(--text); background: var(--bg3); }
+  .market-sub-tab.active { background: var(--bg3); color: var(--gold); border-color: var(--border); }
+  .market-sub-tab .sub-tab-badge { display: inline-block; background: rgba(52,152,219,0.15); color: var(--blue); border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
+  /* ALCH / COFFER TABLE */
+  .alch-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
+  .alch-header { display: grid; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .alch-row { display: grid; padding: 11px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; }
+  .alch-row:last-child { border-bottom: none; }
+  .alch-row:hover { background: var(--bg4); }
+  .profit-positive { font-size: 13px; font-weight: 600; color: var(--green); }
+  .profit-negative { font-size: 13px; font-weight: 600; color: var(--red); }
+  .coffer-efficiency-great { display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: rgba(46,204,113,0.12); color: var(--green); }
+  .coffer-efficiency-ok { display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: rgba(243,156,18,0.12); color: #f39c12; }
+  .coffer-efficiency-poor { display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: rgba(231,76,60,0.12); color: var(--red); }
+  .coffer-target-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; }
+  .coffer-target-label { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+  .coffer-target-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; width: 160px; }
+  .coffer-target-input:focus { border-color: var(--gold-dim); }
+  .coffer-target-summary { font-size: 12px; color: var(--gold); font-weight: 600; }
+
   /* FILTER BAR */
   .filter-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .filter-label { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
@@ -3751,6 +3774,12 @@ export default function RuneTrader() {
   const [sortCol, setSortCol] = useState("volume");
   const [sortDir, setSortDir] = useState("desc");
   const [marketRowsShown, setMarketRowsShown] = useState(200);
+  const [marketSubTab, setMarketSubTab] = useState("flips");
+  const [natureRunePrice, setNatureRunePrice] = useState(0);
+  const [alchShowLosses, setAlchShowLosses] = useState(false);
+  const [alchSearch, setAlchSearch] = useState("");
+  const [cofferTarget, setCofferTarget] = useState("");
+  const [cofferSearch, setCofferSearch] = useState("");
   function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } }
   useEffect(() => { setMarketRowsShown(200); }, [filter, search]);
 
@@ -4126,6 +4155,11 @@ export default function RuneTrader() {
       const mappingMap = mappingCacheRef.current;
       const volumeMap = volumeCacheRef.current;
       const TAX_EXEMPT_IDS = [13190, 13191, 13192];
+
+      // Capture nature rune price (ID 561) — used for High Alch profit calc
+      const natureRuneData = latestData.data["561"];
+      if (natureRuneData && natureRuneData.low) setNatureRunePrice(natureRuneData.low);
+
       const flips = [];
 
       // Build from full mapping catalog — show all items, even those with no live price
@@ -4141,7 +4175,7 @@ export default function RuneTrader() {
         const volume = volumeMap[id] || 0;
         const lastTradeTime = Math.max(highTime || 0, lowTime || 0);
         const score = hasPrice ? getScore(margin, volume, roi, null, null, meta.limit || 0, lastTradeTime) : 0;
-        const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high: high || null, low: low || null, margin, roi, volume, score, lastTradeTime, hasPrice };
+        const flip = { id, name: meta.name, category: meta.members ? "Members" : "F2P", buyLimit: meta.limit || 0, high: high || null, low: low || null, margin, roi, volume, score, lastTradeTime, hasPrice, highalch: meta.highalch || 0 };
         flips.push(flip);
       }
       const validFlips = flips.filter(isValidFlip);
@@ -5168,9 +5202,147 @@ RULES:
             {/* ── FLIPS TAB ── */}
             {activeTab === "market" && (
               <>
-
                 {error && <div className="error-banner">⚠️ {error}</div>}
 
+                {/* ── Market Sub-tabs ── */}
+                <div className="market-sub-tabs">
+                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"]].map(([v,l]) => (
+                    <button key={v} className={`market-sub-tab${marketSubTab === v ? " active" : ""}`} onClick={() => setMarketSubTab(v)}>
+                      {l}{v !== "flips" && <span className="sub-tab-badge">new</span>}
+                    </button>
+                  ))}
+                  {marketSubTab === "flips" && natureRunePrice > 0 && (
+                    <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>
+                      Nature rune: <span style={{ color: "var(--gold)" }}>{natureRunePrice.toLocaleString()}gp</span>
+                    </span>
+                  )}
+                  {marketSubTab === "alch" && (
+                    <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>
+                      Nature rune: <span style={{ color: natureRunePrice > 0 ? "var(--gold)" : "var(--text-dim)" }}>{natureRunePrice > 0 ? `${natureRunePrice.toLocaleString()}gp` : "loading..."}</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* ── HIGH ALCH TAB ── */}
+                {marketSubTab === "alch" && (() => {
+                  const alchItems = (allItems || [])
+                    .filter(item => item.highalch > 0 && item.hasPrice && item.low > 0)
+                    .map(item => ({ ...item, alchProfit: item.highalch - item.low - natureRunePrice }))
+                    .filter(item => alchShowLosses || item.alchProfit > 0)
+                    .filter(item => !alchSearch || item.name.toLowerCase().includes(alchSearch.toLowerCase()))
+                    .sort((a, b) => b.alchProfit - a.alchProfit);
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <div className="filter-bar">
+                        <input className="filter-input" placeholder="Search items..." value={alchSearch} onChange={e => setAlchSearch(e.target.value)} />
+                        <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
+                          <input type="checkbox" checked={alchShowLosses} onChange={e => setAlchShowLosses(e.target.checked)} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
+                          Show unprofitable
+                        </label>
+                        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>{alchItems.length.toLocaleString()} items</span>
+                      </div>
+                      <div className="alch-table">
+                        <div className="alch-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr" }}>
+                          <span>Item</span><span>GE Buy Price</span><span>Alch Value</span><span>Profit / Cast</span><span>Buy Limit</span><span>Last Updated</span>
+                        </div>
+                        {alchItems.length === 0 ? (
+                          <div style={{ padding: "40px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
+                            {natureRunePrice === 0 ? "Loading nature rune price..." : "No profitable alch items found"}
+                          </div>
+                        ) : alchItems.slice(0, 300).map(item => (
+                          <div key={item.id} className="alch-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr" }} onClick={() => setSelectedItem(item)}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
+                              <div>
+                                <div className="item-name">{item.name}</div>
+                                <div className="item-category">{item.category}</div>
+                              </div>
+                            </div>
+                            <span className="price">{formatGP(item.low)}</span>
+                            <span className="price">{formatGP(item.highalch)}</span>
+                            <span className={item.alchProfit >= 0 ? "profit-positive" : "profit-negative"}>
+                              {item.alchProfit >= 0 ? "+" : ""}{formatGP(item.alchProfit)}
+                            </span>
+                            <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
+                            <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                              {item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── DEATH'S COFFER TAB ── */}
+                {marketSubTab === "coffer" && (() => {
+                  const targetGP = parseFloat((cofferTarget || "").replace(/[^0-9.]/g, "")) * (cofferTarget.toLowerCase().includes("m") ? 1_000_000 : cofferTarget.toLowerCase().includes("k") ? 1_000 : 1) || 0;
+                  const cofferItems = (allItems || [])
+                    .filter(item => item.hasPrice && item.high > 0 && item.low > 0)
+                    .filter(item => !cofferSearch || item.name.toLowerCase().includes(cofferSearch.toLowerCase()))
+                    .map(item => {
+                      const efficiency = item.high / item.low;
+                      const qtyNeeded = targetGP > 0 ? Math.ceil(targetGP / item.high) : null;
+                      const totalCost = qtyNeeded ? qtyNeeded * item.low : null;
+                      return { ...item, efficiency, qtyNeeded, totalCost };
+                    })
+                    .sort((a, b) => b.efficiency - a.efficiency)
+                    .filter(item => item.volume > 100);
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <div className="coffer-target-bar">
+                        <span className="coffer-target-label">💀 Target coffer amount:</span>
+                        <input
+                          className="coffer-target-input"
+                          placeholder="e.g. 5m or 500k"
+                          value={cofferTarget}
+                          onChange={e => setCofferTarget(e.target.value)}
+                        />
+                        {targetGP > 0 && (
+                          <span className="coffer-target-summary">
+                            Showing cheapest items to reach {formatGP(targetGP)} in coffer
+                          </span>
+                        )}
+                        <input className="filter-input" placeholder="Search items..." value={cofferSearch} onChange={e => setCofferSearch(e.target.value)} style={{ marginLeft: "auto", width: "200px" }} />
+                        <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>{cofferItems.length.toLocaleString()} items</span>
+                      </div>
+                      <div className="alch-table">
+                        <div className="alch-header" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr" }}>
+                          <span>Item</span><span>GE Buy Price</span><span>Coffer Value</span><span>Efficiency</span><span>Buy Limit</span>
+                          {targetGP > 0 && <span>To reach target</span>}
+                        </div>
+                        {cofferItems.slice(0, 300).map(item => {
+                          const effClass = item.efficiency >= 0.99 ? "coffer-efficiency-great" : item.efficiency >= 0.95 ? "coffer-efficiency-ok" : "coffer-efficiency-poor";
+                          return (
+                            <div key={item.id} className="alch-row" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr" }} onClick={() => setSelectedItem(item)}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
+                                <div>
+                                  <div className="item-name">{item.name}</div>
+                                  <div className="item-category">{item.category}</div>
+                                </div>
+                              </div>
+                              <span className="price">{formatGP(item.low)}</span>
+                              <span className="price">{formatGP(item.high)}</span>
+                              <span className={effClass}>{item.efficiency.toFixed(2)}x</span>
+                              <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
+                              {targetGP > 0 && (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                  <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}>×{item.qtyNeeded?.toLocaleString()}</span>
+                                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Cost: {formatGP(item.totalCost)}</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* ── FLIPS TAB (existing content) ── */}
+                {marketSubTab === "flips" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div className="filter-bar">
                   <span className="filter-label">Filter:</span>
                   {["all", "f2p", "members", "highvol", "favourites"].map(f => (
@@ -5396,6 +5568,7 @@ RULES:
                     </div>
                   )}
                 </div>
+                )} {/* end flips sub-tab */}
               </>
             )}
           </div>
