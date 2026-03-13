@@ -426,7 +426,7 @@ const STYLES = `
   @keyframes barPulse { from { opacity: 0.2; transform: scaleY(0.3); } to { opacity: 1; transform: scaleY(1); } }
   .merchant-anim-status { font-size: 15px; letter-spacing: 5px; color: var(--green); text-transform: uppercase; animation: fadeInUp 0.5s ease 3.8s both; }
   @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-  .merchant-anim-exit { animation: merchantFadeOut 0.5s ease 5.2s both; }
+  .merchant-anim-exit { animation: merchantFadeOut 0.5s ease forwards; }
   @keyframes merchantFadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
   .merchant-ai-bubble { position: fixed; bottom: 28px; right: 28px; z-index: 9000; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #c9a84c, #a06c20); border: 2px solid var(--gold); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 20px rgba(201,168,76,0.4); animation: bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; transition: transform 0.2s, box-shadow 0.2s; }
   .merchant-ai-bubble:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(201,168,76,0.6); }
@@ -451,7 +451,7 @@ const STYLES = `
   .merchant-shutdown-bar { width: 5px; background: var(--gold); border-radius: 2px; animation: barDown 0.6s ease-in-out forwards; }
   @keyframes barDown { 0% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(0.1); opacity: 0.2; } }
   .merchant-shutdown-status { font-size: 14px; letter-spacing: 4px; color: var(--red); text-transform: uppercase; animation: fadeInUp 0.4s ease 1.4s both; }
-  .merchant-shutdown-exit { animation: merchantFadeOut 0.5s ease 2.3s both; }
+  .merchant-shutdown-exit { animation: merchantFadeOut 0.5s ease forwards; }
 
 
   .alerts-wrap { display: flex; flex-direction: column; gap: 20px; }
@@ -3251,11 +3251,12 @@ export default function RuneTrader() {
   const merchantAIMessagesEndRef = useRef(null);
 
   function activateMerchantWithAnim(cb) {
-    setShowMerchantAnim(true);
+    setShowMerchantAnim('active');
     setShowMerchantAIBubble(false);
-    setTimeout(() => { if (cb) cb(); }, 5600);        // render merchant mode underneath first
-    setTimeout(() => setShowMerchantAnim(false), 5800); // then fade overlay out
-    setTimeout(() => setShowMerchantAIBubble(true), 6200);
+    setTimeout(() => { if (cb) cb(); }, 5600);          // render merchant mode underneath first
+    setTimeout(() => setShowMerchantAnim('fading'), 5800); // start CSS fade
+    setTimeout(() => setShowMerchantAnim(false), 6300);    // remove from DOM after fade completes
+    setTimeout(() => setShowMerchantAIBubble(true), 6400);
   }
   const [merchantCapital, setMerchantCapital] = useState(0);
   const [merchantCapitalInput, setMerchantCapitalInput] = useState("");
@@ -3326,11 +3327,12 @@ export default function RuneTrader() {
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
       activateMerchantWithAnim(() => { setMerchantMode(true); setTimeout(() => setShowMerchantAIBubble(true), 400); });
     } else {
-      setShowMerchantShutdown(true);
+      setShowMerchantShutdown('active');
       setShowMerchantAIBubble(false);
       setMerchantAIOpen(false);
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
-      setTimeout(() => { setMerchantMode(false); setShowMerchantShutdown(false); }, 2800);
+      setTimeout(() => setShowMerchantShutdown('fading'), 2400); // start CSS fade
+      setTimeout(() => { setMerchantMode(false); setShowMerchantShutdown(false); }, 2900); // remove after fade
     }
   }
 
@@ -4216,7 +4218,7 @@ RULES:
 
       {/* MERCHANT SHUTDOWN ANIMATION */}
       {showMerchantShutdown && (
-        <div className="merchant-shutdown-overlay merchant-shutdown-exit">
+        <div className={`merchant-shutdown-overlay${showMerchantShutdown === 'fading' ? ' merchant-shutdown-exit' : ''}`}>
           <div className="merchant-shutdown-title">Merchant Mode</div>
           <div className="merchant-shutdown-sub">Closing trading terminal</div>
           <div className="merchant-shutdown-bars">
@@ -4230,7 +4232,7 @@ RULES:
 
       {/* MERCHANT ACTIVATION ANIMATION */}
       {showMerchantAnim && (
-        <div className="merchant-anim-overlay merchant-anim-exit">
+        <div className={`merchant-anim-overlay${showMerchantAnim === 'fading' ? ' merchant-anim-exit' : ''}`}>
           <div className="merchant-anim-scan" />
           <div className="merchant-anim-logo">RuneTrader.gg</div>
           <div className="merchant-anim-title">Merchant Mode</div>
