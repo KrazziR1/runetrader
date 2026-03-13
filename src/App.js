@@ -1609,17 +1609,17 @@ const WELCOME_MSG = {
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
 // ── MERCHANT MODE COMPONENT ──
-function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct, fillPct, hasRules, isAutopilotOpen, autopilotRules, setAutopilotOpen, saveAutopilotRules, clearAutopilotRules, formatGP, setSelectedItem }) {
+function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct, fillPct, hasRules, isAutopilotOpen, autopilotRules, setAutopilotOpen, saveAutopilotRules, clearAutopilotRules, formatGP, setSelectedItem, getHoldTime }) {
   const saved = autopilotRules[op.item_name] || { marginFloor: "", holdHours: "", priceDrop: "" };
-  const [apMargin, setApMargin] = React.useState(saved.marginFloor);
-  const [apHold, setApHold] = React.useState(saved.holdHours);
-  const [apDrop, setApDrop] = React.useState(saved.priceDrop);
-  React.useEffect(() => {
+  const [apMargin, setApMargin] = useState(saved.marginFloor);
+  const [apHold, setApHold] = useState(saved.holdHours);
+  const [apDrop, setApDrop] = useState(saved.priceDrop);
+  useEffect(() => {
     const s = autopilotRules[op.item_name] || { marginFloor: "", holdHours: "", priceDrop: "" };
     setApMargin(s.marginFloor); setApHold(s.holdHours); setApDrop(s.priceDrop);
   }, [autopilotRules, op.item_name]);
   return (
-    <React.Fragment>
+    <>
       <div className="op-row op-row-healthy" onClick={(e) => { if (e.target.closest(".autopilot-btn")) return; liveItem && setSelectedItem(liveItem); }}>
         <div>
           <div className="op-item-name">{op.item_name}</div>
@@ -1676,8 +1676,7 @@ function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct
           </div>
         </div>
       )}
-    </React.Fragment>
-  );
+    </>;
 }
 
 function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView, filter, setFilter, search, setSearch, favourites, toggleFavourite, sortCol, sortDir, handleSort, filtered, marketRowsShown, setMarketRowsShown, showAdvFilters, setShowAdvFilters, advFilters, advFilterCount, setAdv, resetAdvFilters, loading }) {
@@ -2107,6 +2106,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                           saveAutopilotRules={saveAutopilotRules}
                           clearAutopilotRules={clearAutopilotRules}
                           formatGP={formatGP} setSelectedItem={setSelectedItem}
+                          getHoldTime={getHoldTime}
                         />
                       );
                     })}
