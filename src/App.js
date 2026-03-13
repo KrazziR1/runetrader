@@ -444,6 +444,14 @@ const STYLES = `
   .merchant-ai-modal-input textarea:focus { outline: none; border-color: var(--gold-dim); }
   .merchant-ai-close { margin-left: auto; background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 18px; padding: 0 4px; line-height: 1; }
   .merchant-ai-close:hover { color: var(--text); }
+  .merchant-shutdown-overlay { position: fixed; inset: 0; z-index: 99999; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; animation: merchantFadeIn 0.3s ease; }
+  .merchant-shutdown-title { font-size: 48px; font-weight: 800; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; font-family: Inter, sans-serif; animation: fadeInUp 0.5s ease 0.2s both; text-shadow: 0 0 40px rgba(201,168,76,0.3); }
+  .merchant-shutdown-sub { font-size: 15px; letter-spacing: 5px; color: var(--text-dim); text-transform: uppercase; animation: fadeInUp 0.5s ease 0.5s both; }
+  .merchant-shutdown-bars { display: flex; gap: 8px; align-items: flex-end; height: 40px; animation: fadeInUp 0.5s ease 0.7s both; }
+  .merchant-shutdown-bar { width: 5px; background: var(--gold); border-radius: 2px; animation: barDown 0.6s ease-in-out forwards; }
+  @keyframes barDown { 0% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(0.1); opacity: 0.2; } }
+  .merchant-shutdown-status { font-size: 14px; letter-spacing: 4px; color: var(--red); text-transform: uppercase; animation: fadeInUp 0.4s ease 1.4s both; }
+  .merchant-shutdown-exit { animation: merchantFadeOut 0.5s ease 2.3s both; }
 
 
   .alerts-wrap { display: flex; flex-direction: column; gap: 20px; }
@@ -3237,6 +3245,7 @@ export default function RuneTrader() {
   // ── Merchant Mode ──
   const [merchantMode, setMerchantMode] = useState(false);
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
+  const [showMerchantShutdown, setShowMerchantShutdown] = useState(false);
   const [showMerchantAIBubble, setShowMerchantAIBubble] = useState(false);
   const [merchantAIOpen, setMerchantAIOpen] = useState(false);
   const merchantAIMessagesEndRef = useRef(null);
@@ -3244,7 +3253,8 @@ export default function RuneTrader() {
   function activateMerchantWithAnim(cb) {
     setShowMerchantAnim(true);
     setShowMerchantAIBubble(false);
-    setTimeout(() => { setShowMerchantAnim(false); if (cb) cb(); }, 5800);
+    setTimeout(() => { if (cb) cb(); }, 5600);        // render merchant mode underneath first
+    setTimeout(() => setShowMerchantAnim(false), 5800); // then fade overlay out
     setTimeout(() => setShowMerchantAIBubble(true), 6200);
   }
   const [merchantCapital, setMerchantCapital] = useState(0);
@@ -3316,10 +3326,11 @@ export default function RuneTrader() {
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
       activateMerchantWithAnim(() => { setMerchantMode(true); setTimeout(() => setShowMerchantAIBubble(true), 400); });
     } else {
-      setMerchantMode(false);
+      setShowMerchantShutdown(true);
       setShowMerchantAIBubble(false);
       setMerchantAIOpen(false);
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
+      setTimeout(() => { setMerchantMode(false); setShowMerchantShutdown(false); }, 2800);
     }
   }
 
@@ -4200,6 +4211,20 @@ RULES:
               {merchantLoading ? "Activating..." : "Activate Merchant Mode →"}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* MERCHANT SHUTDOWN ANIMATION */}
+      {showMerchantShutdown && (
+        <div className="merchant-shutdown-overlay merchant-shutdown-exit">
+          <div className="merchant-shutdown-title">Merchant Mode</div>
+          <div className="merchant-shutdown-sub">Closing trading terminal</div>
+          <div className="merchant-shutdown-bars">
+            {[1,1.6,0.7,1.3,0.5,1.8,1,0.9,1.5,0.6].map((h,i) => (
+              <div key={i} className="merchant-shutdown-bar" style={{ height: `${h * 20}px`, animationDelay: `${0.8 + i * 0.05}s` }} />
+            ))}
+          </div>
+          <div className="merchant-shutdown-status">● Terminal Offline</div>
         </div>
       )}
 
