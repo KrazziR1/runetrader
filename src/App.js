@@ -1690,15 +1690,11 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     try { return JSON.parse(localStorage.getItem("runetrader_autopilot") || "{}"); } catch { return {}; }
   });
   const [autopilotOpen, setAutopilotOpen] = useState(null); // item_name of open rule panel
-  const autopilotFiredRef = useRef({});
 
   function saveAutopilotRules(itemName, rules) {
     const updated = { ...autopilotRules, [itemName]: rules };
     setAutopilotRules(updated);
     localStorage.setItem("runetrader_autopilot", JSON.stringify(updated));
-  }
-  function getAutopilotRules(itemName) {
-    return autopilotRules[itemName] || { marginFloor: "", holdHours: "", priceDrop: "" };
   }
   function clearAutopilotRules(itemName) {
     const updated = { ...autopilotRules };
