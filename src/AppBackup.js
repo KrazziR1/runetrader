@@ -35,7 +35,7 @@ const STYLES = `
   .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   .main { display: flex; flex: 1; min-height: 0; overflow: hidden; }
   .left-panel { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
-
+  .right-panel { width: 380px; border-left: 1px solid var(--border); display: flex; flex-direction: column; background: var(--bg2); overflow: hidden; flex-shrink: 0; }
 
   /* STAT CARDS */
   .stat-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 4px; }
@@ -586,7 +586,7 @@ const STYLES = `
     .logo-text { font-size: 16px; }
     .main { flex-direction: column; height: auto; overflow: visible; }
     .left-panel { padding: 16px; }
-
+    .right-panel { width: 100%; border-left: none; border-top: 1px solid var(--border); height: 420px; }
     .prefs-bar { grid-template-columns: repeat(2, 1fr); }
     .tracker-summary { grid-template-columns: repeat(2, 1fr); }
     .tracker-form-row { grid-template-columns: 1fr 1fr; }
@@ -825,6 +825,8 @@ function isValidFlip(item) {
 
 // ─── CONSTANTS ──────────────────────────────────────────────────────────────
 
+const QUICK_PROMPTS = ["What should I flip with my budget?", "Why isn't my offer filling?", "Check my active slots", "Best flips right now?"];
+
 const TIME_RANGES = [
   { label: "24H", seconds: 86400 }, { label: "3D", seconds: 259200 },
   { label: "7D", seconds: 604800 }, { label: "1M", seconds: 2592000 },
@@ -833,8 +835,8 @@ const TIME_RANGES = [
 
 const TOUR_STEPS = [
   { id: "flips-table", title: "Live Flip Scanner", desc: "Every tradeable OSRS item ranked by score. Score factors in margin, volume, and ROI — higher is safer and more profitable. Click any item to see its price history.", target: ".flips-table", placement: "top" },
-  { id: "filter-bar", title: "Filter & Search", desc: "Filter by F2P, Members, or High Volume items. Star items to save them as favourites. Use the search box to find any item instantly.", target: ".filter-bar", placement: "bottom" },
-  { id: "ai-advisor", title: "AI Flip Advisor", desc: "Ask the AI anything — best flips for your budget, what's trending, or whether a specific item is worth flipping. It has live GE data.", target: ".merchant-ai-bubble", placement: "left" },
+  { id: "prefs-bar", title: "Set Your Preferences", desc: "Enter your cash stack to filter flips you can afford. Set risk tolerance and flip speed to personalise the list for your playstyle.", target: ".prefs-bar", placement: "bottom" },
+  { id: "ai-advisor", title: "AI Flip Advisor", desc: "Ask the AI anything — best flips for your budget, what's trending, or whether a specific item is worth flipping. It has live GE data.", target: ".right-panel", placement: "left" },
   { id: "tracker-tab", title: "Track Your Flips", desc: "Log every flip to track total profit, best items, and average returns. Your history syncs across all your devices automatically.", target: ".nav-tabs", placement: "bottom" },
   { id: "done", title: "You're Ready to Flip! ⚔️", desc: "That's everything. Start by setting your cash stack, then check the top flips list. Good luck on the Grand Exchange!", target: null, placement: "center" },
 ];
@@ -857,9 +859,9 @@ const MERCHANT_TOUR_STEPS = [
   { title: "⚡ Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the ⚙️ gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
   { title: "📡 Live Feed", desc: "Every alert that's fired this session lands here in real time. Filter by type, click any alert to jump straight to that item's chart, and clear the feed whenever you like.", target: "#tour-live-feed", placement: "right", view: "alerts" },
   // ── AI Bubble ──
-  { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold ⚔️ bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "left", view: "operations" },
+  { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold ⚔️ bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "top", view: "operations" },
   // ── Done ──
-  { title: "You're fully set up ⚔️", desc: "Start a buy offer in the GE in-game — the RuneTrader plugin picks it up automatically and opens a position here. Close or sell in-game and it updates in real time. Good luck on the GE.", target: null, placement: "center", view: "operations" },
+  { title: "You're fully set up ⚔️", desc: "Log a buy in the Tracker without a sell price — it opens a position here automatically. Close it from Merchant Mode and it goes straight to your Flip History. Good luck on the GE.", target: null, placement: "center", view: "operations" },
 ];
 
 // ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
@@ -3245,15 +3247,18 @@ export default function RuneTrader() {
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
   const [showMerchantShutdown, setShowMerchantShutdown] = useState(false);
   const [merchantTransitioning, setMerchantTransitioning] = useState(false);
+  const [showMerchantAIBubble, setShowMerchantAIBubble] = useState(false);
   const [merchantAIOpen, setMerchantAIOpen] = useState(false);
   const merchantAIMessagesEndRef = useRef(null);
 
   function activateMerchantWithAnim(cb) {
     setMerchantTransitioning(true);
     setShowMerchantAnim('active');
+    setShowMerchantAIBubble(false);
     setTimeout(() => { if (cb) cb(); }, 5600);
     setTimeout(() => setShowMerchantAnim('fading'), 5800);
     setTimeout(() => { setShowMerchantAnim('done'); setMerchantTransitioning(false); }, 6400);
+    setTimeout(() => setShowMerchantAIBubble(true), 6500);
   }
   const [merchantCapital, setMerchantCapital] = useState(0);
   const [merchantCapitalInput, setMerchantCapitalInput] = useState("");
@@ -3272,7 +3277,7 @@ export default function RuneTrader() {
     const { data } = await supabase.from("merchant_settings").select("*").eq("user_id", user.id).single();
     if (data) {
       setMerchantCapital(data.total_capital || 0);
-      if (data.mode_enabled) { setMerchantMode(true); }
+      if (data.mode_enabled) { setMerchantMode(true); setShowMerchantAIBubble(true); }
     }
   }
 
@@ -3322,10 +3327,11 @@ export default function RuneTrader() {
     if (!merchantMode) {
       if (merchantCapital === 0) { setShowCapitalSetup(true); return; }
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
-      activateMerchantWithAnim(() => { setMerchantMode(true); });
+      activateMerchantWithAnim(() => { setMerchantMode(true); setTimeout(() => setShowMerchantAIBubble(true), 400); });
     } else {
       setMerchantTransitioning(true);
       setShowMerchantShutdown('active');
+      setShowMerchantAIBubble(false);
       setMerchantAIOpen(false);
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
       setTimeout(() => setShowMerchantShutdown('fading'), 2400);
@@ -4278,11 +4284,10 @@ RULES:
             ? { top: topPos, right: window.innerWidth - (hl.left || 0) + pad + 8, left: "auto" }
             : { top: topPos, left: leftPos };
         }
-        const isBubbleStep = step.target === ".merchant-ai-bubble";
         return (
           <>
             <div className="tour-backdrop" onClick={endMerchantTour} />
-            {!isCenter && merchantTourRect && <div className="tour-highlight" style={{ top: hl.top - pad, left: hl.left - pad, width: hl.width + pad * 2, height: hl.height + pad * 2, zIndex: isBubbleStep ? 10001 : undefined }} />}
+            {!isCenter && merchantTourRect && <div className="tour-highlight" style={{ top: hl.top - pad, left: hl.left - pad, width: hl.width + pad * 2, height: hl.height + pad * 2 }} />}
             <div className="tour-tooltip" style={ttStyle}>
               <div className="tour-step-label">Step {merchantTourStep + 1} of {MERCHANT_TOUR_STEPS.length}</div>
               <div className="tour-title">{step.title}</div>
@@ -4491,6 +4496,45 @@ RULES:
               setActiveView={setMerchantView}
             />
 
+            {/* MERCHANT AI BUBBLE */}
+            {showMerchantAIBubble && !merchantAIOpen && (
+              <div className="merchant-ai-bubble" onClick={() => setMerchantAIOpen(true)} title="AI Advisor">
+                <div className="bubble-ping" />
+                <span>⚔️</span>
+              </div>
+            )}
+            {merchantAIOpen && (
+              <div className="merchant-ai-modal">
+                <div className="merchant-ai-modal-header">
+                  <span style={{ fontSize: 20 }}>⚔️</span>
+                  <div><h4>AI Advisor</h4><p>Live GE data · Powered by Claude</p></div>
+                  <button className="merchant-ai-close" onClick={() => setMerchantAIOpen(false)}>✕</button>
+                </div>
+                <div className="merchant-ai-modal-body">
+                  {messages.map((msg, i) => (
+                    <div key={i} className={`msg ${msg.role}`}>
+                      <div className="msg-bubble">
+                        {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
+                      </div>
+                      <span className="msg-time">{formatTime(msg.time)}</span>
+                    </div>
+                  ))}
+                  {aiLoading && (
+                    <div className="msg assistant"><div className="msg-bubble"><div className="typing"><div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" /></div></div></div>
+                  )}
+                  <div ref={merchantAIMessagesEndRef} />
+                </div>
+                <div className="merchant-ai-modal-input">
+                  <textarea
+                    placeholder="Ask about your positions..."
+                    value={input}
+                    onChange={e => { setInput(e.target.value); e.target.style.height = "36px"; e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px"; }}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (input.trim()) sendMessage(input.trim()); } }}
+                  />
+                  <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>➤</button>
+                </div>
+              </div>
+            )}
           </>) : (
           <>
           <div className="left-panel">
@@ -4895,49 +4939,46 @@ RULES:
               </>
             )}
           </div>
+
+          {/* ── AI CHAT PANEL ── */}
+          <div className="right-panel">
+            <div className="chat-header">
+              <div className="chat-header-icon">⚔️</div>
+              <div className="chat-header-text"><h3>AI Advisor</h3><p>Live GE data · Powered by Claude</p></div>
+            </div>
+            <div className="chat-body">
+              <div className="chat-messages">
+                {messages.map((msg, i) => (
+                  <div key={i} className={`msg ${msg.role}`}>
+                    <div className="msg-bubble">
+                      {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
+                    </div>
+                    <span className="msg-time">{formatTime(msg.time)}</span>
+                  </div>
+                ))}
+                {aiLoading && <div className="msg assistant"><div className="msg-bubble"><div className="typing"><div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" /></div></div></div>}
+                <div ref={messagesEndRef} />
+              </div>
+              <div className="chat-float-input">
+                <div className="quick-prompts-row">
+                  {QUICK_PROMPTS.map(p => <button key={p} className="quick-prompt" onClick={() => sendMessage(p)}>{p}</button>)}
+                </div>
+                <div className="chat-input-row">
+                  <textarea className="chat-input" placeholder="Ask anything about flipping..." value={input}
+                    onChange={e => {
+                      setInput(e.target.value);
+                      e.target.style.height = "24px";
+                      e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px";
+                    }}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (input.trim()) sendMessage(input.trim()); } }} />
+                  <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>➤</button>
+                </div>
+              </div>
+            </div>
+          </div>
           </>
           )}
         </div>
-
-        {/* ── GLOBAL AI BUBBLE (all pages) ── */}
-        {!merchantAIOpen && (
-          <div className="merchant-ai-bubble" onClick={() => setMerchantAIOpen(true)} title="AI Advisor">
-            <div className="bubble-ping" />
-            <span>⚔️</span>
-          </div>
-        )}
-        {merchantAIOpen && (
-          <div className="merchant-ai-modal">
-            <div className="merchant-ai-modal-header">
-              <span style={{ fontSize: 20 }}>⚔️</span>
-              <div><h4>AI Advisor</h4><p>Live GE data · Powered by Claude</p></div>
-              <button className="merchant-ai-close" onClick={() => setMerchantAIOpen(false)}>✕</button>
-            </div>
-            <div className="merchant-ai-modal-body">
-              {messages.map((msg, i) => (
-                <div key={i} className={`msg ${msg.role}`}>
-                  <div className="msg-bubble">
-                    {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
-                  </div>
-                  <span className="msg-time">{formatTime(msg.time)}</span>
-                </div>
-              ))}
-              {aiLoading && (
-                <div className="msg assistant"><div className="msg-bubble"><div className="typing"><div className="typing-dot" /><div className="typing-dot" /><div className="typing-dot" /></div></div></div>
-              )}
-              <div ref={merchantAIMessagesEndRef} />
-            </div>
-            <div className="merchant-ai-modal-input">
-              <textarea
-                placeholder={merchantMode ? "Ask about your positions..." : "Ask anything about flipping..."}
-                value={input}
-                onChange={e => { setInput(e.target.value); e.target.style.height = "36px"; e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px"; }}
-                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (input.trim()) sendMessage(input.trim()); } }}
-              />
-              <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>➤</button>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
