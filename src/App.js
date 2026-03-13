@@ -2084,7 +2084,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     </div>
                     {liveOps.map(op => {
                       const liveItem = items.find(i => i.name.toLowerCase() === op.item_name.toLowerCase());
-                      const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.01), 5_000_000) : 0;
+                      const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
                       const pnlEach = (op.buy_price && liveItem) ? liveItem.high - op.buy_price - tax : 0;
                       const pnlTotal = pnlEach * (op.quantity || 1);
                       const pnlPct = op.buy_price > 0 ? ((pnlEach / op.buy_price) * 100).toFixed(1) : "0.0";
