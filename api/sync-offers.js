@@ -153,6 +153,14 @@ export default async function handler(req, res) {
 
     // ── SOLD ─────────────────────────────────────────────────
     if (offer.status === 'SOLD') {
+      // Log full state for diagnosis
+      const { data: allUserRows } = await supabase
+        .from('ge_flips_live')
+        .select('id, slot, item_id, item_name, status, buy_price')
+        .eq('user_id', userId);
+      console.log('[SOLD] ALL rows in DB:', JSON.stringify(allUserRows));
+      console.log('[SOLD] Looking for item_id:', offer.itemId, 'slot:', slot);
+
       // Match by item_id — OSRS GE assigns a different slot for sell vs buy.
       // The SELLING update already synced the slot, but item_id is always stable.
       let { data: openFlip } = await supabase
