@@ -1785,7 +1785,10 @@ function MerchantMode({ items, flipsLog, autoFlipsLog = [], manualPositions, geO
                   {Array.from({ length: 8 }).map((_, i) => {
                     // SOLD = item sold but not yet collected, still occupies slot
                     const liveOffer = geOffers.find(o => o.slot === i && ["BUYING","BOUGHT","SELLING","SOLD"].includes(o.status));
-                    const pos = allOpenPositions[i];
+                    // Only show manual/portfolio positions as slot card fallback.
+                    // Auto-tracked positions are already shown via geOffers/liveOffer above.
+                    const manualPositionsOnly = allOpenPositions.filter(p => p.source !== "auto");
+                    const pos = manualPositionsOnly[i] || null;
                     if (liveOffer) {
                       const slotColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[liveOffer.status] || "var(--border)";
                       const pct = liveOffer.qty_total > 0 ? Math.round((liveOffer.qty_filled / liveOffer.qty_total) * 100) : 0;
