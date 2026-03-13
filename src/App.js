@@ -4915,13 +4915,7 @@ RULES:
                         else                             expFill = Math.min(lim, mkt4hr * 0.03);
                         const gpPerFill = Math.round(item.margin * Math.max(expFill, 1));
                         const gpPerFillMax = Math.round(item.margin * Math.min(lim, mkt4hr));
-                        const liqRatio = mkt4hr / Math.max(lim, 1);
-                        let fillConf, fillConfColor;
-                        if      (liqRatio >= 5)  { fillConf = null;           fillConfColor = "var(--green)"; }
-                        else if (liqRatio >= 2)  { fillConf = "likely fills"; fillConfColor = "var(--green)"; }
-                        else if (liqRatio >= 0.8){ fillConf = "~competitive"; fillConfColor = "var(--gold)"; }
-                        else if (liqRatio >= 0.3){ fillConf = "~partial";     fillConfColor = "#f39c12"; }
-                        else                     { fillConf = "low liq";       fillConfColor = "var(--red)"; }
+
                         return (
                           <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }} onClick={() => setSelectedItem(item)}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
