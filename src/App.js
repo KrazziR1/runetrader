@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import { supabase } from "./supabaseClient";
@@ -2585,26 +2585,69 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
   );
 }
 
-function LiveGESlots({ user, supabase: sb }) {
-  const [offers, setOffers] = useState([]);
-  const [autoFlips, setAutoFlips] = useState([]);
-  const [loading, setLoading] = useState(true);
+// ─── DRIFT DETECTION CONSTANTS ───────────────────────────────────────────────
+// How aggressively we flag drift based on item price tier.
+// Cheap items: even 2% off matters (200gp on a 10k item = real money).
+// Expensive items: 1% tolerance is too tight — market noise is bigger.
+const getDriftThresholds = (price) => {
+  if (price >= 1_000_000) return { cancel: 0.04, adjust: 0.02 }; // 4% / 2%
+  if (price >= 100_000)   return { cancel: 0.05, adjust: 0.025 }; // 5% / 2.5%
+  return                         { cancel: 0.06, adjust: 0.03 };  // 6% / 3%
+};
 
-  useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
+// Time-weighted urgency: drift matters more the longer it's been sitting unfilled.
+// A 3% drift after 2 minutes = noise. Same drift after 30 minutes = problem.
+const getUrgency = (driftPct, ageMinutes, pctFilled) => {
+  if (pctFilled >= 95) return "filled";   // basically done, no alert needed
+  if (pctFilled >= 50) return "partial";  // half filled — softer alert
+  const timeFactor = Math.log10(Math.max(ageMinutes, 1) + 1);
+  return driftPct * timeFactor;
+};
+
+// What price should they relist at?
+// For buys: 1gp above current instabuy (to be at top of queue)
+// For sells: 1gp below current instasell
+const getRelistPrice = (offerType, wikiData) => {
+  if (!wikiData) return null;
+  if (offerType === "BUY")  return (wikiData.high || 0) + 1;
+  if (offerType === "SELL") return (wikiData.low  || 0) - 1;
+  return null;
+};
+
+// ─── UPGRADED LiveGESlots COMPONENT ──────────────────────────────────────────
+function LiveGESlots({ user, supabase: sb, items }) {
+  const [offers, setOffers]         = useState([]);
+  const [autoFlips, setAutoFlips]   = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [liveWiki, setLiveWiki]     = useState({});   // item_id → {high, low, timestamp}
+  const [wikiLoading, setWikiLoading] = useState(false);
+  const pollRef                     = useRef(null);
+
+  // ── Build name → id lookup from items prop (comes from Wiki mapping) ───────
+  const nameToId = useMemo(() => {
+    const map = {};
+    (items || []).forEach(i => { if (i.name && i.id) map[i.name.toLowerCase()] = i.id; });
+    return map;
+  }, [items]);
+
+  // ── Initial data load + realtime subscriptions ────────────────────────────
+  useEffect(() => {
     if (!user) return;
     setLoading(true);
     Promise.all([
       sb.from("ge_offers").select("*").eq("user_id", user.id).order("slot"),
-      sb.from("ge_flips_live").select("*").eq("user_id", user.id).eq("status", "SOLD").order("sell_completed_at", { ascending: false }).limit(20),
+      sb.from("ge_flips_live").select("*").eq("user_id", user.id).eq("status", "SOLD")
+        .order("sell_completed_at", { ascending: false }).limit(20),
     ]).then(([{ data: offersData }, { data: flipsData }]) => {
       setOffers(offersData || []);
       setAutoFlips(flipsData || []);
       setLoading(false);
     });
+
     const offersChannel = sb.channel("live-ge-offers-" + user.id)
-      .on("postgres_changes", { event: "*", schema: "public", table: "ge_offers", filter: `user_id=eq.${user.id}` }, payload => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "ge_offers",
+        filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          // Re-fetch on DELETE — don't rely on payload.old.slot which requires REPLICA IDENTITY FULL
           sb.from("ge_offers").select("*").eq("user_id", user.id).order("slot")
             .then(({ data }) => setOffers(data || []));
         } else {
@@ -2615,84 +2658,473 @@ function LiveGESlots({ user, supabase: sb }) {
           });
         }
       }).subscribe();
+
     const flipsChannel = sb.channel("live-ge-flips-" + user.id)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "ge_flips_live",
+        filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.new?.status !== "SOLD") return;
         setAutoFlips(prev => [payload.new, ...prev].slice(0, 20));
       }).subscribe();
-    return () => { sb.removeChannel(offersChannel); sb.removeChannel(flipsChannel); };
+
+    return () => {
+      sb.removeChannel(offersChannel);
+      sb.removeChannel(flipsChannel);
+    };
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Live Wiki price polling for active slots ──────────────────────────────
+  // Runs every 30s when there are active offers. Bypasses cache — always fresh.
+  const fetchLiveWiki = useCallback(async (activeOffers) => {
+    if (activeOffers.length === 0) return;
+
+    // Resolve item names → IDs using the mapping
+    const ids = activeOffers
+      .map(o => nameToId[o.item_name?.toLowerCase()])
+      .filter(Boolean);
+
+    if (ids.length === 0) return;
+
+    setWikiLoading(true);
+    try {
+      const res = await fetch(`/api/prices-live?ids=${ids.join(",")}`);
+      if (!res.ok) return;
+      const json = await res.json();
+      setLiveWiki(json.data || {});
+    } catch (e) {
+      console.warn("[drift] prices-live fetch failed:", e.message);
+    } finally {
+      setWikiLoading(false);
+    }
+  }, [nameToId]);
+
+  // Set up polling whenever offers change
+  useEffect(() => {
+    const activeOffers = offers.filter(o =>
+      ["BUYING", "SELLING"].includes(o.status)
+    );
+    // Fetch immediately
+    fetchLiveWiki(activeOffers);
+    // Then poll every 30s
+    if (pollRef.current) clearInterval(pollRef.current);
+    if (activeOffers.length > 0) {
+      pollRef.current = setInterval(() => fetchLiveWiki(activeOffers), 30_000);
+    }
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [offers, fetchLiveWiki]);
+
+  // ── Drift calculation for a single offer ─────────────────────────────────
+  const getDriftAlert = useCallback((offer) => {
+    if (!["BUYING", "SELLING"].includes(offer.status)) return null;
+    if (!offer.offer_price || offer.offer_price <= 0)  return null;
+
+    const itemId   = nameToId[offer.item_name?.toLowerCase()];
+    const wikiData = itemId ? liveWiki[itemId] : null;
+    if (!wikiData) return null;
+
+    const offerPrice  = offer.offer_price;
+    const marketPrice = offer.offer_type === "BUY" ? wikiData.high : wikiData.low;
+    if (!marketPrice || marketPrice <= 0) return null;
+
+    // Drift: how far off is their price from current market?
+    // Positive drift on BUY = market moved up, their bid is now too low
+    // Positive drift on SELL = market moved down, their ask is now too high
+    const drift = offer.offer_type === "BUY"
+      ? (marketPrice - offerPrice) / offerPrice    // they're bidding too low
+      : (offerPrice - marketPrice) / offerPrice;   // they're asking too high
+
+    if (drift <= 0) return null; // their price is competitive or better
+
+    const pctFilled  = offer.qty_total > 0
+      ? (offer.qty_filled / offer.qty_total) * 100 : 0;
+    const ageMinutes = offer.buy_started_at
+      ? (Date.now() - new Date(offer.buy_started_at).getTime()) / 60_000 : 0;
+    const urgency    = getUrgency(drift, ageMinutes, pctFilled);
+    const thresholds = getDriftThresholds(offerPrice);
+    const relistAt   = getRelistPrice(offer.offer_type, wikiData);
+
+    if (urgency === "filled" || urgency === "partial") return null;
+
+    if (drift >= thresholds.cancel) {
+      return {
+        level:     "cancel",
+        color:     "var(--red)",
+        bg:        "rgba(231,76,60,0.08)",
+        border:    "rgba(231,76,60,0.25)",
+        icon:      "🔴",
+        label:     "Cancel & Relist",
+        message:   `Your ${offer.offer_type === "BUY" ? "buy" : "sell"} offer is ${(drift * 100).toFixed(1)}% off market`,
+        relistAt,
+        drift,
+        ageMinutes,
+      };
+    }
+
+    if (drift >= thresholds.adjust) {
+      return {
+        level:     "adjust",
+        color:     "var(--gold)",
+        bg:        "rgba(201,168,76,0.08)",
+        border:    "rgba(201,168,76,0.25)",
+        icon:      "🟡",
+        label:     "Consider Adjusting",
+        message:   `${offer.offer_type === "BUY" ? "Buy" : "Sell"} offer drifted ${(drift * 100).toFixed(1)}% from market`,
+        relistAt,
+        drift,
+        ageMinutes,
+      };
+    }
+
+    return null; // within tolerance — all good
+  }, [nameToId, liveWiki]);
+
+  // ── Derive alerts across all active slots ────────────────────────────────
+  const alerts = useMemo(() => {
+    return offers
+      .map(o => ({ offer: o, alert: getDriftAlert(o) }))
+      .filter(({ alert }) => alert !== null)
+      .sort((a, b) => b.alert.drift - a.alert.drift); // worst first
+  }, [offers, getDriftAlert]);
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  const slotColor  = s => ({ BUYING: "var(--gold)", BOUGHT: "var(--green)",
+    SELLING: "#4fc3f7", SOLD: "var(--green)",
+    CANCELLED_BUY: "var(--red)", CANCELLED_SELL: "var(--red)" }[s] || "#555");
+  const slotLabel  = s => !s || s === "EMPTY" ? "Empty"
+    : s.charAt(0) + s.slice(1).toLowerCase().replace("_", " ");
+  const fmtGP      = n => {
+    if (!n && n !== 0) return "—";
+    if (n >= 1e6) return (n / 1e6).toFixed(2) + "M";
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + "K";
+    return n.toLocaleString();
+  };
+  const fmtMin     = m => m < 60 ? `${Math.round(m)}m` : `${(m / 60).toFixed(1)}h`;
+  const pct        = o => o.qty_total > 0
+    ? Math.round((o.qty_filled / o.qty_total) * 100) : 0;
+  const activeOffers = offers.filter(o =>
+    !["EMPTY", "CANCELLED_BUY", "CANCELLED_SELL"].includes(o.status));
+
   if (!user) return null;
-  const slotColor = s => ({ BUYING: "var(--gold)", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)", CANCELLED_BUY: "var(--red)", CANCELLED_SELL: "var(--red)" }[s] || "#555");
-  const slotLabel = s => !s || s === "EMPTY" ? "Empty" : s.charAt(0) + s.slice(1).toLowerCase().replace("_", " ");
-  const fmtGP = n => { if (!n && n !== 0) return "—"; if (n >= 1e6) return (n/1e6).toFixed(1)+"M"; if (n >= 1e3) return (n/1e3).toFixed(1)+"K"; return n.toLocaleString(); };
-  const pct = o => o.qty_total > 0 ? Math.round((o.qty_filled / o.qty_total) * 100) : 0;
-  // SOLD stays visible — item is in slot waiting to be collected. Only EMPTY means truly gone.
-  const activeOffers = offers.filter(o => !["EMPTY","CANCELLED_BUY","CANCELLED_SELL"].includes(o.status));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-      <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-          <span style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px" }}>🔴 Live GE Slots</span>
-          <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{activeOffers.length} / 8 slots</span>
-        </div>
-        {loading ? (
-          <div style={{ color: "var(--text-dim)", fontSize: "13px", padding: "20px 0" }}>Loading slots...</div>
-        ) : activeOffers.length === 0 ? (
-          <div style={{ color: "var(--text-dim)", fontSize: "13px", padding: "20px 0", textAlign: "center" }}>
-            <div style={{ fontSize: "28px", marginBottom: "8px", opacity: 0.4 }}>📦</div>
-            <div>No active GE offers</div>
-            <div style={{ fontSize: "11px", marginTop: "4px", opacity: 0.6 }}>Open offers in-game — they will appear here in real time</div>
+
+      {/* ── ALERT STRIP ─────────────────────────────────────────────────── */}
+      {alerts.length > 0 && (
+        <div style={{
+          background: "var(--bg3)", border: "1px solid var(--border)",
+          borderRadius: "10px", overflow: "hidden",
+        }}>
+          <div style={{
+            padding: "12px 16px", borderBottom: "1px solid var(--border)",
+            display: "flex", alignItems: "center", gap: "8px",
+          }}>
+            <span style={{ fontFamily: "'Cinzel', serif", fontSize: "13px",
+              fontWeight: 700, color: "var(--red)", textTransform: "uppercase",
+              letterSpacing: "1px" }}>
+              ⚠ Slot Alerts
+            </span>
+            <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+              {alerts.length} offer{alerts.length > 1 ? "s" : ""} need attention
+            </span>
+            {wikiLoading && (
+              <span style={{ fontSize: "10px", color: "var(--text-dim)",
+                marginLeft: "auto" }}>
+                🔄 Checking prices...
+              </span>
+            )}
           </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "24px 2fr 60px 80px 100px 80px 80px", gap: "10px", padding: "0 4px 6px", fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              <span>#</span><span>Item</span><span>Type</span><span>Price</span><span>Progress</span><span>Qty</span><span>Status</span>
-            </div>
-            {activeOffers.map(o => (
-              <div key={o.slot} style={{ display: "grid", gridTemplateColumns: "24px 2fr 60px 80px 100px 80px 80px", gap: "10px", padding: "10px 4px", borderTop: "1px solid var(--border)", alignItems: "center" }}>
-                <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{o.slot + 1}</span>
-                <span style={{ fontSize: "13px", fontWeight: 500 }}>{o.item_name}</span>
-                <span style={{ fontSize: "11px", color: o.offer_type === "BUY" ? "var(--gold)" : "#4fc3f7" }}>{o.offer_type}</span>
-                <span style={{ fontSize: "12px" }}>{fmtGP(o.offer_price)}</span>
-                <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                  <div style={{ background: "var(--bg4)", borderRadius: "3px", height: "4px", overflow: "hidden" }}>
-                    <div style={{ background: slotColor(o.status), height: "100%", width: pct(o)+"%", transition: "width 0.4s ease", borderRadius: "3px" }} />
-                  </div>
-                  <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>{pct(o)}%</span>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {alerts.map(({ offer, alert }) => (
+              <div key={offer.slot} style={{
+                padding: "14px 16px",
+                borderBottom: "1px solid var(--border)",
+                background: alert.bg,
+                borderLeft: `3px solid ${alert.color}`,
+                display: "flex", alignItems: "flex-start",
+                gap: "12px",
+              }}>
+                {/* Icon + slot */}
+                <div style={{ display: "flex", flexDirection: "column",
+                  alignItems: "center", gap: "2px", flexShrink: 0 }}>
+                  <span style={{ fontSize: "18px" }}>{alert.icon}</span>
+                  <span style={{ fontSize: "9px", color: "var(--text-dim)" }}>
+                    Slot {offer.slot + 1}
+                  </span>
                 </div>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(o.qty_filled||0).toLocaleString()} / {(o.qty_total||0).toLocaleString()}</span>
-                <span style={{ fontSize: "11px", display: "flex", alignItems: "center", gap: "4px" }}>
-                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: slotColor(o.status), display: "inline-block" }} />
-                  {slotLabel(o.status)}
-                </span>
+
+                {/* Main content */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center",
+                    gap: "8px", marginBottom: "4px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "13px", fontWeight: 600,
+                      color: "var(--text)" }}>
+                      {offer.item_name}
+                    </span>
+                    <span style={{ fontSize: "10px", fontWeight: 700,
+                      color: alert.color, textTransform: "uppercase",
+                      letterSpacing: "0.5px" }}>
+                      {alert.label}
+                    </span>
+                    <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                      · {fmtMin(alert.ageMinutes)} unfilled · {pct(offer)}% done
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)",
+                    marginBottom: "6px" }}>
+                    {alert.message}
+                  </div>
+
+                  {/* Price comparison row */}
+                  <div style={{ display: "flex", alignItems: "center",
+                    gap: "16px", flexWrap: "wrap" }}>
+                    <div>
+                      <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                        Your price
+                      </span>
+                      <div style={{ fontSize: "13px", color: "var(--text)",
+                        fontWeight: 500 }}>
+                        {fmtGP(offer.offer_price)} gp
+                      </div>
+                    </div>
+                    <span style={{ fontSize: "16px", color: "var(--text-dim)" }}>→</span>
+                    <div>
+                      <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                        Relist at
+                      </span>
+                      <div style={{ fontSize: "13px", fontWeight: 700,
+                        color: alert.level === "cancel" ? "var(--red)" : "var(--gold)" }}>
+                        {alert.relistAt ? fmtGP(alert.relistAt) + " gp" : "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                        Difference
+                      </span>
+                      <div style={{ fontSize: "13px", fontWeight: 600,
+                        color: "var(--red)" }}>
+                        {alert.relistAt
+                          ? fmtGP(Math.abs(alert.relistAt - offer.offer_price)) + " gp off"
+                          : "—"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── LIVE GE SLOTS ────────────────────────────────────────────────── */}
+      <div style={{ background: "var(--bg3)", border: "1px solid var(--border)",
+        borderRadius: "10px", padding: "20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between",
+          alignItems: "center", marginBottom: "16px" }}>
+          <span style={{ fontFamily: "'Cinzel', serif", fontSize: "13px",
+            fontWeight: 700, color: "var(--gold)", textTransform: "uppercase",
+            letterSpacing: "1px" }}>
+            🔴 Live GE Slots
+          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {!wikiLoading && Object.keys(liveWiki).length > 0 && (
+              <span style={{ fontSize: "10px", color: "var(--green)",
+                display: "flex", alignItems: "center", gap: "4px" }}>
+                <span style={{ width: "5px", height: "5px", borderRadius: "50%",
+                  background: "var(--green)", display: "inline-block" }} />
+                Prices live
+              </span>
+            )}
+            <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+              {activeOffers.length} / 8 slots
+            </span>
+          </div>
+        </div>
+
+        {loading ? (
+          <div style={{ color: "var(--text-dim)", fontSize: "13px",
+            padding: "20px 0" }}>
+            Loading slots...
+          </div>
+        ) : activeOffers.length === 0 ? (
+          <div style={{ color: "var(--text-dim)", fontSize: "13px",
+            padding: "20px 0", textAlign: "center" }}>
+            <div style={{ fontSize: "28px", marginBottom: "8px", opacity: 0.4 }}>📦</div>
+            <div>No active GE offers</div>
+            <div style={{ fontSize: "11px", marginTop: "4px", opacity: 0.6 }}>
+              Open offers in-game — they will appear here in real time
+            </div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+            {/* Table header */}
+            <div style={{ display: "grid",
+              gridTemplateColumns: "24px 2fr 60px 80px 100px 70px 70px 80px",
+              gap: "10px", padding: "0 4px 8px",
+              fontSize: "10px", color: "var(--text-dim)",
+              textTransform: "uppercase", letterSpacing: "0.5px",
+              borderBottom: "1px solid var(--border)" }}>
+              <span>#</span>
+              <span>Item</span>
+              <span>Type</span>
+              <span>Your price</span>
+              <span>Progress</span>
+              <span>Qty</span>
+              <span>Market</span>
+              <span>Status</span>
+            </div>
+
+            {activeOffers.map(o => {
+              const itemId    = nameToId[o.item_name?.toLowerCase()];
+              const wikiData  = itemId ? liveWiki[itemId] : null;
+              const marketNow = wikiData
+                ? (o.offer_type === "BUY" ? wikiData.high : wikiData.low) : null;
+              const driftAmt  = marketNow && o.offer_price
+                ? (o.offer_type === "BUY"
+                  ? marketNow - o.offer_price
+                  : o.offer_price - marketNow)
+                : null;
+              const hasAlert  = alerts.some(a => a.offer.slot === o.slot);
+              const fillPct   = pct(o);
+
+              return (
+                <div key={o.slot} style={{
+                  display: "grid",
+                  gridTemplateColumns: "24px 2fr 60px 80px 100px 70px 70px 80px",
+                  gap: "10px", padding: "10px 4px",
+                  borderBottom: "1px solid var(--border)",
+                  alignItems: "center",
+                  background: hasAlert ? "rgba(231,76,60,0.03)" : "transparent",
+                  transition: "background 0.2s",
+                }}>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                    {o.slot + 1}
+                  </span>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <img
+                      src={`https://oldschool.runescape.wiki/images/${encodeURIComponent((o.item_name || "").replace(/ /g, "_"))}_detail.png`}
+                      alt="" style={{ width: 20, height: 20, objectFit: "contain",
+                        imageRendering: "pixelated" }}
+                      onError={e => { e.target.style.display = "none"; }}
+                    />
+                    <span style={{ fontSize: "13px", fontWeight: 500 }}>
+                      {o.item_name}
+                    </span>
+                    {hasAlert && (
+                      <span style={{ fontSize: "10px" }}>⚠</span>
+                    )}
+                  </div>
+
+                  <span style={{ fontSize: "11px",
+                    color: o.offer_type === "BUY" ? "var(--gold)" : "#4fc3f7" }}>
+                    {o.offer_type}
+                  </span>
+
+                  <span style={{ fontSize: "12px" }}>
+                    {fmtGP(o.offer_price)}
+                  </span>
+
+                  {/* Progress bar */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+                    <div style={{ background: "var(--bg4)", borderRadius: "3px",
+                      height: "4px", overflow: "hidden" }}>
+                      <div style={{ background: slotColor(o.status), height: "100%",
+                        width: fillPct + "%", transition: "width 0.4s ease",
+                        borderRadius: "3px" }} />
+                    </div>
+                    <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                      {fillPct}%
+                    </span>
+                  </div>
+
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                    {(o.qty_filled || 0).toLocaleString()} / {(o.qty_total || 0).toLocaleString()}
+                  </span>
+
+                  {/* Live market price + drift indicator */}
+                  <div>
+                    {marketNow ? (
+                      <>
+                        <div style={{ fontSize: "12px", color: "var(--text)" }}>
+                          {fmtGP(marketNow)}
+                        </div>
+                        {driftAmt !== null && Math.abs(driftAmt) > 0 && (
+                          <div style={{ fontSize: "10px",
+                            color: driftAmt > 0 ? "var(--red)" : "var(--green)" }}>
+                            {driftAmt > 0 ? "↑" : "↓"} {fmtGP(Math.abs(driftAmt))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>—</span>
+                    )}
+                  </div>
+
+                  <span style={{ fontSize: "11px", display: "flex",
+                    alignItems: "center", gap: "4px" }}>
+                    <span style={{ width: "6px", height: "6px", borderRadius: "50%",
+                      background: slotColor(o.status), display: "inline-block" }} />
+                    {slotLabel(o.status)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
+
+      {/* ── AUTO-DETECTED FLIPS ──────────────────────────────────────────── */}
       {autoFlips.length > 0 && (
-        <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>⚡ Auto-Detected Flips</div>
+        <div style={{ background: "var(--bg3)", border: "1px solid var(--border)",
+          borderRadius: "10px", padding: "20px" }}>
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: "13px",
+            fontWeight: 700, color: "var(--gold)", textTransform: "uppercase",
+            letterSpacing: "1px", marginBottom: "16px" }}>
+            ⚡ Auto-Detected Flips
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 80px 80px 80px 80px 90px", gap: "10px", padding: "0 4px 8px", fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              <span>Item</span><span>Buy</span><span>Sell</span><span>Qty</span><span>Tax</span><span>Profit</span>
+            <div style={{ display: "grid",
+              gridTemplateColumns: "2fr 80px 80px 80px 80px 90px",
+              gap: "10px", padding: "0 4px 8px",
+              fontSize: "10px", color: "var(--text-dim)",
+              textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <span>Item</span><span>Buy</span><span>Sell</span>
+              <span>Qty</span><span>Tax</span><span>Profit</span>
             </div>
             {autoFlips.map(f => (
-              <div key={f.id} style={{ display: "grid", gridTemplateColumns: "2fr 80px 80px 80px 80px 90px", gap: "10px", padding: "10px 4px", borderTop: "1px solid var(--border)", alignItems: "center" }}>
+              <div key={f.id} style={{ display: "grid",
+                gridTemplateColumns: "2fr 80px 80px 80px 80px 90px",
+                gap: "10px", padding: "10px 4px",
+                borderTop: "1px solid var(--border)", alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: "13px", fontWeight: 500 }}>{f.item_name}</div>
-                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{f.sell_completed_at ? new Date(f.sell_completed_at).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}</div>
+                  <div style={{ fontSize: "13px", fontWeight: 500 }}>
+                    {f.item_name}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                    {f.sell_completed_at
+                      ? new Date(f.sell_completed_at).toLocaleDateString([],
+                          { month: "short", day: "numeric",
+                            hour: "2-digit", minute: "2-digit" })
+                      : ""}
+                  </div>
                 </div>
                 <span style={{ fontSize: "12px" }}>{fmtGP(f.buy_price)}</span>
                 <span style={{ fontSize: "12px" }}>{fmtGP(f.sell_price)}</span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.quantity||0).toLocaleString()}</span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{"—"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>
+                  {(f.quantity || 0).toLocaleString()}
+                </span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>—</span>
                 <div>
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: f.profit >= 0 ? "var(--green)" : "var(--red)" }}>{f.profit >= 0 ? "+" : ""}{fmtGP(f.profit)}</div>
-                  {f.roi != null && <div style={{ fontSize: "11px", color: f.roi >= 0 ? "var(--green)" : "var(--red)" }}>{f.roi >= 0 ? "+" : ""}{Number(f.roi).toFixed(1)}% ROI</div>}
+                  <div style={{ fontSize: "13px", fontWeight: 600,
+                    color: f.profit >= 0 ? "var(--green)" : "var(--red)" }}>
+                    {f.profit >= 0 ? "+" : ""}{fmtGP(f.profit)}
+                  </div>
+                  {f.roi != null && (
+                    <div style={{ fontSize: "11px",
+                      color: f.roi >= 0 ? "var(--green)" : "var(--red)" }}>
+                      {f.roi >= 0 ? "+" : ""}{Number(f.roi).toFixed(1)}% ROI
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -2702,6 +3134,7 @@ function LiveGESlots({ user, supabase: sb }) {
     </div>
   );
 }
+
 
 export default function RuneTrader() {
   const [showApp, setShowApp] = useState(false);
@@ -3950,7 +4383,7 @@ RULES:
 
                 <ProfitChart flipsLog={flipsLog} autoFlipsLog={autoFlipsLog} />
 
-                <LiveGESlots user={user} supabase={supabase} />
+                <LiveGESlots user={user} supabase={supabase} items={items} />
 
                 <AutoFlipHistory user={user} supabase={supabase} formatGP={formatGP} />
               </div>
