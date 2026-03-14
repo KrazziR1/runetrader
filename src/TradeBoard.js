@@ -122,6 +122,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
 
   async function submitListing() {
     if (!form.item_name) return showToast("Please enter an item name", "error");
+    if (allItems.length > 0 && !allItems.includes(form.item_name)) return showToast("Please select a valid in-game item from the suggestions", "error");
     if (!form.price) return showToast("Please enter a price", "error");
     if (!form.discord && !form.rsn) return showToast("Please add at least one contact method", "error");
     if (!user) return showToast("Please sign in to post", "error");
@@ -158,9 +159,17 @@ export default function TradeBoard({ user, supabase, showToast }) {
   }
 
   async function closeListing(id) {
-    await supabase.from("trade_listings").update({ active: false }).eq("id", id).eq("user_id", user.id);
-    showToast("Listing removed", "success");
-    loadListings();
+    const { error } = await supabase
+      .from("trade_listings")
+      .update({ active: false })
+      .eq("id", id)
+      .eq("user_id", user.id);
+    if (error) {
+      showToast("Failed to remove listing: " + error.message, "error");
+    } else {
+      setListings(prev => prev.filter(l => l.id !== id));
+      showToast("Listing removed", "success");
+    }
   }
 
   const filtered = listings.filter(l => {
@@ -177,7 +186,10 @@ export default function TradeBoard({ user, supabase, showToast }) {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
         <div>
           <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>
-            Player-to-player trades for items above max cash (2.147B). Trades happen in-game — RuneTrader does not facilitate or verify transactions.
+            Player-to-player trades. All transactions occur in-game — RuneTrader does not facilitate, verify, or take responsibility for any trade.
+            <span style={{ display: "block", marginTop: "4px", color: "var(--red)", fontSize: "12px" }}>
+              The sale of account names, services, real-world trading, or anything that violates the RuneScape rules of conduct is strictly prohibited and will result in removal.
+            </span>
           </div>
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
@@ -397,7 +409,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
             </div>
 
             <div style={{ fontSize: "12px", color: "var(--text-dim)", fontStyle: "italic" }}>
-              Listing expires automatically after 7 days. RuneTrader does not facilitate or verify trades — all transactions occur in-game.
+              Listing expires automatically after 7 days. All trades occur in-game. The sale of account names, services, or anything violating RuneScape rules is prohibited.
             </div>
 
             <div style={{ display: "flex", gap: "10px" }}>
