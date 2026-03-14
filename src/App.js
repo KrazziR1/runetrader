@@ -50,7 +50,7 @@ const STYLES = `
   .app { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 
   /* HEADER */
-  .header { display: flex; align-items: center; padding: 0 32px; height: 64px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; gap: 16px; }
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 64px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; gap: 8px; }
   .logo { display: flex; align-items: center; gap: 10px; }
   .logo-icon { width: 32px; height: 32px; }
   .logo-text { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: 1px; }
@@ -5570,30 +5570,8 @@ RULES:
               </button>
             ))}
           </div>
-          {/* Market sub-tabs - centered using flex spacer trick */}
-          {activeTab === "market" && !merchantMode && (
-            <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: "1", justifyContent: "center" }}>
-              {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"]].map(([v,l]) => (
-                <button key={v}
-                  onClick={() => setMarketSubTab(v)}
-                  style={{
-                    padding: "7px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: 500,
-                    fontFamily: "Inter, sans-serif", cursor: "pointer", transition: "all 0.2s",
-                    border: marketSubTab === v ? "1px solid var(--border)" : "1px solid transparent",
-                    background: marketSubTab === v ? "var(--bg3)" : "transparent",
-                    color: marketSubTab === v ? "var(--gold)" : "var(--text-dim)",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseOver={e => { if (marketSubTab !== v) { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = "var(--bg3)"; } }}
-                  onMouseOut={e => { if (marketSubTab !== v) { e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.background = "transparent"; } }}
-                >
-                  {l}{v !== "flips" && <span style={{ background: "rgba(52,152,219,0.15)", color: "var(--blue)", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700, marginLeft: "6px" }}>new</span>}
-                </button>
-              ))}
-            </div>
-          )}
-          {activeTab !== "market" && !merchantMode && <div style={{ flex: 1 }} />}
-          <div className="header-right" style={{ marginLeft: "auto" }}>
+
+          <div className="header-right">
             <button onClick={() => setActiveTab("pricing")} style={{ padding: "5px 12px", borderRadius: "6px", border: "1px solid rgba(201,168,76,0.4)", background: activeTab === "pricing" ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}>
               {isPro ? "✓ Pro" : "Pro ✨"}
             </button>
@@ -6054,6 +6032,18 @@ RULES:
             {activeTab === "market" && (
               <>
                 {error && <div className="error-banner">⚠️ {error}</div>}
+
+                {/* Market sub-tabs row */}
+                <div style={{ display: "flex", gap: "4px", paddingBottom: "4px" }}>
+                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"]].map(([v,l]) => (
+                    <button key={v}
+                      className={`market-sub-tab${marketSubTab === v ? " active" : ""}`}
+                      onClick={() => setMarketSubTab(v)}
+                    >
+                      {l}{v !== "flips" && <span className="sub-tab-badge">new</span>}
+                    </button>
+                  ))}
+                </div>
 
 
                 {/* ── HIGH ALCH TAB ── */}
