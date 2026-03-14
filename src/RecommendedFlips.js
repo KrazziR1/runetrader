@@ -145,14 +145,22 @@ function SortBtn({ col, label, sortCol, sortDir, onSort, tip }) {
 
 // ── Defaults ──────────────────────────────────────────────────────────────────
 const DEFAULT_PREFS = {
-  cashStack:  "",
-  risk:       "low",
-  membership: "members",
-  flipSpeed:  "any",
+  cashStack:   "",
+  risk:        "low",
+  membership:  "members",
+  flipSpeed:   "any",
+  defaultSort: "margin",
 };
 const DEFAULT_ADV = { minMargin: "", maxMargin: "", minRoi: "", maxRoi: "", minVolume: "", maxVolume: "" };
-const STORAGE_KEY = "rt_picks_prefs_v4";
-const ONBOARDED_KEY = "rt_picks_onboarded_v4";
+const STORAGE_KEY = "rt_picks_prefs_v5";
+const ONBOARDED_KEY = "rt_picks_onboarded_v5";
+
+// Sort preference → column key mapping
+const SORT_PREF_MAP = {
+  margin:    "margin",
+  gpPerFill: "gpPerFill",
+  volume:    "volume",
+};
 
 // ── Login Gate ────────────────────────────────────────────────────────────────
 function LoginGate({ onSignIn }) {
@@ -308,6 +316,42 @@ const ONBOARDING_STEPS = [
       },
     ],
   },
+  {
+    key: "defaultSort",
+    icon: "📊",
+    title: "How do you prefer to sort picks?",
+    subtitle: "We'll default to this every time you open the tab.",
+    type: "choice",
+    options: [
+      {
+        value: "margin",
+        label: "Highest Margin",
+        color: "var(--green)",
+        border: "rgba(46,204,113,0.35)",
+        bg: "rgba(46,204,113,0.07)",
+        desc: "Sort by raw GP profit per flip. Best for maximising per-trade earnings.",
+        emoji: "💰",
+      },
+      {
+        value: "gpPerFill",
+        label: "Best GP / Fill",
+        color: "var(--gold)",
+        border: "rgba(201,168,76,0.35)",
+        bg: "rgba(201,168,76,0.07)",
+        desc: "Sort by realistic GP per 4hr window. Accounts for buy limit and market volume.",
+        emoji: "⚡",
+      },
+      {
+        value: "volume",
+        label: "Most Liquid",
+        color: "#3498db",
+        border: "rgba(52,152,219,0.35)",
+        bg: "rgba(52,152,219,0.07)",
+        desc: "Sort by daily trade volume. Fastest fills — in and out quickly.",
+        emoji: "🌊",
+      },
+    ],
+  },
 ];
 
 // Progress dots
@@ -336,7 +380,7 @@ function ProgressDots({ total, current }) {
 
 function OnboardingWizard({ onComplete }) {
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState({ cashStack: "", risk: "low", flipSpeed: "any", membership: "both" });
+  const [draft, setDraft] = useState({ cashStack: "", risk: "low", flipSpeed: "any", membership: "members", defaultSort: "margin" });
   const [textVal, setTextVal] = useState("");
   const [animDir, setAnimDir] = useState("in"); // "in" | "out"
 
@@ -588,10 +632,15 @@ function PrefsBar({ prefs, setPref, onResetOnboarding }) {
     high:   "Buy ≥ 10M · Margin ≥ 90k · Vol/limit ≥ 8×. High capital.",
   };
   const speedMeta = {
-    fast:   "Vol/limit ≥ 50× — fast scalps only.",
+    fast:   "Vol/limit ≥ 50×.",
     medium: "Vol/limit ≥ 15× — standard 4hr fills.",
     slow:   "Margin ≥ 50k — patient, high-margin holds.",
     any:    "No speed filter applied.",
+  };
+  const sortMeta = {
+    margin:    "Sorted by highest raw GP margin.",
+    gpPerFill: "Sorted by best realistic GP per 4hr window.",
+    volume:    "Sorted by highest daily trade volume.",
   };
 
   return (
@@ -652,6 +701,20 @@ function PrefsBar({ prefs, setPref, onResetOnboarding }) {
         <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>F2P hides members-only items</span>
       </div>
 
+      {/* Sort Preference */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+        <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Default Sort</span>
+        <div style={{ display: "flex", gap: "4px", height: "32px" }}>
+          {[["margin","Margin"],["gpPerFill","GP/Fill"],["volume","Volume"]].map(([v, l]) => (
+            <button key={v}
+              className={`toggle-btn${prefs.defaultSort === v ? " active-med" : ""}`}
+              onClick={() => setPref("defaultSort", v)}
+            >{l}</button>
+          ))}
+        </div>
+        <span style={{ fontSize: "10px", color: "var(--text-dim)", maxWidth: "240px", lineHeight: 1.5 }}>{sortMeta[prefs.defaultSort] || ""}</span>
+      </div>
+
       {/* Re-run wizard button — pushed right */}
       <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", justifyContent: "flex-start", paddingTop: "18px" }}>
         <button
@@ -686,7 +749,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
   const [adv, setAdv]         = useState(DEFAULT_ADV);
   const [showAdv, setShowAdv] = useState(false);
   const [search, setSearch]   = useState("");
-  const [sortCol, setSortCol] = useState("volume");
+  const [sortCol, setSortCol] = useState(() => SORT_PREF_MAP[prefs.defaultSort] || "margin");
   const [sortDir, setSortDir] = useState("desc");
 
   // When user logs in for the first time (or hasn't onboarded yet), show wizard
@@ -698,6 +761,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       return next;
     });
+    if (key === "defaultSort") setSortCol(SORT_PREF_MAP[val] || "margin");
   }
 
   function handleOnboardComplete(finalPrefs) {
@@ -705,6 +769,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
     setPrefs(merged);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
     localStorage.setItem(ONBOARDED_KEY, "1");
+    setSortCol(SORT_PREF_MAP[merged.defaultSort] || "margin");
     setOnboarded(true);
   }
 
@@ -874,7 +939,13 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
           <SortBtn col="buyLimit"  label="Limit"      sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip="Max you can buy every 4 hours" />
           <SortBtn col="gpPerFill" label="GP / Fill"  sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip="Realistic GP profit per 4hr window, scaled by market volume" />
           <SortBtn col="lastTrade" label="Last Trade" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip="When this item last traded on the GE" />
-          <div style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>24hr Trend</div>
+          <div style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: "4px", paddingLeft: "8px" }}>
+            24hr Trend
+            <span className="stat-tooltip-wrap">
+              <span className="stat-help">?</span>
+              <span className="stat-tooltip">24-hour margin trend sparkline — green rising, red falling</span>
+            </span>
+          </div>
         </div>
 
         {/* Rows */}
@@ -916,8 +987,8 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
                   </div>
                 </div>
 
-                <span className="price">{formatGP(item.low)}</span>
-                <span className="price">{formatGP(item.high)}</span>
+                <span className="price">{item.low != null ? item.low.toLocaleString() : "—"}</span>
+                <span className="price">{item.high != null ? item.high.toLocaleString() : "—"}</span>
                 <span className={`margin${item.margin < 0 ? " neg" : ""}`}>{formatGP(item.margin)}</span>
                 <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>
                   {item.roi}%
