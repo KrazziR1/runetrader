@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import Sparkline from "./Sparkline";
+import PricingPage from "./PricingPage";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 
@@ -48,7 +49,7 @@ const STYLES = `
   .app { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 
   /* HEADER */
-  .header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 64px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .header { display: flex; align-items: center; padding: 0 32px; height: 64px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; gap: 16px; }
   .logo { display: flex; align-items: center; gap: 10px; }
   .logo-icon { width: 32px; height: 32px; }
   .logo-text { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: 1px; }
@@ -57,8 +58,8 @@ const STYLES = `
   .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--green); }
   .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .nav-tabs { display: flex; gap: 4px; }
-  .nav-tab { padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.2s; }
+  .nav-tabs { display: flex; gap: 2px; overflow-x: auto; flex-shrink: 1; min-width: 0; }
+  .nav-tab { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.2s; white-space: nowrap; }
   .nav-tab:hover { color: var(--text); background: var(--bg3); }
   .nav-tab.active { background: var(--bg3); color: var(--gold); border: 1px solid var(--border); }
 
@@ -3928,6 +3929,14 @@ export default function RuneTrader() {
       url.searchParams.delete("ref");
       window.history.replaceState({}, "", url.toString());
     }
+    // Handle Stripe redirect back
+    const upgradeStatus = params.get("upgrade");
+    if (upgradeStatus === "success") {
+      setIsPro(true);
+      url.searchParams.delete("upgrade");
+      window.history.replaceState({}, "", url.toString());
+      setTimeout(() => showToast("Welcome to Pro! 📈 Merchant Mode is now unlocked.", "success", 5000), 500);
+    }
     // Detect /item/:slug — e.g. runetrader.gg/item/abyssal-whip
     const match = window.location.pathname.match(/^\/item\/(.+)$/);
     if (match) {
@@ -3978,9 +3987,9 @@ export default function RuneTrader() {
             setTourStep(0);
           }, 800);
         } else if (session?.user?.id) {
-          // Load ref code for returning users
-          supabase.from("user_profiles").select("ref_code").eq("user_id", session.user.id).single()
-            .then(({ data }) => { if (data?.ref_code) setUserRefCode(data.ref_code); });
+          // Load ref code and pro status for returning users
+          supabase.from("user_profiles").select("ref_code, is_pro").eq("user_id", session.user.id).single()
+            .then(({ data }) => { if (data?.ref_code) setUserRefCode(data.ref_code); if (data?.is_pro) setIsPro(true); });
           // Show What's New modal if this deploy is new to them
           const seen = localStorage.getItem(DEPLOY_KEY);
           if (!seen) { setTimeout(() => setShowWhatsNew(true), 1200); }
@@ -4032,6 +4041,7 @@ export default function RuneTrader() {
   // ── Merchant Mode ──
   const [merchantMode, setMerchantMode] = useState(false);
   const [upgradeModal, setUpgradeModal] = useState(null);
+  const [isPro, setIsPro] = useState(false);
   const [userRefCode, setUserRefCode] = useState(null); // eslint-disable-line no-unused-vars
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
   const [showMerchantShutdown, setShowMerchantShutdown] = useState(false);
@@ -5393,8 +5403,12 @@ RULES:
                 ))}
               </div>
             )}
-            <button className="upgrade-cta" onClick={() => { setUpgradeModal(null); setMerchantMode(true); }}>
-              Activate Merchant Mode →
+            <button className="upgrade-cta" onClick={async () => {
+              if (!user) { setUpgradeModal(null); setShowAuth(true); return; }
+              setUpgradeModal(null);
+              setActiveTab("pricing");
+            }}>
+              See Pro Plans →
             </button>
             <button className="upgrade-dismiss" onClick={() => setUpgradeModal(null)}>Maybe later</button>
           </div>
@@ -5533,7 +5547,7 @@ RULES:
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {!merchantMode && [["market","Market"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"]] : []),["changelog","What's New 🆕"]].map(([t,label]) => (
+            {!merchantMode && [["market","Market"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"]] : [])].map(([t,label]) => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
                 {label}
                 {t === "tracker" && (openFlips.length + (autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length)) > 0 && (
@@ -5554,7 +5568,36 @@ RULES:
               </button>
             ))}
           </div>
-          <div className="header-right">
+          {/* Market sub-tabs - centered using flex spacer trick */}
+          {activeTab === "market" && !merchantMode && (
+            <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: "1", justifyContent: "center" }}>
+              {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"]].map(([v,l]) => (
+                <button key={v}
+                  onClick={() => setMarketSubTab(v)}
+                  style={{
+                    padding: "7px 16px", borderRadius: "8px", fontSize: "13px", fontWeight: 500,
+                    fontFamily: "Inter, sans-serif", cursor: "pointer", transition: "all 0.2s",
+                    border: marketSubTab === v ? "1px solid var(--border)" : "1px solid transparent",
+                    background: marketSubTab === v ? "var(--bg3)" : "transparent",
+                    color: marketSubTab === v ? "var(--gold)" : "var(--text-dim)",
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseOver={e => { if (marketSubTab !== v) { e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = "var(--bg3)"; } }}
+                  onMouseOut={e => { if (marketSubTab !== v) { e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.background = "transparent"; } }}
+                >
+                  {l}{v !== "flips" && <span style={{ background: "rgba(52,152,219,0.15)", color: "var(--blue)", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700, marginLeft: "6px" }}>new</span>}
+                </button>
+              ))}
+            </div>
+          )}
+          {activeTab !== "market" && !merchantMode && <div style={{ flex: 1 }} />}
+          <div className="header-right" style={{ marginLeft: "auto" }}>
+            <button onClick={() => setActiveTab("pricing")} style={{ padding: "5px 12px", borderRadius: "6px", border: "1px solid rgba(201,168,76,0.4)", background: activeTab === "pricing" ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}>
+              {isPro ? "✓ Pro" : "Pro ✨"}
+            </button>
+            <button onClick={() => setActiveTab("changelog")} style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid transparent", background: "transparent", color: activeTab === "changelog" ? "var(--gold)" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}>
+              What's New 🆕
+            </button>
             {lastUpdate && <div className="live-badge"><div className="live-dot" />Live · {formatTime(lastUpdate)}</div>}
             {user && merchantMode && (
               <button onClick={startMerchantTour}
@@ -5671,6 +5714,15 @@ RULES:
                 setUpgradeModal={setUpgradeModal}
                 demoMode={demoMode}
                 formatGP={formatGP}
+              />
+            )}
+
+            {/* ── PRICING TAB ── */}
+            {activeTab === "pricing" && (
+              <PricingPage
+                user={user}
+                isPro={isPro}
+                onSignIn={() => setShowAuth(true)}
               />
             )}
 
@@ -5991,15 +6043,6 @@ RULES:
               <>
                 {error && <div className="error-banner">⚠️ {error}</div>}
 
-                {/* ── Market Sub-tabs ── */}
-                <div className="market-sub-tabs">
-                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"]].map(([v,l]) => (
-                    <button key={v} className={`market-sub-tab${marketSubTab === v ? " active" : ""}`} onClick={() => setMarketSubTab(v)}>
-                      {l}{v !== "flips" && <span className="sub-tab-badge">new</span>}
-                    </button>
-                  ))}
-                  {/* nature rune shown inline in each tab's filter bar, not here */}
-                </div>
 
                 {/* ── HIGH ALCH TAB ── */}
                 {marketSubTab === "alch" && (() => {
