@@ -5114,89 +5114,152 @@ export default function RuneTrader() {
     });
   }
 
-  // â”€â”€ AI sendMessage â”€â”€
+  // ── AI sendMessage ──
   async function sendMessage(text) {
     setMessages(prev => [...prev, { role: "user", content: text, time: new Date() }]);
     setInput(""); setAiLoading(true);
+
+    // Read user's Picks preferences from localStorage
+    let picksPrefs = { cashStack: "", risk: "low", flipSpeed: "any", membership: "members" };
+    try { picksPrefs = { ...picksPrefs, ...JSON.parse(localStorage.getItem("rt_picks_prefs_v5") || "{}") }; } catch {}
+
+    const picksBudget = picksPrefs.cashStack ? (() => {
+      const s = picksPrefs.cashStack.trim().toLowerCase().replace(/,/g, "");
+      if (s.endsWith("b")) return parseFloat(s) * 1_000_000_000;
+      if (s.endsWith("m")) return parseFloat(s) * 1_000_000;
+      if (s.endsWith("k")) return parseFloat(s) * 1_000;
+      return parseFloat(s) || Infinity;
+    })() : Infinity;
+
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    // Exact same tier qualification functions as the Picks tab
+    function qualifiesLow(i) {
+      if (!i.hasPrice || i.margin <= 0) return false;
+      const lim = i.buyLimit || 0; if (lim <= 0) return false;
+      if ((nowSec - (i.lastTradeTime || 0)) > 900) return false;
+      return (i.volume / lim) >= 70;
+    }
+    function qualifiesMedium(i) {
+      if (!i.hasPrice || i.margin <= 0) return false;
+      if ((nowSec - (i.lastTradeTime || 0)) > 2700) return false;
+      const lim = i.buyLimit || 0; if (lim <= 0) return false;
+      if ((i.low || 0) < 200_000 || (i.low || 0) >= 10_000_000) return false;
+      if ((i.margin || 0) < 30_000) return false;
+      return (i.volume / lim) >= 15;
+    }
+    function qualifiesHigh(i) {
+      if (!i.hasPrice || i.margin <= 0) return false;
+      if ((nowSec - (i.lastTradeTime || 0)) > 3600) return false;
+      const lim = i.buyLimit || 0; if (lim <= 0) return false;
+      if ((i.low || 0) < 10_000_000) return false;
+      if ((i.margin || 0) < 90_000) return false;
+      return (i.volume / lim) >= 8;
+    }
+    function passesFlipSpeed(i, speed) {
+      const ratio = (i.volume || 0) / (i.buyLimit || 1);
+      if (speed === "fast")   return ratio >= 50;
+      if (speed === "medium") return ratio >= 15;
+      if (speed === "slow")   return (i.margin || 0) >= 50_000;
+      return true;
+    }
+
+    const qualifyFn = picksPrefs.risk === "medium" ? qualifiesMedium
+                    : picksPrefs.risk === "high"   ? qualifiesHigh
+                    : qualifiesLow;
+
+    // Pre-filter using exact Picks rules
     const reliableItems = itemsRef.current
       .filter(i => {
-        if (i.margin <= 0) return false;
-        if (i.volume < 1000) return false; // must have meaningful daily volume
-        if (i.roi > 150) return false; // suspiciously high â€” likely manipulated or untradeable
-        const ageSec = i.lastTradeTime ? Math.floor(Date.now() / 1000 - i.lastTradeTime) : 99999;
-        if (ageSec > 10800) return false; // data older than 3hrs = unreliable margin
+        if (!qualifyFn(i)) return false;
+        if ((i.low || 0) > picksBudget) return false;
+        if (!passesFlipSpeed(i, picksPrefs.flipSpeed)) return false;
+        if (picksPrefs.membership === "f2p" && i.members) return false;
         return true;
       })
       .sort((a, b) => b.score - a.score);
+
+    // Keep items the user specifically asked about even if outside their tier
+    const mentionedItems = itemsRef.current
+      .filter(i => text.toLowerCase().includes(i.name.toLowerCase()))
+      .map(i => `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, volume ${i.volume.toLocaleString()}/day, score ${i.score}`)
+      .join("\n");
+
     const topFlips = reliableItems.slice(0, 60).map(i => {
-      const ageSec = i.lastTradeTime ? Math.floor(Date.now() / 1000 - i.lastTradeTime) : null;
+      const ageSec = i.lastTradeTime ? nowSec - i.lastTradeTime : null;
       const freshness = !ageSec ? "unknown" : ageSec < 300 ? "fresh" : ageSec < 1800 ? "recent" : "aging";
       const cyclesPerDay = i.buyLimit > 0 ? Math.min(i.volume / i.buyLimit, 6).toFixed(1) : "?";
-      return `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, vol ${i.volume.toLocaleString()}/day, limit ${i.buyLimit.toLocaleString()}, cycles/day ~${cyclesPerDay}, data ${freshness}, score ${i.score}`;
+      const lim = i.buyLimit > 0 ? i.buyLimit : 500;
+      const mkt4hr = i.volume / 6;
+      let expFill;
+      if      (i.volume >= 500_000) expFill = Math.min(lim, mkt4hr);
+      else if (i.volume >= 100_000) expFill = Math.min(lim, mkt4hr * 0.6);
+      else if (i.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
+      else if (i.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
+      else                          expFill = Math.min(lim, mkt4hr * 0.03);
+      const gpPerFill = Math.round((i.margin || 0) * Math.max(expFill, 1));
+      return `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, vol ${i.volume.toLocaleString()}/day, limit ${i.buyLimit.toLocaleString()}, cycles/day ~${cyclesPerDay}, GP/fill ~${formatGP(gpPerFill)}, data ${freshness}`;
     }).join("\n");
-    const mentionedItems = itemsRef.current.filter(i => text.toLowerCase().includes(i.name.toLowerCase())).map(i => `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, volume ${i.volume.toLocaleString()}/day, score ${i.score}`).join("\n");
-    const riskMap = { Low: "only high-volume safe items (volume 500+/day, ROI 2-15%)", Med: "balance margin and volume (volume 100+/day, ROI 5-40%)", High: "higher margin items OK (volume 50+/day, ROI up to 100%)" };
-    const speedMap = { Fast: "only items with very high daily volume (500+)", Med: "items that fill within 1-2 hours (volume 100+/day)", Slow: "slower filling items with bigger margins acceptable" };
 
-    // â”€â”€ Build slot context from live GE offers + drift data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    const tierDesc = {
+      low:    "LOW RISK: vol/limit >= 70x, margin > 0, data <= 15min. Ultra-liquid, near-instant fills.",
+      medium: "MEDIUM RISK: vol/limit >= 15x, buy 200k-10M, margin >= 30k, data <= 45min. Solid margins, reliable fills.",
+      high:   "HIGH RISK: vol/limit >= 8x, buy >= 10M, margin >= 90k, data <= 1hr. High capital, fills not guaranteed.",
+    };
+    const speedDesc = {
+      fast: "FAST speed filter (vol/limit >= 50x)",
+      medium: "MID speed filter (vol/limit >= 15x)",
+      slow: "SLOW speed filter (margin >= 50k)",
+      any: "no speed filter",
+    };
+
+    // Build slot context
     const activeSlots = geOffers.filter(o => ["BUYING", "BOUGHT", "SELLING", "SOLD"].includes(o.status));
     const slotContext = activeSlots.length === 0 ? "No active GE offers right now." : activeSlots.map(o => {
-      const itemId    = (items || []).find(i => i.name?.toLowerCase() === o.item_name?.toLowerCase())?.id;
-      const wikiNow   = itemId ? liveWikiPrices[itemId] : null;
+      const itemId = (items || []).find(i => i.name?.toLowerCase() === o.item_name?.toLowerCase())?.id;
+      const wikiNow = itemId ? liveWikiPrices[itemId] : null;
       const marketPrice = wikiNow ? (o.offer_type === "BUY" ? wikiNow.high : wikiNow.low) : null;
-      const drift     = marketPrice && o.offer_price
-        ? ((o.offer_type === "BUY"
-            ? (marketPrice - o.offer_price)
-            : (o.offer_price - marketPrice)) / o.offer_price * 100).toFixed(1)
-        : null;
-      const fillPct   = o.qty_total > 0 ? Math.round((o.qty_filled / o.qty_total) * 100) : 0;
-      const ageMin    = o.buy_started_at
-        ? Math.round((Date.now() - new Date(o.buy_started_at).getTime()) / 60000) : null;
-      const relistAt  = wikiNow
-        ? (o.offer_type === "BUY" ? wikiNow.high + 1 : wikiNow.low - 1) : null;
-
+      const drift = marketPrice && o.offer_price ? ((o.offer_type === "BUY" ? (marketPrice - o.offer_price) : (o.offer_price - marketPrice)) / o.offer_price * 100).toFixed(1) : null;
+      const fillPct = o.qty_total > 0 ? Math.round((o.qty_filled / o.qty_total) * 100) : 0;
+      const ageMin = o.buy_started_at ? Math.round((Date.now() - new Date(o.buy_started_at).getTime()) / 60000) : null;
+      const relistAt = wikiNow ? (o.offer_type === "BUY" ? wikiNow.high + 1 : wikiNow.low - 1) : null;
       let driftNote = "";
       if (drift !== null) {
-        const driftNum = parseFloat(drift);
-        if (driftNum >= 5)       driftNote = ` ⚠ CANCEL & RELIST â€” ${drift}% off market, relist at ${relistAt?.toLocaleString()} gp`;
-        else if (driftNum >= 2)  driftNote = ` ⚡ Consider adjusting â€” ${drift}% off market, relist at ${relistAt?.toLocaleString()} gp`;
-        else if (driftNum > 0)   driftNote = ` ✓ Slightly off market (${drift}%) â€” within tolerance`;
-        else                     driftNote = ` ✓ Competitive`;
+        const d = parseFloat(drift);
+        if (d >= 5)      driftNote = ` CANCEL & RELIST - ${drift}% off market, relist at ${relistAt?.toLocaleString()} gp`;
+        else if (d >= 2) driftNote = ` Consider adjusting - ${drift}% off market, relist at ${relistAt?.toLocaleString()} gp`;
+        else if (d > 0)  driftNote = ` Slightly off market (${drift}%) - within tolerance`;
+        else             driftNote = ` Competitive`;
       }
-
       return `Slot ${o.slot + 1}: ${o.item_name} | ${o.offer_type} @ ${o.offer_price?.toLocaleString()} gp | ${fillPct}% filled${ageMin !== null ? ` | ${ageMin}min old` : ""}${marketPrice ? ` | Market now: ${marketPrice.toLocaleString()} gp` : " | No live price"}${driftNote}`;
     }).join("\n");
 
-    const systemPrompt = `You are the RuneTrader AI assistant â€” an expert OSRS Grand Exchange flipping advisor with live GE data.
-${budget ? `User cash stack: ${parseInt(budget.replace(/,/g,"")).toLocaleString()} gp â€” only recommend items they can afford (buy price must fit their stack, ideally with room for 5+ flips)` : "Cash stack not set â€” ask before recommending specific items."}
-${prefs.risk ? `Risk tolerance: ${prefs.risk} â€” ${riskMap[prefs.risk]}` : "Risk not set."}
-${prefs.speed ? `Flip speed: ${prefs.speed} â€” ${speedMap[prefs.speed]}` : "Speed not set."}
+    const systemPrompt = `You are the RuneTrader AI assistant - an expert OSRS Grand Exchange flipping advisor with live GE data.
+
+USER PREFERENCES (from their Picks tab settings):
+- Risk tier: ${(picksPrefs.risk || "low").toUpperCase()} - ${tierDesc[picksPrefs.risk] || tierDesc.low}
+- Flip speed: ${speedDesc[picksPrefs.flipSpeed] || speedDesc.any}
+- Cash stack: ${picksPrefs.cashStack ? `${picksPrefs.cashStack} (${picksBudget === Infinity ? "unlimited" : formatGP(picksBudget) + " gp"})` : "not set - ask before recommending specific items"}
+- Membership: ${picksPrefs.membership === "f2p" ? "F2P only" : "Members (all items)"}
+
+IMPORTANT: The live data below has ALREADY been pre-filtered using the exact same qualification rules as the user's Picks tab. Every item listed passes their risk tier, flip speed, cash stack, and membership filters. Only recommend items from this list unless the user specifically asks about something outside it.
 
 PLAYER'S ACTIVE GE SLOTS (synced live from RuneTrader plugin):
 ${slotContext}
-CRITICAL: You DO have access to the player's GE slots via the RuneTrader plugin â€” NEVER say you don't have access to their slots. The data above is real and current. If it says 'No active GE offers right now' it means they have nothing in the GE at this moment OR they are not currently logged in-game â€” tell them that directly. If slots are listed, use them to give specific advice. If a slot shows ⚠ CANCEL & RELIST, mention it proactively even if they didn't ask. Never invent slot data beyond what is shown above.
+CRITICAL: You DO have access to the player's GE slots - NEVER say you don't. If it says "No active GE offers right now" they have nothing in the GE or aren't logged in. If a slot shows CANCEL & RELIST, mention it proactively. Never invent slot data.
 
-SCORING SYSTEM (explain if asked):
-- Score 0–100. Three components multiplied by a freshness multiplier.
-- Liquidity ratio (40pts): daily_volume ÷ buy_limit. Ratio ≥ 20 = excellent (market supports 20 full buy cycles/day). Ratio < 1 = market can't even fill one cycle â€” score 0.
-- GP/hr (35pts): margin × (volume/24 × 0.03 fill_share, capped at buy limit). Log-scaled. 2M+/hr = top tier.
-- ROI (15pts): sweet spot 2–5% (real high-volume OSRS flips). >40% = suspicious. >80% = likely dead market or manipulation â€” score 0.
-- Freshness multiplier: applied after scoring. <5min = ×1.0, <15min = ×0.9, <30min = ×0.75, <1hr = ×0.5, <2hr = ×0.2, 2hr+ = ×0.05.
-- Score 70+ = strong. 50–69 = decent. Under 50 = risky or marginal.
-- Items with ratio < 1 (market can't fill a full buy cycle/day), margin ≤ 0, or data 2hr+ old score near zero.
-
-LIVE DATA (pre-filtered: margin > 0, volume ≥ 1,000/day, data < 3hrs old, ROI ≤ 150%):
-${topFlips}${mentionedItems ? `\nMentioned items (from user query):\n${mentionedItems}` : ""}
+LIVE DATA - pre-filtered to ${(picksPrefs.risk || "low").toUpperCase()} risk tier (${reliableItems.length} qualifying items, top 60 by score):
+${topFlips || "No items currently qualify for this risk tier and cash stack."}
+${mentionedItems ? `\nMentioned items (user asked about these specifically):\n${mentionedItems}` : ""}
 
 RULES:
 - Only recommend items from the live data above. Never invent or assume prices.
-- Always state the buy limit when recommending â€” it defines the max you can buy per 4hrs.
-- CRITICAL â€” COMPETITION & FILLS: OSRS has 100k–200k+ concurrent players with thousands of active flippers. Fill rates are volume-dependent: extremely high volume items (500k+/day) like runes fill reliably because the market is deep enough to absorb all flippers â€” these are solid low-risk fast flips worth 25–100k GP per fill. High volume (100k–500k/day) items likely fill but face competition. Mid volume (20k–100k/day) is competitive â€” expect partial fills. Low volume (<5k/day) is uncertain â€” fills are slow and unreliable. Never tell a user high volume guarantees a fast fill without acknowledging this scale. The GP/Fill number shown already accounts for realistic fill rates at each volume tier.
-- "cycles/day" = how many 4hr windows the market supports being fully bought. Lower = slower flip.
-- Warn explicitly if data freshness is "aging" â€” the margin shown may not be real anymore.
+- Always state the buy limit - it defines how much you can buy per 4hrs.
+- GP/fill shown is the realistic expected GP per 4hr window accounting for market competition.
+- Warn if data freshness is "aging" - the margin may not reflect current market.
 - Write all GP as full numbers with commas (1,220,000 not 1.22M).
-- GE tax: 2% of sell price, capped at 5,000,000. Under 50gp = no tax. Bonds exempt. All margins shown are already after tax.
-- High ROI (>40%) on a GE flip is a red flag, not a green one. It usually means thin market, slow fill, or a one-sided margin snapshot. Say so.
+- GE tax: 2% of sell price, capped at 5,000,000. All margins shown are already after tax.
+- High ROI (>40%) is a red flag - thin market, slow fill, or stale snapshot. Say so.
 - Be concise, honest, and specific. If something looks sketchy, say it.`;
     try {
       const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 700, system: systemPrompt, messages: [...messages.filter(m => m.role !== "system").slice(-6).map(m => ({ role: m.role, content: m.content })), { role: "user", content: text }] }) });
