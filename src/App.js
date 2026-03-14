@@ -879,11 +879,6 @@ function formatGP(n) {
   return Math.round(n).toLocaleString();
 }
 
-function applyOffset(low, high, speed) {
-  const factor = speed === "Fast" ? 0.012 : speed === "Med" ? 0.006 : 0;
-  return { adjLow: Math.round(low * (1 + factor)), adjHigh: Math.round(high * (1 - factor)) };
-}
-
 function formatTime(d) {
   if (!d) return "";
   const diff = Math.floor((new Date() - new Date(d)) / 1000);
