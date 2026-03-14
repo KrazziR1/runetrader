@@ -2762,7 +2762,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               <span className="filter-label">Filter:</span>
               {["all", "f2p", "members", "highvol", "favourites"].map(f => (
                 <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `⭐ Favourites${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
+                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `🔖 Watchlist${watchlist.length > 0 ? ` (${watchlist.length})` : ""}`}
                 </button>
               ))}
               <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
@@ -3739,6 +3739,7 @@ export default function RuneTrader() {
     supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) setDemoMode(false); // exit demo when signed in
       if (event === "SIGNED_IN") {
         const createdAt = session?.user?.created_at;
         const isNewUser = createdAt && (Date.now() - new Date(createdAt).getTime()) < 10000;
@@ -4887,7 +4888,7 @@ RULES:
   const avgProfit = totalFlips ? Math.round(totalProfit / totalFlips) : 0;
   const bestItem = allClosedFlips.length ? allClosedFlips.reduce((best, f) => (f.totalProfit || 0) > (best.totalProfit || 0) ? f : best, allClosedFlips[0]) : null;
 
-  if (!showApp) return <LandingPage onEnterApp={(mode) => { setShowApp(true); if (mode === "demo") setDemoMode(true); }} />;
+  if (!showApp) return <LandingPage onEnterApp={(mode) => { setShowApp(true); if (mode === "demo" && !user) setDemoMode(true); }} />;
 
   return (
     <>
@@ -5171,7 +5172,7 @@ RULES:
         </div>
 
         {/* DEMO BANNER */}
-        {demoMode && (
+        {demoMode && !user && (
           <div className="demo-banner">
             <div className="demo-banner-text">
               <span style={{ fontSize: "16px" }}>👁</span>
@@ -5942,7 +5943,7 @@ RULES:
                   <span className="filter-label">Filter:</span>
                   {["all", "f2p", "members", "highvol", "favourites"].map(f => (
                     <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `⭐ Favourites${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
+                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `🔖 Watchlist${watchlist.length > 0 ? ` (${watchlist.length})` : ""}`}
                     </button>
                   ))}
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
