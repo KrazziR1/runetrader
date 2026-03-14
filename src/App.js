@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import Sparkline from "./Sparkline";
-import WatchlistPage from "./WatchlistPage";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 
