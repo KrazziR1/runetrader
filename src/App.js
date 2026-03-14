@@ -10,6 +10,7 @@ import SettingsPage from "./SettingsPage";
 import RecommendedFlips from "./RecommendedFlips";
 import { xpToLevel, xpProgress, xpToNextLevel, calcFlipXP, getLevelTitle, getCelebrationTier, checkNewAchievements, ACHIEVEMENTS } from "./XPSystem";
 import { generateDailyQuests, updateQuestProgress, calcQuestRewards, todayStr } from "./QuestSystem";
+import { initAudio, playLoginChime, playCoinClink, playBigProfit, playEpicProfit, playLevelUp, playQuestComplete, playNudge, toggleMute, getSoundMuted } from "./SoundEngine";
 
 // â”€â”€ Changelog â€” add new entries at the top, bump DEPLOY_KEY on each deploy â”€â”€
 const DEPLOY_KEY = "runetrader_seen_deploy_v1"; // change this string on each deploy to trigger the modal
@@ -861,6 +862,27 @@ const STYLES = `
   /* ACHIEVEMENT TOAST */
   @keyframes achieveIn { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
   .achievement-toast { display: flex; align-items: center; gap: 12px; background: #0f1218; border: 1px solid var(--gold-dim); border-radius: 10px; padding: 12px 16px; animation: achieveIn 0.4s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 8px 24px rgba(0,0,0,0.6); pointer-events: all; max-width: 300px; }
+
+  /* LOGIN CINEMATIC */
+  @keyframes cinematicFadeIn  { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes cinematicFadeOut { from{opacity:1} to{opacity:0} }
+  @keyframes questDeal { from{opacity:0;transform:translateY(24px) scale(0.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+  @keyframes scanLine { 0%{top:-10%} 100%{top:110%} }
+  .cinematic-overlay { position:fixed;inset:0;z-index:900;background:#030508;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0; }
+  .cinematic-overlay.fade-out { animation: cinematicFadeOut 1.2s ease forwards; }
+  .cinematic-scan { position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.4),transparent);animation:scanLine 1.8s ease-in-out; pointer-events:none; }
+  .cinematic-logo-wrap { display:flex;flex-direction:column;align-items:center;gap:12px;animation:cinematicFadeIn 0.8s ease; }
+  .cinematic-welcome  { font-family:'Cinzel',serif;font-size:13px;letter-spacing:4px;text-transform:uppercase;color:var(--text-dim);animation:cinematicFadeIn 0.8s ease 0.3s both; }
+  .cinematic-username { font-family:'Cinzel',serif;font-size:28px;font-weight:700;color:var(--gold);animation:cinematicFadeIn 0.8s ease 0.5s both; }
+  .cinematic-streak   { font-size:13px;color:var(--text-dim);animation:cinematicFadeIn 0.6s ease 0.8s both; }
+  .cinematic-pulse    { font-size:12px;color:var(--green);background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.2);border-radius:20px;padding:5px 14px;animation:cinematicFadeIn 0.6s ease 1s both; }
+  .cinematic-divider  { width:1px;height:32px;background:linear-gradient(to bottom,transparent,var(--border),transparent);margin:8px 0;animation:cinematicFadeIn 0.4s ease 1.1s both; }
+  .cinematic-quests   { display:flex;flex-direction:column;gap:8px;width:340px; }
+  .cinematic-quest-card { background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;animation:questDeal 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+  /* QUEST NUDGE BANNER */
+  @keyframes nudgeIn { from{opacity:0;transform:translateX(-50%) translateY(-12px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+  .quest-nudge { position:fixed;top:76px;left:50%;transform:translateX(-50%);z-index:500;background:#0f1218;border:1px solid var(--gold-dim);border-radius:10px;padding:10px 20px;display:flex;align-items:center;gap:10px;font-size:13px;animation:nudgeIn 0.35s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 8px 32px rgba(0,0,0,0.6);white-space:nowrap; }
 
   /* QUEST PANEL */
   @keyframes questSlideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
@@ -4072,6 +4094,17 @@ export default function RuneTrader() {
           localStorage.setItem("rt_last_login", today);
           localStorage.setItem("rt_login_streak", String(newStreak));
           setLoginStreak(newStreak);
+          // Login cinematic — fire once per session on a new day
+          if (lastLogin !== today) {
+            setTimeout(() => {
+              playLoginChime();
+              setShowLoginCinematic(true);
+              setCinematicPhase("enter");
+              setTimeout(() => setCinematicPhase("quests"), 1200);
+              setTimeout(() => setCinematicPhase("fade"),   4000);
+              setTimeout(() => setShowLoginCinematic(false), 5200);
+            }, 600);
+          }
           // Show streak banner if streak ≥ 2 (new or continuing streak)
           if (newStreak >= 2 && lastLogin !== today) {
             setTimeout(() => setShowStreakBanner(true), 1400);
@@ -4175,22 +4208,42 @@ export default function RuneTrader() {
       .eq("quest_date", today)
       .single();
 
+    let quests;
     if (data) {
-      setDailyQuests(data.quests || []);
+      quests = data.quests || [];
+      setDailyQuests(quests);
       setGoldCoins(data.gold_coins || 0);
     } else {
-      // Generate fresh quests for today
-      const fresh = generateDailyQuests(user.id, today);
-      setDailyQuests(fresh);
+      quests = generateDailyQuests(user.id, today);
+      setDailyQuests(quests);
       await supabase.from("daily_quests").upsert({
         user_id: user.id,
         quest_date: today,
-        quests: fresh,
+        quests,
         gold_coins: 0,
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id,quest_date" });
     }
+    setCinematicQuests(quests);
     setQuestsLoaded(true);
+
+    // Market pulse — find the top margin mover from live items
+    const liveItems = itemsRef.current || [];
+    if (liveItems.length > 0) {
+      const fresh = liveItems.filter(i => {
+        const age = i.lastTradeTime ? Math.floor(Date.now() / 1000 - i.lastTradeTime) : 9999;
+        return i.margin > 0 && age < 600 && i.volume > 5000;
+      });
+      if (fresh.length > 0) {
+        fresh.sort((a, b) => b.margin - a.margin);
+        const top = fresh[0];
+        setMarketPulse({
+          name: top.name,
+          margin: top.margin,
+          volume: top.volume,
+        });
+      }
+    }
   }
 
   async function saveQuests(updatedQuests, updatedCoins) {
@@ -4224,13 +4277,19 @@ export default function RuneTrader() {
     if (newLevel > oldLevel) {
       setShowLevelUp({ oldLevel, newLevel });
       setTimeout(() => setShowLevelUp(null), 6000);
+      playLevelUp();
     }
 
-    // Profit celebration?
+    // Profit celebration + sound
     const celebration = getCelebrationTier(profit);
     if (celebration) {
       setShowCelebration({ ...celebration, profit });
       setTimeout(() => setShowCelebration(null), 4000);
+      if (celebration.tier === "legendary" || celebration.tier === "epic") playEpicProfit();
+      else if (celebration.tier === "great") playBigProfit();
+      else playCoinClink();
+    } else if (profit > 0) {
+      playCoinClink();
     }
 
     // Check achievements
@@ -4419,8 +4478,19 @@ export default function RuneTrader() {
   const [showQuestPanel, setShowQuestPanel] = useState(false);
   const [questsLoaded, setQuestsLoaded] = useState(false);
   const [newlyCompletedQuests, setNewlyCompletedQuests] = useState([]);
-  // ─────────────────────────────────────────────────────────────────────────────
-  // ─────────────────────────────────────────────────────────────────────────────
+
+  // ── Login cinematic ──────────────────────────────────────────────────────────
+  const [showLoginCinematic, setShowLoginCinematic] = useState(false);
+  const [cinematicPhase, setCinematicPhase] = useState("enter"); // enter | quests | fade
+  const [cinematicQuests, setCinematicQuests] = useState([]);
+  const [marketPulse, setMarketPulse] = useState(null); // { name, change, direction }
+
+  // ── Sound ────────────────────────────────────────────────────────────────────
+  const [soundMuted, setSoundMuted] = useState(() => getSoundMuted());
+
+  // ── Quest nudge ──────────────────────────────────────────────────────────────
+  const [questNudge, setQuestNudge] = useState(null); // { quest, pct }
+  const nudgeSentRef = useRef(new Set()); // track which quests have had a nudge sent
   // ─────────────────────────────────────────────────────────────────────────────
 
   const [selectedItem, setSelectedItem] = useState(null);
@@ -5205,11 +5275,25 @@ export default function RuneTrader() {
             setGoldCoins(newCoins);
             setNewlyCompletedQuests(justDone);
             setTimeout(() => setNewlyCompletedQuests([]), 5000);
-            if (bonusXP > 0) awardXP(bonusXP * 500, {}); // convert to profit equivalent for XP calc
+            playQuestComplete();
+            if (bonusXP > 0) awardXP(bonusXP * 500, {});
             setDailyQuests(updated);
             saveQuests(updated, newCoins);
             showToast(`Quest complete! +${bonusCoins} coins 🪙`, "success", 4000);
           } else {
+            // Check for 50% nudge on any quest
+            updated.forEach(q => {
+              if (q.completed || nudgeSentRef.current.has(q.id)) return;
+              if (q.target > 1) {
+                const pct = (q.progress / q.target) * 100;
+                if (pct >= 50) {
+                  nudgeSentRef.current.add(q.id);
+                  setQuestNudge({ quest: q, pct: Math.round(pct) });
+                  playNudge();
+                  setTimeout(() => setQuestNudge(null), 4000);
+                }
+              }
+            });
             setDailyQuests(updated);
             saveQuests(updated, goldCoins);
           }
@@ -5821,13 +5905,86 @@ RULES:
         );
       })()}
 
-      <div className="app">
+      <div className="app" onClick={initAudio} onTouchStart={initAudio}>
         {/* ALPHA BANNER */}
         <div className="alpha-banner">
           <span className="alpha-badge">Alpha</span>
           <span>RuneTrader is in early access â€” features are actively being built.</span>
           <a className="feedback-btn" href="mailto:feedback@runetrader.gg">💬 Send Feedback</a>
         </div>
+
+        {/* ── LOGIN CINEMATIC ── */}
+        {showLoginCinematic && user && (
+          <div className={`cinematic-overlay${cinematicPhase === "fade" ? " fade-out" : ""}`}>
+            <div className="cinematic-scan" />
+            <div className="cinematic-logo-wrap">
+              {/* Logo */}
+              <svg width="56" height="56" viewBox="0 0 120 120" fill="none">
+                <defs>
+                  <linearGradient id="cl_bg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#080c1c"/><stop offset="100%" stopColor="#020308"/></linearGradient>
+                  <linearGradient id="cl_ring" x1="10" y1="10" x2="110" y2="110" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#f0d898"/><stop offset="100%" stopColor="#8a6030"/></linearGradient>
+                  <linearGradient id="cl_arrow" x1="28" y1="80" x2="84" y2="36" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#c8a96e"/><stop offset="100%" stopColor="#60b8ff"/></linearGradient>
+                </defs>
+                <rect width="120" height="120" rx="26" fill="url(#cl_bg)"/>
+                <circle cx="60" cy="60" r="40" stroke="url(#cl_ring)" strokeWidth="2.5"/>
+                <path d="M32 78 L45 63 L55 71 L80 43" stroke="url(#cl_arrow)" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M73 40 L80 43 L77 51" stroke="#a0d8ff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="80" cy="43" r="5.5" fill="#80ccff" opacity="0.98"/>
+              </svg>
+              <div className="cinematic-welcome">Welcome to RuneTrader</div>
+              <div className="cinematic-username">{user.user_metadata?.username || user.email?.split("@")[0]}</div>
+              {loginStreak >= 2 && (
+                <div className="cinematic-streak">🔥 {loginStreak}-day streak</div>
+              )}
+              {marketPulse && (
+                <div className="cinematic-pulse">
+                  📈 {marketPulse.name} — top margin right now
+                </div>
+              )}
+            </div>
+
+            {/* Quest cards deal in */}
+            {(cinematicPhase === "quests" || cinematicPhase === "fade") && cinematicQuests.length > 0 && (
+              <>
+                <div className="cinematic-divider" />
+                <div style={{ fontSize: "10px", color: "var(--text-dim)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "4px", animation: "cinematicFadeIn 0.4s ease both" }}>
+                  Today's Quests
+                </div>
+                <div className="cinematic-quests">
+                  {cinematicQuests.map((q, i) => {
+                    const diffColor = q.difficulty === "easy" ? "var(--green)" : q.difficulty === "medium" ? "var(--gold)" : "var(--red)";
+                    const rewards = calcQuestRewards(q);
+                    return (
+                      <div key={q.id} className="cinematic-quest-card" style={{ animationDelay: `${i * 0.15}s`, borderColor: q.completed ? "rgba(46,204,113,0.2)" : "rgba(255,255,255,0.07)" }}>
+                        <span style={{ fontSize: "22px" }}>{q.completed ? "✅" : q.emoji}</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "1px" }}>{q.desc}</div>
+                        </div>
+                        <div style={{ textAlign: "right", flexShrink: 0 }}>
+                          <div style={{ fontSize: "10px", color: diffColor, fontWeight: 700, textTransform: "uppercase" }}>{q.difficulty}</div>
+                          <div style={{ fontSize: "10px", color: "var(--gold)", marginTop: "2px" }}>+{rewards.coins}🪙</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── QUEST NUDGE BANNER ── */}
+        {questNudge && (
+          <div className="quest-nudge">
+            <span style={{ fontSize: "18px" }}>{questNudge.quest.emoji}</span>
+            <span style={{ color: "var(--text-dim)" }}>
+              Halfway there on <strong style={{ color: "var(--gold)" }}>{questNudge.quest.title}</strong>
+              {questNudge.quest.target > 1 && ` — ${questNudge.quest.progress}/${questNudge.quest.target}`}
+            </span>
+            <button onClick={() => setQuestNudge(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "13px", marginLeft: "4px" }}>✕</button>
+          </div>
+        )}
 
         {/* ── STREAK BANNER ── */}
         {showStreakBanner && user && (
@@ -6367,6 +6524,12 @@ RULES:
             )}
             {user ? (
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {/* Sound mute toggle */}
+                <button
+                  onClick={() => { const m = toggleMute(); setSoundMuted(m); }}
+                  title={soundMuted ? "Sounds off" : "Sounds on"}
+                  style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "16px", padding: "4px", lineHeight: 1, opacity: soundMuted ? 0.4 : 0.8 }}
+                >{soundMuted ? "🔇" : "🔊"}</button>
                 {/* Quest button */}
                 {questsLoaded && (
                   <button onClick={() => setShowQuestPanel(v => !v)}
