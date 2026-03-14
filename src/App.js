@@ -646,6 +646,39 @@ const STYLES = `
   .watchlist-alert-set-btn { padding: 6px 12px; border-radius: 6px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: Inter, sans-serif; }
   .watchlist-pro-tip { display: flex; align-items: center; gap: 8px; background: rgba(201,168,76,0.05); border: 1px solid rgba(201,168,76,0.12); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--text-dim); }
 
+  /* DEMO TOUR */
+  .demo-tour-backdrop { position: fixed; inset: 0; z-index: 8000; background: rgba(0,0,0,0.7); }
+  .demo-tour-highlight { position: fixed; z-index: 8001; border-radius: 6px; box-shadow: 0 0 0 4px var(--gold), 0 0 0 9999px rgba(0,0,0,0.7); pointer-events: none; transition: all 0.35s cubic-bezier(0.4,0,0.2,1); }
+  .demo-tour-tooltip {
+    position: fixed; z-index: 8002;
+    background: var(--bg2); border: 1px solid var(--gold-dim);
+    border-radius: 14px; padding: 24px 26px; width: 340px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.7);
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .demo-tour-tooltip.center {
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 420px;
+  }
+  .demo-tour-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dim); font-family: Cinzel, serif; }
+  .demo-tour-title { font-family: Cinzel, serif; font-size: 16px; font-weight: 700; color: var(--gold); line-height: 1.3; }
+  .demo-tour-desc { font-size: 13px; color: var(--text-dim); line-height: 1.65; }
+  .demo-tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; border-top: 1px solid var(--border); }
+  .demo-tour-dots { display: flex; gap: 5px; align-items: center; }
+  .demo-tour-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
+  .demo-tour-dot.active { background: var(--gold); }
+  .demo-tour-skip { background: none; border: none; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: Inter, sans-serif; padding: 0; transition: color 0.15s; }
+  .demo-tour-skip:hover { color: var(--text); }
+  .demo-tour-next { padding: 9px 22px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 700; cursor: pointer; font-family: Inter, sans-serif; transition: opacity 0.2s; white-space: nowrap; }
+  .demo-tour-next:hover { opacity: 0.85; }
+  .demo-tour-end-overlay { position: fixed; inset: 0; z-index: 9500; background: rgba(6,8,11,0.97); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; text-align: center; padding: 40px; animation: fadeInUp 0.5s ease both; }
+  .demo-tour-end-title { font-family: "Cinzel Decorative", Cinzel, serif; font-size: clamp(28px, 4vw, 48px); font-weight: 900; color: var(--gold); line-height: 1.2; }
+  .demo-tour-end-sub { font-size: 18px; color: var(--text-dim); max-width: 480px; line-height: 1.7; }
+  .demo-tour-end-cta { padding: 16px 48px; border-radius: 6px; font-family: Cinzel, serif; font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; border: none; cursor: pointer; box-shadow: 0 0 40px rgba(201,168,76,0.3); transition: all 0.3s; }
+  .demo-tour-end-cta:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(201,168,76,0.5); }
+  .demo-tour-end-dismiss { background: none; border: none; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: Inter, sans-serif; padding: 0; transition: color 0.15s; text-decoration: underline; }
+  .demo-tour-end-dismiss:hover { color: var(--text); }
+
   /* PORTFOLIO */
   .portfolio-wrap { display: flex; flex-direction: column; gap: 20px; }
   .port-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
@@ -1604,6 +1637,117 @@ const DEMO_ITEMS = [
   { id: 4587,  name: "Dragon scimitar",    low: 58000,    high: 59200,    margin: 840,    roi: 1.44, volume: 8400,   buyLimit: 100,   score: 64, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 120, category: "Weapons" },
 ];
 const DEMO_WATCHLIST_IDS = [4151, 385, 11832];
+
+// Fake live ops (ge_flips_live rows)
+const DEMO_LIVE_OPS = [
+  { id: "dop1", item_name: "Abyssal whip",      slot: 0, status: "HOLDING",  buy_price: 1_810_000, quantity: 2,   buy_started_at: new Date(Date.now() - 2.1*3600000).toISOString(), profit: null, roi: null },
+  { id: "dop2", item_name: "Shark",              slot: 1, status: "BUYING",   buy_price: 820,       quantity: 500, buy_started_at: new Date(Date.now() - 0.3*3600000).toISOString(), profit: null, roi: null },
+  { id: "dop3", item_name: "Law rune",           slot: 2, status: "SELLING",  buy_price: 178,       quantity: 2000,buy_started_at: new Date(Date.now() - 4.5*3600000).toISOString(), profit: null, roi: null },
+  { id: "dop4", item_name: "Dragon scimitar",    slot: 3, status: "HOLDING",  buy_price: 57_500,    quantity: 5,   buy_started_at: new Date(Date.now() - 1.2*3600000).toISOString(), profit: null, roi: null },
+];
+
+// Fake closed flips for analytics
+const DEMO_AUTO_FLIPS = [
+  { id: "daf1", item_name: "Abyssal whip",    buy_price: 1_800_000, sell_price: 1_846_000, quantity: 2,    profit: 72_040,  roi: 4.0,  sell_completed_at: new Date(Date.now() - 6*3600000).toISOString(),  status: "SOLD" },
+  { id: "daf2", item_name: "Shark",           buy_price: 812,       sell_price: 833,       quantity: 500,  profit: 7_500,   roi: 2.6,  sell_completed_at: new Date(Date.now() - 10*3600000).toISOString(), status: "SOLD" },
+  { id: "daf3", item_name: "Law rune",        buy_price: 176,       sell_price: 182,       quantity: 2000, profit: 8_000,   roi: 3.4,  sell_completed_at: new Date(Date.now() - 14*3600000).toISOString(), status: "SOLD" },
+  { id: "daf4", item_name: "Dragon scimitar", buy_price: 56_000,    sell_price: 59_200,    quantity: 5,    profit: 12_000,  roi: 4.3,  sell_completed_at: new Date(Date.now() - 18*3600000).toISOString(), status: "SOLD" },
+  { id: "daf5", item_name: "Mystic robe top", buy_price: 37_800,    sell_price: 39_200,    quantity: 4,    profit: 3_920,   roi: 2.6,  sell_completed_at: new Date(Date.now() - 22*3600000).toISOString(), status: "SOLD" },
+];
+
+// Fake P&L sparkline history
+const DEMO_PNL_HISTORY = (() => {
+  const vals = [0, 8000, 14000, 12000, 22000, 30000, 28000, 42000, 55000, 61000, 58000, 72000, 80000, 88000, 95000, 103460];
+  return vals.map((v, i) => ({ time: Date.now() - (vals.length - 1 - i) * 900000, value: v }));
+})();
+
+const DEMO_CAPITAL = 50_000_000;
+
+// ── Demo Tour Steps ──────────────────────────────────────────────────────────
+const DEMO_TOUR_STEPS = [
+  {
+    id: "welcome",
+    title: "Welcome to RuneTrader ⚔️",
+    desc: "The AI-powered Grand Exchange trading advisor for OSRS. In the next 60 seconds we'll show you everything — live market data, smart alerts, and Merchant Mode. Let's go.",
+    target: null,
+    placement: "center",
+    tab: null,
+    merchantView: null,
+  },
+  {
+    id: "market-table",
+    title: "4,525 Items Tracked Live",
+    desc: "Every tradeable item on the Grand Exchange, updated in real time via the OSRS Wiki API. Sorted by volume so the best opportunities surface first. Click any row to see a full price history chart.",
+    target: ".flips-table",
+    placement: "top",
+    tab: "market",
+    merchantView: null,
+  },
+  {
+    id: "sparklines",
+    title: "24-Hour Trend Sparklines",
+    desc: "Every item has a live 24hr margin trend chart. Green means the spread is widening — more profit per flip. Red means it's compressing. Spot momentum at a glance without opening the chart modal.",
+    target: ".flips-table",
+    placement: "top",
+    tab: "market",
+    merchantView: null,
+  },
+  {
+    id: "watchlist",
+    title: "Watchlist — Your Favourites",
+    desc: "Bookmark items you flip regularly with the 🔖 icon. Set price alerts so you get notified when the margin hits your target. Your watchlist syncs across devices when you sign in.",
+    target: ".watchlist-table",
+    placement: "top",
+    tab: "watchlist",
+    merchantView: null,
+  },
+  {
+    id: "tracker",
+    title: "Track Every Flip",
+    desc: "Log your buy and sell prices to track total profit, win rate, and your best-performing items. Connect the RuneLite plugin and your GE slots sync automatically — no manual entry needed.",
+    target: ".profit-chart-wrap",
+    placement: "bottom",
+    tab: "tracker",
+    merchantView: null,
+  },
+  {
+    id: "merchant-intro",
+    title: "Meet Merchant Mode ⚔️",
+    desc: "RuneTrader's flagship feature — a self-contained trading terminal. Manage all your GE slots, track live P&L, get rotation picks, set autopilot rules, and monitor risk exposure. All in one place.",
+    target: null,
+    placement: "center",
+    tab: "market",
+    merchantView: "operations",
+    activateMerchant: true,
+  },
+  {
+    id: "merchant-ops",
+    title: "Active Operations",
+    desc: "Every open position with live P&L, hold time, and a margin health bar. The status dots show where each flip is: 🟡 Buying · 🟢 Holding · 🔵 Selling · 🔴 Danger. Click ⚙ to set per-slot Autopilot rules.",
+    target: "#active-operations-section",
+    placement: "top",
+    tab: null,
+    merchantView: "operations",
+  },
+  {
+    id: "merchant-capital",
+    title: "Capital & Daily Goal",
+    desc: "Track how much GP you have deployed vs idle. Set a daily GP target and watch your progress fill in real time. The ring gauge shows capital efficiency — aim for 70%+ to maximise returns.",
+    target: ".capital-bar",
+    placement: "bottom",
+    tab: null,
+    merchantView: "operations",
+  },
+  {
+    id: "ai-advisor",
+    title: "AI Advisor — Always On",
+    desc: "Ask the AI anything: best flips for your budget, why an offer isn't filling, whether to relist. It has full visibility of your active slots and live market data. Tap the ⚔️ bubble any time.",
+    target: ".merchant-ai-bubble",
+    placement: "left",
+    tab: null,
+    merchantView: "operations",
+  },
+];
 
 // ─── WATCHLIST PAGE ────────────────────────────────────────────
 
@@ -3804,6 +3948,88 @@ export default function RuneTrader() {
   }, []);
 
   function endTour() { setTourStep(-1); }
+
+  // ── Demo Tour ────────────────────────────────────────────────────────────────
+  function measureDemoTarget(selector) {
+    if (!selector) { setDemoTourRect(null); return; }
+    setTimeout(() => {
+      const el = document.querySelector(selector);
+      if (el) {
+        el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        setTimeout(() => {
+          const r = el.getBoundingClientRect();
+          setDemoTourRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+        }, 120);
+      } else {
+        setDemoTourRect(null);
+      }
+    }, 80);
+  }
+
+  function startDemoTour() {
+    setDemoTourStep(0);
+    setDemoTourRect(null);
+    setDemoTourReady(false);
+    // Small delay so the app renders before we start measuring
+    setTimeout(() => setDemoTourReady(true), 300);
+  }
+
+  function advanceDemoTour(nextIdx) {
+    if (nextIdx >= DEMO_TOUR_STEPS.length) {
+      // End — show CTA screen
+      setDemoTourStep(-2);
+      setDemoTourRect(null);
+      return;
+    }
+    const step = DEMO_TOUR_STEPS[nextIdx];
+    setDemoTourStep(nextIdx);
+
+    // Navigate to correct tab
+    if (step.tab) setActiveTab(step.tab);
+
+    // Activate merchant mode if needed
+    if (step.activateMerchant) {
+      setMerchantCapital(DEMO_CAPITAL);
+      setMerchantMode(true);
+      setMerchantView("operations");
+      setAutoFlipsLog(DEMO_AUTO_FLIPS);
+      setPnlHistory(DEMO_PNL_HISTORY);
+      setMerchantPositions(DEMO_LIVE_OPS.map(op => ({
+        id: op.id, item_name: op.item_name, buy_price: op.buy_price,
+        quantity: op.quantity, status: op.status,
+        buy_started_at: op.buy_started_at,
+      })));
+    }
+
+    // Set merchant sub-view
+    if (step.merchantView) setMerchantView(step.merchantView);
+
+    // Measure highlight target
+    measureDemoTarget(step.target);
+  }
+
+  function endDemoTour() {
+    setDemoTourStep(-1);
+    setDemoTourRect(null);
+    // Reset merchant mode fake data
+    if (!user) {
+      setMerchantMode(false);
+      setMerchantCapital(0);
+      setAutoFlipsLog([]);
+      setPnlHistory([]);
+      setMerchantPositions([]);
+    }
+  }
+
+  // Auto-start demo tour when demoMode activates
+  useEffect(() => {
+    if (demoMode) {
+      setActiveTab("market");
+      startDemoTour();
+    } else {
+      endDemoTour();
+    }
+  }, [demoMode]); // eslint-disable-line
   function advanceTour(next) {
     if (next >= TOUR_STEPS.length) { endTour(); return; }
     const target = TOUR_STEPS[next].target;
@@ -4083,6 +4309,9 @@ export default function RuneTrader() {
 
   // ── Demo Mode ──
   const [demoMode, setDemoMode] = useState(false);
+  const [demoTourStep, setDemoTourStep] = useState(-1); // -1 = inactive, -2 = end screen
+  const [demoTourRect, setDemoTourRect] = useState(null);
+  const [demoTourReady, setDemoTourReady] = useState(false);
 
   // ── Watchlist (replaces Favourites) ──
   const [watchlist, setWatchlist] = useState(() => {
@@ -5287,14 +5516,14 @@ RULES:
         </header>
 
         <div className="main">
-          {merchantMode && user ? (
+          {merchantMode && (user || demoMode) ? (
             <>
             <MerchantMode
               items={items}
               allItems={allItems}
               flipsLog={flipsLog}
               autoFlipsLog={autoFlipsLog}
-              manualPositions={merchantPositions}
+              manualPositions={demoMode ? DEMO_LIVE_OPS : merchantPositions}
               geOffers={geOffers}
               merchantCapital={merchantCapital}
               setMerchantCapital={setMerchantCapital}
@@ -5303,8 +5532,8 @@ RULES:
               formatGP={formatGP}
               setSelectedItem={setSelectedItem}
               showToast={showToast}
-              supabase={supabase}
-              user={user}
+              supabase={demoMode ? { from: () => ({ select: () => ({ eq: () => ({ not: () => ({ order: () => Promise.resolve({ data: [] }) }) }), order: () => Promise.resolve({ data: [] }), single: () => Promise.resolve({ data: null }) }), on: () => ({ subscribe: () => ({}) }) }, channel: () => ({ on: () => ({ subscribe: () => ({}) }) }), removeChannel: () => {} } : supabase}
+              user={demoMode ? null : user}
               onUpdateCapital={() => setShowCapitalSetup(true)}
               onAddPosition={addPositionFromMerchant}
               smartAlertSettings={smartAlertSettings}
@@ -6185,6 +6414,116 @@ RULES:
           </>
           )}
         </div>
+
+        {/* ── DEMO TOUR ── */}
+        {demoMode && demoTourReady && demoTourStep >= 0 && (() => {
+          const step = DEMO_TOUR_STEPS[demoTourStep];
+          const isCenter = step.placement === "center" || !step.target || !demoTourRect;
+          const hl = demoTourRect || {};
+          const PAD = 10;
+          const TW = 340; // tooltip width
+          const TH = 260; // tooltip approx height
+          const VW = window.innerWidth;
+          const VH = window.innerHeight;
+
+          function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+          let ttStyle = {};
+          if (isCenter) {
+            ttStyle = {}; // handled by .center class
+          } else {
+            const spaceBelow = VH - (hl.top + hl.height);
+            const spaceAbove = hl.top;
+            const spaceRight = VW - (hl.left + hl.width);
+
+            if (step.placement === "top" || (step.placement === "bottom" && spaceBelow < TH + PAD * 2)) {
+              // prefer above
+              if (spaceAbove >= TH + PAD * 2) {
+                ttStyle = {
+                  top: clamp(hl.top - TH - PAD * 2, 70, VH - TH - 16),
+                  left: clamp(hl.left, 16, VW - TW - 16),
+                };
+              } else {
+                ttStyle = {
+                  top: clamp(hl.top + hl.height + PAD, 70, VH - TH - 16),
+                  left: clamp(hl.left, 16, VW - TW - 16),
+                };
+              }
+            } else if (step.placement === "bottom") {
+              ttStyle = {
+                top: clamp(hl.top + hl.height + PAD, 70, VH - TH - 16),
+                left: clamp(hl.left, 16, VW - TW - 16),
+              };
+            } else if (step.placement === "left") {
+              if (spaceRight >= TW + PAD * 2) {
+                ttStyle = {
+                  top: clamp(hl.top, 70, VH - TH - 16),
+                  left: clamp(hl.left + hl.width + PAD, 16, VW - TW - 16),
+                };
+              } else {
+                ttStyle = {
+                  top: clamp(hl.top, 70, VH - TH - 16),
+                  left: clamp(hl.left - TW - PAD, 16, VW - TW - 16),
+                };
+              }
+            }
+          }
+
+          return (
+            <>
+              {/* Backdrop */}
+              {!isCenter && <div className="demo-tour-backdrop" onClick={() => advanceDemoTour(demoTourStep + 1)} />}
+              {isCenter && <div className="demo-tour-backdrop" />}
+
+              {/* Highlight ring */}
+              {!isCenter && demoTourRect && (
+                <div className="demo-tour-highlight" style={{
+                  top: hl.top - PAD, left: hl.left - PAD,
+                  width: hl.width + PAD * 2, height: hl.height + PAD * 2,
+                }} />
+              )}
+
+              {/* Tooltip */}
+              <div className={`demo-tour-tooltip${isCenter ? " center" : ""}`} style={isCenter ? {} : ttStyle}>
+                <div className="demo-tour-label">
+                  RuneTrader Demo · Step {demoTourStep + 1} of {DEMO_TOUR_STEPS.length}
+                </div>
+                <div className="demo-tour-title">{step.title}</div>
+                <div className="demo-tour-desc">{step.desc}</div>
+                <div className="demo-tour-actions">
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <button className="demo-tour-skip" onClick={endDemoTour}>Skip tour</button>
+                    <div className="demo-tour-dots">
+                      {DEMO_TOUR_STEPS.map((_, i) => (
+                        <div key={i} className={"demo-tour-dot" + (i === demoTourStep ? " active" : "")} />
+                      ))}
+                    </div>
+                  </div>
+                  <button className="demo-tour-next" onClick={() => advanceDemoTour(demoTourStep + 1)}>
+                    {demoTourStep === DEMO_TOUR_STEPS.length - 1 ? "Finish →" : "Next →"}
+                  </button>
+                </div>
+              </div>
+            </>
+          );
+        })()}
+
+        {/* DEMO TOUR END SCREEN */}
+        {demoMode && demoTourStep === -2 && (
+          <div className="demo-tour-end-overlay">
+            <div style={{ fontSize: "48px" }}>⚔️</div>
+            <div className="demo-tour-end-title">Ready to flip smarter?</div>
+            <div className="demo-tour-end-sub">
+              You’ve seen what RuneTrader can do. Free to start — install the RuneLite plugin and you’re live in 2 minutes.
+            </div>
+            <button className="demo-tour-end-cta" onClick={() => { setDemoTourStep(-1); setDemoMode(false); setShowAuth(true); }}>
+              Create Free Account →
+            </button>
+            <button className="demo-tour-end-dismiss" onClick={() => { setDemoTourStep(-1); }}>
+              Keep exploring the demo
+            </button>
+          </div>
+        )}
 
         {/* ── GLOBAL AI BUBBLE (all pages) ── */}
         {!merchantAIOpen && (
