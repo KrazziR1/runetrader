@@ -4546,19 +4546,29 @@ export default function RuneTrader() {
   function endDemoTour() {
     setDemoTourStep(-1);
     setDemoTourRect(null);
-    // Reset merchant mode fake data
-    if (!user) {
-      setMerchantMode(false);
-      setMerchantCapital(0);
-      setAutoFlipsLog([]);
-      setPnlHistory([]);
-      setMerchantPositions([]);
+    setDemoMerchantIntro(false);
+    // Always reset demo-injected merchant data and reload real data
+    setMerchantMode(false);
+    setMerchantCapital(0);
+    setAutoFlipsLog([]);
+    setPnlHistory([]);
+    setMerchantPositions([]);
+    // Reload real data for logged-in users
+    if (user) {
+      loadMerchantSettings();
+      supabase.from("ge_flips_live").select("*").eq("user_id", user.id)
+        .then(({ data }) => setAutoFlipsLog(data || []));
+      supabase.from("positions").select("*")
+        .then(({ data }) => setMerchantPositions(data || []));
     }
   }
 
   // Auto-start demo tour when demoMode activates
   useEffect(() => {
     if (!demoMode) return; // don’t run on initial mount (default false)
+    // Force out of Merchant Mode and back to Market before tour starts
+    setMerchantMode(false);
+    setMerchantAIOpen(false);
     setActiveTab("market");
     startDemoTour();
   }, [demoMode]); // eslint-disable-line
