@@ -1,379 +1,4 @@
-
-
-        {activeView === "alerts" && (
-          <div className="merchant-layout">
-            <div className="merchant-left">
-
-              {/* Alert toggles */}
-              <div id="tour-smart-alerts" className="merchant-section">
-                <div className="merchant-section-header">
-                  <span className="merchant-section-title">⚡ Smart Alerts</span>
-                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Auto-fires on market shifts</span>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                  {[
-                    { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps above threshold",    unit: "%",  min: 5,   max: 200, step: 5   },
-                    { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Volume multiplies suddenly",      unit: "x",  min: 1.5, max: 10,  step: 0.5 },
-                    { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops sharply",        unit: "%",  min: 2,   max: 50,  step: 1   },
-                    { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy & sell price collapse",  unit: "%",  min: 2,   max: 50,  step: 1   },
-                  ].map(({ key, icon, label, desc, unit, min, max, step }) => (
-                    <div key={key} className="m-smart-alert-row">
-                      <div style={{ display: "flex", flexDirection: "column", gap: "2px", flex: 1 }}>
-                        <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "5px" }}>{icon} {label}</div>
-                        <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{desc}</div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-                        <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} thresholds={thresholds} openPopover={openPopover} setOpenPopover={setOpenPopover} saveThreshold={saveThreshold} />
-                        <label className="toggle-switch">
-                          <input type="checkbox" checked={smartAlertSettings?.[key] ?? true} onChange={e => saveSmartAlertSettings?.(key, e.target.checked)} />
-                          <span className="toggle-slider"></span>
-                        </label>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Live Feed */}
-              <div id="tour-live-feed" className="merchant-section" style={{ flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span className="merchant-section-title" style={{ marginBottom: 0 }}>📡 Live Feed</span>
-                    {smartEvents?.length > 0 && (
-                      <span style={{ background: "rgba(201,168,76,0.2)", border: "1px solid var(--gold-dim)", borderRadius: "10px", padding: "1px 7px", fontSize: "10px", color: "var(--gold)", fontWeight: 700 }}>
-                        {smartEvents.length}
-                      </span>
-                    )}
-                  </div>
-                  {smartEvents?.length > 0 && (
-                    <button style={{ background: "transparent", border: "1px solid var(--border)", borderRadius: "5px", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", padding: "3px 8px", fontFamily: "Inter, sans-serif" }}
-                      onClick={() => setSmartEvents?.([])}>Clear</button>
-                  )}
-                </div>
-                {smartEvents?.length > 0 && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
-                    <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                      {[["all","All"],["spike","📈 Margin"],["surge","🔥 Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"],["autopilot","🤖 Autopilot"]].map(([v,l]) => (
-                        <button key={v} onClick={() => setMerchantFeedFilter(v)}
-                          style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
-                          {l}
-                        </button>
-                      ))}
-                    </div>
-                    <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-                      <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>Sort:</span>
-                      {[["recent","Recent"],["change","% Change"],["margin","Margin"]].map(([v,l]) => (
-                        <button key={v} onClick={() => { if (merchantFeedSort === v) { setMerchantFeedSortDir(d => d === "desc" ? "asc" : "desc"); } else { setMerchantFeedSort(v); setMerchantFeedSortDir("desc"); } }}
-                          style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "3px" }}>
-                          {l}{merchantFeedSort === v && <span style={{ fontSize: "9px" }}>{merchantFeedSortDir === "desc" ? "▼" : "▲"}</span>}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <div className="smart-events-list" style={{ borderRadius: "8px" }}>
-                  {(() => {
-                    const mDir = merchantFeedSortDir === "asc" ? 1 : -1;
-                    let feed = (smartEvents || []).filter(e => !merchantFeedFilter || merchantFeedFilter === "all" || e.badge === merchantFeedFilter);
-                    if (merchantFeedSort === "change") {
-                      feed = [...feed].sort((a, b) => {
-                        const pA = a.oldVal ? Math.abs((a.newVal - a.oldVal) / Math.abs(a.oldVal)) : 0;
-                        const pB = b.oldVal ? Math.abs((b.newVal - b.oldVal) / Math.abs(b.oldVal)) : 0;
-                        return mDir * (pA - pB);
-                      });
-                    } else if (merchantFeedSort === "margin") {
-                      feed = [...feed].sort((a, b) => {
-                        const mA = allItems.find(i => i.id === a.itemId)?.margin || 0;
-                        const mB = allItems.find(i => i.id === b.itemId)?.margin || 0;
-                        return mDir * (mA - mB);
-                      });
-                    } else {
-                      feed = [...feed].sort((a, b) => mDir * (new Date(a.time) - new Date(b.time)));
-                    }
-                    if (feed.length === 0) return (
-                      <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
-                        <div style={{ fontSize: "32px", marginBottom: "8px", opacity: 0.4 }}>📡</div>
-                        No alerts yet. Monitoring every 30 seconds.
-                      </div>
-                    );
-                    return feed.map(e => {
-                      const liveItem = allItems.find(i => i.id === e.itemId) || allItems.find(i => i.name === e.itemName);
-                      return (
-                        <div key={e.id} className="smart-event-row" style={{ cursor: liveItem ? "pointer" : "default" }}
-                          onClick={() => liveItem && setSelectedItem(liveItem)}>
-                          <span className="smart-event-icon">{e.icon}</span>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                              <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)", cursor: liveItem ? "pointer" : "default" }}>{e.itemName}</span>
-                              <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
-                              {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view →</span>}
-                            </div>
-                            <div className="smart-event-msg">{e.message}</div>
-                            {liveItem && (
-                              <div style={{ display: "flex", gap: "12px", marginTop: "4px", fontSize: "11px" }}>
-                                <span style={{ color: "var(--text-dim)" }}>Margin: <span style={{ color: liveItem.margin > 0 ? "var(--green)" : "var(--red)" }}>{formatGP(liveItem.margin)}</span></span>
-                                <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: liveItem.roi > 4 ? "var(--gold)" : liveItem.roi >= 1 ? "var(--green)" : "#f39c12" }}>{liveItem.roi}%</span></span>
-                              </div>
-                            )}
-                          </div>
-                          <span className="smart-event-time">{formatTime(e.time)}</span>
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              </div>
-            </div>
-
-            <div className="merchant-right">
-              <div className="m-panel-section">
-                <div className="m-panel-title">📊 Alert Summary</div>
-                {smartEvents?.length === 0 ? (
-                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No events fired this session.</div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {[
-                      { badge: "spike", icon: "📈", label: "Margin Spikes" },
-                      { badge: "surge", icon: "🔥", label: "Volume Surges" },
-                      { badge: "dump",  icon: "⚠️", label: "Dumps Detected" },
-                      { badge: "crash", icon: "💥", label: "Price Crashes" },
-                    ].map(({ badge, icon, label }) => {
-                      const count = (smartEvents || []).filter(e => e.badge === badge).length;
-                      return (
-                        <div key={badge} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "var(--bg3)", borderRadius: "6px", border: "1px solid var(--border)" }}>
-                          <span style={{ fontSize: "12px", color: "var(--text)" }}>{icon} {label}</span>
-                          <span style={{ fontSize: "13px", fontWeight: 700, color: count > 0 ? "var(--gold)" : "var(--text-dim)" }}>{count}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeView === "market" && (
-          <div className="merchant-layout">
-            <div className="merchant-left" style={{ paddingTop: "20px" }}>
-
-            {/* Filter bar */}
-            <div className="filter-bar" style={{ marginBottom: "12px" }}>
-              <span className="filter-label">Filter:</span>
-              {["all", "f2p", "members", "highvol", "favourites"].map(f => (
-                <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `⭐ Favourites${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
-                </button>
-              ))}
-              <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
-              <button
-                className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
-                onClick={() => setShowAdvFilters(v => !v)}
-              >
-                ⚙ Filters {advFilterCount > 0 && <span className="adv-filter-badge">{advFilterCount}</span>}
-              </button>
-            </div>
-
-            {/* Advanced filter panel */}
-            {showAdvFilters && (
-              <div className="adv-filter-panel" style={{ marginBottom: "12px" }}>
-                <div className="adv-filter-group">
-                  <div className="adv-filter-label">Margin (gp)</div>
-                  <div className="adv-filter-row">
-                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minMargin} onChange={e => setAdv("minMargin", e.target.value)} type="number" />
-                    <span className="adv-filter-sep">–</span>
-                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxMargin} onChange={e => setAdv("maxMargin", e.target.value)} type="number" />
-                  </div>
-                </div>
-                <div className="adv-filter-group">
-                  <div className="adv-filter-label">ROI (%)</div>
-                  <div className="adv-filter-row">
-                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minRoi} onChange={e => setAdv("minRoi", e.target.value)} type="number" step="0.1" />
-                    <span className="adv-filter-sep">–</span>
-                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxRoi} onChange={e => setAdv("maxRoi", e.target.value)} type="number" step="0.1" />
-                  </div>
-                </div>
-                <div className="adv-filter-group">
-                  <div className="adv-filter-label">Vol/Day</div>
-                  <div className="adv-filter-row">
-                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minVolume} onChange={e => setAdv("minVolume", e.target.value)} type="number" />
-                    <span className="adv-filter-sep">–</span>
-                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxVolume} onChange={e => setAdv("maxVolume", e.target.value)} type="number" />
-                  </div>
-                </div>
-                <div className="adv-filter-group">
-                  <div className="adv-filter-label">Buy Price (gp)</div>
-                  <div className="adv-filter-row">
-                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minPrice} onChange={e => setAdv("minPrice", e.target.value)} type="number" />
-                    <span className="adv-filter-sep">–</span>
-                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxPrice} onChange={e => setAdv("maxPrice", e.target.value)} type="number" />
-                  </div>
-                </div>
-                <div className="adv-filter-group">
-                  <div className="adv-filter-label">Min GP/Fill</div>
-                  <input className="adv-filter-input" placeholder="e.g. 500000" value={advFilters.minGpFill} onChange={e => setAdv("minGpFill", e.target.value)} type="number" />
-                </div>
-                <div className="adv-filter-group">
-                  <div className="adv-filter-label">Last Traded Within</div>
-                  <div className="adv-filter-row" style={{ flexWrap: "wrap", gap: "6px" }}>
-                    {[["1", "1hr"], ["6", "6hr"], ["24", "24hr"], ["168", "7d"]].map(([val, label]) => (
-                      <button key={val}
-                        className={`filter-btn${advFilters.maxLastTrade === val ? " active" : ""}`}
-                        style={{ fontSize: "11px", padding: "4px 10px" }}
-                        onClick={() => setAdv("maxLastTrade", advFilters.maxLastTrade === val ? "" : val)}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div className="adv-filter-group" style={{ justifyContent: "center", gap: "8px" }}>
-                  <label className={`adv-filter-toggle${advFilters.positiveOnly ? " active" : ""}`}>
-                    <input type="checkbox" checked={advFilters.positiveOnly} onChange={e => setAdv("positiveOnly", e.target.checked)} />
-                    Positive margin only
-                  </label>
-                  <label className={`adv-filter-toggle${advFilters.priceDataOnly ? " active" : ""}`}>
-                    <input type="checkbox" checked={advFilters.priceDataOnly} onChange={e => setAdv("priceDataOnly", e.target.checked)} />
-                    Has live price data
-                  </label>
-                </div>
-                <div className="adv-filter-footer">
-                  <span>{filtered.length.toLocaleString()} items match</span>
-                  {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>✕ Clear all filters</button>}
-                </div>
-              </div>
-            )}
-
-            {/* Table */}
-            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
-            <div className="flips-table">
-              <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>
-                {[
-                  ["name", "Item", null],
-                  ["low", "Buy Price", "Lowest current buy offer on the GE"],
-                  ["high", "Sell Price", "Highest current sell offer on the GE"],
-                  ["margin", "Margin", "Sell price minus buy price minus GE tax."],
-                  ["roi", "ROI", "Margin ÷ buy price."],
-                  ["volume", "Vol/Day", "Total items traded per day."],
-                  ["buylimit", "Limit", "Max items you can buy every 4 hours"],
-                  ["gpPerFill", "GP/Fill", "Realistic GP profit per 4hr window"],
-                  ["lastTradeTime", "Last Trade", "When this item last traded."],
-                ].map(([col, label, tip]) => (
-                  <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
-                    {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
-                    {tip && (
-                      <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
-                        <span className="stat-help">?</span>
-                        <span className="stat-tooltip">{tip}</span>
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-              {loading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>
-                    {Array.from({ length: 9 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}
-                  </div>
-                ))
-              ) : filtered.length === 0 ? (
-                <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
-              ) : (
-                filtered.slice(0, marketRowsShown).map(item => {
-                  const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
-                  const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
-                  const lim = item.buyLimit > 0 ? item.buyLimit : 500;
-                  const mkt4hr = item.volume / 6;
-                  let expFill;
-                  if      (item.volume >= 500_000) expFill = Math.min(lim, mkt4hr);
-                  else if (item.volume >= 100_000) expFill = Math.min(lim, mkt4hr * 0.6);
-                  else if (item.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
-                  else if (item.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
-                  else                             expFill = Math.min(lim, mkt4hr * 0.03);
-                  const gpPerFill = Math.round(item.margin * Math.max(expFill, 1));
-                  const gpPerFillMax = Math.round(item.margin * Math.min(lim, mkt4hr));
-                  return (
-                    <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }} onClick={() => setSelectedItem(item)}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }}>⭐</button>
-                        <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                        <div className="item-name">{item.name}</div>
-                      </div>
-                      <span className="price">{item.hasPrice ? formatGP(item.low) : "—"}</span>
-                      <span className="price">{item.hasPrice ? formatGP(item.high) : "—"}</span>
-                      <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
-                      <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "—"}</span>
-                      <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
-                        {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
-                        {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }}>⚠</span>}
-                      </span>
-                      <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
-                      <div>
-                        {item.hasPrice ? (
-                          <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1_000_000 ? "var(--green)" : gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}
-                            title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case: ${formatGP(gpPerFillMax)} GP`}>
-                            {formatGP(gpPerFill)}
-                          </span>
-                        ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
-                      </div>
-                      <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-            {!loading && filtered.length > marketRowsShown && (
-              <div style={{ textAlign: "center", padding: "16px 0" }}>
-                <button
-                  onClick={() => setMarketRowsShown(n => n + 200)}
-                  style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
-                  onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
-                  onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
-                >
-                  Load more ({filtered.length - marketRowsShown} remaining)
-                </button>
-              </div>
-            )}
-            </div>{/* end merchant-left */}
-            <div className="merchant-right" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ fontFamily: "'Cinzel', serif", fontSize: "12px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "4px" }}>Active Positions</div>
-              {(() => { const open = (manualPositions || []).filter(p => p.status !== "closed"); return open.length === 0 ? (
-                <div style={{ fontSize: "12px", color: "var(--text-dim)", textAlign: "center", padding: "24px 0" }}>No open positions</div>
-              ) : open.map(p => (
-                <div key={p.id} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 12px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                    <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{p.item_name}</span>
-                    <span style={{ fontSize: "12px", color: p.pnl >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>{p.pnl >= 0 ? "+" : ""}{formatGP(p.pnl || 0)}</span>
-                  </div>
-                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {(p.slot||0)+1} · {p.status} · {p.qty} qty</div>
-                </div>
-              )); })()
-              }
-            </div>{/* end merchant-right */}
-          </div>
-        )}
-
-      </div>
-    </div>
-
-    {/* Close Position Modal */}
-    {closingPos && (() => {
-      const flip = closingPos.type === "tracker"
-        ? flipsLog.find(f => f.id === closingPos.pos.id)
-        : { id: closingPos.pos.id, item: closingPos.pos.name, buyPrice: closingPos.pos.buyPrice, qty: closingPos.pos.qty };
-      if (!flip) return null;
-      return (
-        <CloseFlipModal
-          flip={flip}
-          items={items}
-          onSold={(f, sellPrice) => { if (closingPos.type === "tracker") onCloseFlip(f, sellPrice); else onClosePortfolioPos(closingPos.pos, sellPrice); setClosingPos(null); }}
-          onCancelled={(f) => { if (closingPos.type === "tracker") onCloseFlip(f, null, true); else onClosePortfolioPos(closingPos.pos, null, true); setClosingPos(null); }}
-          onDismiss={() => setClosingPos(null)}
-          loading={false}
-        />
-      );
-    })()}
-    </>
-  )import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import { supabase } from "./supabaseClient";
@@ -505,11 +130,6 @@ const STYLES = `
   .upgrade-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(201,168,76,0.4); }
   .upgrade-dismiss { font-size: 12px; color: var(--text-dim); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; transition: color 0.15s; }
   .upgrade-dismiss:hover { color: var(--text); }
-  /* SOFT GATE */
-  .soft-gate-wrap { position: relative; display: inline-flex; }
-  .soft-gate-lock { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; border-radius: 6px; background: rgba(10,12,15,0.6); cursor: pointer; z-index: 2; transition: background 0.15s; }
-  .soft-gate-lock:hover { background: rgba(10,12,15,0.75); }
-  .soft-gate-icon { font-size: 13px; opacity: 0.8; }
 
   /* REFRESH BUTTON */
   .refresh-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
@@ -2746,8 +2366,380 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
         )}
 
         {/* ══════════════════════ ALERTS VIEW ══════════════════════ */}
+        {activeView === "alerts" && (
+          <div className="merchant-layout">
+            <div className="merchant-left">
 
-;
+              {/* Alert toggles */}
+              <div id="tour-smart-alerts" className="merchant-section">
+                <div className="merchant-section-header">
+                  <span className="merchant-section-title">⚡ Smart Alerts</span>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Auto-fires on market shifts</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                  {[
+                    { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps above threshold",    unit: "%",  min: 5,   max: 200, step: 5   },
+                    { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Volume multiplies suddenly",      unit: "x",  min: 1.5, max: 10,  step: 0.5 },
+                    { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops sharply",        unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy & sell price collapse",  unit: "%",  min: 2,   max: 50,  step: 1   },
+                  ].map(({ key, icon, label, desc, unit, min, max, step }) => (
+                    <div key={key} className="m-smart-alert-row">
+                      <div style={{ display: "flex", flexDirection: "column", gap: "2px", flex: 1 }}>
+                        <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "5px" }}>{icon} {label}</div>
+                        <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{desc}</div>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                        <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} thresholds={thresholds} openPopover={openPopover} setOpenPopover={setOpenPopover} saveThreshold={saveThreshold} />
+                        <label className="toggle-switch">
+                          <input type="checkbox" checked={smartAlertSettings?.[key] ?? true} onChange={e => saveSmartAlertSettings?.(key, e.target.checked)} />
+                          <span className="toggle-slider"></span>
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Live Feed */}
+              <div id="tour-live-feed" className="merchant-section" style={{ flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span className="merchant-section-title" style={{ marginBottom: 0 }}>📡 Live Feed</span>
+                    {smartEvents?.length > 0 && (
+                      <span style={{ background: "rgba(201,168,76,0.2)", border: "1px solid var(--gold-dim)", borderRadius: "10px", padding: "1px 7px", fontSize: "10px", color: "var(--gold)", fontWeight: 700 }}>
+                        {smartEvents.length}
+                      </span>
+                    )}
+                  </div>
+                  {smartEvents?.length > 0 && (
+                    <button style={{ background: "transparent", border: "1px solid var(--border)", borderRadius: "5px", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", padding: "3px 8px", fontFamily: "Inter, sans-serif" }}
+                      onClick={() => setSmartEvents?.([])}>Clear</button>
+                  )}
+                </div>
+                {smartEvents?.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
+                    <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
+                      {[["all","All"],["spike","📈 Margin"],["surge","🔥 Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"],["autopilot","🤖 Autopilot"]].map(([v,l]) => (
+                        <button key={v} onClick={() => setMerchantFeedFilter(v)}
+                          style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                      <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>Sort:</span>
+                      {[["recent","Recent"],["change","% Change"],["margin","Margin"]].map(([v,l]) => (
+                        <button key={v} onClick={() => { if (merchantFeedSort === v) { setMerchantFeedSortDir(d => d === "desc" ? "asc" : "desc"); } else { setMerchantFeedSort(v); setMerchantFeedSortDir("desc"); } }}
+                          style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "3px" }}>
+                          {l}{merchantFeedSort === v && <span style={{ fontSize: "9px" }}>{merchantFeedSortDir === "desc" ? "▼" : "▲"}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="smart-events-list" style={{ borderRadius: "8px" }}>
+                  {(() => {
+                    const mDir = merchantFeedSortDir === "asc" ? 1 : -1;
+                    let feed = (smartEvents || []).filter(e => !merchantFeedFilter || merchantFeedFilter === "all" || e.badge === merchantFeedFilter);
+                    if (merchantFeedSort === "change") {
+                      feed = [...feed].sort((a, b) => {
+                        const pA = a.oldVal ? Math.abs((a.newVal - a.oldVal) / Math.abs(a.oldVal)) : 0;
+                        const pB = b.oldVal ? Math.abs((b.newVal - b.oldVal) / Math.abs(b.oldVal)) : 0;
+                        return mDir * (pA - pB);
+                      });
+                    } else if (merchantFeedSort === "margin") {
+                      feed = [...feed].sort((a, b) => {
+                        const mA = allItems.find(i => i.id === a.itemId)?.margin || 0;
+                        const mB = allItems.find(i => i.id === b.itemId)?.margin || 0;
+                        return mDir * (mA - mB);
+                      });
+                    } else {
+                      feed = [...feed].sort((a, b) => mDir * (new Date(a.time) - new Date(b.time)));
+                    }
+                    if (feed.length === 0) return (
+                      <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
+                        <div style={{ fontSize: "32px", marginBottom: "8px", opacity: 0.4 }}>📡</div>
+                        No alerts yet. Monitoring every 30 seconds.
+                      </div>
+                    );
+                    return feed.map(e => {
+                      const liveItem = allItems.find(i => i.id === e.itemId) || allItems.find(i => i.name === e.itemName);
+                      return (
+                        <div key={e.id} className="smart-event-row" style={{ cursor: liveItem ? "pointer" : "default" }}
+                          onClick={() => liveItem && setSelectedItem(liveItem)}>
+                          <span className="smart-event-icon">{e.icon}</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                              <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)", cursor: liveItem ? "pointer" : "default" }}>{e.itemName}</span>
+                              <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
+                              {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view →</span>}
+                            </div>
+                            <div className="smart-event-msg">{e.message}</div>
+                            {liveItem && (
+                              <div style={{ display: "flex", gap: "12px", marginTop: "4px", fontSize: "11px" }}>
+                                <span style={{ color: "var(--text-dim)" }}>Margin: <span style={{ color: liveItem.margin > 0 ? "var(--green)" : "var(--red)" }}>{formatGP(liveItem.margin)}</span></span>
+                                <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: liveItem.roi > 4 ? "var(--gold)" : liveItem.roi >= 1 ? "var(--green)" : "#f39c12" }}>{liveItem.roi}%</span></span>
+                              </div>
+                            )}
+                          </div>
+                          <span className="smart-event-time">{formatTime(e.time)}</span>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            <div className="merchant-right">
+              <div className="m-panel-section">
+                <div className="m-panel-title">📊 Alert Summary</div>
+                {smartEvents?.length === 0 ? (
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No events fired this session.</div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {[
+                      { badge: "spike", icon: "📈", label: "Margin Spikes" },
+                      { badge: "surge", icon: "🔥", label: "Volume Surges" },
+                      { badge: "dump",  icon: "⚠️", label: "Dumps Detected" },
+                      { badge: "crash", icon: "💥", label: "Price Crashes" },
+                    ].map(({ badge, icon, label }) => {
+                      const count = (smartEvents || []).filter(e => e.badge === badge).length;
+                      return (
+                        <div key={badge} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 10px", background: "var(--bg3)", borderRadius: "6px", border: "1px solid var(--border)" }}>
+                          <span style={{ fontSize: "12px", color: "var(--text)" }}>{icon} {label}</span>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color: count > 0 ? "var(--gold)" : "var(--text-dim)" }}>{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeView === "market" && (
+          <div className="merchant-layout">
+            <div className="merchant-left" style={{ paddingTop: "20px" }}>
+
+            {/* Filter bar */}
+            <div className="filter-bar" style={{ marginBottom: "12px" }}>
+              <span className="filter-label">Filter:</span>
+              {["all", "f2p", "members", "highvol", "favourites"].map(f => (
+                <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
+                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `⭐ Favourites${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
+                </button>
+              ))}
+              <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
+              <button
+                className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
+                onClick={() => setShowAdvFilters(v => !v)}
+              >
+                ⚙ Filters {advFilterCount > 0 && <span className="adv-filter-badge">{advFilterCount}</span>}
+              </button>
+            </div>
+
+            {/* Advanced filter panel */}
+            {showAdvFilters && (
+              <div className="adv-filter-panel" style={{ marginBottom: "12px" }}>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">Margin (gp)</div>
+                  <div className="adv-filter-row">
+                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minMargin} onChange={e => setAdv("minMargin", e.target.value)} type="number" />
+                    <span className="adv-filter-sep">–</span>
+                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxMargin} onChange={e => setAdv("maxMargin", e.target.value)} type="number" />
+                  </div>
+                </div>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">ROI (%)</div>
+                  <div className="adv-filter-row">
+                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minRoi} onChange={e => setAdv("minRoi", e.target.value)} type="number" step="0.1" />
+                    <span className="adv-filter-sep">–</span>
+                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxRoi} onChange={e => setAdv("maxRoi", e.target.value)} type="number" step="0.1" />
+                  </div>
+                </div>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">Vol/Day</div>
+                  <div className="adv-filter-row">
+                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minVolume} onChange={e => setAdv("minVolume", e.target.value)} type="number" />
+                    <span className="adv-filter-sep">–</span>
+                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxVolume} onChange={e => setAdv("maxVolume", e.target.value)} type="number" />
+                  </div>
+                </div>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">Buy Price (gp)</div>
+                  <div className="adv-filter-row">
+                    <input className="adv-filter-input" placeholder="Min" value={advFilters.minPrice} onChange={e => setAdv("minPrice", e.target.value)} type="number" />
+                    <span className="adv-filter-sep">–</span>
+                    <input className="adv-filter-input" placeholder="Max" value={advFilters.maxPrice} onChange={e => setAdv("maxPrice", e.target.value)} type="number" />
+                  </div>
+                </div>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">Min GP/Fill</div>
+                  <input className="adv-filter-input" placeholder="e.g. 500000" value={advFilters.minGpFill} onChange={e => setAdv("minGpFill", e.target.value)} type="number" />
+                </div>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">Last Traded Within</div>
+                  <div className="adv-filter-row" style={{ flexWrap: "wrap", gap: "6px" }}>
+                    {[["1", "1hr"], ["6", "6hr"], ["24", "24hr"], ["168", "7d"]].map(([val, label]) => (
+                      <button key={val}
+                        className={`filter-btn${advFilters.maxLastTrade === val ? " active" : ""}`}
+                        style={{ fontSize: "11px", padding: "4px 10px" }}
+                        onClick={() => setAdv("maxLastTrade", advFilters.maxLastTrade === val ? "" : val)}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="adv-filter-group" style={{ justifyContent: "center", gap: "8px" }}>
+                  <label className={`adv-filter-toggle${advFilters.positiveOnly ? " active" : ""}`}>
+                    <input type="checkbox" checked={advFilters.positiveOnly} onChange={e => setAdv("positiveOnly", e.target.checked)} />
+                    Positive margin only
+                  </label>
+                  <label className={`adv-filter-toggle${advFilters.priceDataOnly ? " active" : ""}`}>
+                    <input type="checkbox" checked={advFilters.priceDataOnly} onChange={e => setAdv("priceDataOnly", e.target.checked)} />
+                    Has live price data
+                  </label>
+                </div>
+                <div className="adv-filter-footer">
+                  <span>{filtered.length.toLocaleString()} items match</span>
+                  {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>✕ Clear all filters</button>}
+                </div>
+              </div>
+            )}
+
+            {/* Table */}
+            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
+            <div className="flips-table">
+              <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>
+                {[
+                  ["name", "Item", null],
+                  ["low", "Buy Price", "Lowest current buy offer on the GE"],
+                  ["high", "Sell Price", "Highest current sell offer on the GE"],
+                  ["margin", "Margin", "Sell price minus buy price minus GE tax."],
+                  ["roi", "ROI", "Margin ÷ buy price."],
+                  ["volume", "Vol/Day", "Total items traded per day."],
+                  ["buylimit", "Limit", "Max items you can buy every 4 hours"],
+                  ["gpPerFill", "GP/Fill", "Realistic GP profit per 4hr window"],
+                  ["lastTradeTime", "Last Trade", "When this item last traded."],
+                ].map(([col, label, tip]) => (
+                  <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
+                    {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
+                    {tip && (
+                      <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
+                        <span className="stat-help">?</span>
+                        <span className="stat-tooltip">{tip}</span>
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              {loading ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>
+                    {Array.from({ length: 9 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}
+                  </div>
+                ))
+              ) : filtered.length === 0 ? (
+                <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
+              ) : (
+                filtered.slice(0, marketRowsShown).map(item => {
+                  const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
+                  const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
+                  const lim = item.buyLimit > 0 ? item.buyLimit : 500;
+                  const mkt4hr = item.volume / 6;
+                  let expFill;
+                  if      (item.volume >= 500_000) expFill = Math.min(lim, mkt4hr);
+                  else if (item.volume >= 100_000) expFill = Math.min(lim, mkt4hr * 0.6);
+                  else if (item.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
+                  else if (item.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
+                  else                             expFill = Math.min(lim, mkt4hr * 0.03);
+                  const gpPerFill = Math.round(item.margin * Math.max(expFill, 1));
+                  const gpPerFillMax = Math.round(item.margin * Math.min(lim, mkt4hr));
+                  return (
+                    <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }} onClick={() => setSelectedItem(item)}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }}>⭐</button>
+                        <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
+                        <div className="item-name">{item.name}</div>
+                      </div>
+                      <span className="price">{item.hasPrice ? formatGP(item.low) : "—"}</span>
+                      <span className="price">{item.hasPrice ? formatGP(item.high) : "—"}</span>
+                      <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
+                      <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "—"}</span>
+                      <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
+                        {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
+                        {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }}>⚠</span>}
+                      </span>
+                      <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
+                      <div>
+                        {item.hasPrice ? (
+                          <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1_000_000 ? "var(--green)" : gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}
+                            title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case: ${formatGP(gpPerFillMax)} GP`}>
+                            {formatGP(gpPerFill)}
+                          </span>
+                        ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
+                      </div>
+                      <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            {!loading && filtered.length > marketRowsShown && (
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
+                <button
+                  onClick={() => setMarketRowsShown(n => n + 200)}
+                  style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                  onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
+                  onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
+                >
+                  Load more ({filtered.length - marketRowsShown} remaining)
+                </button>
+              </div>
+            )}
+            </div>{/* end merchant-left */}
+            <div className="merchant-right" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: "12px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "4px" }}>Active Positions</div>
+              {(() => { const open = (manualPositions || []).filter(p => p.status !== "closed"); return open.length === 0 ? (
+                <div style={{ fontSize: "12px", color: "var(--text-dim)", textAlign: "center", padding: "24px 0" }}>No open positions</div>
+              ) : open.map(p => (
+                <div key={p.id} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 12px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{p.item_name}</span>
+                    <span style={{ fontSize: "12px", color: p.pnl >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>{p.pnl >= 0 ? "+" : ""}{formatGP(p.pnl || 0)}</span>
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {(p.slot||0)+1} · {p.status} · {p.qty} qty</div>
+                </div>
+              )); })()
+              }
+            </div>{/* end merchant-right */}
+          </div>
+        )}
+
+      </div>
+    </div>
+
+    {/* Close Position Modal */}
+    {closingPos && (() => {
+      const flip = closingPos.type === "tracker"
+        ? flipsLog.find(f => f.id === closingPos.pos.id)
+        : { id: closingPos.pos.id, item: closingPos.pos.name, buyPrice: closingPos.pos.buyPrice, qty: closingPos.pos.qty };
+      if (!flip) return null;
+      return (
+        <CloseFlipModal
+          flip={flip}
+          items={items}
+          onSold={(f, sellPrice) => { if (closingPos.type === "tracker") onCloseFlip(f, sellPrice); else onClosePortfolioPos(closingPos.pos, sellPrice); setClosingPos(null); }}
+          onCancelled={(f) => { if (closingPos.type === "tracker") onCloseFlip(f, null, true); else onClosePortfolioPos(closingPos.pos, null, true); setClosingPos(null); }}
+          onDismiss={() => setClosingPos(null)}
+          loading={false}
+        />
+      );
+    })()}
+    </>
+  );
 }
 
 
@@ -3470,7 +3462,6 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
 export default function RuneTrader() {
   const [showApp, setShowApp] = useState(false);
   const [user, setUser] = useState(null);
-  const [userRefCode, setUserRefCode] = useState(null); // this user's own referral code
   const [showAuth, setShowAuth] = useState(false);
   const [tourStep, setTourStep] = useState(-1);
   const [tourRects, setTourRects] = useState({});
@@ -3507,15 +3498,12 @@ export default function RuneTrader() {
         const createdAt = session?.user?.created_at;
         const isNewUser = createdAt && (Date.now() - new Date(createdAt).getTime()) < 10000;
         if (isNewUser) {
-          // ── Handle referral on new sign-up ──
+          // Handle referral on new sign-up
           const pendingRef = localStorage.getItem("rt_ref_code");
           if (pendingRef && session?.user?.id) {
             (async () => {
               const { data: referrerProfile } = await supabase
-                .from("user_profiles")
-                .select("user_id, ref_code")
-                .eq("ref_code", pendingRef)
-                .single();
+                .from("user_profiles").select("user_id").eq("ref_code", pendingRef).single();
               if (referrerProfile && referrerProfile.user_id !== session.user.id) {
                 await supabase.from("referrals").insert({
                   referrer_id: referrerProfile.user_id,
@@ -3528,7 +3516,7 @@ export default function RuneTrader() {
               }
             })();
           }
-          // ── Ensure new user gets their own ref code ──
+          // Give new user their own ref code
           (async () => {
             const newCode = session.user.id.slice(0, 8).toUpperCase();
             const { data } = await supabase.from("user_profiles")
@@ -3541,9 +3529,8 @@ export default function RuneTrader() {
             if (el) { const r = el.getBoundingClientRect(); setTourRects({ top: r.top, left: r.left, width: r.width, height: r.height }); }
             setTourStep(0);
           }, 800);
-        }
-        // ── Load ref code for existing users on login ──
-        if (!isNewUser && session?.user?.id) {
+        } else if (session?.user?.id) {
+          // Load ref code for returning users
           supabase.from("user_profiles").select("ref_code").eq("user_id", session.user.id).single()
             .then(({ data }) => { if (data?.ref_code) setUserRefCode(data.ref_code); });
         }
@@ -3578,7 +3565,8 @@ export default function RuneTrader() {
 
   // ── Merchant Mode ──
   const [merchantMode, setMerchantMode] = useState(false);
-  const [upgradeModal, setUpgradeModal] = useState(null); // null | { feature, description, bullets }
+  const [upgradeModal, setUpgradeModal] = useState(null);
+  const [userRefCode, setUserRefCode] = useState(null);
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
   const [showMerchantShutdown, setShowMerchantShutdown] = useState(false);
   const [merchantTransitioning, setMerchantTransitioning] = useState(false);
@@ -4987,7 +4975,7 @@ RULES:
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         {merchantMode
                           ? <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} thresholds={thresholds} openPopover={openPopover} setOpenPopover={setOpenPopover} saveThreshold={saveThreshold} />
-                          : <button title="Custom thresholds — Merchant Mode feature" onClick={() => setUpgradeModal({ feature: "Custom Alert Thresholds", description: "Fine-tune exactly when each alert fires — set your own percentage triggers for margin spikes, dumps, crashes and more.", bullets: ["Adjust margin spike sensitivity (5–200%)", "Set dump & crash detection thresholds", "Tune volume surge multiplier", "Per-alert granular control"] })} style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", padding: "3px 8px", cursor: "pointer", fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", gap: "4px" }}>🔒 ⚙</button>
+                          : <button title="Custom thresholds — Merchant Mode feature" onClick={() => setUpgradeModal({ feature: "Custom Alert Thresholds", description: "Fine-tune exactly when each alert fires — set your own percentage triggers per alert type.", bullets: ["Adjust margin spike sensitivity (5–200%)", "Set dump & crash detection thresholds", "Tune volume surge multiplier", "Per-alert granular control"] })} style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", padding: "3px 8px", cursor: "pointer", fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", gap: "4px" }}>🔒 ⚙</button>
                         }
                         <label className="toggle-switch">
                           <input type="checkbox" checked={smartAlertSettings[key]} onChange={e => saveSmartAlertSettings(key, e.target.checked)} />
@@ -5463,15 +5451,13 @@ RULES:
                     </button>
                   ))}
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
-                  <div className="soft-gate-wrap">
-                    <button
-                      className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}${!merchantMode ? " gated" : ""}`}
-                      onClick={() => merchantMode ? setShowAdvFilters(v => !v) : setUpgradeModal({ feature: "Advanced Filters", description: "Filter by margin range, ROI, GP/fill, buy limit, and more to pinpoint exactly the flips you want.", bullets: ["Min/max margin & ROI filters", "GP/fill threshold filtering", "Price data freshness filter", "Stacks with all other filters"] })}
-                    >
-                      {!merchantMode && <span style={{ fontSize: "11px", marginRight: "2px" }}>🔒</span>}
-                      ⚙ Filters {advFilterCount > 0 && merchantMode && <span className="adv-filter-badge">{advFilterCount}</span>}
-                    </button>
-                  </div>
+                  <button
+                    className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
+                    onClick={() => merchantMode ? setShowAdvFilters(v => !v) : setUpgradeModal({ feature: "Advanced Filters", description: "Filter by margin range, ROI, GP/fill, buy limit and more to find exactly the flips you want.", bullets: ["Min/max margin & ROI filters", "GP/fill threshold filtering", "Price data freshness filter", "Stacks with all other filters"] })}
+                  >
+                    {!merchantMode && <span style={{ fontSize: "11px", marginRight: "2px" }}>🔒</span>}
+                    ⚙ Filters {advFilterCount > 0 && merchantMode && <span className="adv-filter-badge">{advFilterCount}</span>}
+                  </button>
                   <button
                     className="refresh-btn"
                     onClick={() => fetchPrices(true)}
@@ -5483,9 +5469,9 @@ RULES:
                   </button>
                   <button
                     className="refresh-btn"
-                    title={merchantMode ? "Export current view to CSV" : "Merchant Mode feature — upgrade to export"}
+                    title={merchantMode ? "Export current view to CSV" : "Merchant Mode feature"}
                     onClick={() => {
-                      if (!merchantMode) { setUpgradeModal({ feature: "CSV Export", description: "Export the full market view to a spreadsheet for offline analysis.", bullets: ["Export all 4,525 items or your filtered view", "Includes margin, ROI, volume, GP/fill", "Works with Excel, Google Sheets"] }); return; }
+                      if (!merchantMode) { setUpgradeModal({ feature: "CSV Export", description: "Export your filtered market view to a spreadsheet for offline analysis.", bullets: ["Export all 4,525 items or filtered view", "Includes margin, ROI, volume, GP/fill", "Works with Excel & Google Sheets"] }); return; }
                       const rows = filtered.slice(0, marketRowsShown);
                       const headers = ["Name", "Category", "Buy Price", "Sell Price", "Margin", "ROI %", "Vol/Day", "Buy Limit", "GP/Fill", "Last Trade"];
                       const csvRows = rows.map(item => {
