@@ -48,7 +48,7 @@ export default function ReferralPage({ user, supabase, showToast }) {
 
   const converted = referrals.filter(r => r.status === "converted").length;
   const pending = referrals.filter(r => r.status === "signed_up").length;
-  const progressPct = Math.min((referralCount / 10) * 100, 100);
+  const progressPct = Math.min((referralCount / 3) * 100, 100);
 
   function copyLink() {
     if (!refLink) return;
@@ -75,7 +75,7 @@ export default function ReferralPage({ user, supabase, showToast }) {
           <span style={{ fontSize: "24px" }}>👑</span>
           <div>
             <div style={{ fontFamily: "Cinzel, serif", fontSize: "14px", fontWeight: 700, color: "var(--gold)" }}>Pro for Life — Unlocked</div>
-            <div style={{ fontSize: "13px", color: "var(--text-dim)", marginTop: "2px" }}>You referred 10 friends. RuneTrader Pro is yours forever, free of charge.</div>
+            <div style={{ fontSize: "13px", color: "var(--text-dim)", marginTop: "2px" }}>You referred 3 friends. RuneTrader Pro is yours forever, free of charge.</div>
           </div>
         </div>
       )}
@@ -86,7 +86,7 @@ export default function ReferralPage({ user, supabase, showToast }) {
           Your Referral Link
         </div>
         <p style={{ fontSize: "14px", color: "var(--text-dim)", lineHeight: 1.6, margin: 0 }}>
-          Share your link with friends. When they sign up and upgrade to Pro, you both get <strong style={{ color: "var(--text)" }}>50% off your first month</strong>. Refer 10 paying friends and get <strong style={{ color: "var(--gold)" }}>Pro free for life</strong>.
+          Share your link with friends. When they sign up and upgrade to Pro, you both get <strong style={{ color: "var(--text)" }}>50% off your first month</strong>. Refer 3 paying friends and get <strong style={{ color: "var(--gold)" }}>Pro free for life</strong>.
         </p>
 
         {loading ? (
@@ -147,15 +147,15 @@ export default function ReferralPage({ user, supabase, showToast }) {
               👑 Pro for Life Progress
             </div>
             <div style={{ fontSize: "13px", color: "var(--gold)", fontWeight: 600 }}>
-              {referralCount} / 10 referrals
+              {referralCount} / 3 referrals
             </div>
           </div>
           <div style={{ background: "var(--bg4)", borderRadius: "6px", height: "8px", overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${progressPct}%`, background: "linear-gradient(90deg, var(--gold-dim), var(--gold))", borderRadius: "6px", transition: "width 0.4s ease" }} />
           </div>
           <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>
-            {10 - referralCount > 0
-              ? `Refer ${10 - referralCount} more friend${10 - referralCount !== 1 ? "s" : ""} who upgrade to Pro and get RuneTrader Pro free for life.`
+            {3 - referralCount > 0
+              ? `Refer ${3 - referralCount} more friend${3 - referralCount !== 1 ? "s" : ""} who upgrade to Pro and get RuneTrader Pro free for life.`
               : "You're almost there!"}
           </div>
         </div>

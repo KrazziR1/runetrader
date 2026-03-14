@@ -3,7 +3,7 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { createClient } = require("@supabase/supabase-js");
 
 const REFERRAL_COUPON = "sAvO4kCM";
-const LIFETIME_PRO_THRESHOLD = 10;
+const LIFETIME_PRO_THRESHOLD = 3;
 
 const supabase = createClient(
   process.env.REACT_APP_SUPABASE_URL,
@@ -103,30 +103,37 @@ module.exports = async function handler(req, res) {
             is_pro: true,
           }).eq("user_id", referral.referrer_id);
 
-          // Apply 50% coupon to referrer's next invoice if they have a Stripe customer
-          if (referrerProfile?.stripe_customer_id && !referrerProfile?.lifetime_pro) {
-            try {
-              // Check referrer hasn't already used their referral discount
-              const { data: referrerDiscount } = await supabase
-                .from("user_profiles")
-                .select("referral_discount_used")
-                .eq("user_id", referral.referrer_id)
-                .single();
+          // Apply 50% coupon to referrer — or store pending discount if not yet a Stripe customer
+          if (!referrerProfile?.lifetime_pro) {
+            const { data: referrerDiscount } = await supabase
+              .from("user_profiles")
+              .select("referral_discount_used, pending_referral_discount")
+              .eq("user_id", referral.referrer_id)
+              .single();
 
-              if (!referrerDiscount?.referral_discount_used) {
-                await stripe.customers.update(referrerProfile.stripe_customer_id, {
-                  coupon: REFERRAL_COUPON,
-                });
+            if (!referrerDiscount?.referral_discount_used && !referrerDiscount?.pending_referral_discount) {
+              if (referrerProfile?.stripe_customer_id) {
+                // Referrer already has Stripe customer — apply coupon directly
+                try {
+                  await stripe.customers.update(referrerProfile.stripe_customer_id, {
+                    coupon: REFERRAL_COUPON,
+                  });
+                  await supabase.from("user_profiles")
+                    .update({ referral_discount_used: true })
+                    .eq("user_id", referral.referrer_id);
+                } catch (couponErr) {
+                  console.error("Coupon apply error:", couponErr.message);
+                }
+              } else {
+                // Referrer hasn't paid yet — store pending discount for when they upgrade
                 await supabase.from("user_profiles")
-                  .update({ referral_discount_used: true })
+                  .update({ pending_referral_discount: true })
                   .eq("user_id", referral.referrer_id);
               }
-            } catch (couponErr) {
-              console.error("Coupon apply error:", couponErr.message);
             }
           }
 
-          // If referrer hit 10 referrals, cancel their subscription (now free for life)
+          // If referrer hit 3 referrals, cancel their subscription (now free for life)
           if (earnedLifetimePro && referrerProfile?.stripe_customer_id) {
             try {
               const subs = await stripe.subscriptions.list({
@@ -143,6 +150,46 @@ module.exports = async function handler(req, res) {
               console.error("Lifetime pro sub cancel error:", cancelErr.message);
             }
           }
+        }
+      }
+    }
+
+    // Safety net: on every successful payment, check lifetime_pro and apply pending discount
+    if (type === "invoice.payment_succeeded") {
+      const customerId = obj.customer;
+      const subscriptionId = obj.subscription;
+      if (!customerId || !subscriptionId) return res.status(200).json({ received: true });
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("user_id, lifetime_pro, pending_referral_discount, referral_discount_used")
+        .eq("stripe_customer_id", customerId)
+        .single();
+
+      if (profile?.lifetime_pro) {
+        // Cancel subscription — they shouldn't be paying
+        try {
+          const sub = await stripe.subscriptions.retrieve(subscriptionId);
+          if (sub.status === "active" && !sub.cancel_at_period_end) {
+            await stripe.subscriptions.update(subscriptionId, { cancel_at_period_end: true });
+          }
+        } catch (err) {
+          console.error("Lifetime pro cancel error:", err.message);
+        }
+        await supabase.from("user_profiles")
+          .update({ is_pro: true, pro_expires_at: null })
+          .eq("user_id", profile.user_id);
+      }
+
+      // Apply pending referral discount on this invoice if not yet used
+      if (profile?.pending_referral_discount && !profile?.referral_discount_used) {
+        try {
+          await stripe.customers.update(customerId, { coupon: REFERRAL_COUPON });
+          await supabase.from("user_profiles")
+            .update({ pending_referral_discount: false, referral_discount_used: true })
+            .eq("user_id", profile.user_id);
+        } catch (err) {
+          console.error("Pending discount apply error:", err.message);
         }
       }
     }

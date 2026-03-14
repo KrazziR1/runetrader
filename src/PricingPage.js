@@ -179,7 +179,7 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
               <span style={{ fontSize: "20px", flexShrink: 0 }}>🎁</span>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", marginBottom: "4px" }}>You get</div>
-                <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.5 }}>50% off your first month when your friend upgrades. Refer 10 friends → <span style={{ color: "var(--gold)", fontWeight: 600 }}>Pro free for life</span>.</div>
+                <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.5 }}>50% off your first month when your friend upgrades. Refer 3 friends → <span style={{ color: "var(--gold)", fontWeight: 600 }}>Pro free for life</span>.</div>
               </div>
             </div>
             <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "10px", padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start" }}>

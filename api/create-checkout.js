@@ -18,10 +18,10 @@ module.exports = async function handler(req, res) {
   if (!userId) return res.status(400).json({ error: "Missing userId" });
 
   try {
-    // Check if this user was referred AND hasn't used their discount yet
+    // Check profile for discount eligibility
     const { data: profile } = await supabase
       .from("user_profiles")
-      .select("referral_discount_used")
+      .select("referral_discount_used, pending_referral_discount")
       .eq("user_id", userId)
       .single();
 
@@ -33,7 +33,10 @@ module.exports = async function handler(req, res) {
       .eq("status", "signed_up")
       .single();
 
-    const applyDiscount = referral && profile && !profile.referral_discount_used;
+    // Apply discount if: referred and not used OR has a pending discount stored
+    const applyDiscount = profile && !profile.referral_discount_used && (
+      referral || profile.pending_referral_discount
+    );
 
     const sessionParams = {
       mode: "subscription",
