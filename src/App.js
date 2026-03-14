@@ -9,6 +9,7 @@ import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 import RecommendedFlips from "./RecommendedFlips";
 import { xpToLevel, xpProgress, xpToNextLevel, calcFlipXP, getLevelTitle, getCelebrationTier, checkNewAchievements, ACHIEVEMENTS } from "./XPSystem";
+import { generateDailyQuests, updateQuestProgress, calcQuestRewards, todayStr } from "./QuestSystem";
 
 // â”€â”€ Changelog â€” add new entries at the top, bump DEPLOY_KEY on each deploy â”€â”€
 const DEPLOY_KEY = "runetrader_seen_deploy_v1"; // change this string on each deploy to trigger the modal
@@ -860,6 +861,19 @@ const STYLES = `
   /* ACHIEVEMENT TOAST */
   @keyframes achieveIn { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
   .achievement-toast { display: flex; align-items: center; gap: 12px; background: #0f1218; border: 1px solid var(--gold-dim); border-radius: 10px; padding: 12px 16px; animation: achieveIn 0.4s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 8px 24px rgba(0,0,0,0.6); pointer-events: all; max-width: 300px; }
+
+  /* QUEST PANEL */
+  @keyframes questSlideIn { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  .quest-panel { position: fixed; top: 72px; right: 24px; z-index: 500; width: 320px; background: #0f1218; border: 1px solid var(--gold-dim); border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.7); animation: questSlideIn 0.25s ease; }
+  .quest-card { padding: 14px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  .quest-card:last-child { border-bottom: none; }
+  .quest-card.completed { background: rgba(46,204,113,0.04); }
+  .quest-progress-bar { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; margin-top: 8px; }
+  .quest-progress-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+  .quest-diff-easy   { background: rgba(46,204,113,0.15);  color: var(--green);  border: 1px solid var(--green-dim); }
+  .quest-diff-medium { background: rgba(201,168,76,0.15);  color: var(--gold);   border: 1px solid var(--gold-dim);  }
+  .quest-diff-hard   { background: rgba(231,76,60,0.15);   color: var(--red);    border: 1px solid var(--red-dim);   }
+  .quest-diff-badge  { display: inline-flex; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
 
   /* ACHIEVEMENTS PAGE */
   .achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
@@ -4151,6 +4165,45 @@ export default function RuneTrader() {
     }
   }
 
+  async function loadQuests() {
+    if (!user) return;
+    const today = todayStr();
+    const { data } = await supabase
+      .from("daily_quests")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("quest_date", today)
+      .single();
+
+    if (data) {
+      setDailyQuests(data.quests || []);
+      setGoldCoins(data.gold_coins || 0);
+    } else {
+      // Generate fresh quests for today
+      const fresh = generateDailyQuests(user.id, today);
+      setDailyQuests(fresh);
+      await supabase.from("daily_quests").upsert({
+        user_id: user.id,
+        quest_date: today,
+        quests: fresh,
+        gold_coins: 0,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id,quest_date" });
+    }
+    setQuestsLoaded(true);
+  }
+
+  async function saveQuests(updatedQuests, updatedCoins) {
+    if (!user) return;
+    await supabase.from("daily_quests").upsert({
+      user_id: user.id,
+      quest_date: todayStr(),
+      quests: updatedQuests,
+      gold_coins: updatedCoins,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id,quest_date" });
+  }
+
   async function awardXP(profit, context = {}) {
     if (!user || !profit || profit <= 0) return;
     const today = new Date().toISOString().slice(0, 10);
@@ -4272,7 +4325,7 @@ export default function RuneTrader() {
     }
   }
 
-  useEffect(() => { if (user) { loadMerchantSettings(); loadXP(); } }, [user]); // eslint-disable-line
+  useEffect(() => { if (user) { loadMerchantSettings(); loadXP(); loadQuests(); } }, [user]); // eslint-disable-line
 
   // Load manual positions for Merchant Mode (read-only copy)
   const [merchantPositions, setMerchantPositions] = useState([]);
@@ -4359,6 +4412,14 @@ export default function RuneTrader() {
   const [showCelebration, setShowCelebration] = useState(null); // getCelebrationTier result + profit
   const [newAchievements, setNewAchievements] = useState([]); // queue of newly unlocked
   const [showAchievements, setShowAchievements] = useState(false);
+
+  // ── Quest system ─────────────────────────────────────────────────────────────
+  const [dailyQuests, setDailyQuests] = useState([]);
+  const [goldCoins, setGoldCoins] = useState(0);
+  const [showQuestPanel, setShowQuestPanel] = useState(false);
+  const [questsLoaded, setQuestsLoaded] = useState(false);
+  const [newlyCompletedQuests, setNewlyCompletedQuests] = useState([]);
+  // ─────────────────────────────────────────────────────────────────────────────
   // ─────────────────────────────────────────────────────────────────────────────
   // ─────────────────────────────────────────────────────────────────────────────
 
@@ -5115,6 +5176,43 @@ export default function RuneTrader() {
         // Award XP
         if (totalProfit > 0) {
           awardXP(totalProfit, { flipsLog, loginStreak });
+        }
+        // Update quest progress
+        if (questsLoaded && dailyQuests.length > 0) {
+          const today = todayStr();
+          const todayFlips = flipsLog.filter(f =>
+            f.status !== "open" && (f.date || "").slice(0, 10) === today
+          );
+          const context = {
+            lastFlipProfit: totalProfit,
+            lastFlipItem: flip.item,
+            todayFlipCount: todayFlips.length + 1,
+            todayTotalProfit: todayFlips.reduce((s, f) => s + (f.totalProfit || 0), 0) + totalProfit,
+            flipsLog,
+          };
+          const { quests: updated, newlyCompleted } = updateQuestProgress(dailyQuests, context);
+          if (newlyCompleted.length > 0) {
+            // Award rewards for each completed quest
+            let bonusXP = 0;
+            let bonusCoins = 0;
+            const justDone = updated.filter(q => newlyCompleted.includes(q.id));
+            justDone.forEach(q => {
+              const rewards = calcQuestRewards(q);
+              bonusXP += rewards.xp;
+              bonusCoins += rewards.coins;
+            });
+            const newCoins = goldCoins + bonusCoins;
+            setGoldCoins(newCoins);
+            setNewlyCompletedQuests(justDone);
+            setTimeout(() => setNewlyCompletedQuests([]), 5000);
+            if (bonusXP > 0) awardXP(bonusXP * 500, {}); // convert to profit equivalent for XP calc
+            setDailyQuests(updated);
+            saveQuests(updated, newCoins);
+            showToast(`Quest complete! +${bonusCoins} coins 🪙`, "success", 4000);
+          } else {
+            setDailyQuests(updated);
+            saveQuests(updated, goldCoins);
+          }
         }
         // First profitable flip celebration (one-time ever)
         if (totalProfit > 0 && !localStorage.getItem("rt_first_profit_celebrated")) {
@@ -6024,7 +6122,76 @@ RULES:
               </div>
             </div>
           ))}
+          {/* Quest completion toasts */}
+          {newlyCompletedQuests.map((q, i) => (
+            <div key={q.id} className="achievement-toast" style={{ animationDelay: `${i * 0.2}s`, borderColor: "var(--green-dim)" }}>
+              <span style={{ fontSize: "28px" }}>{q.emoji}</span>
+              <div>
+                <div style={{ fontSize: "10px", color: "var(--green)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "2px" }}>Quest Complete!</div>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}>{q.title}</div>
+                <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                  +{calcQuestRewards(q).xp.toLocaleString()} XP · +{calcQuestRewards(q).coins} coins 🪙
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+
+        {/* ── QUEST PANEL ── */}
+        {showQuestPanel && user && (
+          <div className="quest-panel">
+            <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "14px", fontWeight: 700, color: "var(--gold)" }}>Daily Quests</div>
+                <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>
+                  {dailyQuests.filter(q => q.completed).length}/{dailyQuests.length} complete
+                  · 🪙 {goldCoins.toLocaleString()} coins
+                </div>
+              </div>
+              <button onClick={() => setShowQuestPanel(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "16px" }}>✕</button>
+            </div>
+
+            {dailyQuests.map(q => {
+              const rewards = calcQuestRewards(q);
+              const diffColor = q.difficulty === "easy" ? "var(--green)" : q.difficulty === "medium" ? "var(--gold)" : "var(--red)";
+              const pct = q.target > 0 ? Math.min(100, Math.round((q.progress / q.target) * 100)) : (q.completed ? 100 : 0);
+              const barColor = q.completed ? "var(--green)" : diffColor;
+              return (
+                <div key={q.id} className={`quest-card${q.completed ? " completed" : ""}`}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                    <span style={{ fontSize: "22px", flexShrink: 0, marginTop: "1px" }}>{q.completed ? "✅" : q.emoji}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
+                        <span style={{ fontSize: "13px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</span>
+                        <span className={`quest-diff-badge quest-diff-${q.difficulty}`}>{q.difficulty}</span>
+                      </div>
+                      <div style={{ fontSize: "11px", color: "var(--text-dim)", lineHeight: 1.5 }}>{q.desc}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "6px" }}>
+                        <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>+{rewards.xp.toLocaleString()} XP</span>
+                        <span style={{ fontSize: "10px", color: "var(--gold)" }}>+{rewards.coins} 🪙</span>
+                        {q.target > 1 && !q.completed && (
+                          <span style={{ fontSize: "10px", color: "var(--text-dim)", marginLeft: "auto" }}>
+                            {q.progress}/{q.target}
+                          </span>
+                        )}
+                        {q.completed && <span style={{ fontSize: "10px", color: "var(--green)", marginLeft: "auto", fontWeight: 600 }}>Done!</span>}
+                      </div>
+                      {q.target > 1 && (
+                        <div className="quest-progress-bar">
+                          <div className="quest-progress-fill" style={{ width: `${pct}%`, background: barColor }} />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            <div style={{ padding: "10px 16px", background: "rgba(201,168,76,0.04)", display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Quests reset daily at midnight · Coins redeemable for cosmetics soon</span>
+            </div>
+          </div>
+        )}
 
         {/* ── ACHIEVEMENTS PAGE MODAL ── */}
         {showAchievements && (
@@ -6200,6 +6367,16 @@ RULES:
             )}
             {user ? (
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {/* Quest button */}
+                {questsLoaded && (
+                  <button onClick={() => setShowQuestPanel(v => !v)}
+                    style={{ display: "flex", alignItems: "center", gap: "6px", padding: "5px 10px", borderRadius: "8px", border: `1px solid ${dailyQuests.every(q => q.completed) ? "var(--green-dim)" : "var(--gold-dim)"}`, background: dailyQuests.every(q => q.completed) ? "rgba(46,204,113,0.08)" : "rgba(201,168,76,0.08)", color: dailyQuests.every(q => q.completed) ? "var(--green)" : "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", position: "relative" }}>
+                    📋 Quests
+                    <span style={{ background: dailyQuests.filter(q => q.completed).length === dailyQuests.length ? "var(--green)" : "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
+                      {dailyQuests.filter(q => q.completed).length}/{dailyQuests.length}
+                    </span>
+                  </button>
+                )}
                 {/* XP Bar + Level Badge */}
                 {totalXP >= 0 && (() => {
                   const level = xpToLevel(totalXP);
