@@ -366,7 +366,7 @@ export default function LandingPage({ onEnterApp }) {
           <a href="#pricing" className="nav-link">Pricing</a>
         </div>
         <a href="/#" className="nav-cta" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp(); }}>
-          Enter the GE →
+          Enter the Market →
         </a>
       </nav>
 
