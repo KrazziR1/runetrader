@@ -1661,6 +1661,23 @@ const DEMO_PNL_HISTORY = (() => {
   return vals.map((v, i) => ({ time: Date.now() - (vals.length - 1 - i) * 900000, value: v }));
 })();
 
+// No-op supabase stub for demo mode — prevents network calls inside MerchantMode
+const DEMO_SUPABASE_STUB = {
+  from: () => ({
+    select: () => ({
+      eq: () => ({
+        not: () => ({ order: () => Promise.resolve({ data: [] }) }),
+        order: () => Promise.resolve({ data: [] }),
+        single: () => Promise.resolve({ data: null }),
+      }),
+      order: () => Promise.resolve({ data: [] }),
+      single: () => Promise.resolve({ data: null }),
+    }),
+  }),
+  channel: () => ({ on: () => ({ subscribe: () => ({}) }) }),
+  removeChannel: () => {},
+};
+
 const DEMO_CAPITAL = 50_000_000;
 
 // ── Demo Tour Steps ──────────────────────────────────────────────────────────
@@ -5532,7 +5549,7 @@ RULES:
               formatGP={formatGP}
               setSelectedItem={setSelectedItem}
               showToast={showToast}
-              supabase={demoMode ? { from: () => ({ select: () => ({ eq: () => ({ not: () => ({ order: () => Promise.resolve({ data: [] }) }) }), order: () => Promise.resolve({ data: [] }), single: () => Promise.resolve({ data: null }) }), on: () => ({ subscribe: () => ({}) }) }, channel: () => ({ on: () => ({ subscribe: () => ({}) }) }), removeChannel: () => {} } : supabase}
+              supabase={demoMode ? DEMO_SUPABASE_STUB : supabase}
               user={demoMode ? null : user}
               onUpdateCapital={() => setShowCapitalSetup(true)}
               onAddPosition={addPositionFromMerchant}
