@@ -287,7 +287,7 @@ const TICKER_ITEMS = [
 ];
 
 const FEATURES = [
-  { icon: "⚔️", title: "Merchant Mode", desc: "A self-contained trading terminal with live operations, analytics, alerts and flip recommendations — all in one screen. Never leave the UI while actively trading.", tag: "Flagship feature" },
+  { icon: "📈", title: "Merchant Mode", desc: "A self-contained trading terminal with live operations, analytics, alerts and flip recommendations — all in one screen. Never leave the UI while actively trading.", tag: "Flagship feature" },
   { icon: "📡", title: "Live GE Slot Tracking", desc: "Connect the RuneLite plugin and your active GE offers sync in real time. See live P&L, slot drift alerts, and position status without tabbing out of the game.", tag: "RuneLite plugin" },
   { icon: "🤖", title: "AI Flip Advisor", desc: "Ask in plain English — 'I have 5M gp, what should I flip?' — and get intelligent recommendations backed by your live GE data and current positions.", tag: "Powered by Claude" },
   { icon: "📊", title: "Live Margin Engine", desc: "4,525 items tracked in real time from the OSRS Wiki API. GE tax automatically factored into every margin, ROI and GP/hr calculation.", tag: "Real-time data" },
@@ -366,7 +366,7 @@ export default function LandingPage({ onEnterApp }) {
           <a href="#pricing" className="nav-link">Pricing</a>
         </div>
         <a href="/#" className="nav-cta" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp(); }}>
-          Launch App →
+          Enter the GE →
         </a>
       </nav>
 
@@ -425,7 +425,7 @@ export default function LandingPage({ onEnterApp }) {
               <div className="hero-stat-label">To Start</div>
             </div>
             <div className="hero-stat">
-              <div className="hero-stat-value">⚔️</div>
+              <div className="hero-stat-value">📈</div>
               <div className="hero-stat-label">Merchant Mode</div>
             </div>
           </div>
@@ -459,7 +459,7 @@ export default function LandingPage({ onEnterApp }) {
             {[
               { num: "01", title: "Install RuneLite", desc: "Download RuneLite if you don't have it, then search 'RuneTrader' in the Plugin Hub and click install.", icon: "🔌" },
               { num: "02", title: "Create a free account", desc: "Sign up at RuneTrader.gg — no credit card, no commitment. Your account links to the plugin automatically.", icon: "🧑‍💻" },
-              { num: "03", title: "Open the GE and flip", desc: "Your GE slots sync in real time. Open Merchant Mode, check the AI advisor, and start stacking gold.", icon: "⚔️" },
+              { num: "03", title: "Open the GE and flip", desc: "Your GE slots sync in real time. Open Merchant Mode, check the AI advisor, and start stacking gold.", icon: "📈" },
             ].map((step, i) => (
               <div key={i} className="feature-card" style={{ textAlign: "left" }}>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: "11px", letterSpacing: "3px", color: "var(--gold-dim)", marginBottom: "16px" }}>{step.num}</div>

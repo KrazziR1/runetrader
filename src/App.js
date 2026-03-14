@@ -1096,12 +1096,12 @@ const TOUR_STEPS = [
   { id: "filter-bar", title: "Filter & Search", desc: "Filter by F2P, Members, or High Volume. Star items to save them as favourites. Use the search box to find any item instantly.", target: ".filter-bar", placement: "bottom" },
   { id: "ai-advisor", title: "AI Flip Advisor", desc: "Ask the AI anything — best flips for your budget, what's trending, or whether a specific item is worth flipping. It has live GE data.", target: ".merchant-ai-bubble", placement: "left" },
   { id: "tracker-tab", title: "Track Your Flips", desc: "Log every flip to track total profit, best items, and average returns. Your history syncs across all your devices automatically.", target: ".nav-tabs", placement: "bottom" },
-  { id: "done", title: "You're Ready to Flip! ⚔️", desc: "That's everything. Start by setting your cash stack, then check the top flips list. Good luck on the Grand Exchange!", target: null, placement: "center" },
+  { id: "done", title: "You're Ready to Flip! 📈", desc: "That's everything. Start by setting your cash stack, then check the top flips list. Good luck on the Grand Exchange!", target: null, placement: "center" },
 ];
 
 const MERCHANT_TOUR_STEPS = [
   // ── Operations tab ──
-  { title: "Welcome to Merchant Mode ⚔️", desc: "Your war room for managing multiple GE positions at once. Four tabs cover everything: Operations, Analytics, Alerts, and Market. Let's walk through each one.", target: null, placement: "center", view: "operations" },
+  { title: "Welcome to Merchant Mode 📈", desc: "Your war room for managing multiple GE positions at once. Four tabs cover everything: Operations, Analytics, Alerts, and Market. Let's walk through each one.", target: null, placement: "center", view: "operations" },
   { title: "Capital Overview", desc: "Tracks your full GP stack at a glance. Deployed = GP locked in open positions. Idle = unused GP ready to put to work. Realised = profit closed today. Click 'Update' any time to adjust your stack.", target: ".capital-bar", placement: "bottom", view: "operations" },
   { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips. Dot colours show each position's status: 🟡 Buying · 🟢 Holding · 🔵 Selling · 🔴 Danger. Click any slot to view that item's price chart.", target: ".slots-grid", placement: "bottom", view: "operations" },
   { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Use the status dropdown to mark each flip: Buying → Holding → Selling. Hit ⚙ on any row to set Autopilot rules — margin floor, hold time limit, or price drop alert — personalised per position. Rules are stored on this device.", target: "#active-operations-section", placement: "top", view: "operations" },
@@ -1117,9 +1117,9 @@ const MERCHANT_TOUR_STEPS = [
   { title: "⚡ Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the ⚙️ gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
   { title: "📡 Live Feed", desc: "Every alert that's fired this session lands here in real time. Filter by type, click any alert to jump straight to that item's chart, and clear the feed whenever you like.", target: "#tour-live-feed", placement: "right", view: "alerts" },
   // ── AI Bubble ──
-  { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold ⚔️ bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "left", view: "operations" },
+  { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold 📈 bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "left", view: "operations" },
   // ── Done ──
-  { title: "You're fully set up ⚔️", desc: "Start a buy offer in the GE in-game — the RuneTrader plugin picks it up automatically and opens a position here. Close or sell in-game and it updates in real time. Good luck on the GE.", target: null, placement: "center", view: "operations" },
+  { title: "You're fully set up 📈", desc: "Start a buy offer in the GE in-game — the RuneTrader plugin picks it up automatically and opens a position here. Close or sell in-game and it updates in real time. Good luck on the GE.", target: null, placement: "center", view: "operations" },
 ];
 
 // ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
@@ -1273,7 +1273,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
             {isWatchlisted ? "🔖 Remove from Watchlist" : "🔖 Add to Watchlist"}
           </button>
           <button className="modal-ask-btn" onClick={() => { onAskAI(`Analyse ${item.name} for me. Is now a good time to flip it? Buy at ${formatGP(item.adjLow ?? item.low)}, sell at ${formatGP(item.adjHigh ?? item.high)}, margin ${formatGP(item.adjMargin ?? item.margin)}.`); onClose(); }}>
-            ⚔️ Ask AI to analyse this flip →
+            📈 Ask AI to analyse this flip →
           </button>
           {onShare && (
             <button className="modal-ask-btn" style={{ opacity: 0.7 }} onClick={onShare}>
@@ -1725,7 +1725,7 @@ const DEMO_CAPITAL = 50_000_000;
 const DEMO_TOUR_STEPS = [
   {
     id: "welcome",
-    title: "Welcome to RuneTrader ⚔️",
+    title: "Welcome to RuneTrader 📈",
     desc: "The AI-powered Grand Exchange trading advisor for OSRS. In the next 60 seconds we'll show you everything — live market data, smart alerts, and Merchant Mode. Let's go.",
     target: null,
     placement: "center",
@@ -1770,7 +1770,7 @@ const DEMO_TOUR_STEPS = [
   },
   {
     id: "merchant-intro",
-    title: "Meet Merchant Mode ⚔️",
+    title: "Meet Merchant Mode 📈",
     desc: "RuneTrader's flagship feature — a self-contained trading terminal. Manage all your GE slots, track live P&L, get rotation picks, set autopilot rules, and monitor risk exposure. All in one place.",
     target: null,
     placement: "center",
@@ -1799,7 +1799,7 @@ const DEMO_TOUR_STEPS = [
   {
     id: "ai-advisor",
     title: "AI Advisor — Always On",
-    desc: "Ask the AI anything: best flips for your budget, why an offer isn't filling, whether to relist. It has full visibility of your active slots and live market data. Tap the ⚔️ bubble any time.",
+    desc: "Ask the AI anything: best flips for your budget, why an offer isn't filling, whether to relist. It has full visibility of your active slots and live market data. Tap the 📈 bubble any time.",
     target: ".merchant-ai-bubble",
     placement: "left",
     tab: null,
@@ -2286,7 +2286,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
             <span style={{ fontFamily: "'Cinzel', serif", fontSize: "14px", fontWeight: 700, color: "var(--gold)", letterSpacing: "1.5px" }}>MERCHANT MODE</span>
           </div>
           <div className="merchant-header-pills">
-            {[["operations", "⚔️ Operations"], ["analytics", "📊 Analytics"], ["market", "📈 Market"], ["alerts", "⚡ Alerts"]].map(([v, l]) => (
+            {[["operations", "📈 Operations"], ["analytics", "📊 Analytics"], ["market", "📈 Market"], ["alerts", "⚡ Alerts"]].map(([v, l]) => (
               <button key={v} className={`merchant-nav-pill${activeView === v ? " active" : ""}`} onClick={() => setActiveView(v)}>{l}</button>
             ))}
           </div>
@@ -2401,7 +2401,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
 
                 {liveOps.length === 0 ? (
                   <div className="merchant-empty">
-                    <div style={{ fontSize: "36px", opacity: 0.3 }}>⚔️</div>
+                    <div style={{ fontSize: "36px", opacity: 0.3 }}>📈</div>
                     <p style={{ marginTop: "10px", color: "var(--text-dim)", fontSize: "13px" }}>No open positions</p>
                     <small style={{ color: "var(--text-dim)", fontSize: "11px" }}>Start a buy offer in-game — it will appear here automatically.</small>
                   </div>
@@ -3269,7 +3269,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
       {/* Open flips */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
-          ⚔️ Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "Inter", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{openFlips.length} active</span>
+          📈 Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "Inter", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{openFlips.length} active</span>
         </div>
         {loading ? <div style={{ color: "var(--text-dim)", fontSize: "13px" }}>Loading...</div>
         : openFlips.length === 0 ? (
@@ -4883,7 +4883,7 @@ export default function RuneTrader() {
     ctx.fillRect(2, 2, 596, 196);
     // Sword icon area
     ctx.font = "32px serif";
-    ctx.fillText("⚔️", 28, 80);
+    ctx.fillText("📈", 28, 80);
     // RuneTrader label
     ctx.fillStyle = "#c9a84c";
     ctx.font = "bold 13px 'Arial'";
@@ -5207,7 +5207,7 @@ RULES:
       {showCapitalSetup && (
         <div className="capital-setup" onClick={e => e.target === e.currentTarget && setShowCapitalSetup(false)}>
           <div className="capital-setup-inner">
-            <div className="capital-setup-title">⚔️ Activate Merchant Mode</div>
+            <div className="capital-setup-title">📈 Activate Merchant Mode</div>
             <div className="capital-setup-sub">Enter your total GP stack. This helps track capital efficiency, idle GP, and expected returns. You can update it any time.</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               <label style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Capital (GP)</label>
@@ -5345,7 +5345,7 @@ RULES:
         <div className="whats-new-overlay" onClick={() => setShowWhatsNew(false)}>
           <div className="whats-new-modal" onClick={e => e.stopPropagation()}>
             <div className="whats-new-header">
-              <div className="whats-new-title">⚔️ What's New in RuneTrader</div>
+              <div className="whats-new-title">📈 What's New in RuneTrader</div>
               <button onClick={() => setShowWhatsNew(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "18px", lineHeight: 1 }}>✕</button>
             </div>
             <div className="whats-new-body">
@@ -5378,7 +5378,7 @@ RULES:
       {upgradeModal && (
         <div className="upgrade-overlay" onClick={() => setUpgradeModal(null)}>
           <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
-            <div className="upgrade-icon">⚔️</div>
+            <div className="upgrade-icon">📈</div>
             <div className="upgrade-title">Merchant Mode</div>
             <div className="upgrade-desc">
               <strong style={{ color: "var(--text)" }}>{upgradeModal.feature}</strong> is a Merchant Mode feature.
@@ -5570,7 +5570,7 @@ RULES:
                 onMouseOver={e => { if (!merchantMode) { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; e.currentTarget.style.background = "rgba(201,168,76,0.06)"; }}}
                 onMouseOut={e => { if (!merchantMode) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.background = "transparent"; }}}>
                 {merchantMode && <div className="merchant-dot" style={{ background: "var(--green)" }} />}
-                <span style={{ fontSize: "13px" }}>⚔️</span>
+                <span style={{ fontSize: "13px" }}>📈</span>
                 {merchantMode ? "Exit Merchant" : "Merchant Mode"}
               </button>
             )}
@@ -6600,7 +6600,7 @@ RULES:
         {/* DEMO TOUR END SCREEN */}
         {demoMode && demoTourStep === -2 && (
           <div className="demo-tour-end-overlay">
-            <div style={{ fontSize: "48px" }}>⚔️</div>
+            <div style={{ fontSize: "48px" }}>📈</div>
             <div className="demo-tour-end-title">Ready to flip smarter?</div>
             <div className="demo-tour-end-sub">
               You’ve seen what RuneTrader can do. Free to start — install the RuneLite plugin and you’re live in 2 minutes.
@@ -6618,13 +6618,13 @@ RULES:
         {!merchantAIOpen && (
           <div className="merchant-ai-bubble" onClick={() => setMerchantAIOpen(true)} title="AI Advisor">
             <div className="bubble-ping" />
-            <span>⚔️</span>
+            <span>📈</span>
           </div>
         )}
         {merchantAIOpen && (
           <div className="merchant-ai-modal">
             <div className="merchant-ai-modal-header">
-              <span style={{ fontSize: 20 }}>⚔️</span>
+              <span style={{ fontSize: 20 }}>📈</span>
               <div><h4>AI Advisor</h4><p>Live GE data · Powered by Claude</p></div>
               <button className="merchant-ai-close" onClick={() => setMerchantAIOpen(false)}>✕</button>
             </div>
