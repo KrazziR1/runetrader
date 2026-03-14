@@ -407,7 +407,9 @@ export default function LandingPage({ onEnterApp }) {
             <a href="/#" className="btn-primary" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp(); }}>
               Create Free Account →
             </a>
-            <a href="#features" className="btn-secondary">See How It Works</a>
+            <a href="/#" className="btn-secondary" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp("demo"); }}>
+              Explore Demo ↗
+            </a>
           </div>
           <div className="hero-stats">
             <div className="hero-stat">

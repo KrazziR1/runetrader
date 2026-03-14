@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
+import Sparkline from "./Sparkline";
+import WatchlistPage from "./WatchlistPage";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 
@@ -614,6 +616,37 @@ const STYLES = `
   .notif-enable-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .notif-active-banner { display: flex; align-items: center; gap: 8px; background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--green); }
 
+  /* DEMO BANNER */
+  .demo-banner { position: sticky; top: 64px; z-index: 90; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 32px; background: rgba(52,152,219,0.1); border-bottom: 1px solid rgba(52,152,219,0.25); font-size: 13px; color: #4fc3f7; flex-wrap: wrap; }
+  .demo-banner-text { display: flex; align-items: center; gap: 8px; }
+  .demo-cta-btn { padding: 7px 18px; border-radius: 6px; border: 1px solid rgba(201,168,76,0.5); background: rgba(201,168,76,0.1); color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; font-family: Inter, sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .demo-cta-btn:hover { background: rgba(201,168,76,0.2); }
+
+  /* WATCHLIST */
+  .watchlist-wrap { display: flex; flex-direction: column; gap: 16px; }
+  .watchlist-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 80px 20px; text-align: center; color: var(--text-dim); }
+  .watchlist-empty .icon { font-size: 40px; opacity: 0.4; }
+  .watchlist-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .watchlist-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 84px 140px 44px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .watchlist-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 84px 140px 44px; padding: 11px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.15s; }
+  .watchlist-row:last-child { border-bottom: none; }
+  .watchlist-row:hover { background: var(--bg4); }
+  .watchlist-remove-btn { background: none; border: none; cursor: pointer; color: var(--text-dim); font-size: 15px; padding: 0 4px; transition: color 0.15s; line-height: 1; }
+  .watchlist-remove-btn:hover { color: var(--red); }
+  .watchlist-add-row { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg4); position: relative; }
+  .watchlist-add-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--text); font-size: 13px; font-family: Inter, sans-serif; outline: none; flex: 1; transition: border-color 0.15s; }
+  .watchlist-add-input:focus { border-color: var(--gold-dim); }
+  .watchlist-alert-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; white-space: nowrap; max-width: 136px; overflow: hidden; text-overflow: ellipsis; }
+  .watchlist-alert-badge.set { background: rgba(201,168,76,0.12); color: var(--gold); border-color: var(--gold-dim); }
+  .watchlist-alert-badge.unset { background: var(--bg4); color: var(--text-dim); border-color: var(--border); }
+  .watchlist-alert-badge:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .watchlist-alert-popover { position: absolute; z-index: 200; background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; width: 230px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+  .watchlist-alert-popover-title { font-size: 12px; font-weight: 600; color: var(--gold); font-family: Cinzel, serif; text-transform: uppercase; letter-spacing: 0.5px; }
+  .watchlist-alert-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: Inter, sans-serif; outline: none; width: 100%; transition: border-color 0.15s; }
+  .watchlist-alert-input:focus { border-color: var(--gold-dim); }
+  .watchlist-alert-set-btn { padding: 6px 12px; border-radius: 6px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: Inter, sans-serif; }
+  .watchlist-pro-tip { display: flex; align-items: center; gap: 8px; background: rgba(201,168,76,0.05); border: 1px solid rgba(201,168,76,0.12); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--text-dim); }
+
   /* PORTFOLIO */
   .portfolio-wrap { display: flex; flex-direction: column; gap: 20px; }
   .port-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
@@ -707,7 +740,7 @@ const STYLES = `
   .tour-next:hover { opacity: 0.85; }
 
   /* TOAST */
-  .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 400; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast-container { position: fixed; bottom: 24px; right: 90px; z-index: 400; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: 320px; }
   .toast { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; font-family: "Inter", sans-serif; box-shadow: 0 8px 32px rgba(0,0,0,0.5); pointer-events: all; animation: toastIn 0.3s cubic-bezier(0.4,0,0.2,1); max-width: 320px; }
   @keyframes toastIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
   .toast.success { background: #0f1218; border: 1px solid var(--green-dim); color: var(--green); }
@@ -1556,6 +1589,147 @@ const WELCOME_MSG = {
   content: "Hey! I'm your RuneTrader AI assistant 👋\n\nI have access to live Grand Exchange data and can help you find the best flips for your budget, explain market trends, and answer any OSRS trading questions.\n\nWhat are you working with today?",
   time: new Date(),
 };
+
+// ─── DEMO DATA ───────────────────────────────────────────────────────────────
+
+const DEMO_ITEMS = [
+  { id: 4151,  name: "Abyssal whip",       low: 1820000,  high: 1846000,  margin: 18040,  roi: 0.99, volume: 3200,   buyLimit: 8,     score: 72, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 45,  category: "Weapons" },
+  { id: 11832, name: "Bandos chestplate",  low: 18200000, high: 18460000, margin: 52000,  roi: 0.29, volume: 420,    buyLimit: 8,     score: 58, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 180, category: "Armour"  },
+  { id: 2363,  name: "Law rune",           low: 180,      high: 182,      margin: 1,      roi: 0.55, volume: 820000, buyLimit: 18000, score: 61, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 12,  category: "Runes"   },
+  { id: 385,   name: "Shark",              low: 820,      high: 833,      margin: 9,      roi: 1.10, volume: 180000, buyLimit: 10000, score: 65, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 90,  category: "Food"    },
+  { id: 2995,  name: "Dragon bones",       low: 2340,     high: 2380,     margin: 28,     roi: 1.20, volume: 90000,  buyLimit: 3000,  score: 63, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 60,  category: "Bones"   },
+  { id: 11212, name: "Rune arrow",         low: 72,       high: 75,       margin: 2,      roi: 2.77, volume: 240000, buyLimit: 11000, score: 60, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 30,  category: "Ammo"    },
+  { id: 12006, name: "Saradomin godsword", low: 20400000, high: 20800000, margin: 196000, roi: 0.96, volume: 180,    buyLimit: 8,     score: 54, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 600, category: "Weapons" },
+  { id: 3140,  name: "Mystic robe top",    low: 38500,    high: 39200,    margin: 490,    roi: 1.27, volume: 2100,   buyLimit: 8,     score: 67, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 240, category: "Armour"  },
+  { id: 1515,  name: "Magic logs",         low: 970,      high: 984,      margin: 9,      roi: 0.92, volume: 62000,  buyLimit: 10000, score: 59, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 150, category: "Logs"    },
+  { id: 4587,  name: "Dragon scimitar",    low: 58000,    high: 59200,    margin: 840,    roi: 1.44, volume: 8400,   buyLimit: 100,   score: 64, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 120, category: "Weapons" },
+];
+const DEMO_WATCHLIST_IDS = [4151, 385, 11832];
+
+// ─── WATCHLIST PAGE ────────────────────────────────────────────
+
+function WatchlistPage({
+  user, items, watchlist, watchlistAlerts,
+  toggleWatchlist, setWatchlistAlert, clearWatchlistAlert,
+  watchlistAlertOpen, setWatchlistAlertOpen,
+  watchlistAlertInputs, setWatchlistAlertInputs,
+  watchlistAddSearch, setWatchlistAddSearch,
+  watchlistAddAutocomplete, setWatchlistAddAutocomplete,
+  setSelectedItem, onSignIn, setUpgradeModal,
+  demoMode, formatGP,
+}) {
+  const watchedItems = items.filter(i => watchlist.includes(i.id));
+
+  function handleAddSearch(val) {
+    setWatchlistAddSearch(val);
+    if (!val.trim()) { setWatchlistAddAutocomplete([]); return; }
+    const matches = items.filter(i => i.name.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
+    setWatchlistAddAutocomplete(matches);
+  }
+
+  function addToWatchlist(item) {
+    if (!watchlist.includes(item.id)) toggleWatchlist(item.id);
+    setWatchlistAddSearch("");
+    setWatchlistAddAutocomplete([]);
+  }
+
+  function openAlertPopover(itemId) {
+    const existing = watchlistAlerts[itemId] || {};
+    setWatchlistAlertInputs({ above: existing.above ? String(existing.above) : "", below: existing.below ? String(existing.below) : "" });
+    setWatchlistAlertOpen(itemId);
+  }
+
+  function saveAlerts(itemId) {
+    const above = parseFloat(String(watchlistAlertInputs.above).replace(/,/g, ""));
+    const below = parseFloat(String(watchlistAlertInputs.below).replace(/,/g, ""));
+    if (!isNaN(above) && above > 0) setWatchlistAlert(itemId, "above", above);
+    else clearWatchlistAlert(itemId, "above");
+    if (!isNaN(below) && below > 0) setWatchlistAlert(itemId, "below", below);
+    else clearWatchlistAlert(itemId, "below");
+    setWatchlistAlertOpen(null);
+  }
+
+  const hasAlertFor = (itemId) => { const a = watchlistAlerts[itemId]; return a && (a.above || a.below); };
+
+  return (
+    <div className="watchlist-wrap">
+      <div className="watchlist-pro-tip">
+        <span>🔖</span>
+        <span>Watch items you flip regularly. Set price alerts to get notified when the market moves.
+          {!user && !demoMode && (<span> <button onClick={onSignIn} style={{ background: "none", border: "none", color: "var(--gold)", cursor: "pointer", fontSize: "inherit", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}>Sign in</button> to sync your watchlist across devices.</span>)}
+        </span>
+      </div>
+      {watchedItems.length === 0 ? (
+        <div className="watchlist-empty">
+          <div className="icon">🔖</div>
+          <p style={{ fontSize: "15px" }}>Your watchlist is empty</p>
+          <p style={{ fontSize: "13px" }}>Click the 🔖 icon on any item in the Market tab to add it here, or search below.</p>
+        </div>
+      ) : (
+        <div className="watchlist-table">
+          <div className="watchlist-header">
+            <span>Item</span><span>Buy</span><span>Sell</span><span>Margin</span><span>24hr Trend</span><span>Alert</span><span />
+          </div>
+          {watchedItems.map(item => {
+            const alertSet = hasAlertFor(item.id);
+            const al = watchlistAlerts[item.id] || {};
+            return (
+              <div key={item.id} style={{ position: "relative" }}>
+                <div className="watchlist-row" onClick={() => setSelectedItem(item)}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <img src={`https://oldschool.runescape.wiki/images/${encodeURIComponent(item.name.replace(/ /g, "_"))}_detail.png`} alt="" style={{ width: 24, height: 24, objectFit: "contain", imageRendering: "pixelated", flexShrink: 0 }} onError={e => { e.target.style.display = "none"; }} />
+                    <span style={{ fontWeight: 500, fontSize: "13px" }}>{item.name}</span>
+                  </div>
+                  <span style={{ fontSize: "13px" }}>{item.hasPrice ? formatGP(item.low) : "—"}</span>
+                  <span style={{ fontSize: "13px" }}>{item.hasPrice ? formatGP(item.high) : "—"}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: item.margin > 0 ? "var(--green)" : "var(--red)" }}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
+                  <div onClick={e => e.stopPropagation()}><Sparkline itemId={item.id} width={78} height={28} /></div>
+                  <div onClick={e => e.stopPropagation()} style={{ position: "relative" }}>
+                    <button className={`watchlist-alert-badge ${alertSet ? "set" : "unset"}`} onClick={() => { if (!user && !demoMode) { setUpgradeModal({ feature: "Watchlist Alerts", description: "Sign up free to set price alerts on your watchlist items." }); return; } openAlertPopover(item.id); }}>
+                      🔔 {alertSet ? `${al.above ? "↑" + formatGP(al.above) : ""}${al.above && al.below ? " · " : ""}${al.below ? "↓" + formatGP(al.below) : ""}` : "Set alert"}
+                    </button>
+                    {watchlistAlertOpen === item.id && (
+                      <div className="watchlist-alert-popover" style={{ top: "32px", left: 0 }}>
+                        <div className="watchlist-alert-popover-title">Price Alert</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Alert when sell price goes above:</div>
+                          <input className="watchlist-alert-input" placeholder="e.g. 1,850,000" value={watchlistAlertInputs.above} onChange={e => setWatchlistAlertInputs(v => ({ ...v, above: e.target.value }))} />
+                          <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Alert when buy price drops below:</div>
+                          <input className="watchlist-alert-input" placeholder="e.g. 1,800,000" value={watchlistAlertInputs.below} onChange={e => setWatchlistAlertInputs(v => ({ ...v, below: e.target.value }))} />
+                        </div>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button className="watchlist-alert-set-btn" style={{ flex: 1 }} onClick={() => saveAlerts(item.id)}>Save</button>
+                          <button onClick={() => setWatchlistAlertOpen(null)} style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>Cancel</button>
+                        </div>
+                        {alertSet && (<button onClick={() => { clearWatchlistAlert(item.id, "above"); clearWatchlistAlert(item.id, "below"); setWatchlistAlertOpen(null); }} style={{ background: "none", border: "none", color: "var(--red)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0 }}>Clear all alerts for this item</button>)}
+                      </div>
+                    )}
+                  </div>
+                  <button className="watchlist-remove-btn" onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} title="Remove from watchlist">✕</button>
+                </div>
+              </div>
+            );
+          })}
+          <div className="watchlist-add-row" style={{ position: "relative" }}>
+            <input className="watchlist-add-input" placeholder="Search to add an item..." value={watchlistAddSearch} onChange={e => handleAddSearch(e.target.value)} />
+            {watchlistAddAutocomplete.length > 0 && (
+              <div style={{ position: "absolute", bottom: "100%", left: "16px", right: "16px", background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden", zIndex: 50, marginBottom: "4px" }}>
+                {watchlistAddAutocomplete.map(i => (
+                  <div key={i.id} style={{ padding: "9px 14px", fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "background 0.1s" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "var(--bg3)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"} onClick={() => addToWatchlist(i)}>
+                    <img src={`https://oldschool.runescape.wiki/images/${encodeURIComponent(i.name.replace(/ /g, "_"))}_detail.png`} alt="" style={{ width: 20, height: 20, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
+                    <span>{i.name}</span>
+                    <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>{i.hasPrice ? formatGP(i.margin) + " margin" : "no data"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
@@ -2673,7 +2847,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
             {/* Table */}
             <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
             <div className="flips-table">
-              <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>
+              <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>
                 {[
                   ["name", "Item", null],
                   ["low", "Buy Price", "Lowest current buy offer on the GE"],
@@ -2684,6 +2858,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   ["buylimit", "Limit", "Max items you can buy every 4 hours"],
                   ["gpPerFill", "GP/Fill", "Realistic GP profit per 4hr window"],
                   ["lastTradeTime", "Last Trade", "When this item last traded."],
+                  ["sparkline", "Trend", null],
                 ].map(([col, label, tip]) => (
                   <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
                     {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
@@ -2698,8 +2873,8 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               </div>
               {loading ? (
                 Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>
-                    {Array.from({ length: 9 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}
+                  <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>
+                    {Array.from({ length: 10 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}
                   </div>
                 ))
               ) : filtered.length === 0 ? (
@@ -2719,9 +2894,9 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   const gpPerFill = Math.round(item.margin * Math.max(expFill, 1));
                   const gpPerFillMax = Math.round(item.margin * Math.min(lim, mkt4hr));
                   return (
-                    <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }} onClick={() => setSelectedItem(item)}>
+                    <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }} onClick={() => setSelectedItem(item)}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }}>⭐</button>
+                        <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={favourites.includes(item.id) ? "Remove from Watchlist" : "Add to Watchlist"}>🔖</button>
                         <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                         <div className="item-name">{item.name}</div>
                       </div>
@@ -2736,13 +2911,16 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
                       <div>
                         {item.hasPrice ? (
-                          <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1_000_000 ? "var(--green)" : gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}
+                          <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1000000 ? "var(--green)" : gpPerFill >= 200000 ? "var(--gold)" : "var(--text-dim)" }}
                             title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case: ${formatGP(gpPerFillMax)} GP`}>
                             {formatGP(gpPerFill)}
                           </span>
                         ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
                       </div>
                       <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
+                      <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center" }}>
+                        <Sparkline itemId={item.id} width={78} height={30} />
+                      </div>
                     </div>
                   );
                 })
@@ -3903,18 +4081,57 @@ export default function RuneTrader() {
   const [closeFlipLoading, setCloseFlipLoading] = useState(false);
   const [flipCard, setFlipCard] = useState(null); // { itemName, profit, roi, dataUrl }
 
-  // ── Favourites ──
-  const [favourites, setFavourites] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("runetrader_favs") || "[]"); } catch { return []; }
-  });
+  // ── Demo Mode ──
+  const [demoMode, setDemoMode] = useState(false);
 
-  function toggleFavourite(itemId) {
-    setFavourites(prev => {
+  // ── Watchlist (replaces Favourites) ──
+  const [watchlist, setWatchlist] = useState(() => {
+    try {
+      const wl = localStorage.getItem("runetrader_watchlist");
+      if (wl) return JSON.parse(wl);
+      const old = localStorage.getItem("runetrader_favs");
+      if (old) { localStorage.setItem("runetrader_watchlist", old); return JSON.parse(old); }
+      return [];
+    } catch { return []; }
+  });
+  const favourites = watchlist; // alias — MerchantMode and filtered still use `favourites`
+
+  function toggleWatchlist(itemId) {
+    setWatchlist(prev => {
       const next = prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId];
-      localStorage.setItem("runetrader_favs", JSON.stringify(next));
+      localStorage.setItem("runetrader_watchlist", JSON.stringify(next));
       return next;
     });
   }
+  const toggleFavourite = toggleWatchlist; // backwards compat
+
+  const [watchlistAlerts, setWatchlistAlerts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("runetrader_watchlist_alerts") || "{}"); } catch { return {}; }
+  });
+
+  function setWatchlistAlert(itemId, type, price) {
+    setWatchlistAlerts(prev => {
+      const updated = { ...prev, [itemId]: { ...(prev[itemId] || {}), [type]: price } };
+      localStorage.setItem("runetrader_watchlist_alerts", JSON.stringify(updated));
+      return updated;
+    });
+  }
+
+  function clearWatchlistAlert(itemId, type) {
+    setWatchlistAlerts(prev => {
+      const entry = { ...(prev[itemId] || {}) };
+      delete entry[type];
+      const updated = { ...prev, [itemId]: entry };
+      if (!entry.above && !entry.below) delete updated[itemId];
+      localStorage.setItem("runetrader_watchlist_alerts", JSON.stringify(updated));
+      return updated;
+    });
+  }
+
+  const [watchlistAddSearch, setWatchlistAddSearch] = useState("");
+  const [watchlistAddAutocomplete, setWatchlistAddAutocomplete] = useState([]);
+  const [watchlistAlertOpen, setWatchlistAlertOpen] = useState(null);
+  const [watchlistAlertInputs, setWatchlistAlertInputs] = useState({ above: "", below: "" });
 
   // ── Alerts ──
   const [alerts, setAlerts] = useState(() => {
@@ -4671,7 +4888,7 @@ RULES:
   const avgProfit = totalFlips ? Math.round(totalProfit / totalFlips) : 0;
   const bestItem = allClosedFlips.length ? allClosedFlips.reduce((best, f) => (f.totalProfit || 0) > (best.totalProfit || 0) ? f : best, allClosedFlips[0]) : null;
 
-  if (!showApp) return <LandingPage onEnterApp={() => setShowApp(true)} />;
+  if (!showApp) return <LandingPage onEnterApp={(mode) => { setShowApp(true); if (mode === "demo") setDemoMode(true); }} />;
 
   return (
     <>
@@ -4954,6 +5171,19 @@ RULES:
           <a className="feedback-btn" href="mailto:feedback@runetrader.gg">💬 Send Feedback</a>
         </div>
 
+        {/* DEMO BANNER */}
+        {demoMode && (
+          <div className="demo-banner">
+            <div className="demo-banner-text">
+              <span style={{ fontSize: "16px" }}>👁</span>
+              <span>You’re viewing a <strong>demo</strong> — data is simulated. Create a free account to see live prices and track your own flips.</span>
+            </div>
+            <button className="demo-cta-btn" onClick={() => { setDemoMode(false); setShowAuth(true); }}>
+              Create Free Account →
+            </button>
+          </div>
+        )}
+
         {/* HEADER */}
         <header className="header">
           <div className="logo">
@@ -4995,7 +5225,7 @@ RULES:
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {!merchantMode && [["market","Market"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"]] : []),["changelog","What's New 🆕"]].map(([t,label]) => (
+            {!merchantMode && [["market","Market"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"]] : []),["changelog","What's New 🆕"]].map(([t,label]) => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
                 {label}
                 {t === "tracker" && (openFlips.length + (autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length)) > 0 && (
@@ -5006,6 +5236,11 @@ RULES:
                 {t === "alerts" && (alerts.filter(a => a.triggered).length + smartEvents.length) > 0 && (
                   <span style={{ marginLeft: "6px", background: "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
                     {alerts.filter(a => a.triggered).length + smartEvents.length}
+                  </span>
+                )}
+                {t === "watchlist" && watchlist.length > 0 && (
+                  <span style={{ marginLeft: "6px", background: "var(--bg4)", color: "var(--text-dim)", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700, border: "1px solid var(--border)" }}>
+                    {watchlist.length}
                   </span>
                 )}
               </button>
@@ -5104,6 +5339,32 @@ RULES:
           </>) : (
           <>
           <div className="left-panel">
+
+            {/* ── WATCHLIST TAB ── */}
+            {activeTab === "watchlist" && (
+              <WatchlistPage
+                user={user}
+                items={demoMode ? DEMO_ITEMS : items}
+                watchlist={demoMode ? DEMO_WATCHLIST_IDS : watchlist}
+                watchlistAlerts={watchlistAlerts}
+                toggleWatchlist={toggleWatchlist}
+                setWatchlistAlert={setWatchlistAlert}
+                clearWatchlistAlert={clearWatchlistAlert}
+                watchlistAlertOpen={watchlistAlertOpen}
+                setWatchlistAlertOpen={setWatchlistAlertOpen}
+                watchlistAlertInputs={watchlistAlertInputs}
+                setWatchlistAlertInputs={setWatchlistAlertInputs}
+                watchlistAddSearch={watchlistAddSearch}
+                setWatchlistAddSearch={setWatchlistAddSearch}
+                watchlistAddAutocomplete={watchlistAddAutocomplete}
+                setWatchlistAddAutocomplete={setWatchlistAddAutocomplete}
+                setSelectedItem={setSelectedItem}
+                onSignIn={() => setShowAuth(true)}
+                setUpgradeModal={setUpgradeModal}
+                demoMode={demoMode}
+                formatGP={formatGP}
+              />
+            )}
 
             {/* ── TRACKER TAB ── */}
             {activeTab === "tracker" && (
@@ -5818,7 +6079,7 @@ RULES:
                 <div>
                   <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
                   <div className="flips-table">
-                    <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>
+                    <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>
                       {[
                         ["name", "Item", null],
                         ["low", "Buy Price", "Lowest current buy offer on the GE"],
@@ -5829,6 +6090,7 @@ RULES:
                         ["buylimit", "Limit", "Max items you can buy every 4 hours"],
                         ["gpPerFill", "GP/Fill", "Realistic GP profit per 4hr window, scaled by market volume"],
                         ["lastTradeTime", "Last Trade", "When this item last traded. Stale = low activity."],
+                        ["sparkline", "Trend", null],
                       ].map(([col, label, tip]) => (
                         <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
                           {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
@@ -5843,7 +6105,7 @@ RULES:
                     </div>
                     {loading ? (
                       Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }}>{Array.from({ length: 9 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
+                        <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>{Array.from({ length: 10 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
                       ))
                     ) : filtered.length === 0 ? (
                       <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
@@ -5863,9 +6125,9 @@ RULES:
                         const gpPerFillMax = Math.round(item.margin * Math.min(lim, mkt4hr));
 
                         return (
-                          <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px" }} onClick={() => setSelectedItem(item)}>
+                          <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }} onClick={() => setSelectedItem(item)}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={favourites.includes(item.id) ? "Remove favourite" : "Add to favourites"}>⭐</button>
+                              <button onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: watchlist.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={watchlist.includes(item.id) ? "Remove from Watchlist" : "Add to Watchlist"}>🔖</button>
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                               <div className="item-name">{item.name}</div>
                             </div>
@@ -5880,13 +6142,16 @@ RULES:
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
                             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                               {item.hasPrice ? (
-                                <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1_000_000 ? "var(--green)" : gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}
+                                <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1000000 ? "var(--green)" : gpPerFill >= 200000 ? "var(--gold)" : "var(--text-dim)" }}
                                   title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case (full limit): ${formatGP(gpPerFillMax)} GP`}>
                                   {formatGP(gpPerFill)}
                                 </span>
                               ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
                             </div>
                             <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
+                            <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center" }}>
+                              <Sparkline itemId={item.id} width={78} height={30} />
+                            </div>
                           </div>
                         );
                       })
