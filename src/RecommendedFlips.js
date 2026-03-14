@@ -59,7 +59,25 @@ function calcGpPerFill(item) {
   return Math.round((item.margin || 0) * Math.max(expFill, 1));
 }
 
-// ── Tier Qualification ────────────────────────────────────────────────────────
+// ── Item Personality Tags ─────────────────────────────────────────────────────
+// Pure vibes — no interaction, just makes the table feel alive.
+// Deterministic based on item data so tags don't flicker on re-render.
+function getPersonalityTag(item) {
+  const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : 9999;
+  const vol    = item.volume   || 0;
+  const lim    = item.buyLimit || 1;
+  const ratio  = vol / lim;
+
+  if (ageSec < 120 && ratio >= 60)                        return { icon: "🔥", label: "Moving fast today" };
+  if (item.margin >= 500_000)                             return { icon: "💎", label: "High margin" };
+  if (ratio >= 100)                                       return { icon: "🌊", label: "Insane liquidity" };
+  if (ageSec < 180)                                       return { icon: "⚡", label: "Just traded" };
+  if (item.roi >= 8 && item.roi <= 20)                    return { icon: "📈", label: "Margin expanding" };
+  if (vol >= 1_000_000)                                   return { icon: "👀", label: "Heavily watched" };
+  if (item.margin >= 100_000 && ratio >= 15)              return { icon: "✨", label: "Solid pick" };
+  if (item.buyLimit >= 5000 && ratio >= 30)               return { icon: "🚀", label: "High capacity" };
+  return null;
+}
 // LOW:    vol/limit ≥ 70×  |  margin > 0       |  freshness ≤ 15min
 // MEDIUM: vol/limit ≥ 15×  |  buy 200k–10M     |  margin ≥ 30k   |  freshness ≤ 45min
 // HIGH:   vol/limit ≥ 8×   |  buy ≥ 10M        |  margin ≥ 90k   |  freshness ≤ 1hr
@@ -978,11 +996,14 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
                   <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                   <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
                     <div className="item-name">{item.name}</div>
-                    <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", alignItems: "center" }}>
                       <RiskTag item={item} />
                       {hasFlipped && (
                         <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(201,168,76,0.12)", color: "var(--gold)", borderRadius: "4px", padding: "1px 5px" }}>✓ Flipped</span>
                       )}
+                      {(() => { const tag = getPersonalityTag(item); return tag ? (
+                        <span style={{ fontSize: "10px", color: "var(--text-dim)", opacity: 0.8 }}>{tag.icon} {tag.label}</span>
+                      ) : null; })()}
                     </div>
                   </div>
                 </div>

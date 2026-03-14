@@ -9,30 +9,30 @@ import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 import RecommendedFlips from "./RecommendedFlips";
 
-// ── Changelog — add new entries at the top, bump DEPLOY_KEY on each deploy ──
+// â”€â”€ Changelog â€” add new entries at the top, bump DEPLOY_KEY on each deploy â”€â”€
 const DEPLOY_KEY = "runetrader_seen_deploy_v1"; // change this string on each deploy to trigger the modal
 const CHANGELOG = [
   {
     version: "Latest",
     date: "March 2026",
     items: [
-      { type: "new", text: "High Alch Tracker — find profitable alch items with live nature rune pricing" },
-      { type: "new", text: "Death's Coffer tool — find cheapest items to sacrifice, with potential savings calculator" },
-      { type: "new", text: "Portfolio page rebuilt — period stats, win rate donut, per-item P&L, best/worst items" },
-      { type: "new", text: "Soft gates — Merchant Mode features now shown with upgrade prompts for free users" },
-      { type: "new", text: "Shareable item URLs — share runetrader.gg/item/abyssal-whip to open any item chart" },
+      { type: "new", text: "High Alch Tracker â€” find profitable alch items with live nature rune pricing" },
+      { type: "new", text: "Death's Coffer tool â€” find cheapest items to sacrifice, with potential savings calculator" },
+      { type: "new", text: "Portfolio page rebuilt â€” period stats, win rate donut, per-item P&L, best/worst items" },
+      { type: "new", text: "Soft gates â€” Merchant Mode features now shown with upgrade prompts for free users" },
+      { type: "new", text: "Shareable item URLs â€” share runetrader.gg/item/abyssal-whip to open any item chart" },
       { type: "improved", text: "Alert feed items now clickable to open price chart" },
-      { type: "improved", text: "Market sub-tabs — Flips, High Alch, Death's Coffer now in one place" },
-      { type: "improved", text: "Nature rune price editable in High Alch tab — use your own cost basis" },
+      { type: "improved", text: "Market sub-tabs â€” Flips, High Alch, Death's Coffer now in one place" },
+      { type: "improved", text: "Nature rune price editable in High Alch tab â€” use your own cost basis" },
     ],
   },
   {
     version: "v0.9",
     date: "February 2026",
     items: [
-      { type: "new", text: "Merchant Mode — full trading terminal with Operations and Analytics tabs" },
+      { type: "new", text: "Merchant Mode â€” full trading terminal with Operations and Analytics tabs" },
       { type: "new", text: "Live GE slot tracking via RuneLite plugin" },
-      { type: "new", text: "Smart Alerts — margin spike, volume surge, dump detection, price crash" },
+      { type: "new", text: "Smart Alerts â€” margin spike, volume surge, dump detection, price crash" },
       { type: "new", text: "AI Advisor with live GE slot context" },
       { type: "improved", text: "Market page rebuilt with 4,525 items and advanced filters" },
     ],
@@ -876,10 +876,10 @@ const STYLES = `
   }
 `;
 
-// ─── HELPERS ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function formatGP(n) {
-  if (!n && n !== 0) return "—";
+  if (!n && n !== 0) return "â€”";
   return Math.round(n).toLocaleString();
 }
 
@@ -892,7 +892,7 @@ function formatTime(d) {
 }
 
 function timeAgo(unixSec) {
-  if (!unixSec) return "—";
+  if (!unixSec) return "â€”";
   const diff = Math.floor(Date.now() / 1000 - unixSec);
   if (diff < 0) return "just now";
   if (diff < 60) return diff + "s ago";
@@ -901,27 +901,27 @@ function timeAgo(unixSec) {
   return Math.floor(diff / 86400) + "d ago";
 }
 
-// ── SCORING SYSTEM ──────────────────────────────────────────────────────────
+// â”€â”€ SCORING SYSTEM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Core question: "How good is this flip for THIS player right now?"
 // Built around one real metric: expected GP per 4hr buy window.
 // Then shaped by risk/speed preferences and data confidence.
 
 function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
-  // Hard disqualifiers — not a flip at all
+  // Hard disqualifiers â€” not a flip at all
   if (margin <= 0)  return 0;
   if (volume < 200) return 0;
 
-  // ── Core metric: realistic GP per 4hr buy window ─────────────────────────
+  // â”€â”€ Core metric: realistic GP per 4hr buy window â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Competition model: scales with volume. Deep markets absorb all flippers.
   // At extreme volume (500k+/day), the market is so liquid that even 2000 flippers
-  // each buying their full limit won't exhaust it — everyone fills.
+  // each buying their full limit won't exhaust it â€” everyone fills.
   // At low volume, you're fighting over scraps.
   const limit = buyLimit > 0 ? buyLimit : 500;
   const marketPer4hr = volume / 6;
 
   let expectedFill;
   if (volume >= 500_000) {
-    // Extreme volume: fills reliably — competition absorbed by market depth
+    // Extreme volume: fills reliably â€” competition absorbed by market depth
     expectedFill = Math.min(limit, marketPer4hr);
   } else if (volume >= 100_000) {
     // High volume: light competition, ~60% fill rate
@@ -939,7 +939,7 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
 
   const gpPer4hr = margin * Math.max(expectedFill, 1);
   if (gpPer4hr < 50_000) return 0;
-  // Score 0–70 from GP/4hr (the primary signal)
+  // Score 0â€“70 from GP/4hr (the primary signal)
   let baseScore;
   if      (gpPer4hr >= 10_000_000) baseScore = 70;
   else if (gpPer4hr >= 5_000_000)  baseScore = 62;
@@ -951,8 +951,8 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
   else if (gpPer4hr >= 5_000)      baseScore = 8;
   else                             baseScore = 2;
 
-  // ── ROI modifier: ±15pts ────────────────────────────────────────────────
-  // Rewards realistic GE ROI (2–10%). Penalizes extremes heavily.
+  // â”€â”€ ROI modifier: Â±15pts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Rewards realistic GE ROI (2â€“10%). Penalizes extremes heavily.
   // <0.5% = margin probably noise/tax artifact
   // >50% = thin market, likely won't fill at that price or is stale
   let roiMod = 0;
@@ -964,7 +964,7 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
   else if (roi <= 100)  roiMod = -8;
   else                  roiMod = -15; // very high ROI = almost never fills at this spread
 
-  // ── Data freshness: multiplicative confidence factor ─────────────────────
+  // â”€â”€ Data freshness: multiplicative confidence factor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Stale data = margin shown is probably wrong. Hard kill above 2hr.
   let freshness = 0.5; // default if unknown
   if (lastTradeTime) {
@@ -979,7 +979,7 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
 
   const base = Math.max(0, Math.min(85, Math.round((baseScore + roiMod) * freshness)));
 
-  // ── Preference shaping ───────────────────────────────────────────────────
+  // â”€â”€ Preference shaping â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // This is the layer that makes the LIST actually change.
   // Preferences apply ADDITIVE bonus/penalty points (not multipliers)
   // so that the relative ordering shifts visibly without everything clamping to 100.
@@ -988,7 +988,7 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
 
   let prefDelta = 0;
 
-  // SPEED preference — about fill time, driven by volume
+  // SPEED preference â€” about fill time, driven by volume
   if (speed === "Fast") {
     // Fast = need to fill within 30min = needs massive daily volume
     if      (volume >= 1_000_000) prefDelta += 15;
@@ -1010,7 +1010,7 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
     if (margin < 1_000)    prefDelta -= 10;
   }
 
-  // RISK preference — about margin stability and market depth
+  // RISK preference â€” about margin stability and market depth
   if (risk === "Low") {
     // Low risk = stable, liquid, predictable. Punish thin/volatile markets hard.
     if      (volume >= 500_000)  prefDelta += 12;
@@ -1045,7 +1045,7 @@ function renderMarkdown(text) {
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
-    // blank line → spacer
+    // blank line â†’ spacer
     if (line.trim() === "") { elements.push(<div key={i} style={{ height: "6px" }} />); i++; continue; }
     // bullet line
     if (/^[-*]\s/.test(line.trim())) {
@@ -1087,7 +1087,7 @@ function isValidFlip(item) {
   return item.high > item.low && item.low >= 50 && item.margin > 0;
 }
 
-// ─── CONSTANTS ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const TIME_RANGES = [
   { label: "24H", seconds: 86400 }, { label: "3D", seconds: 259200 },
@@ -1098,35 +1098,35 @@ const TIME_RANGES = [
 const TOUR_STEPS = [
   { id: "flips-table", title: "Live Market", desc: "Every tradeable OSRS item sorted by volume. Click any item to see its price history and margin. Use column headers to sort by margin, ROI, GP/Fill, and more.", target: ".flips-table", placement: "top" },
   { id: "filter-bar", title: "Filter & Search", desc: "Filter by F2P, Members, or High Volume. Star items to save them as favourites. Use the search box to find any item instantly.", target: ".filter-bar", placement: "bottom" },
-  { id: "ai-advisor", title: "AI Flip Advisor", desc: "Ask the AI anything — best flips for your budget, what's trending, or whether a specific item is worth flipping. It has live GE data.", target: ".merchant-ai-bubble", placement: "left" },
+  { id: "ai-advisor", title: "AI Flip Advisor", desc: "Ask the AI anything â€” best flips for your budget, what's trending, or whether a specific item is worth flipping. It has live GE data.", target: ".merchant-ai-bubble", placement: "left" },
   { id: "tracker-tab", title: "Track Your Flips", desc: "Log every flip to track total profit, best items, and average returns. Your history syncs across all your devices automatically.", target: ".nav-tabs", placement: "bottom" },
-  { id: "done", title: "You're Ready to Flip! 📈", desc: "That's everything. Start by setting your cash stack, then check the top flips list. Good luck on the Grand Exchange!", target: null, placement: "center" },
+  { id: "done", title: "You're Ready to Flip! ðŸ“ˆ", desc: "That's everything. Start by setting your cash stack, then check the top flips list. Good luck on the Grand Exchange!", target: null, placement: "center" },
 ];
 
 const MERCHANT_TOUR_STEPS = [
-  // ── Operations tab ──
-  { title: "Welcome to Merchant Mode 📈", desc: "Your war room for managing multiple GE positions at once. Four tabs cover everything: Operations, Analytics, Alerts, and Market. Let's walk through each one.", target: null, placement: "center", view: "operations" },
+  // â”€â”€ Operations tab â”€â”€
+  { title: "Welcome to Merchant Mode ðŸ“ˆ", desc: "Your war room for managing multiple GE positions at once. Four tabs cover everything: Operations, Analytics, Alerts, and Market. Let's walk through each one.", target: null, placement: "center", view: "operations" },
   { title: "Capital Overview", desc: "Tracks your full GP stack at a glance. Deployed = GP locked in open positions. Idle = unused GP ready to put to work. Realised = profit closed today. Click 'Update' any time to adjust your stack.", target: ".capital-bar", placement: "bottom", view: "operations" },
-  { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips. Dot colours show each position's status: 🟡 Buying · 🟢 Holding · 🔵 Selling · 🔴 Danger. Click any slot to view that item's price chart.", target: ".slots-grid", placement: "bottom", view: "operations" },
-  { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Use the status dropdown to mark each flip: Buying → Holding → Selling. Hit ⚙ on any row to set Autopilot rules — margin floor, hold time limit, or price drop alert — personalised per position. Rules are stored on this device.", target: "#active-operations-section", placement: "top", view: "operations" },
+  { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips. Dot colours show each position's status: ðŸŸ¡ Buying Â· ðŸŸ¢ Holding Â· ðŸ”µ Selling Â· ðŸ”´ Danger. Click any slot to view that item's price chart.", target: ".slots-grid", placement: "bottom", view: "operations" },
+  { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Use the status dropdown to mark each flip: Buying â†’ Holding â†’ Selling. Hit âš™ on any row to set Autopilot rules â€” margin floor, hold time limit, or price drop alert â€” personalised per position. Rules are stored on this device.", target: "#active-operations-section", placement: "top", view: "operations" },
   { title: "Capital Efficiency", desc: "The ring gauge shows what % of your stack is actively working. Aim for 70%+ for best returns. Below 50% means too much idle GP sitting unused.", target: ".gauge-ring", placement: "left", view: "operations" },
-  { title: "🎯 Daily GP Goal", desc: "Set a daily GP target and track your progress in real time. The bar fills as you close flips, and gives you an ETA based on your current GP/hr rate.", target: "#tour-daily-goal", placement: "left", view: "operations" },
-  { title: "⚡ Rotation Picks", desc: "Items suggested to fill your idle GP right now — filtered to fit your budget and ranked by score. Click any card to open the price chart and decide if it's worth a flip.", target: ".rotation-picks-section", placement: "left", view: "operations" },
-  { title: "📋 Flip Queue", desc: "A wishlist of items you want to flip next. Add anything here, and the live margin updates automatically. When a slot opens up, your queue tells you exactly what to buy.", target: "#tour-flip-queue", placement: "top", view: "operations" },
-  // ── Analytics tab ──
-  { title: "📊 Session Intel", desc: "A full breakdown of your current session: duration, GP/hr rate, flips closed, return on capital, and more. All updated live as you trade.", target: "#tour-session-intel", placement: "right", view: "analytics" },
-  { title: "⚠️ Risk Exposure", desc: "See how concentrated your capital is across items. Any position above 40% of your stack triggers a warning — over-concentration is one of the biggest risks in GE flipping.", target: "#tour-risk-exposure", placement: "right", view: "analytics" },
-  { title: "✅ Closed Today", desc: "A full log of every flip you've closed today with buy price, sell price, and profit per flip. Great for reviewing what's working and what isn't.", target: "#tour-closed-today", placement: "right", view: "analytics" },
-  // ── Alerts tab ──
-  { title: "⚡ Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the ⚙️ gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
-  { title: "📡 Live Feed", desc: "Every alert that's fired this session lands here in real time. Filter by type, click any alert to jump straight to that item's chart, and clear the feed whenever you like.", target: "#tour-live-feed", placement: "right", view: "alerts" },
-  // ── AI Bubble ──
-  { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold 📈 bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "left", view: "operations" },
-  // ── Done ──
-  { title: "You're fully set up 📈", desc: "Start a buy offer in the GE in-game — the RuneTrader plugin picks it up automatically and opens a position here. Close or sell in-game and it updates in real time. Good luck on the GE.", target: null, placement: "center", view: "operations" },
+  { title: "ðŸŽ¯ Daily GP Goal", desc: "Set a daily GP target and track your progress in real time. The bar fills as you close flips, and gives you an ETA based on your current GP/hr rate.", target: "#tour-daily-goal", placement: "left", view: "operations" },
+  { title: "âš¡ Rotation Picks", desc: "Items suggested to fill your idle GP right now â€” filtered to fit your budget and ranked by score. Click any card to open the price chart and decide if it's worth a flip.", target: ".rotation-picks-section", placement: "left", view: "operations" },
+  { title: "ðŸ“‹ Flip Queue", desc: "A wishlist of items you want to flip next. Add anything here, and the live margin updates automatically. When a slot opens up, your queue tells you exactly what to buy.", target: "#tour-flip-queue", placement: "top", view: "operations" },
+  // â”€â”€ Analytics tab â”€â”€
+  { title: "ðŸ“Š Session Intel", desc: "A full breakdown of your current session: duration, GP/hr rate, flips closed, return on capital, and more. All updated live as you trade.", target: "#tour-session-intel", placement: "right", view: "analytics" },
+  { title: "âš ï¸ Risk Exposure", desc: "See how concentrated your capital is across items. Any position above 40% of your stack triggers a warning â€” over-concentration is one of the biggest risks in GE flipping.", target: "#tour-risk-exposure", placement: "right", view: "analytics" },
+  { title: "âœ… Closed Today", desc: "A full log of every flip you've closed today with buy price, sell price, and profit per flip. Great for reviewing what's working and what isn't.", target: "#tour-closed-today", placement: "right", view: "analytics" },
+  // â”€â”€ Alerts tab â”€â”€
+  { title: "âš¡ Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the âš™ï¸ gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
+  { title: "ðŸ“¡ Live Feed", desc: "Every alert that's fired this session lands here in real time. Filter by type, click any alert to jump straight to that item's chart, and clear the feed whenever you like.", target: "#tour-live-feed", placement: "right", view: "alerts" },
+  // â”€â”€ AI Bubble â”€â”€
+  { title: "ðŸ¤– AI Advisor", desc: "Your AI trading assistant is always one click away â€” look for the gold ðŸ“ˆ bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "left", view: "operations" },
+  // â”€â”€ Done â”€â”€
+  { title: "You're fully set up ðŸ“ˆ", desc: "Start a buy offer in the GE in-game â€” the RuneTrader plugin picks it up automatically and opens a position here. Close or sell in-game and it updates in real time. Good luck on the GE.", target: null, placement: "center", view: "operations" },
 ];
 
-// ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
+// â”€â”€â”€ ITEM CHART MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCooldown, onShare, isWatchlisted, onToggleWatchlist }) {
   const [range, setRange] = useState("7D");
@@ -1222,7 +1222,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
         <div className="modal-header">
           <div>
             <div className="modal-title">{item.name}</div>
-            <div className="modal-meta">{item.category} · Buy limit: {item.buyLimit > 0 ? item.buyLimit.toLocaleString() : "Unknown"} · Score: {item.score}/100</div>
+            <div className="modal-meta">{item.category} Â· Buy limit: {item.buyLimit > 0 ? item.buyLimit.toLocaleString() : "Unknown"} Â· Score: {item.score}/100</div>
           </div>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <button
@@ -1231,10 +1231,10 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
               disabled={refreshing || refreshCooldown > 0}
               title={refreshCooldown > 0 ? `Wait ${refreshCooldown}s` : "Refresh prices"}
             >
-              <span className={refreshing ? "refresh-spin" : ""}>↻</span>
-              {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `↻ ${refreshCooldown}s` : "Refresh"}
+              <span className={refreshing ? "refresh-spin" : ""}>â†»</span>
+              {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `â†» ${refreshCooldown}s` : "Refresh"}
             </button>
-            <button className="modal-close" onClick={onClose}>✕</button>
+            <button className="modal-close" onClick={onClose}>âœ•</button>
           </div>
         </div>
         <div className="modal-stats">
@@ -1242,11 +1242,11 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
             { label: "Buy Price", value: formatGP(item.adjLow ?? item.low), color: "var(--green)", tip: "The current lowest buy offer on the GE. This is what you'll pay to buy the item." },
             { label: "Sell Price", value: formatGP(item.adjHigh ?? item.high), color: "var(--text)", tip: "The current highest sell offer on the GE. This is what buyers are paying right now." },
             { label: "Margin (after tax)", value: formatGP(item.adjMargin ?? item.margin), color: (item.adjMargin ?? item.margin) > 0 ? "var(--green)" : "var(--red)", tip: "Sell price minus buy price minus GE tax (1%, capped at 5M). This is your actual profit per item." },
-            { label: "ROI", value: item.roi + "%", color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12", tip: "Return on investment — margin ÷ buy price. 🟢 1–3% = Healthy sweet spot. 🟡 >4% = Risky (wide spread, hard to exit). 🟠 <1% = Competitive (thin margin, many flippers)." },
-            { label: "Vol / Day", value: item.volume > 0 ? item.volume.toLocaleString() : "—", color: "var(--text-dim)", tip: "Total items traded across all GE slots per day. Higher volume = easier fills and less competition risk." },
-            { label: "GP / Fill", value: item.buyLimit > 0 ? formatGP((item.adjMargin ?? item.margin) * item.buyLimit) : "—", color: "var(--gold)", tip: "Maximum GP profit per 4-hour buy limit window (margin × buy limit). Use this to compare how much a full cycle is worth." },
-            { label: "Cycles / Day", value: item.buyLimit > 0 && item.volume > 0 ? (item.volume / item.buyLimit).toFixed(1) + "×" : "—", color: item.buyLimit > 0 && item.volume / item.buyLimit >= 71 ? "var(--green)" : item.buyLimit > 0 && item.volume / item.buyLimit >= 31 ? "#f39c12" : "var(--red)", tip: "How many times the daily volume could fill your buy limit (vol ÷ limit). 🟢 71×+ = Liquid. 🟠 31–70× = Active. 🔴 ≤30× = Competitive (fills may be slow)." },
-            { label: "Last Trade", value: item.lastTradeTime ? formatTime(item.lastTradeTime * 1000) : "—", color: "var(--text-dim)", tip: "When this item last traded on the GE. Stale data (hours ago) means low activity — prices may not reflect reality." },
+            { label: "ROI", value: item.roi + "%", color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12", tip: "Return on investment â€” margin Ã· buy price. ðŸŸ¢ 1â€“3% = Healthy sweet spot. ðŸŸ¡ >4% = Risky (wide spread, hard to exit). ðŸŸ  <1% = Competitive (thin margin, many flippers)." },
+            { label: "Vol / Day", value: item.volume > 0 ? item.volume.toLocaleString() : "â€”", color: "var(--text-dim)", tip: "Total items traded across all GE slots per day. Higher volume = easier fills and less competition risk." },
+            { label: "GP / Fill", value: item.buyLimit > 0 ? formatGP((item.adjMargin ?? item.margin) * item.buyLimit) : "â€”", color: "var(--gold)", tip: "Maximum GP profit per 4-hour buy limit window (margin Ã— buy limit). Use this to compare how much a full cycle is worth." },
+            { label: "Cycles / Day", value: item.buyLimit > 0 && item.volume > 0 ? (item.volume / item.buyLimit).toFixed(1) + "Ã—" : "â€”", color: item.buyLimit > 0 && item.volume / item.buyLimit >= 71 ? "var(--green)" : item.buyLimit > 0 && item.volume / item.buyLimit >= 31 ? "#f39c12" : "var(--red)", tip: "How many times the daily volume could fill your buy limit (vol Ã· limit). ðŸŸ¢ 71Ã—+ = Liquid. ðŸŸ  31â€“70Ã— = Active. ðŸ”´ â‰¤30Ã— = Competitive (fills may be slow)." },
+            { label: "Last Trade", value: item.lastTradeTime ? formatTime(item.lastTradeTime * 1000) : "â€”", color: "var(--text-dim)", tip: "When this item last traded on the GE. Stale data (hours ago) means low activity â€” prices may not reflect reality." },
           ].map((s, i) => (
             <div key={i} className="modal-stat">
               <div className="modal-stat-label">
@@ -1274,14 +1274,14 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
         </div>
         <div className="modal-body">
           <button className="modal-ask-btn" onClick={() => { onToggleWatchlist && onToggleWatchlist(); }} style={{ background: isWatchlisted ? "rgba(201,168,76,0.12)" : undefined, borderColor: isWatchlisted ? "var(--gold-dim)" : undefined, color: isWatchlisted ? "var(--gold)" : undefined }}>
-            {isWatchlisted ? "🔖 Remove from Watchlist" : "🔖 Add to Watchlist"}
+            {isWatchlisted ? "ðŸ”– Remove from Watchlist" : "ðŸ”– Add to Watchlist"}
           </button>
           <button className="modal-ask-btn" onClick={() => { onAskAI(`Analyse ${item.name} for me. Is now a good time to flip it? Buy at ${formatGP(item.adjLow ?? item.low)}, sell at ${formatGP(item.adjHigh ?? item.high)}, margin ${formatGP(item.adjMargin ?? item.margin)}.`); onClose(); }}>
-            📈 Ask AI to analyse this flip →
+            ðŸ“ˆ Ask AI to analyse this flip â†’
           </button>
           {onShare && (
             <button className="modal-ask-btn" style={{ opacity: 0.7 }} onClick={onShare}>
-              🔗 Copy shareable link →
+              ðŸ”— Copy shareable link â†’
             </button>
           )}
         </div>
@@ -1290,7 +1290,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
   );
 }
 
-// ─── PROFIT CHART ────────────────────────────────────────────────────────────
+// â”€â”€â”€ PROFIT CHART â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function ProfitChart({ flipsLog, autoFlipsLog = [] }) {
   const canvasRef = useRef(null);
@@ -1347,7 +1347,7 @@ function ProfitChart({ flipsLog, autoFlipsLog = [] }) {
   if (closedCount < 2) return null;
   return (
     <div className="profit-chart-wrap">
-      <div className="profit-chart-title">📈 Cumulative Profit</div>
+      <div className="profit-chart-title">ðŸ“ˆ Cumulative Profit</div>
       <div className="profit-canvas-wrap">
         <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />
       </div>
@@ -1355,7 +1355,7 @@ function ProfitChart({ flipsLog, autoFlipsLog = [] }) {
   );
 }
 
-// ─── CLOSE FLIP MODAL ────────────────────────────────────────────────────────
+// â”€â”€â”€ CLOSE FLIP MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }) {
   const [step, setStep] = useState("choose"); // "choose" | "sold"
@@ -1387,19 +1387,19 @@ function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }
         {step === "choose" && (
           <div className="close-flip-options">
             <button className="close-flip-option-btn sold" onClick={() => setStep("sold")}>
-              <span className="opt-title">✅ Sold</span>
-              <span className="opt-sub">I sold this item — enter my sell price and log the profit</span>
+              <span className="opt-title">âœ… Sold</span>
+              <span className="opt-sub">I sold this item â€” enter my sell price and log the profit</span>
             </button>
             <button className="close-flip-option-btn" onClick={() => onCancelled(flip)}>
-              <span className="opt-title">❌ Cancelled</span>
-              <span className="opt-sub">Order didn&apos;t fill or I changed my mind — remove from open flips</span>
+              <span className="opt-title">âŒ Cancelled</span>
+              <span className="opt-sub">Order didn&apos;t fill or I changed my mind â€” remove from open flips</span>
             </button>
           </div>
         )}
 
         {step === "sold" && (
           <div className="close-flip-sold-form">
-            <button className="back-link" onClick={() => setStep("choose")}>← Back</button>
+            <button className="back-link" onClick={() => setStep("choose")}>â† Back</button>
             <div className="close-flip-field">
               <label className="close-flip-label">Sell Price (gp)</label>
               <input
@@ -1441,7 +1441,7 @@ function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }
   );
 }
 
-// ─── PORTFOLIO PAGE ───────────────────────────────────────────────────────────
+// â”€â”€â”€ PORTFOLIO PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
   const [portPeriod, setPortPeriod] = useState("month"); // "week" | "month" | "all"
@@ -1449,7 +1449,7 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
   if (!user) {
     return (
       <div className="portfolio-login-prompt">
-        <div className="icon">📊</div>
+        <div className="icon">ðŸ“Š</div>
         <p>Portfolio tracking requires an account</p>
         <small>Sign up and connect the RuneLite plugin to start tracking your flips.</small>
         <button className="portfolio-signin-btn" onClick={onSignIn}>Sign In / Create Account</button>
@@ -1457,7 +1457,7 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
     );
   }
 
-  // ── Helper: get date cutoff for period ──
+  // â”€â”€ Helper: get date cutoff for period â”€â”€
   function getPeriodCutoff(period) {
     const now = new Date();
     if (period === "week") { const d = new Date(now); d.setDate(d.getDate() - 7); return d; }
@@ -1465,21 +1465,21 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
     return null; // all time
   }
 
-  // ── All closed flips (plugin + tracker) ──
+  // â”€â”€ All closed flips (plugin + tracker) â”€â”€
   const allClosed = [
     ...flipsLog.filter(f => f.status !== "open").map(f => ({ ...f, _date: f.date ? new Date(f.date) : null })),
     ...autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, roi: f.roi || 0, qty: f.quantity || 1, buyPrice: f.buy_price || 0, _date: f.sell_completed_at ? new Date(f.sell_completed_at) : null })),
   ];
 
-  // ── Open positions (tracker open flips only — no manual entry) ──
+  // â”€â”€ Open positions (tracker open flips only â€” no manual entry) â”€â”€
   const trackerOpenFlips = flipsLog.filter(f => f.status === "open");
   const totalOpenValue = trackerOpenFlips.reduce((s, f) => s + (f.buyPrice || 0) * (f.qty || 1), 0);
 
-  // Capital allocation — open tracker flips only
+  // Capital allocation â€” open tracker flips only
   const allOpen = trackerOpenFlips.map(f => ({ name: f.item, value: (f.buyPrice || 0) * (f.qty || 1) }));
   const maxAlloc = Math.max(...allOpen.map(p => p.value), 1);
 
-  // ── Period-filtered stats (for tables) ──
+  // â”€â”€ Period-filtered stats (for tables) â”€â”€
   const cutoff = getPeriodCutoff(portPeriod);
   const periodClosed = cutoff ? allClosed.filter(f => f._date && f._date >= cutoff) : allClosed;
   const periodProfit = periodClosed.reduce((s, f) => s + (f.totalProfit || 0), 0);
@@ -1506,7 +1506,7 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
   return (
     <div className="portfolio-wrap">
 
-      {/* ── PERIOD SELECTOR ── */}
+      {/* â”€â”€ PERIOD SELECTOR â”€â”€ */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         {[["week","This Week"],["month","This Month"],["all","All Time"]].map(([v,l]) => (
           <button key={v}
@@ -1515,27 +1515,27 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
           >{l}</button>
         ))}
         <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>
-          {periodFlips > 0 ? `${periodFlips} flips · ${formatGP(periodProfit)} profit` : "No flips in this period"}
+          {periodFlips > 0 ? `${periodFlips} flips Â· ${formatGP(periodProfit)} profit` : "No flips in this period"}
         </span>
       </div>
 
-      {/* ── PERIOD STAT CARDS ── */}
+      {/* â”€â”€ PERIOD STAT CARDS â”€â”€ */}
       <div className="port-stats">
         <div className="port-stat">
           <span className="port-stat-label">Profit</span>
-          <span className="port-stat-value" style={{ color: periodProfit >= 0 ? "var(--green)" : "var(--red)" }}>{periodFlips > 0 ? formatGP(periodProfit) : "—"}</span>
+          <span className="port-stat-value" style={{ color: periodProfit >= 0 ? "var(--green)" : "var(--red)" }}>{periodFlips > 0 ? formatGP(periodProfit) : "â€”"}</span>
           <span className="port-stat-sub">{periodLabel}</span>
         </div>
         <div className="port-stat">
           <span className="port-stat-label">Win Rate</span>
           <span className="port-stat-value" style={{ color: periodWinRate === null ? "var(--text-dim)" : periodWinRate >= 60 ? "var(--green)" : periodWinRate >= 40 ? "var(--gold)" : "var(--red)" }}>
-            {periodWinRate === null ? "—" : `${periodWinRate}%`}
+            {periodWinRate === null ? "â€”" : `${periodWinRate}%`}
           </span>
           <span className="port-stat-sub">{periodWins}W / {periodFlips - periodWins}L</span>
         </div>
         <div className="port-stat">
           <span className="port-stat-label">Avg / Flip</span>
-          <span className="port-stat-value" style={{ color: periodAvgProfit >= 0 ? "var(--gold)" : "var(--red)" }}>{periodFlips > 0 ? formatGP(periodAvgProfit) : "—"}</span>
+          <span className="port-stat-value" style={{ color: periodAvgProfit >= 0 ? "var(--gold)" : "var(--red)" }}>{periodFlips > 0 ? formatGP(periodAvgProfit) : "â€”"}</span>
           <span className="port-stat-sub">after 2% GE tax</span>
         </div>
         <div className="port-stat">
@@ -1546,16 +1546,16 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
         <div className="port-stat">
           <span className="port-stat-label">Items Traded</span>
           <span className="port-stat-value">{periodItemStats.length}</span>
-          <span className="port-stat-sub">unique · {periodLabel}</span>
+          <span className="port-stat-sub">unique Â· {periodLabel}</span>
         </div>
       </div>
 
-      {/* ── TWO COL: CAPITAL ALLOCATION + WIN RATE ── */}
+      {/* â”€â”€ TWO COL: CAPITAL ALLOCATION + WIN RATE â”€â”€ */}
       <div className="port-two-col">
         <div className="port-card">
-          <div className="port-card-title">💰 Capital Allocation</div>
+          <div className="port-card-title">ðŸ’° Capital Allocation</div>
           {allOpen.length === 0 ? (
-            <div className="alloc-empty">No open GE slots — connect the RuneLite plugin to see live positions</div>
+            <div className="alloc-empty">No open GE slots â€” connect the RuneLite plugin to see live positions</div>
           ) : (
             <div className="alloc-bar-wrap">
               {allOpen.sort((a, b) => b.value - a.value).map((pos, i) => (
@@ -1572,7 +1572,7 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
         </div>
 
         <div className="port-card">
-          <div className="port-card-title">🏆 Win Rate — {periodLabel}</div>
+          <div className="port-card-title">ðŸ† Win Rate â€” {periodLabel}</div>
           {periodFlips === 0 ? (
             <div className="alloc-empty">No closed flips in this period</div>
           ) : (
@@ -1610,10 +1610,10 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
         </div>
       </div>
 
-      {/* ── TWO COL: PER-ITEM P&L + BEST/WORST ── */}
+      {/* â”€â”€ TWO COL: PER-ITEM P&L + BEST/WORST â”€â”€ */}
       <div className="port-two-col">
         <div className="port-card">
-          <div className="port-card-title">📊 Per-Item P&amp;L — {periodLabel}</div>
+          <div className="port-card-title">ðŸ“Š Per-Item P&amp;L â€” {periodLabel}</div>
           {periodItemStats.length === 0 ? (
             <div className="alloc-empty">No flips in this period</div>
           ) : (
@@ -1636,13 +1636,13 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
         </div>
 
         <div className="port-card">
-          <div className="port-card-title">⚡ Best &amp; Worst — {periodLabel}</div>
+          <div className="port-card-title">âš¡ Best &amp; Worst â€” {periodLabel}</div>
           {periodItemStats.length === 0 ? (
             <div className="alloc-empty">No flips in this period</div>
           ) : (
             <div className="bw-table">
               <div className="bw-header"><span>Item</span><span>Flips</span><span>Win %</span><span>P&amp;L</span></div>
-              <div className="bw-section-label">🏆 Best performers</div>
+              <div className="bw-section-label">ðŸ† Best performers</div>
               {periodBestItems.map((item, i) => (
                 <div key={`b${i}`} className="bw-row">
                   <span style={{ color: "var(--text)" }}>{item.name}</span>
@@ -1653,7 +1653,7 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
               ))}
               {periodWorstItems.length > 0 && (
                 <>
-                  <div className="bw-section-label">📉 Worst performers</div>
+                  <div className="bw-section-label">ðŸ“‰ Worst performers</div>
                   {periodWorstItems.map((item, i) => (
                     <div key={`w${i}`} className="bw-row">
                       <span style={{ color: "var(--text)" }}>{item.name}</span>
@@ -1673,15 +1673,15 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
   );
 }
 
-// ─── WELCOME MESSAGE ─────────────────────────────────────────────────────────
+// â”€â”€â”€ WELCOME MESSAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const WELCOME_MSG = {
   role: "assistant",
-  content: "Hey! I'm your RuneTrader AI assistant 👋\n\nI have access to live Grand Exchange data and can help you find the best flips for your budget, explain market trends, and answer any OSRS trading questions.\n\nWhat are you working with today?",
+  content: "Hey! I'm your RuneTrader AI assistant ðŸ‘‹\n\nI have access to live Grand Exchange data and can help you find the best flips for your budget, explain market trends, and answer any OSRS trading questions.\n\nWhat are you working with today?",
   time: new Date(),
 };
 
-// ─── DEMO DATA ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ DEMO DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Fake live ops (ge_flips_live rows)
 const DEMO_LIVE_OPS = [
@@ -1706,7 +1706,7 @@ const DEMO_PNL_HISTORY = (() => {
   return vals.map((v, i) => ({ time: Date.now() - (vals.length - 1 - i) * 900000, value: v }));
 })();
 
-// No-op supabase stub for demo mode — prevents network calls inside MerchantMode
+// No-op supabase stub for demo mode â€” prevents network calls inside MerchantMode
 const DEMO_SUPABASE_STUB = {
   from: () => ({
     select: () => ({
@@ -1725,12 +1725,12 @@ const DEMO_SUPABASE_STUB = {
 
 const DEMO_CAPITAL = 50_000_000;
 
-// ── Demo Tour Steps ──────────────────────────────────────────────────────────
+// â”€â”€ Demo Tour Steps â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const DEMO_TOUR_STEPS = [
   {
     id: "welcome",
-    title: "Welcome to RuneTrader 📈",
-    desc: "RuneTrader is your Grand Exchange command centre. In the next 60 seconds we'll show you everything — live market data, smart alerts, and Merchant Mode. Let's go.",
+    title: "Welcome to RuneTrader ðŸ“ˆ",
+    desc: "RuneTrader is your Grand Exchange command centre. In the next 60 seconds we'll show you everything â€” live market data, smart alerts, and Merchant Mode. Let's go.",
     target: null,
     placement: "center",
     tab: null,
@@ -1748,7 +1748,7 @@ const DEMO_TOUR_STEPS = [
   {
     id: "sparklines",
     title: "24-Hour Trend Sparklines",
-    desc: "Every item has a live 24hr margin trend chart. Green means the spread is widening — more profit per flip. Red means it's compressing. Spot momentum at a glance without opening the chart modal.",
+    desc: "Every item has a live 24hr margin trend chart. Green means the spread is widening â€” more profit per flip. Red means it's compressing. Spot momentum at a glance without opening the chart modal.",
     target: ".flips-table",
     placement: "center",
     tab: "market",
@@ -1756,8 +1756,8 @@ const DEMO_TOUR_STEPS = [
   },
   {
     id: "watchlist",
-    title: "Watchlist — Your Favourites",
-    desc: "Bookmark items you flip regularly with the 🔖 icon. Set price alerts so you get notified when the margin hits your target. Your watchlist syncs across devices when you sign in.",
+    title: "Watchlist â€” Your Favourites",
+    desc: "Bookmark items you flip regularly with the ðŸ”– icon. Set price alerts so you get notified when the margin hits your target. Your watchlist syncs across devices when you sign in.",
     target: ".watchlist-table",
     placement: "top",
     tab: "watchlist",
@@ -1766,7 +1766,7 @@ const DEMO_TOUR_STEPS = [
   {
     id: "tracker",
     title: "Track Every Flip",
-    desc: "Log your buy and sell prices to track total profit, win rate, and your best-performing items. Connect the RuneLite plugin and your GE slots sync automatically — no manual entry needed.",
+    desc: "Log your buy and sell prices to track total profit, win rate, and your best-performing items. Connect the RuneLite plugin and your GE slots sync automatically â€” no manual entry needed.",
     target: ".profit-chart-wrap",
     placement: "bottom",
     tab: "tracker",
@@ -1774,8 +1774,8 @@ const DEMO_TOUR_STEPS = [
   },
   {
     id: "merchant-intro",
-    title: "Meet Merchant Mode 📈",
-    desc: "RuneTrader's flagship feature — a self-contained trading terminal. Manage all your GE slots, track live P&L, get rotation picks, set autopilot rules, and monitor risk exposure. All in one place.",
+    title: "Meet Merchant Mode ðŸ“ˆ",
+    desc: "RuneTrader's flagship feature â€” a self-contained trading terminal. Manage all your GE slots, track live P&L, get rotation picks, set autopilot rules, and monitor risk exposure. All in one place.",
     target: null,
     placement: "center",
     tab: "market",
@@ -1785,7 +1785,7 @@ const DEMO_TOUR_STEPS = [
   {
     id: "merchant-ops",
     title: "Active Operations",
-    desc: "Every open position with live P&L, hold time, and a margin health bar. The status dots show where each flip is: 🟡 Buying · 🟢 Holding · 🔵 Selling · 🔴 Danger. Click ⚙ to set per-slot Autopilot rules.",
+    desc: "Every open position with live P&L, hold time, and a margin health bar. The status dots show where each flip is: ðŸŸ¡ Buying Â· ðŸŸ¢ Holding Â· ðŸ”µ Selling Â· ðŸ”´ Danger. Click âš™ to set per-slot Autopilot rules.",
     target: "#active-operations-section",
     placement: "top",
     tab: null,
@@ -1794,7 +1794,7 @@ const DEMO_TOUR_STEPS = [
   {
     id: "merchant-capital",
     title: "Capital & Daily Goal",
-    desc: "Track how much GP you have deployed vs idle. Set a daily GP target and watch your progress fill in real time. The ring gauge shows capital efficiency — aim for 70%+ to maximise returns.",
+    desc: "Track how much GP you have deployed vs idle. Set a daily GP target and watch your progress fill in real time. The ring gauge shows capital efficiency â€” aim for 70%+ to maximise returns.",
     target: ".capital-bar",
     placement: "bottom",
     tab: null,
@@ -1802,8 +1802,8 @@ const DEMO_TOUR_STEPS = [
   },
   {
     id: "ai-advisor",
-    title: "AI Advisor — Always On",
-    desc: "Ask the AI anything: best flips for your budget, why an offer isn't filling, whether to relist. It has full visibility of your active slots and live market data. Tap the 📈 bubble any time.",
+    title: "AI Advisor â€” Always On",
+    desc: "Ask the AI anything: best flips for your budget, why an offer isn't filling, whether to relist. It has full visibility of your active slots and live market data. Tap the ðŸ“ˆ bubble any time.",
     target: ".merchant-ai-bubble",
     placement: "left",
     tab: null,
@@ -1811,7 +1811,7 @@ const DEMO_TOUR_STEPS = [
   },
 ];
 
-// ─── WATCHLIST PAGE ────────────────────────────────────────────
+// â”€â”€â”€ WATCHLIST PAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function WatchlistPage({
   user, items, watchlist, watchlistAlerts,
@@ -1859,16 +1859,16 @@ function WatchlistPage({
   return (
     <div className="watchlist-wrap">
       <div className="watchlist-pro-tip">
-        <span>🔖</span>
+        <span>ðŸ”–</span>
         <span>Watch items you flip regularly. Set price alerts to get notified when the market moves.
           {!user && !demoMode && (<span> <button onClick={onSignIn} style={{ background: "none", border: "none", color: "var(--gold)", cursor: "pointer", fontSize: "inherit", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}>Sign in</button> to sync your watchlist across devices.</span>)}
         </span>
       </div>
       {watchedItems.length === 0 ? (
         <div className="watchlist-empty">
-          <div className="icon">🔖</div>
+          <div className="icon">ðŸ”–</div>
           <p style={{ fontSize: "15px" }}>Your watchlist is empty</p>
-          <p style={{ fontSize: "13px" }}>Click the 🔖 icon on any item in the Market tab to add it here, or search below.</p>
+          <p style={{ fontSize: "13px" }}>Click the ðŸ”– icon on any item in the Market tab to add it here, or search below.</p>
         </div>
       ) : (
         <div className="watchlist-table">
@@ -1885,13 +1885,13 @@ function WatchlistPage({
                     <img src={`https://oldschool.runescape.wiki/images/${encodeURIComponent(item.name.replace(/ /g, "_"))}_detail.png`} alt="" style={{ width: 24, height: 24, objectFit: "contain", imageRendering: "pixelated", flexShrink: 0 }} onError={e => { e.target.style.display = "none"; }} />
                     <span style={{ fontWeight: 500, fontSize: "13px" }}>{item.name}</span>
                   </div>
-                  <span style={{ fontSize: "13px" }}>{item.hasPrice ? formatGP(item.low) : "—"}</span>
-                  <span style={{ fontSize: "13px" }}>{item.hasPrice ? formatGP(item.high) : "—"}</span>
-                  <span style={{ fontSize: "13px", fontWeight: 600, color: item.margin > 0 ? "var(--green)" : "var(--red)" }}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
+                  <span style={{ fontSize: "13px" }}>{item.hasPrice ? formatGP(item.low) : "â€”"}</span>
+                  <span style={{ fontSize: "13px" }}>{item.hasPrice ? formatGP(item.high) : "â€”"}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: item.margin > 0 ? "var(--green)" : "var(--red)" }}>{item.hasPrice ? formatGP(item.margin) : "â€”"}</span>
                   <div onClick={e => e.stopPropagation()}><Sparkline itemId={item.id} width={78} height={28} /></div>
                   <div onClick={e => e.stopPropagation()} style={{ position: "relative" }}>
                     <button className={`watchlist-alert-badge ${alertSet ? "set" : "unset"}`} onClick={() => { if (!user && !demoMode) { setUpgradeModal({ feature: "Watchlist Alerts", description: "Sign up free to set price alerts on your watchlist items." }); return; } openAlertPopover(item.id); }}>
-                      🔔 {alertSet ? `${al.above ? "↑" + formatGP(al.above) : ""}${al.above && al.below ? " · " : ""}${al.below ? "↓" + formatGP(al.below) : ""}` : "Set alert"}
+                      ðŸ”” {alertSet ? `${al.above ? "â†‘" + formatGP(al.above) : ""}${al.above && al.below ? " Â· " : ""}${al.below ? "â†“" + formatGP(al.below) : ""}` : "Set alert"}
                     </button>
                     {watchlistAlertOpen === item.id && (
                       <div className="watchlist-alert-popover" style={{ top: "32px", left: 0 }}>
@@ -1910,7 +1910,7 @@ function WatchlistPage({
                       </div>
                     )}
                   </div>
-                  <button className="watchlist-remove-btn" onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} title="Remove from watchlist">✕</button>
+                  <button className="watchlist-remove-btn" onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} title="Remove from watchlist">âœ•</button>
                 </div>
               </div>
             );
@@ -1936,9 +1936,9 @@ function WatchlistPage({
   );
 }
 
-// ─── MAIN APP ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ MAIN APP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// ── MERCHANT MODE COMPONENT ──
+// â”€â”€ MERCHANT MODE COMPONENT â”€â”€
 function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct, fillPct, hasRules, isAutopilotOpen, autopilotRules, setAutopilotOpen, saveAutopilotRules, clearAutopilotRules, formatGP, setSelectedItem, getHoldTime }) {
   const saved = autopilotRules[op.item_name] || { marginFloor: "", holdHours: "", priceDrop: "" };
   const [apMargin, setApMargin] = useState(saved.marginFloor);
@@ -1953,19 +1953,19 @@ function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct
       <div className="op-row op-row-healthy" onClick={(e) => { if (e.target.closest(".autopilot-btn")) return; liveItem && setSelectedItem(liveItem); }}>
         <div>
           <div className="op-item-name">{op.item_name}</div>
-          <div className="op-item-sub">Slot {op.slot + 1} · {op.buy_started_at ? getHoldTime(op.buy_started_at) : ""}</div>
+          <div className="op-item-sub">Slot {op.slot + 1} Â· {op.buy_started_at ? getHoldTime(op.buy_started_at) : ""}</div>
         </div>
         <span style={{ fontSize: "12px", color: statusColor }}>{statusLabel}</span>
-        <span style={{ fontSize: "12px" }}>{op.buy_price && op.quantity ? formatGP(op.buy_price * op.quantity) : "—"}</span>
+        <span style={{ fontSize: "12px" }}>{op.buy_price && op.quantity ? formatGP(op.buy_price * op.quantity) : "â€”"}</span>
         <span style={{ fontSize: "12px" }}>{(op.quantity || 0).toLocaleString()}</span>
-        <span style={{ fontSize: "12px" }}>{op.buy_price ? formatGP(op.buy_price) : "—"}</span>
-        <span style={{ fontSize: "12px", color: liveItem ? "var(--text)" : "var(--text-dim)" }}>{liveItem ? formatGP(liveItem.high) : "—"}</span>
+        <span style={{ fontSize: "12px" }}>{op.buy_price ? formatGP(op.buy_price) : "â€”"}</span>
+        <span style={{ fontSize: "12px", color: liveItem ? "var(--text)" : "var(--text-dim)" }}>{liveItem ? formatGP(liveItem.high) : "â€”"}</span>
         <div>
           {op.status === "SOLD" ? (
             <><div style={{ color: (op.profit || 0) >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>{(op.profit || 0) >= 0 ? "+" : ""}{formatGP(op.profit || 0)}</div><div style={{ fontSize: "10px", color: (op.roi || 0) >= 0 ? "var(--green)" : "var(--red)" }}>{op.roi}% ROI</div></>
           ) : op.buy_price ? (
             <><div style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>{pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}</div><div style={{ fontSize: "10px", color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>{pnlPct}%</div></>
-          ) : <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>—</span>}
+          ) : <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>â€”</span>}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
           <div style={{ background: "var(--bg4)", borderRadius: "3px", height: "4px", overflow: "hidden" }}>
@@ -1976,29 +1976,29 @@ function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct
         <span />
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           {hasRules && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--gold)", flexShrink: 0 }} title="Autopilot active" />}
-          <button className={`autopilot-btn${isAutopilotOpen ? " active" : ""}`} onClick={e => { e.stopPropagation(); setAutopilotOpen(isAutopilotOpen ? null : op.item_name); }}>⚙</button>
+          <button className={`autopilot-btn${isAutopilotOpen ? " active" : ""}`} onClick={e => { e.stopPropagation(); setAutopilotOpen(isAutopilotOpen ? null : op.item_name); }}>âš™</button>
         </div>
       </div>
       {isAutopilotOpen && (
         <div className="autopilot-panel">
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gold)", marginBottom: "4px" }}>Autopilot — {op.item_name}</div>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gold)", marginBottom: "4px" }}>Autopilot â€” {op.item_name}</div>
           <div className="autopilot-panel-row">
             <span className="autopilot-label">Margin drops below</span>
             <input className="autopilot-input" type="number" placeholder="e.g. 50" value={apMargin} onChange={e => setApMargin(e.target.value)} />
-            <span className="autopilot-unit">gp → alert</span>
+            <span className="autopilot-unit">gp â†’ alert</span>
           </div>
           <div className="autopilot-panel-row">
             <span className="autopilot-label">Held longer than</span>
             <input className="autopilot-input" type="number" placeholder="e.g. 24" value={apHold} onChange={e => setApHold(e.target.value)} />
-            <span className="autopilot-unit">hours → alert</span>
+            <span className="autopilot-unit">hours â†’ alert</span>
           </div>
           <div className="autopilot-panel-row">
             <span className="autopilot-label">Sell price drops by</span>
             <input className="autopilot-input" type="number" placeholder="e.g. 10" value={apDrop} onChange={e => setApDrop(e.target.value)} />
-            <span className="autopilot-unit">% since buy → alert</span>
+            <span className="autopilot-unit">% since buy â†’ alert</span>
           </div>
           <div className="autopilot-footer">
-            <span className="autopilot-hint">Saved locally — cleared if you clear browser data.</span>
+            <span className="autopilot-hint">Saved locally â€” cleared if you clear browser data.</span>
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               <button className="autopilot-clear" onClick={() => { clearAutopilotRules(op.item_name); setAutopilotOpen(null); }}>Clear rules</button>
               <button className="autopilot-save" onClick={() => { saveAutopilotRules(op.item_name, { marginFloor: apMargin, holdHours: apHold, priceDrop: apDrop }); setAutopilotOpen(null); }}>Save</button>
@@ -2015,7 +2015,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
   // liveOps must be declared before allOpenPositions calculation below
   const [liveOps, setLiveOps] = useState([]);
 
-  // ── Position Autopilot ──
+  // â”€â”€ Position Autopilot â”€â”€
   const [autopilotRules, setAutopilotRules] = useState(() => {
     try { return JSON.parse(localStorage.getItem("runetrader_autopilot") || "{}"); } catch { return {}; }
   });
@@ -2057,7 +2057,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
         const event = {
           id: `autopilot_${op.item_name}_${key}_${now}`,
           itemId: op.id, itemName: op.item_name,
-          type: "autopilot", icon: "🤖", badge: "autopilot",
+          type: "autopilot", icon: "ðŸ¤–", badge: "autopilot",
           message, time: new Date(),
         };
         setSmartEvents(prev => [event, ...prev]);
@@ -2097,7 +2097,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     });
   }, [liveOps, items, smartAlertSettings]); // eslint-disable-line
 
-  // ── Build open positions ──
+  // â”€â”€ Build open positions â”€â”€
   const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
     id: f.id, name: f.item, gpIn: (f.buyPrice || 0) * (f.qty || 1),
     qty: f.qty || 1, buyPrice: f.buyPrice || 0, source: "tracker",
@@ -2127,7 +2127,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     }));
   const allOpenPositions = [...trackerOpen, ...portfolioOnly, ...autoOpen];
 
-  // ── Core metrics ──
+  // â”€â”€ Core metrics â”€â”€
   const totalDeployed = allOpenPositions.reduce((s, p) => s + p.gpIn, 0);
   const idleGP = Math.max(0, merchantCapital - totalDeployed);
   const efficiencyPct = merchantCapital > 0 ? Math.round((totalDeployed / merchantCapital) * 100) : 0;
@@ -2143,7 +2143,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     return s + (liveItem.high - pos.buyPrice - tax) * pos.qty;
   }, 0);
 
-  // ── State ──
+  // â”€â”€ State â”€â”€
   useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
     if (!user || !sb) return;
     sb.from("ge_flips_live")
@@ -2156,7 +2156,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     const ch = sb.channel("merchant-live-ops-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          // Re-fetch on DELETE — don't rely on payload.old which requires REPLICA IDENTITY FULL
+          // Re-fetch on DELETE â€” don't rely on payload.old which requires REPLICA IDENTITY FULL
           sb.from("ge_flips_live").select("*").eq("user_id", user.id)
             .not("status", "in", "(SOLD,CANCELLED)")
             .order("buy_started_at", { ascending: false })
@@ -2164,7 +2164,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
         } else {
           const op = payload.new;
           if (["SOLD", "CANCELLED"].includes(op.status)) {
-            // Remove by slot — more reliable than id without REPLICA IDENTITY FULL
+            // Remove by slot â€” more reliable than id without REPLICA IDENTITY FULL
             setLiveOps(prev => prev.filter(o => o.slot !== op.slot));
           } else {
             setLiveOps(prev => {
@@ -2199,7 +2199,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     return () => clearInterval(iv);
   }, []);
 
-  // ── Helpers ──
+  // â”€â”€ Helpers â”€â”€
   function getHoldTime(openedAt) {
     const ms = Date.now() - new Date(openedAt).getTime();
     const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
@@ -2262,13 +2262,13 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     localStorage.setItem("rt_flip_queue", JSON.stringify(updated));
   }
 
-  // ── Rotation picks ──
+  // â”€â”€ Rotation picks â”€â”€
   const rotationPicks = items
     .filter(i => i.low <= idleGP && i.margin > 0 && i.score >= 60)
     .filter(i => !allOpenPositions.some(p => p.name.toLowerCase() === i.name.toLowerCase()))
     .slice(0, 3);
 
-  // ── Risk exposure ──
+  // â”€â”€ Risk exposure â”€â”€
   const riskItems = allOpenPositions.map(pos => {
     const pct = merchantCapital > 0 ? Math.round((pos.gpIn / merchantCapital) * 100) : 0;
     return { ...pos, pct };
@@ -2277,12 +2277,12 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
   const gpHr = getGPHr();
 
   const STATUS_COLORS = { buying: "#f39c12", selling: "var(--blue)", holding: "var(--green)", danger: "var(--red)" };
-  const STATUS_LABELS = { buying: "Buying", selling: "Selling", holding: "Holding", danger: "⚠ Danger" };
+  const STATUS_LABELS = { buying: "Buying", selling: "Selling", holding: "Holding", danger: "âš  Danger" };
 
   return (
     <>
     <div className="merchant-wrap">
-      {/* ── HEADER BAR ── */}
+      {/* â”€â”€ HEADER BAR â”€â”€ */}
       <div className="merchant-header">
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -2290,7 +2290,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
             <span style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", letterSpacing: "1.5px" }}>MERCHANT MODE</span>
           </div>
           <div className="merchant-header-pills">
-            {[["operations", "📈 Operations"], ["analytics", "📊 Analytics"], ["market", "📈 Market"], ["alerts", "⚡ Alerts"]].map(([v, l]) => (
+            {[["operations", "ðŸ“ˆ Operations"], ["analytics", "ðŸ“Š Analytics"], ["market", "ðŸ“ˆ Market"], ["alerts", "âš¡ Alerts"]].map(([v, l]) => (
               <button key={v} className={`merchant-nav-pill${activeView === v ? " active" : ""}`} onClick={() => setActiveView(v)}>{l}</button>
             ))}
           </div>
@@ -2298,22 +2298,22 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {/* Session timer */}
           <div style={{ fontSize: "11px", color: "var(--text-dim)", display: "flex", gap: "10px", alignItems: "center" }}>
-            <span>⏱ {getSessionTime()}</span>
+            <span>â± {getSessionTime()}</span>
             {gpHr !== null && <span style={{ color: gpHr >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>{gpHr >= 0 ? "+" : ""}{formatGP(gpHr)} gp/hr</span>}
           </div>
           <button className="refresh-btn" disabled={refreshing || refreshCooldown > 0} onClick={onRefresh} style={{ fontSize: "12px" }}>
-            <span className={refreshing ? "refresh-spin" : ""}>↻</span>
+            <span className={refreshing ? "refresh-spin" : ""}>â†»</span>
             {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh"}
           </button>
         </div>
       </div>
 
-      {/* ── CAPITAL BAR ── */}
+      {/* â”€â”€ CAPITAL BAR â”€â”€ */}
       <div className="capital-bar">
         {[
           { label: "Total Capital", value: formatGP(merchantCapital), color: "var(--gold)", sub: <span style={{ cursor: "pointer", textDecoration: "underline", color: "var(--text-dim)", fontSize: "11px" }} onClick={onUpdateCapital}>Update</span> },
           { label: "Deployed", value: formatGP(totalDeployed), color: "var(--blue)", sub: `${efficiencyPct}% of stack` },
-          { label: "Idle GP", value: formatGP(idleGP), color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text)", sub: idleGP > merchantCapital * 0.3 ? <span style={{ color: "#f39c12" }}>⚠ Sitting unused</span> : "Available" },
+          { label: "Idle GP", value: formatGP(idleGP), color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text)", sub: idleGP > merchantCapital * 0.3 ? <span style={{ color: "#f39c12" }}>âš  Sitting unused</span> : "Available" },
           { label: "Unrealised P&L", value: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)", sub: `${allOpenPositions.length} open positions` },
           { label: "Realised Today", value: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)", sub: `${todayFlips.length + autoTodayFlips.length} flips closed` },
         ].map((c, i) => (
@@ -2326,11 +2326,11 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
       </div>
 
       <div className="merchant-body">
-        {/* ══════════════════════ OPERATIONS VIEW ══════════════════════ */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• OPERATIONS VIEW â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {activeView === "operations" && (
           <div className="merchant-layout">
 
-            {/* ── LEFT: GE Slots + Active Operations ── */}
+            {/* â”€â”€ LEFT: GE Slots + Active Operations â”€â”€ */}
             <div className="merchant-left">
 
               {/* GE Slot Grid */}
@@ -2351,11 +2351,11 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       const slotColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[liveOffer.status] || "var(--border)";
                       const pct = liveOffer.qty_total > 0 ? Math.round((liveOffer.qty_filled / liveOffer.qty_total) * 100) : 0;
                       return (
-                        <div key={i} className="ge-slot active" title={`${liveOffer.item_name} · ${liveOffer.status} · ${pct}% filled`}
+                        <div key={i} className="ge-slot active" title={`${liveOffer.item_name} Â· ${liveOffer.status} Â· ${pct}% filled`}
                           onClick={() => { const it = items.find(x => x.name.toLowerCase() === liveOffer.item_name.toLowerCase()); if (it) setSelectedItem(it); }}>
                           <div className="slot-dot" style={{ background: slotColor }} />
                           <img src={itemIconUrl(liveOffer.item_name)} alt="" style={{ width: 64, height: 64, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
-                          <div className="slot-name">{liveOffer.item_name.length > 14 ? liveOffer.item_name.slice(0, 13) + "…" : liveOffer.item_name}</div>
+                          <div className="slot-name">{liveOffer.item_name.length > 14 ? liveOffer.item_name.slice(0, 13) + "â€¦" : liveOffer.item_name}</div>
                           <div className="slot-status-label" style={{ color: slotColor }}>{liveOffer.status}</div>
                           <div className="slot-pnl" style={{ color: "var(--text-dim)", fontSize: "11px" }}>{pct}% filled</div>
                         </div>
@@ -2374,11 +2374,11 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     return (
                       <div key={i} className={`ge-slot active slot-status-${status}`}
                         onClick={() => liveItem && setSelectedItem(liveItem)}
-                        title={`${pos.name} · ${STATUS_LABELS[status]} · Click to view chart`}>
+                        title={`${pos.name} Â· ${STATUS_LABELS[status]} Â· Click to view chart`}>
                         <div className={`slot-dot`} style={{ background: STATUS_COLORS[status] }} />
                         <img src={itemIconUrl(pos.name)} alt="" style={{ width: 64, height: 64, objectFit: "contain", imageRendering: "pixelated" }}
                           onError={e => { e.target.style.display = "none"; }} />
-                        <div className="slot-name">{pos.name.length > 14 ? pos.name.slice(0, 13) + "…" : pos.name}</div>
+                        <div className="slot-name">{pos.name.length > 14 ? pos.name.slice(0, 13) + "â€¦" : pos.name}</div>
                         <div className="slot-status-label" style={{ color: STATUS_COLORS[status] }}>{STATUS_LABELS[status]}</div>
                         <div className="slot-pnl" style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
                           {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
@@ -2405,9 +2405,9 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
 
                 {liveOps.length === 0 ? (
                   <div className="merchant-empty">
-                    <div style={{ fontSize: "36px", opacity: 0.3 }}>📈</div>
+                    <div style={{ fontSize: "36px", opacity: 0.3 }}>ðŸ“ˆ</div>
                     <p style={{ marginTop: "10px", color: "var(--text-dim)", fontSize: "13px" }}>No open positions</p>
-                    <small style={{ color: "var(--text-dim)", fontSize: "11px" }}>Start a buy offer in-game — it will appear here automatically.</small>
+                    <small style={{ color: "var(--text-dim)", fontSize: "11px" }}>Start a buy offer in-game â€” it will appear here automatically.</small>
                   </div>
                 ) : (
                   <div className="ops-table">
@@ -2422,7 +2422,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       const pnlPct = op.buy_price > 0 ? ((pnlEach / op.buy_price) * 100).toFixed(1) : "0.0";
                       const fillPct = op.quantity > 0 ? Math.round(((op.status === "BUYING" ? op.qty_filled_buy : op.qty_filled_sell) || 0) / op.quantity * 100) : 0;
                       const statusColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[op.status] || "var(--text-dim)";
-                      const statusLabel = { BUYING: "🟡 Buying", BOUGHT: "🟢 Holding", SELLING: "🔵 Selling", SOLD: "✅ Sold" }[op.status] || op.status;
+                      const statusLabel = { BUYING: "ðŸŸ¡ Buying", BOUGHT: "ðŸŸ¢ Holding", SELLING: "ðŸ”µ Selling", SOLD: "âœ… Sold" }[op.status] || op.status;
                       const hasRules = autopilotRules[op.item_name] && Object.values(autopilotRules[op.item_name]).some(v => v !== "");
                       const isAutopilotOpen = autopilotOpen === op.item_name;
                       return (
@@ -2444,7 +2444,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               </div>
             </div>
 
-            {/* ── RIGHT SIDEBAR ── */}
+            {/* â”€â”€ RIGHT SIDEBAR â”€â”€ */}
             <div className="merchant-right">
 
               {/* Capital Efficiency Ring */}
@@ -2480,7 +2480,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Daily GP Goal */}
               <div id="tour-daily-goal" className="m-panel-section">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <div className="m-panel-title" style={{ marginBottom: 0 }}>🎯 Daily Goal</div>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>ðŸŽ¯ Daily Goal</div>
                   <button style={{ background: "transparent", border: "none", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
                     onClick={() => { setShowGoalInput(true); setGoalInput(dailyGoal > 0 ? String(dailyGoal) : ""); }}>
                     {dailyGoal > 0 ? "Edit" : "Set Goal"}
@@ -2492,8 +2492,8 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       onChange={e => setGoalInput(e.target.value)}
                       onKeyDown={e => { if (e.key === "Enter") saveGoal(goalInput); if (e.key === "Escape") setShowGoalInput(false); }}
                       autoFocus />
-                    <button className="add-pos-confirm" onClick={() => saveGoal(goalInput)}>✓</button>
-                    <button className="add-pos-cancel" onClick={() => setShowGoalInput(false)}>✕</button>
+                    <button className="add-pos-confirm" onClick={() => saveGoal(goalInput)}>âœ“</button>
+                    <button className="add-pos-cancel" onClick={() => setShowGoalInput(false)}>âœ•</button>
                   </div>
                 ) : dailyGoal > 0 ? (
                   <>
@@ -2515,7 +2515,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     </div>
                     {realisedToday >= dailyGoal && (
                       <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--green)", fontWeight: 600, textAlign: "center" }}>
-                        🎉 Goal reached!
+                        ðŸŽ‰ Goal reached!
                       </div>
                     )}
                     {realisedToday < dailyGoal && gpHr !== null && gpHr > 0 && (
@@ -2558,22 +2558,22 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
 
               {/* Rotation Picks */}
               <div className="m-panel-section rotation-picks-section">
-                <div className="m-panel-title">⚡ Rotation Picks</div>
+                <div className="m-panel-title">âš¡ Rotation Picks</div>
                 <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "10px" }}>
                   Best fits for your {formatGP(idleGP)} idle GP:
                 </div>
                 {rotationPicks.length === 0 ? (
-                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No picks — all capital deployed or no good candidates.</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No picks â€” all capital deployed or no good candidates.</div>
                 ) : rotationPicks.map((item, i) => (
                   <div key={item.id} className={`rotation-card ${["rc-green","rc-blue","rc-amber"][i]}`} onClick={() => setSelectedItem(item)}>
                     <div className="rc-name">{item.name}</div>
-                    <div className="rc-reason">Score {item.score}/100 · {item.volume.toLocaleString()}/day</div>
+                    <div className="rc-reason">Score {item.score}/100 Â· {item.volume.toLocaleString()}/day</div>
                     <div className="rc-stats">
                       <div className="rc-stat">Margin <span style={{ color: "var(--green)" }}>{formatGP(item.margin)}</span></div>
                       <div className="rc-stat">ROI <span style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.roi}%</span></div>
                       <div className="rc-stat">Limit <span style={{ color: "var(--text)" }}>{item.buyLimit > 0 ? item.buyLimit.toLocaleString() : "?"}</span></div>
                     </div>
-                    <div className="rc-action">→ Click to view chart</div>
+                    <div className="rc-action">â†’ Click to view chart</div>
                   </div>
                 ))}
               </div>
@@ -2581,7 +2581,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Flip Queue */}
               <div id="tour-flip-queue" className="m-panel-section" style={{ flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <div className="m-panel-title" style={{ marginBottom: 0 }}>📋 Flip Queue</div>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>ðŸ“‹ Flip Queue</div>
                   <button style={{ background: "transparent", border: "none", color: "var(--gold)", fontSize: "18px", cursor: "pointer", lineHeight: 1 }}
                     onClick={() => setShowQueueAdd(v => !v)}>+</button>
                 </div>
@@ -2609,11 +2609,11 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                           <div style={{ flex: 1, cursor: liveItem ? "pointer" : "default" }} onClick={() => liveItem && setSelectedItem(liveItem)}>
                             <div style={{ fontSize: "12px", color: liveItem ? "var(--gold)" : "var(--text)", fontWeight: 500 }}>{q.name}</div>
                             {liveItem && <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "1px" }}>
-                              Margin {formatGP(liveItem.margin)} · ROI {liveItem.roi}%
+                              Margin {formatGP(liveItem.margin)} Â· ROI {liveItem.roi}%
                             </div>}
                           </div>
                           <button onClick={() => removeFromQueue(q.id)}
-                            style={{ background: "transparent", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "13px", padding: "2px 4px" }}>✕</button>
+                            style={{ background: "transparent", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "13px", padding: "2px 4px" }}>âœ•</button>
                         </div>
                       );
                     })}
@@ -2625,7 +2625,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
           </div>
         )}
 
-        {/* ══════════════════════ ANALYTICS VIEW ══════════════════════ */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ANALYTICS VIEW â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {activeView === "analytics" && (
           <div className="merchant-layout">
             <div className="merchant-left">
@@ -2633,17 +2633,17 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Session Intel */}
               <div id="tour-session-intel" className="merchant-section">
                 <div className="merchant-section-header">
-                  <span className="merchant-section-title">📊 Session Intel</span>
+                  <span className="merchant-section-title">ðŸ“Š Session Intel</span>
                   <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Started {getSessionTime()} ago</span>
                 </div>
                 <div className="analytics-grid">
                   {[
                     { label: "Session Duration", val: getSessionTime(), color: "var(--text)" },
-                    { label: "GP / Hour", val: gpHr !== null ? `${gpHr >= 0 ? "+" : ""}${formatGP(gpHr)}` : "—", color: gpHr !== null ? (gpHr >= 0 ? "var(--green)" : "var(--red)") : "var(--text-dim)" },
+                    { label: "GP / Hour", val: gpHr !== null ? `${gpHr >= 0 ? "+" : ""}${formatGP(gpHr)}` : "â€”", color: gpHr !== null ? (gpHr >= 0 ? "var(--green)" : "var(--red)") : "var(--text-dim)" },
                     { label: "Flips Closed Today", val: todayFlips.length + autoTodayFlips.length, color: "var(--text)" },
                     { label: "Realised Today", val: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
                     { label: "Unrealised P&L", val: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)" },
-                    { label: "Return on Capital", val: merchantCapital > 0 ? `${((realisedToday / merchantCapital) * 100).toFixed(2)}%` : "—", color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
+                    { label: "Return on Capital", val: merchantCapital > 0 ? `${((realisedToday / merchantCapital) * 100).toFixed(2)}%` : "â€”", color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
                     { label: "Capital Deployed", val: `${efficiencyPct}%`, color: "var(--blue)" },
                     { label: "Idle GP", val: formatGP(idleGP), color: idleGP > merchantCapital * 0.3 ? "#f39c12" : "var(--text-dim)" },
                   ].map(row => (
@@ -2658,7 +2658,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Risk Exposure */}
               <div id="tour-risk-exposure" className="merchant-section">
                 <div className="merchant-section-header">
-                  <span className="merchant-section-title">⚖️ Risk Exposure</span>
+                  <span className="merchant-section-title">âš–ï¸ Risk Exposure</span>
                   {topRiskPct > 50 && <span style={{ fontSize: "11px", color: "var(--red)", fontWeight: 600 }}>Concentrated position</span>}
                 </div>
                 {riskItems.length === 0 ? (
@@ -2680,13 +2680,13 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                           }} />
                         </div>
                         <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "2px" }}>
-                          {formatGP(pos.gpIn)} invested · {pos.qty.toLocaleString()} qty
+                          {formatGP(pos.gpIn)} invested Â· {pos.qty.toLocaleString()} qty
                         </div>
                       </div>
                     ))}
                     {topRiskPct > 40 && (
                       <div style={{ marginTop: "4px", fontSize: "11px", color: "#f39c12", background: "rgba(243,156,18,0.08)", border: "1px solid rgba(243,156,18,0.2)", borderRadius: "6px", padding: "8px 10px" }}>
-                        ⚠️ {riskItems[0].name} represents {topRiskPct}% of your capital. Consider diversifying.
+                        âš ï¸ {riskItems[0].name} represents {topRiskPct}% of your capital. Consider diversifying.
                       </div>
                     )}
                   </div>
@@ -2703,7 +2703,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   ].sort((a, b) => new Date(b.date) - new Date(a.date));
                   return (<>
                     <div className="merchant-section-header">
-                      <span className="merchant-section-title">✅ Closed Today</span>
+                      <span className="merchant-section-title">âœ… Closed Today</span>
                       <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{allTodayFlips.length} flips</span>
                     </div>
                     {allTodayFlips.length === 0 ? (
@@ -2715,7 +2715,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                             <div>
                               <div style={{ fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>{f.item}</div>
                               <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "1px" }}>
-                                {f.qty?.toLocaleString()}x · Buy {formatGP(f.buyPrice)} → Sell {formatGP(f.sellPrice)}
+                                {f.qty?.toLocaleString()}x Â· Buy {formatGP(f.buyPrice)} â†’ Sell {formatGP(f.sellPrice)}
                               </div>
                             </div>
                             <div style={{ textAlign: "right" }}>
@@ -2762,7 +2762,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Daily Goal */}
               <div className="m-panel-section">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <div className="m-panel-title" style={{ marginBottom: 0 }}>🎯 Daily Goal</div>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>ðŸŽ¯ Daily Goal</div>
                   <button style={{ background: "transparent", border: "none", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
                     onClick={() => { setShowGoalInput(true); setGoalInput(dailyGoal > 0 ? String(dailyGoal) : ""); }}>
                     {dailyGoal > 0 ? "Edit" : "Set Goal"}
@@ -2774,8 +2774,8 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       onChange={e => setGoalInput(e.target.value)}
                       onKeyDown={e => { if (e.key === "Enter") saveGoal(goalInput); if (e.key === "Escape") setShowGoalInput(false); }}
                       autoFocus />
-                    <button className="add-pos-confirm" onClick={() => saveGoal(goalInput)}>✓</button>
-                    <button className="add-pos-cancel" onClick={() => setShowGoalInput(false)}>✕</button>
+                    <button className="add-pos-confirm" onClick={() => saveGoal(goalInput)}>âœ“</button>
+                    <button className="add-pos-cancel" onClick={() => setShowGoalInput(false)}>âœ•</button>
                   </div>
                 ) : dailyGoal > 0 ? (
                   <>
@@ -2788,7 +2788,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     <div style={{ background: "var(--bg4)", borderRadius: "4px", overflow: "hidden", height: "8px" }}>
                       <div style={{ height: "100%", width: `${Math.min(100, (realisedToday / dailyGoal) * 100)}%`, background: realisedToday >= dailyGoal ? "var(--green)" : "linear-gradient(90deg, var(--gold-dim), var(--gold))", transition: "width 0.6s ease", borderRadius: "4px" }} />
                     </div>
-                    {realisedToday >= dailyGoal && <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--green)", fontWeight: 600, textAlign: "center" }}>🎉 Goal reached!</div>}
+                    {realisedToday >= dailyGoal && <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--green)", fontWeight: 600, textAlign: "center" }}>ðŸŽ‰ Goal reached!</div>}
                   </>
                 ) : (
                   <div style={{ fontSize: "12px", color: "var(--text-dim)", textAlign: "center", padding: "8px 0" }}>No goal set.</div>
@@ -2798,14 +2798,14 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Update Capital */}
               <div className="m-panel-section">
                 <button className="op-action-btn" style={{ width: "100%", textAlign: "center", padding: "9px" }} onClick={onUpdateCapital}>
-                  💰 Update Total Capital
+                  ðŸ’° Update Total Capital
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* ══════════════════════ ALERTS VIEW ══════════════════════ */}
+        {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• ALERTS VIEW â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
         {activeView === "alerts" && (
           <div className="merchant-layout">
             <div className="merchant-left">
@@ -2813,15 +2813,15 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Alert toggles */}
               <div id="tour-smart-alerts" className="merchant-section">
                 <div className="merchant-section-header">
-                  <span className="merchant-section-title">⚡ Smart Alerts</span>
+                  <span className="merchant-section-title">âš¡ Smart Alerts</span>
                   <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Auto-fires on market shifts</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                   {[
-                    { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps above threshold",    unit: "%",  min: 5,   max: 200, step: 5   },
-                    { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Volume multiplies suddenly",      unit: "x",  min: 1.5, max: 10,  step: 0.5 },
-                    { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops sharply",        unit: "%",  min: 2,   max: 50,  step: 1   },
-                    { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy & sell price collapse",  unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "marginSpike",  icon: "ðŸ“ˆ", label: "Margin Spike",  desc: "Margin jumps above threshold",    unit: "%",  min: 5,   max: 200, step: 5   },
+                    { key: "volumeSurge",  icon: "ðŸ”¥", label: "Volume Surge",  desc: "Volume multiplies suddenly",      unit: "x",  min: 1.5, max: 10,  step: 0.5 },
+                    { key: "dumpDetected", icon: "âš ï¸", label: "Dump Detected", desc: "Sell price drops sharply",        unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "priceCrash",   icon: "ðŸ’¥", label: "Price Crash",   desc: "Both buy & sell price collapse",  unit: "%",  min: 2,   max: 50,  step: 1   },
                   ].map(({ key, icon, label, desc, unit, min, max, step }) => (
                     <div key={key} className="m-smart-alert-row">
                       <div style={{ display: "flex", flexDirection: "column", gap: "2px", flex: 1 }}>
@@ -2844,7 +2844,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               <div id="tour-live-feed" className="merchant-section" style={{ flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span className="merchant-section-title" style={{ marginBottom: 0 }}>📡 Live Feed</span>
+                    <span className="merchant-section-title" style={{ marginBottom: 0 }}>ðŸ“¡ Live Feed</span>
                     {smartEvents?.length > 0 && (
                       <span style={{ background: "rgba(201,168,76,0.2)", border: "1px solid var(--gold-dim)", borderRadius: "10px", padding: "1px 7px", fontSize: "10px", color: "var(--gold)", fontWeight: 700 }}>
                         {smartEvents.length}
@@ -2859,7 +2859,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                 {smartEvents?.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
                     <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                      {[["all","All"],["spike","📈 Margin"],["surge","🔥 Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"],["autopilot","🤖 Autopilot"]].map(([v,l]) => (
+                      {[["all","All"],["spike","ðŸ“ˆ Margin"],["surge","ðŸ”¥ Volume"],["dump","âš ï¸ Dump"],["crash","ðŸ’¥ Crash"],["autopilot","ðŸ¤– Autopilot"]].map(([v,l]) => (
                         <button key={v} onClick={() => setMerchantFeedFilter(v)}
                           style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
                           {l}
@@ -2871,7 +2871,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       {[["recent","Recent"],["change","% Change"],["margin","Margin"]].map(([v,l]) => (
                         <button key={v} onClick={() => { if (merchantFeedSort === v) { setMerchantFeedSortDir(d => d === "desc" ? "asc" : "desc"); } else { setMerchantFeedSort(v); setMerchantFeedSortDir("desc"); } }}
                           style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "3px" }}>
-                          {l}{merchantFeedSort === v && <span style={{ fontSize: "9px" }}>{merchantFeedSortDir === "desc" ? "▼" : "▲"}</span>}
+                          {l}{merchantFeedSort === v && <span style={{ fontSize: "9px" }}>{merchantFeedSortDir === "desc" ? "â–¼" : "â–²"}</span>}
                         </button>
                       ))}
                     </div>
@@ -2898,7 +2898,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     }
                     if (feed.length === 0) return (
                       <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
-                        <div style={{ fontSize: "32px", marginBottom: "8px", opacity: 0.4 }}>📡</div>
+                        <div style={{ fontSize: "32px", marginBottom: "8px", opacity: 0.4 }}>ðŸ“¡</div>
                         No alerts yet. Monitoring every 30 seconds.
                       </div>
                     );
@@ -2912,7 +2912,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                             <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                               <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)", cursor: liveItem ? "pointer" : "default" }}>{e.itemName}</span>
                               <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
-                              {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view →</span>}
+                              {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>Â· click to view â†’</span>}
                             </div>
                             <div className="smart-event-msg">{e.message}</div>
                             {liveItem && (
@@ -2933,16 +2933,16 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
 
             <div className="merchant-right">
               <div className="m-panel-section">
-                <div className="m-panel-title">📊 Alert Summary</div>
+                <div className="m-panel-title">ðŸ“Š Alert Summary</div>
                 {smartEvents?.length === 0 ? (
                   <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No events fired this session.</div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     {[
-                      { badge: "spike", icon: "📈", label: "Margin Spikes" },
-                      { badge: "surge", icon: "🔥", label: "Volume Surges" },
-                      { badge: "dump",  icon: "⚠️", label: "Dumps Detected" },
-                      { badge: "crash", icon: "💥", label: "Price Crashes" },
+                      { badge: "spike", icon: "ðŸ“ˆ", label: "Margin Spikes" },
+                      { badge: "surge", icon: "ðŸ”¥", label: "Volume Surges" },
+                      { badge: "dump",  icon: "âš ï¸", label: "Dumps Detected" },
+                      { badge: "crash", icon: "ðŸ’¥", label: "Price Crashes" },
                     ].map(({ badge, icon, label }) => {
                       const count = (smartEvents || []).filter(e => e.badge === badge).length;
                       return (
@@ -2968,7 +2968,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               <span className="filter-label">Filter:</span>
               {["all", "f2p", "members", "highvol", "favourites"].map(f => (
                 <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `🔖 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
+                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `ðŸ”– Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                 </button>
               ))}
               <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
@@ -2976,7 +2976,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                 className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
                 onClick={() => setShowAdvFilters(v => !v)}
               >
-                ⚙ Filters {advFilterCount > 0 && <span className="adv-filter-badge">{advFilterCount}</span>}
+                âš™ Filters {advFilterCount > 0 && <span className="adv-filter-badge">{advFilterCount}</span>}
               </button>
             </div>
 
@@ -2987,7 +2987,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   <div className="adv-filter-label">Margin (gp)</div>
                   <div className="adv-filter-row">
                     <input className="adv-filter-input" placeholder="Min" value={advFilters.minMargin} onChange={e => setAdv("minMargin", e.target.value)} type="number" />
-                    <span className="adv-filter-sep">–</span>
+                    <span className="adv-filter-sep">â€“</span>
                     <input className="adv-filter-input" placeholder="Max" value={advFilters.maxMargin} onChange={e => setAdv("maxMargin", e.target.value)} type="number" />
                   </div>
                 </div>
@@ -2995,7 +2995,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   <div className="adv-filter-label">ROI (%)</div>
                   <div className="adv-filter-row">
                     <input className="adv-filter-input" placeholder="Min" value={advFilters.minRoi} onChange={e => setAdv("minRoi", e.target.value)} type="number" step="0.1" />
-                    <span className="adv-filter-sep">–</span>
+                    <span className="adv-filter-sep">â€“</span>
                     <input className="adv-filter-input" placeholder="Max" value={advFilters.maxRoi} onChange={e => setAdv("maxRoi", e.target.value)} type="number" step="0.1" />
                   </div>
                 </div>
@@ -3003,7 +3003,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   <div className="adv-filter-label">Vol/Day</div>
                   <div className="adv-filter-row">
                     <input className="adv-filter-input" placeholder="Min" value={advFilters.minVolume} onChange={e => setAdv("minVolume", e.target.value)} type="number" />
-                    <span className="adv-filter-sep">–</span>
+                    <span className="adv-filter-sep">â€“</span>
                     <input className="adv-filter-input" placeholder="Max" value={advFilters.maxVolume} onChange={e => setAdv("maxVolume", e.target.value)} type="number" />
                   </div>
                 </div>
@@ -3011,7 +3011,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   <div className="adv-filter-label">Buy Price (gp)</div>
                   <div className="adv-filter-row">
                     <input className="adv-filter-input" placeholder="Min" value={advFilters.minPrice} onChange={e => setAdv("minPrice", e.target.value)} type="number" />
-                    <span className="adv-filter-sep">–</span>
+                    <span className="adv-filter-sep">â€“</span>
                     <input className="adv-filter-input" placeholder="Max" value={advFilters.maxPrice} onChange={e => setAdv("maxPrice", e.target.value)} type="number" />
                   </div>
                 </div>
@@ -3044,13 +3044,13 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                 </div>
                 <div className="adv-filter-footer">
                   <span>{filtered.length.toLocaleString()} items match</span>
-                  {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>✕ Clear all filters</button>}
+                  {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>âœ• Clear all filters</button>}
                 </div>
               </div>
             )}
 
             {/* Table */}
-            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
+            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loadingâ€¦" : `${filtered.length.toLocaleString()} items`}</span></div>
             <div className="flips-table">
               <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>
                 {[
@@ -3058,7 +3058,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   ["low", "Buy Price", "Lowest current buy offer on the GE"],
                   ["high", "Sell Price", "Highest current sell offer on the GE"],
                   ["margin", "Margin", "Sell price minus buy price minus GE tax."],
-                  ["roi", "ROI", "Margin ÷ buy price."],
+                  ["roi", "ROI", "Margin Ã· buy price."],
                   ["volume", "Vol/Day", "Total items traded per day."],
                   ["buylimit", "Limit", "Max items you can buy every 4 hours"],
                   ["gpPerFill", "GP/Fill", "Realistic GP profit per 4hr window"],
@@ -3066,7 +3066,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   ["sparkline", "24hr Trend", null],
                 ].map(([col, label, tip]) => (
                   <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
-                    {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
+                    {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "â–¼" : "â–²"}</span>}
                     {tip && (
                       <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
                         <span className="stat-help">?</span>
@@ -3083,7 +3083,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   </div>
                 ))
               ) : filtered.length === 0 ? (
-                <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
+                <div className="empty-state"><div className="icon">ðŸ”</div><p>No items match your filters</p></div>
               ) : (
                 filtered.slice(0, marketRowsShown).map(item => {
                   const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
@@ -3101,17 +3101,17 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   return (
                     <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }} onClick={() => setSelectedItem(item)}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={favourites.includes(item.id) ? "Remove from Watchlist" : "Add to Watchlist"}>🔖</button>
+                        <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={favourites.includes(item.id) ? "Remove from Watchlist" : "Add to Watchlist"}>ðŸ”–</button>
                         <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                         <div className="item-name">{item.name}</div>
                       </div>
-                      <span className="price">{item.hasPrice ? formatGP(item.low) : "—"}</span>
-                      <span className="price">{item.hasPrice ? formatGP(item.high) : "—"}</span>
-                      <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
-                      <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "—"}</span>
+                      <span className="price">{item.hasPrice ? formatGP(item.low) : "â€”"}</span>
+                      <span className="price">{item.hasPrice ? formatGP(item.high) : "â€”"}</span>
+                      <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "â€”"}</span>
+                      <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "â€”"}</span>
                       <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
                         {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
-                        {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }}>⚠</span>}
+                        {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }}>âš </span>}
                       </span>
                       <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
                       <div>
@@ -3120,9 +3120,9 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                             title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case: ${formatGP(gpPerFillMax)} GP`}>
                             {formatGP(gpPerFill)}
                           </span>
-                        ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
+                        ) : <span style={{ color: "var(--text-dim)" }}>â€”</span>}
                       </div>
-                      <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
+                      <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "â€”"}</span>
                       <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center" }}>
                         <Sparkline itemId={item.id} width={78} height={30} />
                       </div>
@@ -3154,7 +3154,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>{p.item_name}</span>
                     <span style={{ fontSize: "12px", color: p.pnl >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>{p.pnl >= 0 ? "+" : ""}{formatGP(p.pnl || 0)}</span>
                   </div>
-                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {(p.slot||0)+1} · {p.status} · {p.qty} qty</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {(p.slot||0)+1} Â· {p.status} Â· {p.qty} qty</div>
                 </div>
               )); })()
               }
@@ -3187,7 +3187,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
 }
 
 
-// ── ThresholdPopover — top-level component (must not be defined inside RuneTrader to avoid remount crashes)
+// â”€â”€ ThresholdPopover â€” top-level component (must not be defined inside RuneTrader to avoid remount crashes)
 const THRESHOLD_DEFAULTS = { marginSpike: 50, volumeSurge: 3, dumpDetected: 10, priceCrash: 15 };
 
 function ThresholdPopover({ alertKey, label, unit, min, max, step, thresholds, openPopover, setOpenPopover, saveThreshold }) {
@@ -3197,12 +3197,12 @@ function ThresholdPopover({ alertKey, label, unit, min, max, step, thresholds, o
     <div className="threshold-popover-wrap">
       <button className={`threshold-gear-btn${openPopover === alertKey ? " active" : ""}`}
         onClick={e => { e.stopPropagation(); setOpenPopover(openPopover === alertKey ? null : alertKey); }}
-        title="Adjust threshold">⚙️</button>
+        title="Adjust threshold">âš™ï¸</button>
       {openPopover === alertKey && (
         <div className="threshold-popover" onClick={e => e.stopPropagation()}>
-          <div className="threshold-popover-title">Threshold — {label}</div>
+          <div className="threshold-popover-title">Threshold â€” {label}</div>
           <div className="threshold-popover-label">
-            Trigger when: {alertKey === "volumeSurge" ? `volume is ${val}x previous` : `change is ≥ ${val}${unit}`}
+            Trigger when: {alertKey === "volumeSurge" ? `volume is ${val}x previous` : `change is â‰¥ ${val}${unit}`}
           </div>
           <div className="threshold-row">
             <input type="range" className="threshold-slider" min={min} max={max} step={step} value={val}
@@ -3222,9 +3222,9 @@ function ThresholdPopover({ alertKey, label, unit, min, max, step, thresholds, o
 }
 
 
-// ── LIVE GE SLOTS COMPONENT ──────────────────────────────────
+// â”€â”€ LIVE GE SLOTS COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// ── AUTO FLIP HISTORY COMPONENT ─────────────────────────────────────────────
+// â”€â”€ AUTO FLIP HISTORY COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AutoFlipHistory({ user, supabase: sb, formatGP }) {
   const [flips, setFlips] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -3241,7 +3241,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
     const ch = sb.channel("auto-flip-history-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          // Re-fetch on DELETE — don't rely on payload.old which requires REPLICA IDENTITY FULL
+          // Re-fetch on DELETE â€” don't rely on payload.old which requires REPLICA IDENTITY FULL
           sb.from("ge_flips_live").select("*").eq("user_id", user.id)
             .order("buy_started_at", { ascending: false }).limit(50)
             .then(({ data }) => setFlips(data || []));
@@ -3257,7 +3257,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
     return () => sb.removeChannel(ch);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fmtDate = ts => ts ? new Date(ts).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+  const fmtDate = ts => ts ? new Date(ts).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "â€”";
   const statusBadge = s => {
     const map = { BUYING: ["#f39c12", "Buying"], BOUGHT: ["var(--green)", "Holding"], SELLING: ["#4fc3f7", "Selling"], SOLD: ["var(--green)", "Closed"], CANCELLED: ["var(--text-dim)", "Cancelled"] };
     const [color, label] = map[s] || ["var(--text-dim)", s];
@@ -3273,13 +3273,13 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
       {/* Open flips */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
-          📈 Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "Inter", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{openFlips.length} active</span>
+          ðŸ“ˆ Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "Inter", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{openFlips.length} active</span>
         </div>
         {loading ? <div style={{ color: "var(--text-dim)", fontSize: "13px" }}>Loading...</div>
         : openFlips.length === 0 ? (
           <div style={{ color: "var(--text-dim)", fontSize: "13px", textAlign: "center", padding: "20px 0" }}>
-            <div style={{ fontSize: "24px", opacity: 0.4, marginBottom: "8px" }}>📋</div>
-            <div>No open flips — start a buy offer in-game</div>
+            <div style={{ fontSize: "24px", opacity: 0.4, marginBottom: "8px" }}>ðŸ“‹</div>
+            <div>No open flips â€” start a buy offer in-game</div>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
@@ -3293,8 +3293,8 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
                   <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {f.slot + 1}</div>
                 </div>
                 {statusBadge(f.status)}
-                <span style={{ fontSize: "12px" }}>{f.buy_price ? formatGP(f.buy_price) : "—"}</span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{f.sell_price ? formatGP(f.sell_price) : "—"}</span>
+                <span style={{ fontSize: "12px" }}>{f.buy_price ? formatGP(f.buy_price) : "â€”"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{f.sell_price ? formatGP(f.sell_price) : "â€”"}</span>
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.quantity || 0).toLocaleString()}</span>
                 <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{fmtDate(f.buy_started_at)}</span>
               </div>
@@ -3306,12 +3306,12 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
       {/* Closed flips */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
-          📜 Flip History
+          ðŸ“œ Flip History
         </div>
         {loading ? <div style={{ color: "var(--text-dim)", fontSize: "13px" }}>Loading...</div>
         : closedFlips.length === 0 ? (
           <div style={{ color: "var(--text-dim)", fontSize: "13px", textAlign: "center", padding: "20px 0" }}>
-            <div style={{ fontSize: "24px", opacity: 0.4, marginBottom: "8px" }}>📊</div>
+            <div style={{ fontSize: "24px", opacity: 0.4, marginBottom: "8px" }}>ðŸ“Š</div>
             <div>No completed flips yet</div>
             <div style={{ fontSize: "11px", marginTop: "4px", opacity: 0.6 }}>Complete a buy + sell in-game to see your P&L here</div>
           </div>
@@ -3326,10 +3326,10 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
                   <div style={{ fontSize: "13px", fontWeight: 500 }}>{f.item_name}</div>
                   <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {f.slot + 1}</div>
                 </div>
-                <span style={{ fontSize: "12px" }}>{f.buy_price ? formatGP(f.buy_price) : "—"}</span>
-                <span style={{ fontSize: "12px" }}>{f.sell_price ? formatGP(f.sell_price) : "—"}</span>
+                <span style={{ fontSize: "12px" }}>{f.buy_price ? formatGP(f.buy_price) : "â€”"}</span>
+                <span style={{ fontSize: "12px" }}>{f.sell_price ? formatGP(f.sell_price) : "â€”"}</span>
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.quantity || 0).toLocaleString()}</span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{f.tax ? formatGP(f.tax) : "—"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{f.tax ? formatGP(f.tax) : "â€”"}</span>
                 <div>
                   {f.status === "SOLD" ? (
                     <>
@@ -3350,10 +3350,10 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
   );
 }
 
-// ─── DRIFT DETECTION CONSTANTS ───────────────────────────────────────────────
+// â”€â”€â”€ DRIFT DETECTION CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // How aggressively we flag drift based on item price tier.
 // Cheap items: even 2% off matters (200gp on a 10k item = real money).
-// Expensive items: 1% tolerance is too tight — market noise is bigger.
+// Expensive items: 1% tolerance is too tight â€” market noise is bigger.
 const getDriftThresholds = (price) => {
   if (price >= 1_000_000) return { cancel: 0.04, adjust: 0.02 }; // 4% / 2%
   if (price >= 100_000)   return { cancel: 0.05, adjust: 0.025 }; // 5% / 2.5%
@@ -3364,7 +3364,7 @@ const getDriftThresholds = (price) => {
 // A 3% drift after 2 minutes = noise. Same drift after 30 minutes = problem.
 const getUrgency = (driftPct, ageMinutes, pctFilled) => {
   if (pctFilled >= 95) return "filled";   // basically done, no alert needed
-  if (pctFilled >= 50) return "partial";  // half filled — softer alert
+  if (pctFilled >= 50) return "partial";  // half filled â€” softer alert
   const timeFactor = Math.log10(Math.max(ageMinutes, 1) + 1);
   return driftPct * timeFactor;
 };
@@ -3379,23 +3379,23 @@ const getRelistPrice = (offerType, wikiData) => {
   return null;
 };
 
-// ─── UPGRADED LiveGESlots COMPONENT ──────────────────────────────────────────
+// â”€â”€â”€ UPGRADED LiveGESlots COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
   const [offers, setOffers]         = useState([]);
   const [autoFlips, setAutoFlips]   = useState([]);
   const [loading, setLoading]       = useState(true);
-  const [liveWiki, setLiveWiki]     = useState({});   // item_id → {high, low, timestamp}
+  const [liveWiki, setLiveWiki]     = useState({});   // item_id â†’ {high, low, timestamp}
   const [wikiLoading, setWikiLoading] = useState(false);
   const pollRef                     = useRef(null);
 
-  // ── Build name → id lookup from items prop (comes from Wiki mapping) ───────
+  // â”€â”€ Build name â†’ id lookup from items prop (comes from Wiki mapping) â”€â”€â”€â”€â”€â”€â”€
   const nameToId = useMemo(() => {
     const map = {};
     (items || []).forEach(i => { if (i.name && i.id) map[i.name.toLowerCase()] = i.id; });
     return map;
   }, [items]);
 
-  // ── Initial data load + realtime subscriptions ────────────────────────────
+  // â”€â”€ Initial data load + realtime subscriptions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!user) return;
     setLoading(true);
@@ -3437,12 +3437,12 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
     };
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Live Wiki price polling for active slots ──────────────────────────────
-  // Runs every 30s when there are active offers. Bypasses cache — always fresh.
+  // â”€â”€ Live Wiki price polling for active slots â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Runs every 30s when there are active offers. Bypasses cache â€” always fresh.
   const fetchLiveWiki = useCallback(async (activeOffers) => {
     if (activeOffers.length === 0) return;
 
-    // Resolve item names → IDs using the mapping
+    // Resolve item names â†’ IDs using the mapping
     const ids = activeOffers
       .map(o => nameToId[o.item_name?.toLowerCase()])
       .filter(Boolean);
@@ -3479,7 +3479,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [offers, fetchLiveWiki]);
 
-  // ── Drift calculation for a single offer ─────────────────────────────────
+  // â”€â”€ Drift calculation for a single offer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const getDriftAlert = useCallback((offer) => {
     if (!["BUYING", "SELLING"].includes(offer.status)) return null;
     if (!offer.offer_price || offer.offer_price <= 0)  return null;
@@ -3517,7 +3517,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
         color:     "var(--red)",
         bg:        "rgba(231,76,60,0.08)",
         border:    "rgba(231,76,60,0.25)",
-        icon:      "🔴",
+        icon:      "ðŸ”´",
         label:     "Cancel & Relist",
         message:   `Your ${offer.offer_type === "BUY" ? "buy" : "sell"} offer is ${(drift * 100).toFixed(1)}% off market`,
         relistAt,
@@ -3532,7 +3532,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
         color:     "var(--gold)",
         bg:        "rgba(201,168,76,0.08)",
         border:    "rgba(201,168,76,0.25)",
-        icon:      "🟡",
+        icon:      "ðŸŸ¡",
         label:     "Consider Adjusting",
         message:   `${offer.offer_type === "BUY" ? "Buy" : "Sell"} offer drifted ${(drift * 100).toFixed(1)}% from market`,
         relistAt,
@@ -3541,10 +3541,10 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
       };
     }
 
-    return null; // within tolerance — all good
+    return null; // within tolerance â€” all good
   }, [nameToId, liveWiki]);
 
-  // ── Derive alerts across all active slots ────────────────────────────────
+  // â”€â”€ Derive alerts across all active slots â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const alerts = useMemo(() => {
     return offers
       .map(o => ({ offer: o, alert: getDriftAlert(o) }))
@@ -3552,14 +3552,14 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
       .sort((a, b) => b.alert.drift - a.alert.drift); // worst first
   }, [offers, getDriftAlert]);
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
+  // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const slotColor  = s => ({ BUYING: "var(--gold)", BOUGHT: "var(--green)",
     SELLING: "#4fc3f7", SOLD: "var(--green)",
     CANCELLED_BUY: "var(--red)", CANCELLED_SELL: "var(--red)" }[s] || "#555");
   const slotLabel  = s => !s || s === "EMPTY" ? "Empty"
     : s.charAt(0) + s.slice(1).toLowerCase().replace("_", " ");
   const fmtGP      = n => {
-    if (!n && n !== 0) return "—";
+    if (!n && n !== 0) return "â€”";
     if (n >= 1e6) return (n / 1e6).toFixed(2) + "M";
     if (n >= 1e3) return (n / 1e3).toFixed(1) + "K";
     return n.toLocaleString();
@@ -3575,7 +3575,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-      {/* ── ALERT STRIP ─────────────────────────────────────────────────── */}
+      {/* â”€â”€ ALERT STRIP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {alerts.length > 0 && (
         <div style={{
           background: "var(--bg3)", border: "1px solid var(--border)",
@@ -3588,7 +3588,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
             <span style={{ fontFamily: "'Cinzel', serif", fontSize: "18px",
               fontWeight: 700, color: "var(--red)", textTransform: "uppercase",
               letterSpacing: "1px" }}>
-              ⚠ Slot Alerts
+              âš  Slot Alerts
             </span>
             <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
               {alerts.length} offer{alerts.length > 1 ? "s" : ""} need attention
@@ -3596,7 +3596,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
             {wikiLoading && (
               <span style={{ fontSize: "10px", color: "var(--text-dim)",
                 marginLeft: "auto" }}>
-                🔄 Checking prices...
+                ðŸ”„ Checking prices...
               </span>
             )}
           </div>
@@ -3633,7 +3633,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
                       {alert.label}
                     </span>
                     <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
-                      · {fmtMin(alert.ageMinutes)} unfilled · {pct(offer)}% done
+                      Â· {fmtMin(alert.ageMinutes)} unfilled Â· {pct(offer)}% done
                     </span>
                   </div>
                   <div style={{ fontSize: "12px", color: "var(--text-dim)",
@@ -3653,14 +3653,14 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
                         {fmtGP(offer.offer_price)} gp
                       </div>
                     </div>
-                    <span style={{ fontSize: "16px", color: "var(--text-dim)" }}>→</span>
+                    <span style={{ fontSize: "16px", color: "var(--text-dim)" }}>â†’</span>
                     <div>
                       <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
                         Relist at
                       </span>
                       <div style={{ fontSize: "13px", fontWeight: 700,
                         color: alert.level === "cancel" ? "var(--red)" : "var(--gold)" }}>
-                        {alert.relistAt ? fmtGP(alert.relistAt) + " gp" : "—"}
+                        {alert.relistAt ? fmtGP(alert.relistAt) + " gp" : "â€”"}
                       </div>
                     </div>
                     <div>
@@ -3671,7 +3671,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
                         color: "var(--red)" }}>
                         {alert.relistAt
                           ? fmtGP(Math.abs(alert.relistAt - offer.offer_price)) + " gp off"
-                          : "—"}
+                          : "â€”"}
                       </div>
                     </div>
                   </div>
@@ -3682,7 +3682,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
         </div>
       )}
 
-      {/* ── LIVE GE SLOTS ────────────────────────────────────────────────── */}
+      {/* â”€â”€ LIVE GE SLOTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)",
         borderRadius: "10px", padding: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between",
@@ -3690,7 +3690,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
           <span style={{ fontFamily: "'Cinzel', serif", fontSize: "18px",
             fontWeight: 700, color: "var(--gold)", textTransform: "uppercase",
             letterSpacing: "1px" }}>
-            🔴 Live GE Slots
+            ðŸ”´ Live GE Slots
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             {!wikiLoading && Object.keys(liveWiki).length > 0 && (
@@ -3715,10 +3715,10 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
         ) : activeOffers.length === 0 ? (
           <div style={{ color: "var(--text-dim)", fontSize: "13px",
             padding: "20px 0", textAlign: "center" }}>
-            <div style={{ fontSize: "28px", marginBottom: "8px", opacity: 0.4 }}>📦</div>
+            <div style={{ fontSize: "28px", marginBottom: "8px", opacity: 0.4 }}>ðŸ“¦</div>
             <div>No active GE offers</div>
             <div style={{ fontSize: "11px", marginTop: "4px", opacity: 0.6 }}>
-              Open offers in-game — they will appear here in real time
+              Open offers in-game â€” they will appear here in real time
             </div>
           </div>
         ) : (
@@ -3778,7 +3778,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
                       {o.item_name}
                     </span>
                     {hasAlert && (
-                      <span style={{ fontSize: "10px" }}>⚠</span>
+                      <span style={{ fontSize: "10px" }}>âš </span>
                     )}
                   </div>
 
@@ -3818,12 +3818,12 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
                         {driftAmt !== null && Math.abs(driftAmt) > 0 && (
                           <div style={{ fontSize: "10px",
                             color: driftAmt > 0 ? "var(--red)" : "var(--green)" }}>
-                            {driftAmt > 0 ? "↑" : "↓"} {fmtGP(Math.abs(driftAmt))}
+                            {driftAmt > 0 ? "â†‘" : "â†“"} {fmtGP(Math.abs(driftAmt))}
                           </div>
                         )}
                       </>
                     ) : (
-                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>—</span>
+                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>â€”</span>
                     )}
                   </div>
 
@@ -3840,14 +3840,14 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
         )}
       </div>
 
-      {/* ── AUTO-DETECTED FLIPS ──────────────────────────────────────────── */}
+      {/* â”€â”€ AUTO-DETECTED FLIPS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       {autoFlips.length > 0 && (
         <div style={{ background: "var(--bg3)", border: "1px solid var(--border)",
           borderRadius: "10px", padding: "20px" }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px",
             fontWeight: 700, color: "var(--gold)", textTransform: "uppercase",
             letterSpacing: "1px", marginBottom: "16px" }}>
-            ⚡ Auto-Detected Flips
+            âš¡ Auto-Detected Flips
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
             <div style={{ display: "grid",
@@ -3880,7 +3880,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>
                   {(f.quantity || 0).toLocaleString()}
                 </span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>—</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>â€”</span>
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: 600,
                     color: f.profit >= 0 ? "var(--green)" : "var(--red)" }}>
@@ -3922,7 +3922,7 @@ export default function RuneTrader() {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
   }
 
-  // ── Capture referral code from URL on load ──
+  // â”€â”€ Capture referral code from URL on load â”€â”€
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get("ref");
@@ -3939,9 +3939,9 @@ export default function RuneTrader() {
       const upgradeUrl = new URL(window.location.href);
       upgradeUrl.searchParams.delete("upgrade");
       window.history.replaceState({}, "", upgradeUrl.toString());
-      setTimeout(() => showToast("Welcome to Pro! 📈 Merchant Mode is now unlocked.", "success", 5000), 500);
+      setTimeout(() => showToast("Welcome to Pro! ðŸ“ˆ Merchant Mode is now unlocked.", "success", 5000), 500);
     }
-    // Detect /item/:slug — e.g. runetrader.gg/item/abyssal-whip
+    // Detect /item/:slug â€” e.g. runetrader.gg/item/abyssal-whip
     const match = window.location.pathname.match(/^\/item\/(.+)$/);
     if (match) {
       const slug = decodeURIComponent(match[1]).replace(/-/g, " ");
@@ -3998,7 +3998,7 @@ export default function RuneTrader() {
           const seen = localStorage.getItem(DEPLOY_KEY);
           if (!seen) { setTimeout(() => setShowWhatsNew(true), 1200); }
           localStorage.setItem(DEPLOY_KEY, "1");
-          // ── Login streak ──
+          // â”€â”€ Login streak â”€â”€
           const today = new Date().toISOString().slice(0, 10);
           const lastLogin = localStorage.getItem("rt_last_login");
           const storedStreak = parseInt(localStorage.getItem("rt_login_streak") || "0");
@@ -4012,6 +4012,21 @@ export default function RuneTrader() {
           localStorage.setItem("rt_last_login", today);
           localStorage.setItem("rt_login_streak", String(newStreak));
           setLoginStreak(newStreak);
+          // Show streak banner if streak ≥ 2 (new or continuing streak)
+          if (newStreak >= 2 && lastLogin !== today) {
+            setTimeout(() => setShowStreakBanner(true), 1400);
+            setTimeout(() => setShowStreakBanner(false), 7000);
+          }
+          // Show first-login goal if never set
+          const hasGoalBeenSet = localStorage.getItem("rt_first_goal_set");
+          if (!hasGoalBeenSet) {
+            setTimeout(() => setShowFirstLoginGoal(true), 2000);
+          }
+          // Show daily GP goal prompt if signed in today and no session goal yet
+          const hasSessionGoal = sessionStorage.getItem("rt_session_goal");
+          if (!hasSessionGoal && lastLogin !== today) {
+            setTimeout(() => setShowDailyGoalPrompt(true), 3200);
+          }
         }
       }
     });
@@ -4029,20 +4044,20 @@ export default function RuneTrader() {
     setTourStep(next);
   }
 
-  // ── Market data ──
+  // â”€â”€ Market data â”€â”€
   const [items, setItems] = useState([]);
   const [allItems, setAllItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshCooldown, setRefreshCooldown] = useState(0); // seconds remaining
   const cooldownRef = useRef(null);
-  const mappingCacheRef = useRef(null);   // static — only fetched once
-  const volumeCacheRef = useRef(null);    // daily — refetched every 10 min
+  const mappingCacheRef = useRef(null);   // static â€” only fetched once
+  const volumeCacheRef = useRef(null);    // daily â€” refetched every 10 min
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [allItemsMap, setAllItemsMap] = useState({});
 
-  // ── Merchant Mode ──
+  // â”€â”€ Merchant Mode â”€â”€
   const [merchantMode, setMerchantMode] = useState(false);
   const [upgradeModal, setUpgradeModal] = useState(null);
   const [isPro, setIsPro] = useState(false);
@@ -4144,7 +4159,7 @@ export default function RuneTrader() {
   // Load manual positions for Merchant Mode (read-only copy)
   const [merchantPositions, setMerchantPositions] = useState([]);
   const [geOffers, setGeOffers] = useState([]);
-  const [liveWikiPrices, setLiveWikiPrices] = useState({}); // item_id → {high,low} — populated by LiveGESlots poll
+  const [liveWikiPrices, setLiveWikiPrices] = useState({}); // item_id â†’ {high,low} â€” populated by LiveGESlots poll
   useEffect(() => {
     if (!user) return;
     supabase.from("positions").select("*").then(({ data }) => setMerchantPositions(data || []));
@@ -4153,7 +4168,7 @@ export default function RuneTrader() {
     const ch = supabase.channel("merchant-ge-offers-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_offers", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          // Re-fetch on DELETE — don't rely on payload.old.slot which requires REPLICA IDENTITY FULL
+          // Re-fetch on DELETE â€” don't rely on payload.old.slot which requires REPLICA IDENTITY FULL
           supabase.from("ge_offers").select("*").eq("user_id", user.id).order("slot")
             .then(({ data }) => setGeOffers(data || []));
         } else {
@@ -4170,7 +4185,7 @@ export default function RuneTrader() {
 
   async function addPositionFromMerchant({ item, buyPrice, qty }) {
     if (!user) return;
-    // Write only to flips table as an open flip — this shows in Tracker and Merchant Mode
+    // Write only to flips table as an open flip â€” this shows in Tracker and Merchant Mode
     // (previously also wrote to positions table causing duplicate entries)
     const { data: flipData, error } = await supabase.from("flips").insert({
       user_id: user.id, item, buy_price: buyPrice, qty, status: "open",
@@ -4183,16 +4198,45 @@ export default function RuneTrader() {
 
 
 
-  // ── Prefs ──
+  // â”€â”€ Prefs â”€â”€
   const [prefs] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}"); } catch { return {}; } });
   const [budget] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}").budget || ""; } catch { return ""; } });
 
-  // ── UI state ──
+  // â”€â”€ UI state â”€â”€
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("market");
+  function handleSetActiveTab(tab) {
+    setActiveTab(tab);
+    if (tab === "market" && user && !localStorage.getItem("rt_market_wizard_seen")) {
+      setTimeout(() => setShowMarketWizard(true), 400);
+    }
+    if (tab === "tracker" && user && !localStorage.getItem("rt_tracker_wizard_seen")) {
+      setTimeout(() => setShowTrackerWizard(true), 400);
+    }
+  }
   const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [loginStreak, setLoginStreak] = useState(0);
+
+  // ── Engagement features ──────────────────────────────────────────────────────
+  // Daily GP goal
+  const [showDailyGoalPrompt, setShowDailyGoalPrompt] = useState(false);
+  const [dailyGoalSession, setDailyGoalSession] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem("rt_session_goal") || "null"); } catch { return null; }
+  });
+  // First-login goal modal ("what's your main goal?")
+  const [showFirstLoginGoal, setShowFirstLoginGoal] = useState(false);
+  // First-visit Market wizard
+  const [showMarketWizard, setShowMarketWizard] = useState(false);
+  // First-visit Tracker wizard
+  const [showTrackerWizard, setShowTrackerWizard] = useState(false);
+  // Streak banner (shown once per session after login)
+  const [showStreakBanner, setShowStreakBanner] = useState(false);
+  // First profitable flip confetti
+  const [showFlipConfetti, setShowFlipConfetti] = useState(false);
+  const [flipConfettiData, setFlipConfettiData] = useState(null);
+  // ─────────────────────────────────────────────────────────────────────────────
+
   const [selectedItem, setSelectedItem] = useState(null);
   const [pendingItemSlug, setPendingItemSlug] = useState(null); // from /item/:slug URL
   const [sortCol, setSortCol] = useState("volume");
@@ -4213,7 +4257,7 @@ export default function RuneTrader() {
   function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } }
   useEffect(() => { setMarketRowsShown(200); }, [filter, search]);
 
-  // ── Advanced filters ──
+  // â”€â”€ Advanced filters â”€â”€
   const [showAdvFilters, setShowAdvFilters] = useState(false);
   const [advFilters, setAdvFilters] = useState({
     minMargin: "", maxMargin: "",
@@ -4229,7 +4273,7 @@ export default function RuneTrader() {
   function resetAdvFilters() { setAdvFilters({ minMargin: "", maxMargin: "", minRoi: "", maxRoi: "", minVolume: "", maxVolume: "", minPrice: "", maxPrice: "", minGpFill: "", maxLastTrade: "", positiveOnly: false, priceDataOnly: false }); }
   const advFilterCount = Object.entries(advFilters).filter(([, v]) => v !== "" && v !== false).length;
 
-  // ── AI Chat ──
+  // â”€â”€ AI Chat â”€â”€
   const [messages, setMessages] = useState([WELCOME_MSG]);
   const [input, setInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
@@ -4238,14 +4282,14 @@ export default function RuneTrader() {
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
   useEffect(() => { merchantAIMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, merchantAIOpen]);
 
-  // ── Tracker ──
+  // â”€â”€ Tracker â”€â”€
   const [flipsLog, setFlipsLog] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch { return []; } });
   // eslint-disable-next-line no-unused-vars
   const [flipsLoading, setFlipsLoading] = useState(false); // eslint-disable-line no-unused-vars
   const [autoFlipsLog, setAutoFlipsLog] = useState([]);
 
 
-  // ── Merchant P&L tracking (after flipsLog is declared) ──
+  // â”€â”€ Merchant P&L tracking (after flipsLog is declared) â”€â”€
   useEffect(() => {
     if (!merchantMode) return;
     const todayManual = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.totalProfit || 0), 0);
@@ -4293,19 +4337,19 @@ export default function RuneTrader() {
   // eslint-disable-next-line no-unused-vars
   const [showAutocomplete, setShowAutocomplete] = useState(false); // eslint-disable-line no-unused-vars
 
-  // ── Close flip modal ──
+  // â”€â”€ Close flip modal â”€â”€
   const [closingFlip, setClosingFlip] = useState(null);
   const [closeFlipLoading, setCloseFlipLoading] = useState(false);
   const [flipCard, setFlipCard] = useState(null); // { itemName, profit, roi, dataUrl }
 
-  // ── Demo Mode ──
+  // â”€â”€ Demo Mode â”€â”€
   const [demoMode, setDemoMode] = useState(false);
   const [demoTourStep, setDemoTourStep] = useState(-1); // -1 = inactive, -2 = end screen
   const [demoTourRect, setDemoTourRect] = useState(null);
   const [demoTourTransitioning, setDemoTourTransitioning] = useState(false);
   const [demoMerchantIntro, setDemoMerchantIntro] = useState(false); // dramatic MM intro overlay
 
-  // ── Watchlist (replaces Favourites) ──
+  // â”€â”€ Watchlist (replaces Favourites) â”€â”€
   const [watchlist, setWatchlist] = useState(() => {
     try {
       const wl = localStorage.getItem("runetrader_watchlist");
@@ -4315,7 +4359,7 @@ export default function RuneTrader() {
       return [];
     } catch { return []; }
   });
-  const favourites = watchlist; // alias — MerchantMode and filtered still use `favourites`
+  const favourites = watchlist; // alias â€” MerchantMode and filtered still use `favourites`
 
   function toggleWatchlist(itemId) {
     setWatchlist(prev => {
@@ -4354,7 +4398,7 @@ export default function RuneTrader() {
   const [watchlistAlertOpen, setWatchlistAlertOpen] = useState(null);
   const [watchlistAlertInputs, setWatchlistAlertInputs] = useState({ above: "", below: "" });
 
-  // ── Alerts ──
+  // â”€â”€ Alerts â”€â”€
   const [alerts, setAlerts] = useState(() => {
     try { return JSON.parse(localStorage.getItem("runetrader_alerts") || "[]"); } catch { return []; }
   });
@@ -4386,7 +4430,7 @@ export default function RuneTrader() {
     return () => document.removeEventListener("mousedown", handler);
   }, [openPopover]);
 
-  // ── Smart Alerts ──
+  // â”€â”€ Smart Alerts â”€â”€
   const [smartAlertSettings, setSmartAlertSettings] = useState(() => {
     try { return JSON.parse(localStorage.getItem("runetrader_smart_alerts") || '{"marginSpike":true,"volumeSurge":true,"dumpDetected":true,"priceCrash":true,"autopilotSound":true,"autopilotPush":true}'); }
     catch { return { marginSpike: true, volumeSurge: true, dumpDetected: true, priceCrash: true, autopilotSound: true, autopilotPush: true }; }
@@ -4396,7 +4440,7 @@ export default function RuneTrader() {
   const [smartFeedSort, setSmartFeedSort] = useState("recent");  // recent | change | margin
   const [smartFeedSortDir, setSmartFeedSortDir] = useState("desc"); // asc | desc
   const prevItemsRef = useRef({});
-  const smartCooldownRef = useRef({}); // key: `${itemId}_${type}` → timestamp
+  const smartCooldownRef = useRef({}); // key: `${itemId}_${type}` â†’ timestamp
 
   function saveSmartAlertSettings(key, val) {
     const updated = { ...smartAlertSettings, [key]: val };
@@ -4407,7 +4451,7 @@ export default function RuneTrader() {
   function runSmartAlerts(newItems) {
     const prev = prevItemsRef.current;
     if (!Object.keys(prev).length) {
-      // First load — just store baseline, don't fire
+      // First load â€” just store baseline, don't fire
       const baseline = {};
       newItems.forEach(i => { baseline[i.id] = { margin: i.margin, volume: i.volume, high: i.high, low: i.low }; });
       prevItemsRef.current = baseline;
@@ -4449,25 +4493,25 @@ export default function RuneTrader() {
       // Margin Spike: margin up >threshold% vs previous
       if (smartAlertSettings.marginSpike && canFire("marginSpike") && p.margin > 100) {
         const pct = ((item.margin - p.margin) / Math.abs(p.margin)) * 100;
-        if (pct >= thresholds.marginSpike) fire("marginSpike", "📈", "spike", `Margin spiked +${Math.round(pct)}% to ${formatGP(item.margin)} gp`, p.margin, item.margin);
+        if (pct >= thresholds.marginSpike) fire("marginSpike", "ðŸ“ˆ", "spike", `Margin spiked +${Math.round(pct)}% to ${formatGP(item.margin)} gp`, p.margin, item.margin);
       }
 
       // Volume Surge: volume >threshold x previous
       if (smartAlertSettings.volumeSurge && canFire("volumeSurge") && p.volume > 10) {
-        if (item.volume >= p.volume * thresholds.volumeSurge && item.volume > 50) fire("volumeSurge", "🔥", "surge", `Volume surged to ${item.volume.toLocaleString()}/day (was ${p.volume.toLocaleString()})`, p.volume, item.volume);
+        if (item.volume >= p.volume * thresholds.volumeSurge && item.volume > 50) fire("volumeSurge", "ðŸ”¥", "surge", `Volume surged to ${item.volume.toLocaleString()}/day (was ${p.volume.toLocaleString()})`, p.volume, item.volume);
       }
 
       // Dump Detected: sell price dropped >threshold%
       if (smartAlertSettings.dumpDetected && canFire("dumpDetected") && p.high > 100) {
         const drop = ((p.high - item.high) / p.high) * 100;
-        if (drop >= thresholds.dumpDetected) fire("dumpDetected", "⚠️", "dump", `Sell price dropped ${Math.round(drop)}% to ${formatGP(item.high)} gp`, p.high, item.high);
+        if (drop >= thresholds.dumpDetected) fire("dumpDetected", "âš ï¸", "dump", `Sell price dropped ${Math.round(drop)}% to ${formatGP(item.high)} gp`, p.high, item.high);
       }
 
       // Price Crash: both buy and sell dropped >threshold%
       if (smartAlertSettings.priceCrash && canFire("priceCrash") && p.high > 100 && p.low > 100) {
         const highDrop = ((p.high - item.high) / p.high) * 100;
         const lowDrop = ((p.low - item.low) / p.low) * 100;
-        if (highDrop >= thresholds.priceCrash && lowDrop >= thresholds.priceCrash) fire("priceCrash", "💥", "crash", `Price crashed! Buy ${formatGP(item.low)} (↓${Math.round(lowDrop)}%), Sell ${formatGP(item.high)} (↓${Math.round(highDrop)}%)`, p.high, item.high);
+        if (highDrop >= thresholds.priceCrash && lowDrop >= thresholds.priceCrash) fire("priceCrash", "ðŸ’¥", "crash", `Price crashed! Buy ${formatGP(item.low)} (â†“${Math.round(lowDrop)}%), Sell ${formatGP(item.high)} (â†“${Math.round(highDrop)}%)`, p.high, item.high);
       }
     });
 
@@ -4481,13 +4525,13 @@ export default function RuneTrader() {
     prevItemsRef.current = updated;
   }
 
-  // ── Push notifications ──
+  // â”€â”€ Push notifications â”€â”€
   const [notifPermission, setNotifPermission] = useState(() =>
     typeof Notification !== "undefined" ? Notification.permission : "default"
   );
   const [notifLoading, setNotifLoading] = useState(false);
 
-  // ── Demo Tour ────────────────────────────────────────────────────
+  // â”€â”€ Demo Tour â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function measureDemoTarget(selector) {
     if (!selector) { setDemoTourRect(null); return; }
     setTimeout(() => {
@@ -4511,7 +4555,7 @@ export default function RuneTrader() {
 
   function advanceDemoTour(nextIdx) {
     if (nextIdx >= DEMO_TOUR_STEPS.length) {
-      // End — show CTA screen
+      // End â€” show CTA screen
       setDemoTourStep(-2);
       setDemoTourRect(null);
       return;
@@ -4519,7 +4563,7 @@ export default function RuneTrader() {
     const step = DEMO_TOUR_STEPS[nextIdx];
     setDemoTourStep(nextIdx);
 
-    // Navigate to correct tab — briefly show solid backdrop during transition
+    // Navigate to correct tab â€” briefly show solid backdrop during transition
     if (step.tab) {
       setDemoTourTransitioning(true);
       setDemoTourRect(null);
@@ -4576,7 +4620,7 @@ export default function RuneTrader() {
 
   // Auto-start demo tour when demoMode activates
   useEffect(() => {
-    if (!demoMode) return; // don’t run on initial mount (default false)
+    if (!demoMode) return; // donâ€™t run on initial mount (default false)
     // Force out of Merchant Mode and back to Market before tour starts
     setMerchantMode(false);
     setMerchantAIOpen(false);
@@ -4632,7 +4676,7 @@ export default function RuneTrader() {
     return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
   }
 
-  // ── Load flips on user change ──
+  // â”€â”€ Load flips on user change â”€â”€
   useEffect(() => {
     if (user) { loadAndMergeFlips(); }
     else { try { setFlipsLog(JSON.parse(localStorage.getItem("runetrader_flips") || "[]")); } catch { setFlipsLog([]); } }
@@ -4688,14 +4732,14 @@ export default function RuneTrader() {
     };
   }
 
-  // ── Fetch market prices ──
-  // /mapping is static (item metadata — never changes), cached for the session
+  // â”€â”€ Fetch market prices â”€â”€
+  // /mapping is static (item metadata â€” never changes), cached for the session
   // /volumes updates daily, refreshed every 10 min
-  // /latest updates every ~60s on wiki's end — poll every 30s to catch it fast
+  // /latest updates every ~60s on wiki's end â€” poll every 30s to catch it fast
   const volumeCacheTimeRef = useRef(0);
   useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 30 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
 
-  // ── Resolve pending /item/:slug once allItems is populated ──
+  // â”€â”€ Resolve pending /item/:slug once allItems is populated â”€â”€
   useEffect(() => {
     if (!pendingItemSlug || allItems.length === 0) return;
     const match = allItems.find(i => i.name.toLowerCase() === pendingItemSlug)
@@ -4709,7 +4753,7 @@ export default function RuneTrader() {
       else setLoading(true);
       setError(null);
 
-      // Always fetch latest prices — via our server cache (hits Wiki at most once/min)
+      // Always fetch latest prices â€” via our server cache (hits Wiki at most once/min)
       const latestRes = await fetch("/api/prices?type=latest");
       const latestData = await latestRes.json();
 
@@ -4737,14 +4781,14 @@ export default function RuneTrader() {
       const volumeMap = volumeCacheRef.current;
       const TAX_EXEMPT_IDS = [13190, 13191, 13192];
 
-      // Capture nature rune price (ID 561) — used for High Alch profit calc
+      // Capture nature rune price (ID 561) â€” used for High Alch profit calc
       const natureRuneData = latestData.data["561"];
       if (natureRuneData && natureRuneData.low) setNatureRunePrice(natureRuneData.low);
       else if (natureRunePrice === 0) setNatureRunePrice(200); // fallback if no live data
 
       const flips = [];
 
-      // Build from full mapping catalog — show all items, even those with no live price
+      // Build from full mapping catalog â€” show all items, even those with no live price
       for (const [idStr, meta] of Object.entries(mappingMap)) {
         const id = parseInt(idStr);
         const prices = latestData.data[idStr] || {};
@@ -4763,7 +4807,7 @@ export default function RuneTrader() {
       const validFlips = flips.filter(isValidFlip);
       validFlips.sort((a, b) => b.score - a.score);
       setItems(validFlips);
-      setAllItems(flips); // all items including invalid — for search
+      setAllItems(flips); // all items including invalid â€” for search
       itemsRef.current = validFlips;
       runSmartAlerts(flips);
       setLastUpdate(new Date());
@@ -4782,7 +4826,7 @@ export default function RuneTrader() {
     finally { setLoading(false); setRefreshing(false); }
   }
 
-  // ── Sign out ──
+  // â”€â”€ Sign out â”€â”€
   async function handleSignOut() {
     await supabase.auth.signOut();
     setUser(null);
@@ -4792,7 +4836,7 @@ export default function RuneTrader() {
     setActiveTab("market");
   }
 
-  // ── Check alerts against live prices ──
+  // â”€â”€ Check alerts against live prices â”€â”€
   useEffect(() => {
     if (!items.length || !alerts.length) return;
     setAlerts(prev => prev.map(alert => {
@@ -4804,7 +4848,7 @@ export default function RuneTrader() {
     }));
   }, [items]); // eslint-disable-line
 
-  // ── Autocomplete helpers ──
+  // â”€â”€ Autocomplete helpers â”€â”€
   const allNames = Object.values(allItemsMap);
   function handleItemInput(val, setForm, setAc, setShowAc) {
     setForm(f => ({ ...f, item: val }));
@@ -4817,7 +4861,7 @@ export default function RuneTrader() {
     setShowAc(false);
   }
 
-  // ── Log a flip (buy-only or full) ──
+  // â”€â”€ Log a flip (buy-only or full) â”€â”€
   // eslint-disable-next-line no-unused-vars
   async function logFlip() { // eslint-disable-line no-unused-vars
     const buy = parseInt(logForm.buyPrice.replace(/,/g, ""));
@@ -4880,7 +4924,7 @@ export default function RuneTrader() {
     }
   }
 
-  // ── Close an open flip ──
+  // â”€â”€ Close an open flip â”€â”€
   function generateFlipCard(itemName, totalProfit, roi) {
     const canvas = document.createElement("canvas");
     canvas.width = 600; canvas.height = 200;
@@ -4897,7 +4941,7 @@ export default function RuneTrader() {
     ctx.fillRect(2, 2, 596, 196);
     // Sword icon area
     ctx.font = "32px serif";
-    ctx.fillText("📈", 28, 80);
+    ctx.fillText("ðŸ“ˆ", 28, 80);
     // RuneTrader label
     ctx.fillStyle = "#c9a84c";
     ctx.font = "bold 13px 'Arial'";
@@ -4943,6 +4987,13 @@ export default function RuneTrader() {
       if (!error && data) {
         setFlipsLog(prev => prev.map(f => f.id === flip.id ? mapFlipRow(data) : f));
         showToast(`Sold! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
+        // First profitable flip celebration (one-time ever)
+        if (totalProfit > 0 && !localStorage.getItem("rt_first_profit_celebrated")) {
+          localStorage.setItem("rt_first_profit_celebrated", "1");
+          setFlipConfettiData({ itemName: flip.item, profit: totalProfit, roi });
+          setShowFlipConfetti(true);
+          setTimeout(() => setShowFlipConfetti(false), 6000);
+        }
         if (merchantMode && totalProfit > 0) {
           const dataUrl = generateFlipCard(flip.item, totalProfit, roi);
           setFlipCard({ itemName: flip.item, profit: totalProfit, roi, dataUrl });
@@ -4971,7 +5022,7 @@ export default function RuneTrader() {
     showToast(`${flip.item} removed from open flips.`, "info");
   }
 
-  // ── Merchant Mode close handlers (no tab switching needed) ──
+  // â”€â”€ Merchant Mode close handlers (no tab switching needed) â”€â”€
   async function merchantCloseFlip(flip, sellPrice, cancelled = false) {
     if (cancelled) {
       await handleCloseFlipCancelled(flip);
@@ -5007,7 +5058,7 @@ export default function RuneTrader() {
     showToast(`Closed! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
   }
 
-  // ── "Flip This" from item modal ──
+  // â”€â”€ "Flip This" from item modal â”€â”€
   // eslint-disable-next-line no-unused-vars
   async function deleteFlip(id) { // eslint-disable-line no-unused-vars
     if (user) { await supabase.from("flips").delete().eq("id", id); }
@@ -5023,7 +5074,7 @@ export default function RuneTrader() {
     setFlipsLog([]);
   }
 
-  // ── Alerts ──
+  // â”€â”€ Alerts â”€â”€
   function addAlert() {
     if (!alertForm.item || !alertForm.price) return;
     const liveItem = items.find(i => i.name.toLowerCase() === alertForm.item.toLowerCase());
@@ -5045,7 +5096,7 @@ export default function RuneTrader() {
     });
   }
 
-  // ── AI sendMessage ──
+  // â”€â”€ AI sendMessage â”€â”€
   async function sendMessage(text) {
     setMessages(prev => [...prev, { role: "user", content: text, time: new Date() }]);
     setInput(""); setAiLoading(true);
@@ -5053,7 +5104,7 @@ export default function RuneTrader() {
       .filter(i => {
         if (i.margin <= 0) return false;
         if (i.volume < 1000) return false; // must have meaningful daily volume
-        if (i.roi > 150) return false; // suspiciously high — likely manipulated or untradeable
+        if (i.roi > 150) return false; // suspiciously high â€” likely manipulated or untradeable
         const ageSec = i.lastTradeTime ? Math.floor(Date.now() / 1000 - i.lastTradeTime) : 99999;
         if (ageSec > 10800) return false; // data older than 3hrs = unreliable margin
         return true;
@@ -5069,7 +5120,7 @@ export default function RuneTrader() {
     const riskMap = { Low: "only high-volume safe items (volume 500+/day, ROI 2-15%)", Med: "balance margin and volume (volume 100+/day, ROI 5-40%)", High: "higher margin items OK (volume 50+/day, ROI up to 100%)" };
     const speedMap = { Fast: "only items with very high daily volume (500+)", Med: "items that fill within 1-2 hours (volume 100+/day)", Slow: "slower filling items with bigger margins acceptable" };
 
-    // ── Build slot context from live GE offers + drift data ──────────────────
+    // â”€â”€ Build slot context from live GE offers + drift data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const activeSlots = geOffers.filter(o => ["BUYING", "BOUGHT", "SELLING", "SOLD"].includes(o.status));
     const slotContext = activeSlots.length === 0 ? "No active GE offers right now." : activeSlots.map(o => {
       const itemId    = (items || []).find(i => i.name?.toLowerCase() === o.item_name?.toLowerCase())?.id;
@@ -5089,42 +5140,42 @@ export default function RuneTrader() {
       let driftNote = "";
       if (drift !== null) {
         const driftNum = parseFloat(drift);
-        if (driftNum >= 5)       driftNote = ` ⚠ CANCEL & RELIST — ${drift}% off market, relist at ${relistAt?.toLocaleString()} gp`;
-        else if (driftNum >= 2)  driftNote = ` ⚡ Consider adjusting — ${drift}% off market, relist at ${relistAt?.toLocaleString()} gp`;
-        else if (driftNum > 0)   driftNote = ` ✓ Slightly off market (${drift}%) — within tolerance`;
-        else                     driftNote = ` ✓ Competitive`;
+        if (driftNum >= 5)       driftNote = ` âš  CANCEL & RELIST â€” ${drift}% off market, relist at ${relistAt?.toLocaleString()} gp`;
+        else if (driftNum >= 2)  driftNote = ` âš¡ Consider adjusting â€” ${drift}% off market, relist at ${relistAt?.toLocaleString()} gp`;
+        else if (driftNum > 0)   driftNote = ` âœ“ Slightly off market (${drift}%) â€” within tolerance`;
+        else                     driftNote = ` âœ“ Competitive`;
       }
 
       return `Slot ${o.slot + 1}: ${o.item_name} | ${o.offer_type} @ ${o.offer_price?.toLocaleString()} gp | ${fillPct}% filled${ageMin !== null ? ` | ${ageMin}min old` : ""}${marketPrice ? ` | Market now: ${marketPrice.toLocaleString()} gp` : " | No live price"}${driftNote}`;
     }).join("\n");
 
-    const systemPrompt = `You are the RuneTrader AI assistant — an expert OSRS Grand Exchange flipping advisor with live GE data.
-${budget ? `User cash stack: ${parseInt(budget.replace(/,/g,"")).toLocaleString()} gp — only recommend items they can afford (buy price must fit their stack, ideally with room for 5+ flips)` : "Cash stack not set — ask before recommending specific items."}
-${prefs.risk ? `Risk tolerance: ${prefs.risk} — ${riskMap[prefs.risk]}` : "Risk not set."}
-${prefs.speed ? `Flip speed: ${prefs.speed} — ${speedMap[prefs.speed]}` : "Speed not set."}
+    const systemPrompt = `You are the RuneTrader AI assistant â€” an expert OSRS Grand Exchange flipping advisor with live GE data.
+${budget ? `User cash stack: ${parseInt(budget.replace(/,/g,"")).toLocaleString()} gp â€” only recommend items they can afford (buy price must fit their stack, ideally with room for 5+ flips)` : "Cash stack not set â€” ask before recommending specific items."}
+${prefs.risk ? `Risk tolerance: ${prefs.risk} â€” ${riskMap[prefs.risk]}` : "Risk not set."}
+${prefs.speed ? `Flip speed: ${prefs.speed} â€” ${speedMap[prefs.speed]}` : "Speed not set."}
 
 PLAYER'S ACTIVE GE SLOTS (synced live from RuneTrader plugin):
 ${slotContext}
-CRITICAL: You DO have access to the player's GE slots via the RuneTrader plugin — NEVER say you don't have access to their slots. The data above is real and current. If it says 'No active GE offers right now' it means they have nothing in the GE at this moment OR they are not currently logged in-game — tell them that directly. If slots are listed, use them to give specific advice. If a slot shows ⚠ CANCEL & RELIST, mention it proactively even if they didn't ask. Never invent slot data beyond what is shown above.
+CRITICAL: You DO have access to the player's GE slots via the RuneTrader plugin â€” NEVER say you don't have access to their slots. The data above is real and current. If it says 'No active GE offers right now' it means they have nothing in the GE at this moment OR they are not currently logged in-game â€” tell them that directly. If slots are listed, use them to give specific advice. If a slot shows âš  CANCEL & RELIST, mention it proactively even if they didn't ask. Never invent slot data beyond what is shown above.
 
 SCORING SYSTEM (explain if asked):
-- Score 0–100. Three components multiplied by a freshness multiplier.
-- Liquidity ratio (40pts): daily_volume ÷ buy_limit. Ratio ≥ 20 = excellent (market supports 20 full buy cycles/day). Ratio < 1 = market can't even fill one cycle — score 0.
-- GP/hr (35pts): margin × (volume/24 × 0.03 fill_share, capped at buy limit). Log-scaled. 2M+/hr = top tier.
-- ROI (15pts): sweet spot 2–5% (real high-volume OSRS flips). >40% = suspicious. >80% = likely dead market or manipulation — score 0.
-- Freshness multiplier: applied after scoring. <5min = ×1.0, <15min = ×0.9, <30min = ×0.75, <1hr = ×0.5, <2hr = ×0.2, 2hr+ = ×0.05.
-- Score 70+ = strong. 50–69 = decent. Under 50 = risky or marginal.
-- Items with ratio < 1 (market can't fill a full buy cycle/day), margin ≤ 0, or data 2hr+ old score near zero.
+- Score 0â€“100. Three components multiplied by a freshness multiplier.
+- Liquidity ratio (40pts): daily_volume Ã· buy_limit. Ratio â‰¥ 20 = excellent (market supports 20 full buy cycles/day). Ratio < 1 = market can't even fill one cycle â€” score 0.
+- GP/hr (35pts): margin Ã— (volume/24 Ã— 0.03 fill_share, capped at buy limit). Log-scaled. 2M+/hr = top tier.
+- ROI (15pts): sweet spot 2â€“5% (real high-volume OSRS flips). >40% = suspicious. >80% = likely dead market or manipulation â€” score 0.
+- Freshness multiplier: applied after scoring. <5min = Ã—1.0, <15min = Ã—0.9, <30min = Ã—0.75, <1hr = Ã—0.5, <2hr = Ã—0.2, 2hr+ = Ã—0.05.
+- Score 70+ = strong. 50â€“69 = decent. Under 50 = risky or marginal.
+- Items with ratio < 1 (market can't fill a full buy cycle/day), margin â‰¤ 0, or data 2hr+ old score near zero.
 
-LIVE DATA (pre-filtered: margin > 0, volume ≥ 1,000/day, data < 3hrs old, ROI ≤ 150%):
+LIVE DATA (pre-filtered: margin > 0, volume â‰¥ 1,000/day, data < 3hrs old, ROI â‰¤ 150%):
 ${topFlips}${mentionedItems ? `\nMentioned items (from user query):\n${mentionedItems}` : ""}
 
 RULES:
 - Only recommend items from the live data above. Never invent or assume prices.
-- Always state the buy limit when recommending — it defines the max you can buy per 4hrs.
-- CRITICAL — COMPETITION & FILLS: OSRS has 100k–200k+ concurrent players with thousands of active flippers. Fill rates are volume-dependent: extremely high volume items (500k+/day) like runes fill reliably because the market is deep enough to absorb all flippers — these are solid low-risk fast flips worth 25–100k GP per fill. High volume (100k–500k/day) items likely fill but face competition. Mid volume (20k–100k/day) is competitive — expect partial fills. Low volume (<5k/day) is uncertain — fills are slow and unreliable. Never tell a user high volume guarantees a fast fill without acknowledging this scale. The GP/Fill number shown already accounts for realistic fill rates at each volume tier.
+- Always state the buy limit when recommending â€” it defines the max you can buy per 4hrs.
+- CRITICAL â€” COMPETITION & FILLS: OSRS has 100kâ€“200k+ concurrent players with thousands of active flippers. Fill rates are volume-dependent: extremely high volume items (500k+/day) like runes fill reliably because the market is deep enough to absorb all flippers â€” these are solid low-risk fast flips worth 25â€“100k GP per fill. High volume (100kâ€“500k/day) items likely fill but face competition. Mid volume (20kâ€“100k/day) is competitive â€” expect partial fills. Low volume (<5k/day) is uncertain â€” fills are slow and unreliable. Never tell a user high volume guarantees a fast fill without acknowledging this scale. The GP/Fill number shown already accounts for realistic fill rates at each volume tier.
 - "cycles/day" = how many 4hr windows the market supports being fully bought. Lower = slower flip.
-- Warn explicitly if data freshness is "aging" — the margin shown may not be real anymore.
+- Warn explicitly if data freshness is "aging" â€” the margin shown may not be real anymore.
 - Write all GP as full numbers with commas (1,220,000 not 1.22M).
 - GE tax: 2% of sell price, capped at 5,000,000. Under 50gp = no tax. Bonds exempt. All margins shown are already after tax.
 - High ROI (>40%) on a GE flip is a red flag, not a green one. It usually means thin market, slow fill, or a one-sided margin snapshot. Say so.
@@ -5190,7 +5241,7 @@ RULES:
     return sortDir === "asc" ? a[sortCol] - b[sortCol] : b[sortCol] - a[sortCol];
   });
 
-  // ── Tracker stats (manual + auto-tracked flips combined) ──
+  // â”€â”€ Tracker stats (manual + auto-tracked flips combined) â”€â”€
   const closedFlips = flipsLog.filter(f => f.status !== "open");
   const openFlips = flipsLog.filter(f => f.status === "open");
   const autoClosedFlips = autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, date: f.sell_completed_at }));
@@ -5210,7 +5261,7 @@ RULES:
       <div className="toast-container">
         {toasts.map(t => (
           <div key={t.id} className={`toast ${t.type}`}>
-            {t.type === "success" ? "✅" : t.type === "error" ? "❌" : "⚡"} {t.msg}
+            {t.type === "success" ? "âœ…" : t.type === "error" ? "âŒ" : "âš¡"} {t.msg}
           </div>
         ))}
       </div>
@@ -5221,7 +5272,7 @@ RULES:
       {showCapitalSetup && (
         <div className="capital-setup" onClick={e => e.target === e.currentTarget && setShowCapitalSetup(false)}>
           <div className="capital-setup-inner">
-            <div className="capital-setup-title">📈 Activate Merchant Mode</div>
+            <div className="capital-setup-title">ðŸ“ˆ Activate Merchant Mode</div>
             <div className="capital-setup-sub">Enter your total GP stack. This helps track capital efficiency, idle GP, and expected returns. You can update it any time.</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               <label style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Capital (GP)</label>
@@ -5235,7 +5286,7 @@ RULES:
             </div>
             <button className="capital-setup-btn" disabled={!merchantCapitalInput || merchantLoading}
               onClick={() => saveMerchantCapital(merchantCapitalInput)}>
-              {merchantLoading ? "Activating..." : "Activate Merchant Mode →"}
+              {merchantLoading ? "Activating..." : "Activate Merchant Mode â†’"}
             </button>
           </div>
         </div>
@@ -5255,7 +5306,7 @@ RULES:
               <div key={i} className="merchant-shutdown-bar" style={{ height: `${h * 20}px`, animationDelay: `${0.8 + i * 0.05}s` }} />
             ))}
           </div>
-          <div className="merchant-shutdown-status">● Terminal Offline</div>
+          <div className="merchant-shutdown-status">â— Terminal Offline</div>
         </div>
 
       {/* MERCHANT ACTIVATION ANIMATION */}
@@ -5269,7 +5320,7 @@ RULES:
               <div key={i} className="merchant-anim-bar" style={{ height: `${h * 20}px`, animationDelay: `${i * 0.08}s` }} />
             ))}
           </div>
-          <div className="merchant-anim-status">● System Ready</div>
+          <div className="merchant-anim-status">â— System Ready</div>
         </div>
 
       {/* MERCHANT TOUR */}
@@ -5318,7 +5369,7 @@ RULES:
                 <div className="tour-btn-row">
                   <button className="tour-skip" onClick={endMerchantTour}>Skip</button>
                   <button className="tour-next" onClick={() => advanceMerchantTour(merchantTourStep + 1)}>
-                    {merchantTourStep === MERCHANT_TOUR_STEPS.length - 1 ? "Let's go!" : "Next →"}
+                    {merchantTourStep === MERCHANT_TOUR_STEPS.length - 1 ? "Let's go!" : "Next â†’"}
                   </button>
                 </div>
               </div>
@@ -5331,7 +5382,7 @@ RULES:
       {flipCard && (
         <div className="flip-card-overlay" onClick={() => setFlipCard(null)}>
           <div className="flip-card-modal" onClick={e => e.stopPropagation()}>
-            <div className="flip-card-title">🎉 Nice flip! Share it?</div>
+            <div className="flip-card-title">ðŸŽ‰ Nice flip! Share it?</div>
             <img src={flipCard.dataUrl} alt="Flip card" className="flip-card-image" />
             <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>
               Share your {formatGP(flipCard.profit)} gp profit on {flipCard.itemName} with your clan.
@@ -5343,12 +5394,12 @@ RULES:
                 link.download = `runetrader-${flipCard.itemName.replace(/\s+/g, "-").toLowerCase()}.png`;
                 link.href = flipCard.dataUrl;
                 link.click();
-              }}>↓ Download</button>
+              }}>â†“ Download</button>
               <button className="flip-card-btn primary" onClick={() => {
                 const slug = flipCard.itemName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-                const text = `I just made ${formatGP(flipCard.profit)} gp flipping ${flipCard.itemName} on RuneTrader.gg 📈\nrunetrader.gg/item/${slug}`;
-                navigator.clipboard.writeText(text).then(() => { showToast("Copied to clipboard! Paste in Discord 🔗", "success"); setFlipCard(null); });
-              }}>📋 Copy for Discord</button>
+                const text = `I just made ${formatGP(flipCard.profit)} gp flipping ${flipCard.itemName} on RuneTrader.gg ðŸ“ˆ\nrunetrader.gg/item/${slug}`;
+                navigator.clipboard.writeText(text).then(() => { showToast("Copied to clipboard! Paste in Discord ðŸ”—", "success"); setFlipCard(null); });
+              }}>ðŸ“‹ Copy for Discord</button>
             </div>
           </div>
         </div>
@@ -5359,8 +5410,8 @@ RULES:
         <div className="whats-new-overlay" onClick={() => setShowWhatsNew(false)}>
           <div className="whats-new-modal" onClick={e => e.stopPropagation()}>
             <div className="whats-new-header">
-              <div className="whats-new-title">📈 What's New in RuneTrader</div>
-              <button onClick={() => setShowWhatsNew(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "18px", lineHeight: 1 }}>✕</button>
+              <div className="whats-new-title">ðŸ“ˆ What's New in RuneTrader</div>
+              <button onClick={() => setShowWhatsNew(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "18px", lineHeight: 1 }}>âœ•</button>
             </div>
             <div className="whats-new-body">
               {CHANGELOG.slice(0, 1).map((release, ri) => (
@@ -5382,7 +5433,7 @@ RULES:
             </div>
             <div className="whats-new-footer">
               <button className="refresh-btn" onClick={() => { setShowWhatsNew(false); setActiveTab("changelog"); }}>View full changelog</button>
-              <button className="upgrade-cta" style={{ width: "auto", padding: "9px 24px", fontSize: "13px", letterSpacing: "0.5px" }} onClick={() => setShowWhatsNew(false)}>Got it ✓</button>
+              <button className="upgrade-cta" style={{ width: "auto", padding: "9px 24px", fontSize: "13px", letterSpacing: "0.5px" }} onClick={() => setShowWhatsNew(false)}>Got it âœ“</button>
             </div>
           </div>
         </div>
@@ -5392,7 +5443,7 @@ RULES:
       {upgradeModal && (
         <div className="upgrade-overlay" onClick={() => setUpgradeModal(null)}>
           <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
-            <div className="upgrade-icon">📈</div>
+            <div className="upgrade-icon">ðŸ“ˆ</div>
             <div className="upgrade-title">Merchant Mode</div>
             <div className="upgrade-desc">
               <strong style={{ color: "var(--text)" }}>{upgradeModal.feature}</strong> is a Merchant Mode feature.
@@ -5402,7 +5453,7 @@ RULES:
               <div className="upgrade-features">
                 {upgradeModal.bullets.map((b, i) => (
                   <div key={i} className="upgrade-feature-row">
-                    <span className="check">◆</span>{b}
+                    <span className="check">â—†</span>{b}
                   </div>
                 ))}
               </div>
@@ -5412,7 +5463,7 @@ RULES:
               setUpgradeModal(null);
               setActiveTab("pricing");
             }}>
-              See Pro Plans →
+              See Pro Plans â†’
             </button>
             <button className="upgrade-dismiss" onClick={() => setUpgradeModal(null)}>Maybe later</button>
           </div>
@@ -5431,7 +5482,7 @@ RULES:
           onShare={() => {
             const slug = selectedItem.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
             const url = `${window.location.origin}/item/${slug}`;
-            navigator.clipboard.writeText(url).then(() => showToast("Link copied! Share it on Discord or Reddit 🔗", "success"));
+            navigator.clipboard.writeText(url).then(() => showToast("Link copied! Share it on Discord or Reddit ðŸ”—", "success"));
           }}
           isWatchlisted={watchlist.includes(selectedItem?.id)}
           onToggleWatchlist={() => toggleWatchlist(selectedItem?.id)}
@@ -5472,7 +5523,7 @@ RULES:
                 <div className="tour-dots">{TOUR_STEPS.map((_, i) => <div key={i} className={"tour-dot" + (i === tourStep ? " active" : "")} />)}</div>
                 <div className="tour-btn-row">
                   <button className="tour-skip" onClick={endTour}>Skip tour</button>
-                  <button className="tour-next" onClick={() => advanceTour(tourStep + 1)}>{tourStep === TOUR_STEPS.length - 1 ? "Let's go!" : "Next →"}</button>
+                  <button className="tour-next" onClick={() => advanceTour(tourStep + 1)}>{tourStep === TOUR_STEPS.length - 1 ? "Let's go!" : "Next â†’"}</button>
                 </div>
               </div>
             </div>
@@ -5484,9 +5535,209 @@ RULES:
         {/* ALPHA BANNER */}
         <div className="alpha-banner">
           <span className="alpha-badge">Alpha</span>
-          <span>RuneTrader is in early access — features are actively being built.</span>
-          <a className="feedback-btn" href="mailto:feedback@runetrader.gg">💬 Send Feedback</a>
+          <span>RuneTrader is in early access â€” features are actively being built.</span>
+          <a className="feedback-btn" href="mailto:feedback@runetrader.gg">ðŸ’¬ Send Feedback</a>
         </div>
+
+        {/* ── STREAK BANNER ── */}
+        {showStreakBanner && user && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 32px", background: "rgba(201,168,76,0.08)", borderBottom: "1px solid rgba(201,168,76,0.2)", fontSize: "13px", color: "var(--gold)", animation: "fadeIn 0.4s ease" }}>
+            <span>
+              🔥 <strong>{loginStreak}-day streak!</strong>
+              {loginStreak >= 7 ? " You're on fire — keep it up!" : loginStreak >= 3 ? " Nice consistency." : " Welcome back!"}
+            </span>
+            <button onClick={() => setShowStreakBanner(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "14px" }}>✕</button>
+          </div>
+        )}
+
+        {/* ── FIRST-LOGIN GOAL MODAL ── */}
+        {showFirstLoginGoal && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.25s ease" }}
+            onClick={e => { if (e.target === e.currentTarget) { setShowFirstLoginGoal(false); localStorage.setItem("rt_first_goal_set", "skipped"); } }}>
+            <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "480px", padding: "36px", display: "flex", flexDirection: "column", gap: "24px", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }} />
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "36px", marginBottom: "12px" }}>⚔️</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>Welcome to RuneTrader</div>
+                <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>What's your main goal right now?</div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {[
+                  { value: "grow_gp", emoji: "💰", label: "Grow my GP stack",  desc: "I want to flip and build capital fast." },
+                  { value: "learn",   emoji: "📚", label: "Learn to flip",      desc: "I'm new — show me how the GE works." },
+                  { value: "track",   emoji: "📊", label: "Track my trades",    desc: "I already flip — I want to see my P&L." },
+                ].map(opt => (
+                  <button key={opt.value}
+                    onClick={() => {
+                      localStorage.setItem("rt_first_goal_set", opt.value);
+                      setShowFirstLoginGoal(false);
+                      if (opt.value === "learn") { handleSetActiveTab("market"); setTimeout(() => setShowMarketWizard(true), 400); }
+                      if (opt.value === "track") handleSetActiveTab("tracker");
+                    }}
+                    style={{ padding: "14px 18px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", transition: "all 0.15s", fontFamily: "Inter, sans-serif" }}
+                    onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)"; e.currentTarget.style.background = "rgba(201,168,76,0.07)"; }}
+                    onMouseOut={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                  >
+                    <span style={{ fontSize: "22px", flexShrink: 0 }}>{opt.emoji}</span>
+                    <div>
+                      <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", marginBottom: "2px" }}>{opt.label}</div>
+                      <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>{opt.desc}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => { setShowFirstLoginGoal(false); localStorage.setItem("rt_first_goal_set", "skipped"); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Skip for now</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── DAILY GP GOAL PROMPT ── */}
+        {showDailyGoalPrompt && user && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.25s ease" }}
+            onClick={e => { if (e.target === e.currentTarget) setShowDailyGoalPrompt(false); }}>
+            <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "440px", padding: "36px", display: "flex", flexDirection: "column", gap: "20px", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }} />
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "36px", marginBottom: "12px" }}>🎯</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>What's your GP goal today?</div>
+                <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>Set a target and we'll track your progress as you flip.</div>
+              </div>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" }}>
+                {[["500k", 500_000], ["1M", 1_000_000], ["2M", 2_000_000], ["5M", 5_000_000], ["10M", 10_000_000]].map(([label, val]) => (
+                  <button key={label}
+                    onClick={() => {
+                      const goal = { gp: val, label, setAt: Date.now() };
+                      sessionStorage.setItem("rt_session_goal", JSON.stringify(goal));
+                      setDailyGoalSession(goal);
+                      setShowDailyGoalPrompt(false);
+                      showToast(`Goal set: ${label} GP today 🎯`, "success");
+                    }}
+                    style={{ padding: "10px 20px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.3)", background: "rgba(201,168,76,0.07)", color: "var(--gold)", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "'Cinzel', serif", transition: "all 0.15s" }}
+                    onMouseOver={e => { e.currentTarget.style.background = "rgba(201,168,76,0.15)"; }}
+                    onMouseOut={e => { e.currentTarget.style.background = "rgba(201,168,76,0.07)"; }}
+                  >{label}</button>
+                ))}
+              </div>
+              <button onClick={() => setShowDailyGoalPrompt(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Skip — no goal today</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── MARKET WIZARD (first visit) ── */}
+        {showMarketWizard && user && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.88)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.25s ease" }}>
+            <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "480px", padding: "36px", display: "flex", flexDirection: "column", gap: "24px", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }} />
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "36px", marginBottom: "12px" }}>📈</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>GE Tracker</div>
+                <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>What are you here to do today?</div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {[
+                  { value: "flip",   emoji: "💹", label: "Flip for profit",        desc: "Take me to the best margins right now." },
+                  { value: "picks",  emoji: "⭐", label: "Get personalised picks",  desc: "Show me items filtered to my style." },
+                  { value: "alch",   emoji: "🔥", label: "High Alch",               desc: "Find profitable items to alch." },
+                  { value: "browse", emoji: "👀", label: "Just browsing",            desc: "Show me everything." },
+                ].map(opt => (
+                  <button key={opt.value}
+                    onClick={() => {
+                      localStorage.setItem("rt_market_wizard_seen", "1");
+                      setShowMarketWizard(false);
+                      if (opt.value === "picks") setMarketSubTab("picks");
+                      else if (opt.value === "alch") setMarketSubTab("alch");
+                      else setMarketSubTab("flips");
+                    }}
+                    style={{ padding: "14px 18px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", transition: "all 0.15s", fontFamily: "Inter, sans-serif" }}
+                    onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)"; e.currentTarget.style.background = "rgba(201,168,76,0.07)"; }}
+                    onMouseOut={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                  >
+                    <span style={{ fontSize: "22px", flexShrink: 0 }}>{opt.emoji}</span>
+                    <div>
+                      <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", marginBottom: "2px" }}>{opt.label}</div>
+                      <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>{opt.desc}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => { localStorage.setItem("rt_market_wizard_seen", "1"); setShowMarketWizard(false); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Skip</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── TRACKER WIZARD (first visit) ── */}
+        {showTrackerWizard && user && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.88)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.25s ease" }}>
+            <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "480px", padding: "36px", display: "flex", flexDirection: "column", gap: "24px", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }} />
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "36px", marginBottom: "12px" }}>📊</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>Flip Tracker</div>
+                <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>Have you flipped before on RuneTrader?</div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {[
+                  { value: "yes",    emoji: "✅", label: "Yes — I've logged flips before",   desc: "Great, your history is already here." },
+                  { value: "plugin", emoji: "🔌", label: "Yes — via the RuneLite plugin",     desc: "Your GE slots sync automatically. Check below." },
+                  { value: "no",     emoji: "🆕", label: "No — I'm just getting started",     desc: "Here's how the Tracker works..." },
+                ].map(opt => (
+                  <button key={opt.value}
+                    onClick={() => {
+                      localStorage.setItem("rt_tracker_wizard_seen", "1");
+                      setShowTrackerWizard(false);
+                      if (opt.value === "no") setTimeout(() => showToast("Log a flip using the Close button on any open offer — or use the RuneLite plugin to auto-track.", "info", 7000), 300);
+                    }}
+                    style={{ padding: "14px 18px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", transition: "all 0.15s", fontFamily: "Inter, sans-serif" }}
+                    onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)"; e.currentTarget.style.background = "rgba(201,168,76,0.07)"; }}
+                    onMouseOut={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
+                  >
+                    <span style={{ fontSize: "22px", flexShrink: 0 }}>{opt.emoji}</span>
+                    <div>
+                      <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", marginBottom: "2px" }}>{opt.label}</div>
+                      <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>{opt.desc}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => { localStorage.setItem("rt_tracker_wizard_seen", "1"); setShowTrackerWizard(false); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Skip</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── FIRST PROFITABLE FLIP CONFETTI ── */}
+        {showFlipConfetti && flipConfettiData && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 700, overflow: "hidden" }}>
+            <style>{`
+              @keyframes confettiFall {
+                0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+              }
+              .confetti-p { position: absolute; top: -20px; border-radius: 2px; animation: confettiFall linear forwards; }
+            `}</style>
+            {Array.from({ length: 60 }).map((_, i) => (
+              <div key={i} className="confetti-p" style={{
+                left: `${Math.random() * 100}%`,
+                background: ["#c9a84c","#2ecc71","#3498db","#e74c3c","#f39c12","#9b59b6"][i % 6],
+                animationDuration: `${1.5 + Math.random() * 2}s`,
+                animationDelay: `${Math.random() * 0.8}s`,
+                width: `${6 + Math.random() * 8}px`,
+                height: `${6 + Math.random() * 8}px`,
+                borderRadius: i % 3 === 0 ? "50%" : "2px",
+              }} />
+            ))}
+            <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", background: "#0f1218", border: "2px solid var(--gold)", borderRadius: "20px", padding: "36px", textAlign: "center", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "380px", width: "90%", animation: "slideUp 0.4s ease", boxShadow: "0 20px 60px rgba(201,168,76,0.4)" }}>
+              <div style={{ fontSize: "52px" }}>🎉</div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 700, color: "var(--gold)" }}>First Profit!</div>
+              <div style={{ fontSize: "14px", color: "var(--text-dim)", lineHeight: 1.6 }}>
+                You just made <strong style={{ color: "var(--green)", fontSize: "18px" }}>+{formatGP(flipConfettiData.profit)} gp</strong> flipping <strong style={{ color: "var(--text)" }}>{flipConfettiData.itemName}</strong>.
+              </div>
+              <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>Your flip history is being tracked. Check the Tracker tab to see your stats.</div>
+              <button onClick={() => setShowFlipConfetti(false)} style={{ padding: "12px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>
+                Let's keep flipping →
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* DEMO BANNER */}
         {demoMode && (
@@ -5551,8 +5802,8 @@ RULES:
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {!merchantMode && [["market","GE Tracker"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"],["referral","Refer & Earn 🔗"]] : [])].map(([t,label]) => (
-              <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
+            {!merchantMode && [["market","GE Tracker"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"],["referral","Refer & Earn ðŸ”—"]] : [])].map(([t,label]) => (
+              <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)}>
                 {label}
                 {t === "tracker" && (openFlips.length + (autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length)) > 0 && (
                   <span style={{ marginLeft: "6px", background: "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
@@ -5575,18 +5826,18 @@ RULES:
 
           <div className="header-right">
             <button onClick={() => setActiveTab("pricing")} style={{ padding: "5px 12px", borderRadius: "6px", border: "1px solid rgba(201,168,76,0.4)", background: activeTab === "pricing" ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}>
-              {isPro ? "✓ Pro" : "Pro ✨"}
+              {isPro ? "âœ“ Pro" : "Pro âœ¨"}
             </button>
             <button onClick={() => setActiveTab("changelog")} style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid transparent", background: "transparent", color: activeTab === "changelog" ? "var(--gold)" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}>
-              What's New 🆕
+              What's New ðŸ†•
             </button>
-            {lastUpdate && <div className="live-badge"><div className="live-dot" />Live · {formatTime(lastUpdate)}</div>}
+            {lastUpdate && <div className="live-badge"><div className="live-dot" />Live Â· {formatTime(lastUpdate)}</div>}
             {user && merchantMode && (
               <button onClick={startMerchantTour}
                 style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 14px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.2s", letterSpacing: "0.3px" }}
                 onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; e.currentTarget.style.background = "rgba(201,168,76,0.06)"; }}
                 onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.background = "transparent"; }}>
-                <span style={{ fontSize: "13px" }}>📖</span> Tutorial
+                <span style={{ fontSize: "13px" }}>ðŸ“–</span> Tutorial
               </button>
             )}
             {user && (
@@ -5595,7 +5846,7 @@ RULES:
                 onMouseOver={e => { if (!merchantMode) { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; e.currentTarget.style.background = "rgba(201,168,76,0.06)"; }}}
                 onMouseOut={e => { if (!merchantMode) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.background = "transparent"; }}}>
                 {merchantMode && <div className="merchant-dot" style={{ background: "var(--green)" }} />}
-                <span style={{ fontSize: "13px" }}>📈</span>
+                <span style={{ fontSize: "13px" }}>ðŸ“ˆ</span>
                 {merchantMode ? "Exit Merchant" : "Merchant Mode"}
               </button>
             )}
@@ -5673,7 +5924,7 @@ RULES:
           <>
           <div className="left-panel">
 
-            {/* ── WATCHLIST TAB ── */}
+            {/* â”€â”€ WATCHLIST TAB â”€â”€ */}
             {activeTab === "watchlist" && (
               <WatchlistPage
                 user={user}
@@ -5699,7 +5950,7 @@ RULES:
               />
             )}
 
-            {/* ── PRICING TAB ── */}
+            {/* â”€â”€ PRICING TAB â”€â”€ */}
             {activeTab === "pricing" && (
               <PricingPage
                 user={user}
@@ -5709,7 +5960,7 @@ RULES:
               />
             )}
 
-            {/* ── REFERRAL TAB ── */}
+            {/* â”€â”€ REFERRAL TAB â”€â”€ */}
             {activeTab === "referral" && (
               <ReferralPage
                 user={user}
@@ -5718,16 +5969,43 @@ RULES:
               />
             )}
 
-            {/* ── TRACKER TAB ── */}
+            {/* â”€â”€ TRACKER TAB â”€â”€ */}
             {activeTab === "tracker" && (
               <div className="tracker-wrap">
+
+                {/* Session goal progress bar */}
+                {dailyGoalSession && (() => {
+                  const todayProfit = allClosedFlips
+                    .filter(f => f.date && new Date(f.date).toDateString() === new Date().toDateString())
+                    .reduce((s, f) => s + (f.totalProfit || 0), 0);
+                  const pct = Math.min(100, Math.round((todayProfit / dailyGoalSession.gp) * 100));
+                  const reached = todayProfit >= dailyGoalSession.gp;
+                  return (
+                    <div style={{ background: "var(--bg3)", border: `1px solid ${reached ? "var(--green-dim)" : "var(--border)"}`, borderRadius: "10px", padding: "14px 18px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "13px", fontWeight: 600, color: reached ? "var(--green)" : "var(--gold)" }}>
+                          🎯 Today's goal: {dailyGoalSession.label} GP {reached ? "✓ Reached!" : ""}
+                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{formatGP(todayProfit)} / {dailyGoalSession.label}</span>
+                          <button onClick={() => { sessionStorage.removeItem("rt_session_goal"); setDailyGoalSession(null); }} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "12px", fontFamily: "Inter, sans-serif" }}>✕</button>
+                        </div>
+                      </div>
+                      <div style={{ background: "var(--bg4)", borderRadius: "6px", height: "8px", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pct}%`, background: reached ? "var(--green)" : "linear-gradient(90deg, var(--gold-dim), var(--gold))", borderRadius: "6px", transition: "width 0.6s ease" }} />
+                      </div>
+                      {!reached && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{pct}% — {formatGP(dailyGoalSession.gp - todayProfit)} to go</span>}
+                    </div>
+                  );
+                })()}
+
                 <div className="tracker-summary">
                   {[
                     { label: "Total Profit", value: formatGP(totalProfit), color: totalProfit >= 0 ? "var(--green)" : "var(--red)", sub: "Closed flips only" },
                     { label: "Flips Logged", value: totalFlips.toLocaleString(), color: "var(--gold)", sub: `${openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length} open` },
                     { label: "Avg Profit/Flip", value: formatGP(avgProfit), color: "var(--text)", sub: "Per closed flip" },
-                    { label: "Best Item", value: bestItem?.item || "—", color: "var(--gold)", sub: bestItem ? formatGP(bestItem.totalProfit) + " profit" : "Log a flip first" },
-                    { label: "Login Streak", value: loginStreak > 0 ? `${loginStreak} 🔥` : "—", color: loginStreak >= 7 ? "var(--green)" : "var(--gold)", sub: loginStreak >= 7 ? "On fire!" : loginStreak > 1 ? "Keep it up!" : "Day 1" },
+                    { label: "Best Item", value: bestItem?.item || "â€”", color: "var(--gold)", sub: bestItem ? formatGP(bestItem.totalProfit) + " profit" : "Log a flip first" },
+                    { label: "Login Streak", value: loginStreak > 0 ? `${loginStreak} ðŸ”¥` : "â€”", color: loginStreak >= 7 ? "var(--green)" : "var(--gold)", sub: loginStreak >= 7 ? "On fire!" : loginStreak > 1 ? "Keep it up!" : "Day 1" },
                   ].map((s, i) => (
                     <div key={i} className="stat-card">
                       <span className="stat-label">{s.label}</span>
@@ -5779,10 +6057,10 @@ RULES:
                 {notifPermission !== "granted" && (
                   <div className="notif-banner">
                     <div className="notif-banner-left">
-                      <span className="notif-banner-icon">🔔</span>
+                      <span className="notif-banner-icon">ðŸ””</span>
                       <div>
                         <div className="notif-banner-title">Get notified on your phone</div>
-                        <div className="notif-banner-sub">Alerts will fire even when the app is closed — on iPhone, Android, and desktop.</div>
+                        <div className="notif-banner-sub">Alerts will fire even when the app is closed â€” on iPhone, Android, and desktop.</div>
                       </div>
                     </div>
                     {!user ? (
@@ -5799,21 +6077,21 @@ RULES:
 
                 {notifPermission === "granted" && (
                   <div className="notif-active-banner">
-                    <span>✅ Push notifications active — you&apos;ll be alerted even when RuneTrader is closed.</span>
+                    <span>âœ… Push notifications active â€” you&apos;ll be alerted even when RuneTrader is closed.</span>
                   </div>
                 )}
 
-                {/* ── SMART ALERT TOGGLES ── */}
+                {/* â”€â”€ SMART ALERT TOGGLES â”€â”€ */}
                 <div className="smart-alert-toggles">
-                  <div className="smart-alert-toggle-title">⚡ Smart Market Alerts</div>
+                  <div className="smart-alert-toggle-title">âš¡ Smart Market Alerts</div>
                   <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
                     Automatically fires when market conditions shift. Monitors all items every 5 minutes.
                   </div>
                   {[
-                    { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps 50%+ vs last poll — sudden profit opportunity", unit: "%",  min: 5,   max: 200, step: 5   },
-                    { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Daily volume triples — item getting heavily traded",           unit: "x",  min: 1.5, max: 10,  step: 0.5 },
-                    { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops 10%+ — someone offloading stock",             unit: "%",  min: 2,   max: 50,  step: 1   },
-                    { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy & sell drop 15%+ — avoid or buy the dip",             unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "marginSpike",  icon: "ðŸ“ˆ", label: "Margin Spike",  desc: "Margin jumps 50%+ vs last poll â€” sudden profit opportunity", unit: "%",  min: 5,   max: 200, step: 5   },
+                    { key: "volumeSurge",  icon: "ðŸ”¥", label: "Volume Surge",  desc: "Daily volume triples â€” item getting heavily traded",           unit: "x",  min: 1.5, max: 10,  step: 0.5 },
+                    { key: "dumpDetected", icon: "âš ï¸", label: "Dump Detected", desc: "Sell price drops 10%+ â€” someone offloading stock",             unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "priceCrash",   icon: "ðŸ’¥", label: "Price Crash",   desc: "Both buy & sell drop 15%+ â€” avoid or buy the dip",             unit: "%",  min: 2,   max: 50,  step: 1   },
                   ].map(({ key, icon, label, desc, unit, min, max, step }) => (
                     <div key={key} className="smart-alert-toggle-row">
                       <div className="smart-alert-toggle-info">
@@ -5823,7 +6101,7 @@ RULES:
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         {merchantMode
                           ? <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} thresholds={thresholds} openPopover={openPopover} setOpenPopover={setOpenPopover} saveThreshold={saveThreshold} />
-                          : <button title="Custom thresholds — Merchant Mode feature" onClick={() => setUpgradeModal({ feature: "Custom Alert Thresholds", description: "Fine-tune exactly when each alert fires — set your own percentage triggers per alert type.", bullets: ["Adjust margin spike sensitivity (5–200%)", "Set dump & crash detection thresholds", "Tune volume surge multiplier", "Per-alert granular control"] })} style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", padding: "3px 8px", cursor: "pointer", fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", gap: "4px" }}>🔒 ⚙</button>
+                          : <button title="Custom thresholds â€” Merchant Mode feature" onClick={() => setUpgradeModal({ feature: "Custom Alert Thresholds", description: "Fine-tune exactly when each alert fires â€” set your own percentage triggers per alert type.", bullets: ["Adjust margin spike sensitivity (5â€“200%)", "Set dump & crash detection thresholds", "Tune volume surge multiplier", "Per-alert granular control"] })} style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", padding: "3px 8px", cursor: "pointer", fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", gap: "4px" }}>ðŸ”’ âš™</button>
                         }
                         <label className="toggle-switch">
                           <input type="checkbox" checked={smartAlertSettings[key]} onChange={e => saveSmartAlertSettings(key, e.target.checked)} />
@@ -5834,16 +6112,16 @@ RULES:
                   ))}
                 </div>
 
-                {/* ── AUTOPILOT ALERT SETTINGS — Merchant Mode only ── */}
+                {/* â”€â”€ AUTOPILOT ALERT SETTINGS â€” Merchant Mode only â”€â”€ */}
                 {merchantMode && (
                 <div className="smart-alert-toggles">
-                  <div className="smart-alert-toggle-title">🤖 Autopilot Alerts</div>
+                  <div className="smart-alert-toggle-title">ðŸ¤– Autopilot Alerts</div>
                   <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
                     Fires when your per-position rules are triggered in Active Operations.
                   </div>
                   <div className="smart-alert-toggle-row">
                     <div className="smart-alert-toggle-info">
-                      <div className="smart-alert-toggle-name">🔊 Sound Alert</div>
+                      <div className="smart-alert-toggle-name">ðŸ”Š Sound Alert</div>
                       <div className="smart-alert-toggle-desc">Play a chime in-browser when an autopilot rule fires</div>
                     </div>
                     <label className="toggle-switch">
@@ -5853,8 +6131,8 @@ RULES:
                   </div>
                   <div className="smart-alert-toggle-row">
                     <div className="smart-alert-toggle-info">
-                      <div className="smart-alert-toggle-name">🔔 Push Notification</div>
-                      <div className="smart-alert-toggle-desc">Fire a browser push notification — works even if RuneTrader is in the background</div>
+                      <div className="smart-alert-toggle-name">ðŸ”” Push Notification</div>
+                      <div className="smart-alert-toggle-desc">Fire a browser push notification â€” works even if RuneTrader is in the background</div>
                     </div>
                     <label className="toggle-switch">
                       <input type="checkbox" checked={smartAlertSettings.autopilotPush ?? true} onChange={e => saveSmartAlertSettings("autopilotPush", e.target.checked)} />
@@ -5864,10 +6142,10 @@ RULES:
                 </div>
                 )} {/* end merchantMode autopilot alerts */}
 
-                {/* ── PRICE ALERT FORM ── */}
-                <div className="alert-info">ℹ️ Price alerts check every 5 minutes. Triggered alerts won&apos;t fire again — delete and re-add to reset.</div>
+                {/* â”€â”€ PRICE ALERT FORM â”€â”€ */}
+                <div className="alert-info">â„¹ï¸ Price alerts check every 5 minutes. Triggered alerts won&apos;t fire again â€” delete and re-add to reset.</div>
                 <div className="alert-form">
-                  <div className="alert-form-title">🔔 Set a Price Alert</div>
+                  <div className="alert-form-title">ðŸ”” Set a Price Alert</div>
                   <div className="alert-form-row">
                     <div className="alert-field">
                       <label className="alert-label">Item Name</label>
@@ -5899,26 +6177,26 @@ RULES:
                   </div>
                 </div>
 
-                {/* ── ACTIVE PRICE ALERTS ── */}
+                {/* â”€â”€ ACTIVE PRICE ALERTS â”€â”€ */}
                 <div>
                   <div className="section-title">Active Price Alerts</div>
                   <div className="alerts-list">
                     <div className="alert-header-row"><span>Item</span><span>Condition</span><span>Target</span><span>Current</span><span></span></div>
                     {alerts.length === 0 ? (
-                      <div className="alerts-empty"><div className="icon">🔔</div><p>No alerts set</p><small>Add an alert above to get notified when prices move</small></div>
+                      <div className="alerts-empty"><div className="icon">ðŸ””</div><p>No alerts set</p><small>Add an alert above to get notified when prices move</small></div>
                     ) : alerts.map(a => (
                       <div key={a.id} className={"alert-row" + (a.triggered ? " alert-triggered" : "")}>
-                        <div><div className="alert-item-name">{a.item}</div>{a.triggered && <div className="alert-triggered-badge">⚡ Triggered!</div>}</div>
-                        <span className={"alert-badge " + a.type}>{a.type === "above" ? "↑ Above" : "↓ Below"}</span>
+                        <div><div className="alert-item-name">{a.item}</div>{a.triggered && <div className="alert-triggered-badge">âš¡ Triggered!</div>}</div>
+                        <span className={"alert-badge " + a.type}>{a.type === "above" ? "â†‘ Above" : "â†“ Below"}</span>
                         <span style={{ color: "var(--gold)", fontWeight: 600 }}>{formatGP(a.price)}</span>
-                        <span style={{ color: a.currentPrice ? "var(--text)" : "var(--text-dim)" }}>{a.currentPrice ? formatGP(a.currentPrice) : "—"}</span>
-                        <button className="delete-btn" onClick={() => deleteAlert(a.id)}>✕</button>
+                        <span style={{ color: a.currentPrice ? "var(--text)" : "var(--text-dim)" }}>{a.currentPrice ? formatGP(a.currentPrice) : "â€”"}</span>
+                        <button className="delete-btn" onClick={() => deleteAlert(a.id)}>âœ•</button>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* ── RECENT SMART ALERTS FEED (bottom, grows down) ── */}
+                {/* â”€â”€ RECENT SMART ALERTS FEED (bottom, grows down) â”€â”€ */}
                 <div>
                   <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Recent Smart Alerts</span>
@@ -5926,7 +6204,7 @@ RULES:
                       <button className="smart-refresh-btn" disabled={refreshing || refreshCooldown > 0}
                         onClick={() => fetchPrices(true)}
                         title={refreshCooldown > 0 ? `Wait ${refreshCooldown}s` : "Refresh prices"}>
-                        <span className={refreshing ? "refresh-spin" : ""}>↻</span>
+                        <span className={refreshing ? "refresh-spin" : ""}>â†»</span>
                         {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh"}
                       </button>
                       {smartEvents.length > 0 && (
@@ -5938,7 +6216,7 @@ RULES:
                   {smartEvents.length > 0 && (
                     <div className="smart-feed-controls" style={{ marginBottom: "10px", gap: "10px" }}>
                       <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                        {[["all","All"],["spike","📈 Margin"],["surge","🔥 Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"]].map(([v,l]) => (
+                        {[["all","All"],["spike","ðŸ“ˆ Margin"],["surge","ðŸ”¥ Volume"],["dump","âš ï¸ Dump"],["crash","ðŸ’¥ Crash"]].map(([v,l]) => (
                           <button key={v} onClick={() => setSmartFeedFilter(v)}
                             style={{ padding: "4px 11px", borderRadius: "12px", border: "1px solid var(--border)", background: smartFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: smartFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
                             {l}
@@ -5950,7 +6228,7 @@ RULES:
                         {[["recent","Recent"],["change","% Change"],["margin","Margin"]].map(([v,l]) => (
                           <button key={v} onClick={() => { if (smartFeedSort === v) { setSmartFeedSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSmartFeedSort(v); setSmartFeedSortDir("desc"); } }}
                             style={{ padding: "4px 11px", borderRadius: "12px", border: "1px solid var(--border)", background: smartFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: smartFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "4px" }}>
-                            {l}{smartFeedSort === v && <span style={{ fontSize: "9px" }}>{smartFeedSortDir === "desc" ? "▼" : "▲"}</span>}
+                            {l}{smartFeedSort === v && <span style={{ fontSize: "9px" }}>{smartFeedSortDir === "desc" ? "â–¼" : "â–²"}</span>}
                           </button>
                         ))}
                       </div>
@@ -5977,12 +6255,12 @@ RULES:
                           return dir * (mA - mB);
                         });
                       } else {
-                        // recent — sort by time
+                        // recent â€” sort by time
                         feed.sort((a, b) => dir * (new Date(a.time) - new Date(b.time)));
                       }
                       if (feed.length === 0) return (
                         <div className="smart-empty">
-                          {smartEvents.length > 0 ? "No alerts match this filter." : "No smart alerts yet — they'll appear here when market conditions shift."}
+                          {smartEvents.length > 0 ? "No alerts match this filter." : "No smart alerts yet â€” they'll appear here when market conditions shift."}
                         </div>
                       );
                       return feed.map(e => {
@@ -5997,7 +6275,7 @@ RULES:
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)" }}>{e.itemName}</span>
                                 <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
-                                {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view →</span>}
+                                {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>Â· click to view â†’</span>}
                               </div>
                               <div className="smart-event-msg">{e.message}</div>
                               {liveItem && (
@@ -6019,7 +6297,7 @@ RULES:
               </div>
             )}
 
-            {/* ── PORTFOLIO TAB ── */}
+            {/* â”€â”€ PORTFOLIO TAB â”€â”€ */}
             {activeTab === "portfolio" && (
               <PortfolioPage
                 user={user}
@@ -6030,14 +6308,14 @@ RULES:
               />
             )}
 
-            {/* ── FLIPS TAB ── */}
+            {/* â”€â”€ FLIPS TAB â”€â”€ */}
             {activeTab === "market" && (
               <>
-                {error && <div className="error-banner">⚠️ {error}</div>}
+                {error && <div className="error-banner">âš ï¸ {error}</div>}
 
                 {/* Market sub-tabs row */}
                 <div style={{ display: "flex", gap: "4px", paddingBottom: "4px" }}>
-                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"],["tradeboard","🤝 Trade Board"],["picks","⭐ Picks"]].map(([v,l]) => (
+                  {[["flips","ðŸ“ˆ Flips"],["alch","ðŸ”¥ High Alch"],["coffer","ðŸ’€ Death's Coffer"],["tradeboard","ðŸ¤ Trade Board"],["picks","â­ Picks"]].map(([v,l]) => (
                     <button key={v}
                       className={`market-sub-tab${marketSubTab === v ? " active" : ""}`}
                       onClick={() => setMarketSubTab(v)}
@@ -6048,7 +6326,7 @@ RULES:
                 </div>
 
 
-                {/* ── HIGH ALCH TAB ── */}
+                {/* â”€â”€ HIGH ALCH TAB â”€â”€ */}
                 {marketSubTab === "alch" && (() => {
                   const alchSortCol = alchSortState.col;
                   const alchSortDir = alchSortState.dir;
@@ -6081,7 +6359,7 @@ RULES:
                     ["highalch",      "Alch Value",       "GP received when casting High Alchemy on this item."],
                     ["alchProfit",    "Profit / Cast",    "Alch Value minus GE Buy Price minus your nature rune cost. Adjust the nature rune price in the filter bar to match what you actually paid."],
                     ["buyLimit",      "Buy Limit",        "Max quantity you can buy in a 4-hour GE window."],
-                    ["maxProfit4hr",  "Max Profit / 4hr", "Profit per cast × Buy Limit. Maximum GP you can make in one 4-hour GE window buying at the limit."],
+                    ["maxProfit4hr",  "Max Profit / 4hr", "Profit per cast Ã— Buy Limit. Maximum GP you can make in one 4-hour GE window buying at the limit."],
                     ["lastTradeTime", "Last Updated",     "How recently this item's GE price was recorded. Stale data may not reflect current market."],
                   ];
                   return (
@@ -6093,7 +6371,7 @@ RULES:
                           Show unprofitable
                         </label>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "8px", background: "var(--bg3)", border: `1px solid ${isCustomPrice ? "var(--gold-dim)" : "var(--border)"}`, borderRadius: "8px", padding: "4px 10px" }}>
-                          <span style={{ fontSize: "12px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>🌿 Nature rune:</span>
+                          <span style={{ fontSize: "12px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>ðŸŒ¿ Nature rune:</span>
                           <input
                             type="number"
                             min="0"
@@ -6110,7 +6388,7 @@ RULES:
                               style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "11px", padding: "0 2px", fontFamily: "Inter, sans-serif", transition: "color 0.15s" }}
                               onMouseOver={e => e.currentTarget.style.color = "var(--gold)"}
                               onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}
-                            >↺ live</button>
+                            >â†º live</button>
                           )}
                           {!isCustomPrice && natureRunePrice === 200 && (
                             <span style={{ color: "var(--red)", fontSize: "10px" }}>(fallback)</span>
@@ -6118,7 +6396,7 @@ RULES:
                         </div>
                         {isCustomPrice && (
                           <span style={{ fontSize: "11px", color: "var(--gold-dim)" }}>
-                            Using custom price · Live: {natureRunePrice.toLocaleString()}gp
+                            Using custom price Â· Live: {natureRunePrice.toLocaleString()}gp
                           </span>
                         )}
                         <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>{alchItems.length.toLocaleString()} items</span>
@@ -6127,7 +6405,7 @@ RULES:
                         <div className="alch-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", display: "grid" }}>
                           {ALCH_COLS.map(([col, label, tip]) => (
                             <button key={col} className={`sort-btn ${alchSortCol === col ? "active" : ""}`} onClick={() => handleAlchSort(col)}>
-                              {label} {alchSortCol === col && <span className="sort-arrow">{alchSortDir === "desc" ? "▼" : "▲"}</span>}
+                              {label} {alchSortCol === col && <span className="sort-arrow">{alchSortDir === "desc" ? "â–¼" : "â–²"}</span>}
                               <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
                                 <span className="stat-help">?</span>
                                 <span className="stat-tooltip">{tip}</span>
@@ -6155,9 +6433,9 @@ RULES:
                             </span>
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
                             <span style={{ fontSize: "13px", fontWeight: 600, color: item.maxProfit4hr >= 0 ? "var(--green)" : "var(--red)" }}>
-                              {item.buyLimit ? formatGP(item.maxProfit4hr) : "—"}
+                              {item.buyLimit ? formatGP(item.maxProfit4hr) : "â€”"}
                             </span>
-                            <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
+                            <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "â€”"}</span>
                           </div>
                         ))}
                       </div>
@@ -6177,7 +6455,7 @@ RULES:
                   );
                 })()}
 
-                {/* ── DEATH'S COFFER TAB ── */}
+                {/* â”€â”€ DEATH'S COFFER TAB â”€â”€ */}
                 {marketSubTab === "coffer" && (() => {
                   const handleCofferSort = col => setCofferSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
                   const cofferSortCol = cofferSortState.col;
@@ -6213,12 +6491,12 @@ RULES:
                     ["high",             "Coffer Value",      "The fixed base value Jagex credits to your Death's Coffer when you sacrifice this item. This is the game's internal item value, not the GE price."],
                     ["savings",          "Savings",           "Coffer Value minus GE Buy Price. Positive means you're funding your coffer for less than face value."],
                     ["buyLimit",         "Buy Limit",         "Max quantity you can buy in a 4-hour GE window."],
-                    ["potentialSavings", "Potential Savings", "Savings per item × Buy Limit. Maximum GP saved in one 4-hour buying window."],
+                    ["potentialSavings", "Potential Savings", "Savings per item Ã— Buy Limit. Maximum GP saved in one 4-hour buying window."],
                   ];
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                       <div className="coffer-target-bar">
-                        <span className="coffer-target-label">💀 Target coffer amount:</span>
+                        <span className="coffer-target-label">ðŸ’€ Target coffer amount:</span>
                         <input
                           className="coffer-target-input"
                           placeholder="e.g. 5m, 2.5m, 500k"
@@ -6237,7 +6515,7 @@ RULES:
                         <div className="alch-header" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 1fr", display: "grid" }}>
                           {COFFER_COLS.map(([col, label, tip]) => (
                             <button key={col} className={`sort-btn ${cofferSortCol === col ? "active" : ""}`} onClick={() => handleCofferSort(col)}>
-                              {label} {cofferSortCol === col && <span className="sort-arrow">{cofferSortDir === "desc" ? "▼" : "▲"}</span>}
+                              {label} {cofferSortCol === col && <span className="sort-arrow">{cofferSortDir === "desc" ? "â–¼" : "â–²"}</span>}
                               <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
                                 <span className="stat-help">?</span>
                                 <span className="stat-tooltip">{tip}</span>
@@ -6268,7 +6546,7 @@ RULES:
                             </span>
                             {targetGP > 0 && (
                               <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}>×{item.qtyNeeded?.toLocaleString()}</span>
+                                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}>Ã—{item.qtyNeeded?.toLocaleString()}</span>
                                 <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Cost: {formatGP(item.totalCost)}</span>
                               </div>
                             )}
@@ -6291,7 +6569,7 @@ RULES:
                   );
                 })()}
 
-                {/* ── FLIPS TAB (existing content) ── */}
+                {/* â”€â”€ FLIPS TAB (existing content) â”€â”€ */}
                 {marketSubTab === "tradeboard" && (
                   <TradeBoard
                     user={user}
@@ -6300,7 +6578,7 @@ RULES:
                   />
                 )}
 
-                {/* ── PICKS TAB ── */}
+                {/* â”€â”€ PICKS TAB â”€â”€ */}
                 {marketSubTab === "picks" && (
                   <RecommendedFlips
                     user={user}
@@ -6317,7 +6595,7 @@ RULES:
                   <span className="filter-label">Filter:</span>
                   {["all", "f2p", "members", "highvol", "favourites"].map(f => (
                     <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `🔖 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
+                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `ðŸ”– Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                     </button>
                   ))}
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
@@ -6325,8 +6603,8 @@ RULES:
                     className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
                     onClick={() => merchantMode ? setShowAdvFilters(v => !v) : setUpgradeModal({ feature: "Advanced Filters", description: "Filter by margin range, ROI, GP/fill, buy limit and more to find exactly the flips you want.", bullets: ["Min/max margin & ROI filters", "GP/fill threshold filtering", "Price data freshness filter", "Stacks with all other filters"] })}
                   >
-                    {!merchantMode && <span style={{ fontSize: "11px", marginRight: "2px" }}>🔒</span>}
-                    ⚙ Filters {advFilterCount > 0 && merchantMode && <span className="adv-filter-badge">{advFilterCount}</span>}
+                    {!merchantMode && <span style={{ fontSize: "11px", marginRight: "2px" }}>ðŸ”’</span>}
+                    âš™ Filters {advFilterCount > 0 && merchantMode && <span className="adv-filter-badge">{advFilterCount}</span>}
                   </button>
                   <button
                     className="refresh-btn"
@@ -6334,7 +6612,7 @@ RULES:
                     disabled={refreshing || loading || refreshCooldown > 0}
                     title={refreshCooldown > 0 ? `Wait ${refreshCooldown}s` : "Refresh all prices"}
                   >
-                    <span className={refreshing ? "refresh-spin" : ""}>↻</span>
+                    <span className={refreshing ? "refresh-spin" : ""}>â†»</span>
                     {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh"}
                   </button>
                   <button
@@ -6378,7 +6656,7 @@ RULES:
                       URL.revokeObjectURL(url);
                     }}
                   >
-                    {!merchantMode ? "🔒 Export" : "↓ Export"}
+                    {!merchantMode ? "ðŸ”’ Export" : "â†“ Export"}
                   </button>
                 </div>
 
@@ -6388,7 +6666,7 @@ RULES:
                       <div className="adv-filter-label">Margin (gp)</div>
                       <div className="adv-filter-row">
                         <input className="adv-filter-input" placeholder="Min" value={advFilters.minMargin} onChange={e => setAdv("minMargin", e.target.value)} type="number" />
-                        <span className="adv-filter-sep">–</span>
+                        <span className="adv-filter-sep">â€“</span>
                         <input className="adv-filter-input" placeholder="Max" value={advFilters.maxMargin} onChange={e => setAdv("maxMargin", e.target.value)} type="number" />
                       </div>
                     </div>
@@ -6396,7 +6674,7 @@ RULES:
                       <div className="adv-filter-label">ROI (%)</div>
                       <div className="adv-filter-row">
                         <input className="adv-filter-input" placeholder="Min" value={advFilters.minRoi} onChange={e => setAdv("minRoi", e.target.value)} type="number" step="0.1" />
-                        <span className="adv-filter-sep">–</span>
+                        <span className="adv-filter-sep">â€“</span>
                         <input className="adv-filter-input" placeholder="Max" value={advFilters.maxRoi} onChange={e => setAdv("maxRoi", e.target.value)} type="number" step="0.1" />
                       </div>
                     </div>
@@ -6404,7 +6682,7 @@ RULES:
                       <div className="adv-filter-label">Vol/Day</div>
                       <div className="adv-filter-row">
                         <input className="adv-filter-input" placeholder="Min" value={advFilters.minVolume} onChange={e => setAdv("minVolume", e.target.value)} type="number" />
-                        <span className="adv-filter-sep">–</span>
+                        <span className="adv-filter-sep">â€“</span>
                         <input className="adv-filter-input" placeholder="Max" value={advFilters.maxVolume} onChange={e => setAdv("maxVolume", e.target.value)} type="number" />
                       </div>
                     </div>
@@ -6412,7 +6690,7 @@ RULES:
                       <div className="adv-filter-label">Buy Price (gp)</div>
                       <div className="adv-filter-row">
                         <input className="adv-filter-input" placeholder="Min" value={advFilters.minPrice} onChange={e => setAdv("minPrice", e.target.value)} type="number" />
-                        <span className="adv-filter-sep">–</span>
+                        <span className="adv-filter-sep">â€“</span>
                         <input className="adv-filter-input" placeholder="Max" value={advFilters.maxPrice} onChange={e => setAdv("maxPrice", e.target.value)} type="number" />
                       </div>
                     </div>
@@ -6445,13 +6723,13 @@ RULES:
                     </div>
                     <div className="adv-filter-footer">
                       <span>{filtered.length.toLocaleString()} items match</span>
-                      {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>✕ Clear all filters</button>}
+                      {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>âœ• Clear all filters</button>}
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
+                  <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loadingâ€¦" : `${filtered.length.toLocaleString()} items`}</span></div>
                   <div className="flips-table">
                     <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>
                       {[
@@ -6459,7 +6737,7 @@ RULES:
                         ["low", "Buy Price", "Lowest current buy offer on the GE"],
                         ["high", "Sell Price", "Highest current sell offer on the GE"],
                         ["margin", "Margin", "Sell price minus buy price minus GE tax. Your profit per item."],
-                        ["roi", "ROI", "Margin ÷ buy price. Return on investment per flip."],
+                        ["roi", "ROI", "Margin Ã· buy price. Return on investment per flip."],
                         ["volume", "Vol/Day", "Total items traded per day. Higher = easier fills."],
                         ["buylimit", "Limit", "Max items you can buy every 4 hours"],
                         ["gpPerFill", "GP/Fill", "Realistic GP profit per 4hr window, scaled by market volume"],
@@ -6467,7 +6745,7 @@ RULES:
                         ["sparkline", "24hr Trend", null],
                       ].map(([col, label, tip]) => (
                         <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
-                          {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
+                          {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "â–¼" : "â–²"}</span>}
                           {tip && (
                             <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
                               <span className="stat-help">?</span>
@@ -6482,7 +6760,7 @@ RULES:
                         <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>{Array.from({ length: 10 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
                       ))
                     ) : filtered.length === 0 ? (
-                      <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
+                      <div className="empty-state"><div className="icon">ðŸ”</div><p>No items match your filters</p></div>
                     ) : (
                       filtered.slice(0, marketRowsShown).map(item => {
                         const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
@@ -6501,17 +6779,17 @@ RULES:
                         return (
                           <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }} onClick={() => setSelectedItem(item)}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <button onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: watchlist.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={watchlist.includes(item.id) ? "Remove from Watchlist" : "Add to Watchlist"}>🔖</button>
+                              <button onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: watchlist.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={watchlist.includes(item.id) ? "Remove from Watchlist" : "Add to Watchlist"}>ðŸ”–</button>
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                               <div className="item-name">{item.name}</div>
                             </div>
-                            <span className="price">{item.hasPrice ? formatGP(item.low) : "—"}</span>
-                            <span className="price">{item.hasPrice ? formatGP(item.high) : "—"}</span>
-                            <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
-                            <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "—"}</span>
+                            <span className="price">{item.hasPrice ? formatGP(item.low) : "â€”"}</span>
+                            <span className="price">{item.hasPrice ? formatGP(item.high) : "â€”"}</span>
+                            <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "â€”"}</span>
+                            <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "â€”"}</span>
                             <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
                               {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
-                              {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit — hard to fill">⚠</span>}
+                              {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit â€” hard to fill">âš </span>}
                             </span>
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
                             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
@@ -6520,9 +6798,9 @@ RULES:
                                   title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case (full limit): ${formatGP(gpPerFillMax)} GP`}>
                                   {formatGP(gpPerFill)}
                                 </span>
-                              ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
+                              ) : <span style={{ color: "var(--text-dim)" }}>â€”</span>}
                             </div>
-                            <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
+                            <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "â€”"}</span>
                             <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center" }}>
                               <Sparkline itemId={item.id} width={78} height={30} />
                             </div>
@@ -6553,12 +6831,12 @@ RULES:
           )}
         </div>
 
-        {/* ── DEMO MERCHANT INTRO OVERLAY ── */}
+        {/* â”€â”€ DEMO MERCHANT INTRO OVERLAY â”€â”€ */}
         {demoMerchantIntro && (
           <div className={`demo-merchant-intro${demoMerchantIntro === "fading" ? " demo-merchant-intro-exit" : ""}`}>
             <div className="demo-merchant-scan" />
             <div className="demo-merchant-grid" />
-            <div className="demo-merchant-eyebrow">RuneTrader.gg — Flagship Feature</div>
+            <div className="demo-merchant-eyebrow">RuneTrader.gg â€” Flagship Feature</div>
             <div className="demo-merchant-title">Merchant Mode</div>
             <div className="demo-merchant-sub">Initialising trading terminal</div>
             <div className="demo-merchant-bars">
@@ -6566,11 +6844,11 @@ RULES:
                 <div key={i} className="demo-merchant-bar" style={{ height: `${h * 28}px`, animationDelay: `${1.6 + i * 0.06}s` }} />
               ))}
             </div>
-            <div className="demo-merchant-status">● System Ready</div>
+            <div className="demo-merchant-status">â— System Ready</div>
           </div>
         )}
 
-        {/* ── DEMO TOUR ── */}
+        {/* â”€â”€ DEMO TOUR â”€â”€ */}
         {demoMode && demoTourStep >= 0 && (() => {
           const step = DEMO_TOUR_STEPS[demoTourStep];
           const isCenter = step.placement === "center" || !step.target || !demoTourRect;
@@ -6641,7 +6919,7 @@ RULES:
               {/* Tooltip */}
               <div className={`demo-tour-tooltip${isCenter ? " center" : ""}`} style={isCenter ? {} : ttStyle}>
                 <div className="demo-tour-label">
-                  RuneTrader Demo · Step {demoTourStep + 1} of {DEMO_TOUR_STEPS.length}
+                  RuneTrader Demo Â· Step {demoTourStep + 1} of {DEMO_TOUR_STEPS.length}
                 </div>
                 <div className="demo-tour-title">{step.title}</div>
                 <div className="demo-tour-desc">{step.desc}</div>
@@ -6655,7 +6933,7 @@ RULES:
                     </div>
                   </div>
                   <button className="demo-tour-next" onClick={() => advanceDemoTour(demoTourStep + 1)}>
-                    {demoTourStep === DEMO_TOUR_STEPS.length - 1 ? "Finish →" : "Next →"}
+                    {demoTourStep === DEMO_TOUR_STEPS.length - 1 ? "Finish â†’" : "Next â†’"}
                   </button>
                 </div>
               </div>
@@ -6666,13 +6944,13 @@ RULES:
         {/* DEMO TOUR END SCREEN */}
         {demoMode && demoTourStep === -2 && (
           <div className="demo-tour-end-overlay">
-            <div style={{ fontSize: "48px" }}>📈</div>
+            <div style={{ fontSize: "48px" }}>ðŸ“ˆ</div>
             <div className="demo-tour-end-title">Ready to flip smarter?</div>
             <div className="demo-tour-end-sub">
-              You’ve seen what RuneTrader can do. Free to start — install the RuneLite plugin and you’re live in 2 minutes.
+              Youâ€™ve seen what RuneTrader can do. Free to start â€” install the RuneLite plugin and youâ€™re live in 2 minutes.
             </div>
             <button className="demo-tour-end-cta" onClick={() => { setDemoTourStep(-1); setDemoMode(false); setShowAuth(true); }}>
-              Create Free Account →
+              Create Free Account â†’
             </button>
             <button className="demo-tour-end-dismiss" onClick={() => { setDemoTourStep(-1); }}>
               Keep exploring the demo
@@ -6680,19 +6958,19 @@ RULES:
           </div>
         )}
 
-        {/* ── GLOBAL AI BUBBLE (all pages) ── */}
+        {/* â”€â”€ GLOBAL AI BUBBLE (all pages) â”€â”€ */}
         {!merchantAIOpen && (
           <div className="merchant-ai-bubble" onClick={() => setMerchantAIOpen(true)} title="AI Advisor">
             <div className="bubble-ping" />
-            <span>📈</span>
+            <span>ðŸ“ˆ</span>
           </div>
         )}
         {merchantAIOpen && (
           <div className="merchant-ai-modal">
             <div className="merchant-ai-modal-header">
-              <span style={{ fontSize: 20 }}>📈</span>
-              <div><h4>AI Advisor</h4><p>Live GE data · Powered by Claude</p></div>
-              <button className="merchant-ai-close" onClick={() => setMerchantAIOpen(false)}>✕</button>
+              <span style={{ fontSize: 20 }}>ðŸ“ˆ</span>
+              <div><h4>AI Advisor</h4><p>Live GE data Â· Powered by Claude</p></div>
+              <button className="merchant-ai-close" onClick={() => setMerchantAIOpen(false)}>âœ•</button>
             </div>
             <div className="merchant-ai-modal-body">
               {messages.map((msg, i) => (
@@ -6715,7 +6993,7 @@ RULES:
                 onChange={e => { setInput(e.target.value); e.target.style.height = "36px"; e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px"; }}
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (input.trim()) sendMessage(input.trim()); } }}
               />
-              <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>➤</button>
+              <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>âž¤</button>
             </div>
           </div>
         )}
