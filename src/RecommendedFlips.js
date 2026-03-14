@@ -125,7 +125,7 @@ function FlipCard({ item, rank, hasFlipped, onOpenChart }) {
     >
       {/* Rank */}
       <span style={{
-        fontSize: "11px", color: "var(--text-dim)",
+        fontSize: "11px",
         fontWeight: rank <= 3 ? 700 : 400,
         color: rank === 1 ? "var(--gold)" : rank === 2 ? "#aaa" : rank === 3 ? "#cd7f32" : "var(--text-dim)",
       }}>
