@@ -257,7 +257,7 @@ const ONBOARDING_STEPS = [
         color: "var(--green)",
         border: "rgba(46,204,113,0.35)",
         bg: "rgba(46,204,113,0.07)",
-        desc: "You babysit your GE. Want fast scalps — vol/limit ≥ 50×.",
+        desc: "You check your offers frequently. Prioritises items with very high fill rates.",
         emoji: "🔥",
       },
       {
