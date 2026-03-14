@@ -161,7 +161,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
   async function closeListing(id) {
     const { error } = await supabase
       .from("trade_listings")
-      .update({ active: false })
+      .delete()
       .eq("id", id)
       .eq("user_id", user.id);
     if (error) {
