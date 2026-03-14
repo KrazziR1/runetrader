@@ -4293,7 +4293,7 @@ export default function RuneTrader() {
   const [demoMode, setDemoMode] = useState(false);
   const [demoTourStep, setDemoTourStep] = useState(-1); // -1 = inactive, -2 = end screen
   const [demoTourRect, setDemoTourRect] = useState(null);
-  const [demoTourReady, setDemoTourReady] = useState(false);
+  const [demoTourTransitioning, setDemoTourTransitioning] = useState(false);
   const [demoMerchantIntro, setDemoMerchantIntro] = useState(false); // dramatic MM intro overlay
 
   // ── Watchlist (replaces Favourites) ──
@@ -4498,9 +4498,6 @@ export default function RuneTrader() {
   function startDemoTour() {
     setDemoTourStep(0);
     setDemoTourRect(null);
-    setDemoTourReady(false);
-    // Small delay so the app renders before we start measuring
-    setTimeout(() => setDemoTourReady(true), 300);
   }
 
   function advanceDemoTour(nextIdx) {
@@ -4513,8 +4510,13 @@ export default function RuneTrader() {
     const step = DEMO_TOUR_STEPS[nextIdx];
     setDemoTourStep(nextIdx);
 
-    // Navigate to correct tab
-    if (step.tab) setActiveTab(step.tab);
+    // Navigate to correct tab — briefly show solid backdrop during transition
+    if (step.tab) {
+      setDemoTourTransitioning(true);
+      setDemoTourRect(null);
+      setActiveTab(step.tab);
+      setTimeout(() => setDemoTourTransitioning(false), 200);
+    }
 
     // Activate merchant mode if needed
     if (step.activateMerchant) {
@@ -5493,7 +5495,7 @@ RULES:
                   Sign Up Free &rarr;
                 </button>
               )}
-              <button onClick={() => { setDemoMode(false); endDemoTour(); }} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.15)", background: "transparent", color: "rgba(255,255,255,0.45)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}>
+              <button onClick={() => { setDemoMode(false); endDemoTour(); }} style={{ padding: "6px 14px", borderRadius: "6px", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap", transition: "all 0.15s" }}>
                 Exit Demo
               </button>
             </div>
@@ -6513,7 +6515,7 @@ RULES:
         )}
 
         {/* ── DEMO TOUR ── */}
-        {demoMode && demoTourReady && demoTourStep >= 0 && (() => {
+        {demoMode && demoTourStep >= 0 && (() => {
           const step = DEMO_TOUR_STEPS[demoTourStep];
           const isCenter = step.placement === "center" || !step.target || !demoTourRect;
           const hl = demoTourRect || {};
@@ -6573,7 +6575,7 @@ RULES:
               {isCenter && <div className="demo-tour-backdrop" />}
 
               {/* Highlight ring */}
-              {!isCenter && demoTourRect && (
+              {!isCenter && demoTourRect && !demoTourTransitioning && (
                 <div className="demo-tour-highlight" style={{
                   top: hl.top - PAD, left: hl.left - PAD,
                   width: hl.width + PAD * 2, height: hl.height + PAD * 2,
