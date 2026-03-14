@@ -1675,11 +1675,29 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
 
 // â”€â”€â”€ WELCOME MESSAGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-const WELCOME_MSG = {
-  role: "assistant",
-  content: "Hey! I'm your RuneTrader AI assistant 👋\n\nI have access to live Grand Exchange data and can help you find the best flips for your budget, explain market trends, and answer any OSRS trading questions.\n\nWhat are you working with today?",
-  time: new Date(),
-};
+function getWelcomeMsg() {
+  const goal = typeof localStorage !== "undefined" ? localStorage.getItem("rt_first_goal_set") : null;
+  const streak = typeof localStorage !== "undefined" ? parseInt(localStorage.getItem("rt_login_streak") || "0") : 0;
+
+  let content;
+  if (goal === "grow_gp") {
+    content = "Hey! Ready to grow that stack? 📈\n\nI'm watching all 4,525 GE items in real time. Tell me your cash stack and I'll find the highest GP/fill flips available right now.\n\nWhat are you working with today?";
+  } else if (goal === "learn") {
+    content = "Hey! Great time to start flipping 👋\n\nI'll keep things simple — tell me roughly how much GP you have and I'll walk you through the safest, easiest items to start with. No jargon, just clear picks.\n\nWhat's your cash stack?";
+  } else if (goal === "track") {
+    content = "Hey! I can see your flip history and live GE data 📊\n\nAsk me anything — how your items are performing, whether a margin is still good, or what to flip next with your idle GP.\n\nWhat do you want to know?";
+  } else if (streak >= 7) {
+    content = `Hey, ${streak}-day streak — respect 🔥\n\nI have live GE data and can see your active positions. What are we flipping today?`;
+  } else if (streak >= 3) {
+    content = `Welcome back! ${streak} days running 📈\n\nI have live GE data on all 4,525 items. Tell me your budget and I'll find what's worth flipping right now.\n\nWhat are you working with today?`;
+  } else {
+    content = "Hey! I'm your RuneTrader AI assistant 👋\n\nI have access to live Grand Exchange data and can help you find the best flips for your budget, explain market trends, and answer any OSRS trading questions.\n\nWhat are you working with today?";
+  }
+
+  return { role: "assistant", content, time: new Date() };
+}
+
+const WELCOME_MSG = getWelcomeMsg();
 
 // â”€â”€â”€ DEMO DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -4274,7 +4292,7 @@ export default function RuneTrader() {
   const advFilterCount = Object.entries(advFilters).filter(([, v]) => v !== "" && v !== false).length;
 
   // â”€â”€ AI Chat â”€â”€
-  const [messages, setMessages] = useState([WELCOME_MSG]);
+  const [messages, setMessages] = useState(() => [getWelcomeMsg()]);
   const [input, setInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -6997,7 +7015,11 @@ RULES:
 
         {/* â”€â”€ GLOBAL AI BUBBLE (all pages) â”€â”€ */}
         {!merchantAIOpen && (
-          <div className="merchant-ai-bubble" onClick={() => setMerchantAIOpen(true)} title="AI Advisor">
+          <div className="merchant-ai-bubble" onClick={() => {
+            // Refresh welcome if this is the first open (only 1 message = the welcome)
+            if (messages.length === 1) setMessages([getWelcomeMsg()]);
+            setMerchantAIOpen(true);
+          }} title="AI Advisor">
             <div className="bubble-ping" />
             <span>📈</span>
           </div>
