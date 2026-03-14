@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
 
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -85,7 +85,7 @@ const STYLES = `
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
 
   .hero-title {
-    font-family: 'Cinzel Decorative', serif; font-size: clamp(42px, 7vw, 88px);
+    font-family: 'Cinzel', serif; font-size: clamp(52px, 8vw, 100px);
     font-weight: 900; line-height: 1.05; letter-spacing: -1px;
     color: var(--text);
     animation: fadeInUp 0.8s ease 0.1s both;
@@ -197,7 +197,7 @@ const STYLES = `
     padding: 4px 16px; border-radius: 20px;
   }
   .pricing-name { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); }
-  .pricing-price { font-family: 'Cinzel Decorative', serif; font-size: 48px; color: var(--gold); margin: 16px 0 4px; }
+  .pricing-price { font-family: 'Cinzel', serif; font-size: 58px; font-weight: 700; color: var(--gold); margin: 16px 0 4px; }
   .pricing-period { font-size: 14px; color: var(--text-dim); }
   .pricing-features { list-style: none; margin: 32px 0; text-align: left; display: flex; flex-direction: column; gap: 12px; }
   .pricing-features li { font-size: 15px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; font-style: italic; }
@@ -222,7 +222,7 @@ const STYLES = `
     position: absolute; inset: 0;
     background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(201,168,76,0.06) 0%, transparent 70%);
   }
-  .cta-title { font-family: 'Cinzel Decorative', serif; font-size: clamp(32px, 5vw, 64px); font-weight: 900; color: var(--text); position: relative; z-index: 1; }
+  .cta-title { font-family: 'Cinzel', serif; font-size: clamp(40px, 6vw, 72px); font-weight: 900; color: var(--text); position: relative; z-index: 1; }
   .cta-sub { font-size: 20px; color: var(--text-dim); margin: 24px auto; max-width: 500px; font-style: italic; line-height: 1.7; position: relative; z-index: 1; }
   .cta-actions { display: flex; gap: 16px; justify-content: center; margin-top: 48px; position: relative; z-index: 1; }
 

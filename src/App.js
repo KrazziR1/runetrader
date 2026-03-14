@@ -674,7 +674,7 @@ const STYLES = `
   .demo-tour-next { padding: 9px 22px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 700; cursor: pointer; font-family: Inter, sans-serif; transition: opacity 0.2s; white-space: nowrap; }
   .demo-tour-next:hover { opacity: 0.85; }
   .demo-tour-end-overlay { position: fixed; inset: 0; z-index: 9500; background: rgba(6,8,11,0.97); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; text-align: center; padding: 40px; animation: fadeInUp 0.5s ease both; }
-  .demo-tour-end-title { font-family: "Cinzel Decorative", Cinzel, serif; font-size: clamp(28px, 4vw, 48px); font-weight: 900; color: var(--gold); line-height: 1.2; }
+  .demo-tour-end-title { font-family: "Cinzel", serif; font-size: clamp(36px, 5vw, 60px); font-weight: 900; color: var(--gold); line-height: 1.2; }
   .demo-tour-end-sub { font-size: 18px; color: var(--text-dim); max-width: 480px; line-height: 1.7; }
   .demo-tour-end-cta { padding: 16px 48px; border-radius: 6px; font-family: Cinzel, serif; font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; border: none; cursor: pointer; box-shadow: 0 0 40px rgba(201,168,76,0.3); transition: all 0.3s; }
   .demo-tour-end-cta:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(201,168,76,0.5); }
