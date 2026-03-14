@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import Sparkline from "./Sparkline";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatGP(n) {
@@ -8,14 +7,6 @@ function formatGP(n) {
   if (Math.abs(n) >= 1_000_000)     return (n / 1_000_000).toFixed(1) + "M";
   if (Math.abs(n) >= 1_000)         return (n / 1_000).toFixed(1) + "k";
   return n.toLocaleString();
-}
-
-function timeAgo(ts) {
-  const sec = Math.floor(Date.now() / 1000 - ts);
-  if (sec < 60)   return `${sec}s ago`;
-  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
-  if (sec < 86400)return `${Math.floor(sec / 3600)}h ago`;
-  return `${Math.floor(sec / 86400)}d ago`;
 }
 
 function itemIconUrl(name) {
@@ -332,8 +323,6 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
           </div>
         ) : (
           recommendations.map((item, i) => {
-            const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
-            const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
             const score = item._score;
             const scoreClass = score >= 65 ? "score-high" : score >= 35 ? "score-med" : "score-low";
             const rank = i + 1;
