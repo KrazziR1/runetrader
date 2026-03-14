@@ -10,6 +10,11 @@ const MAX_CASH = 2_147_483_647;
 
 function formatGP(n) {
   if (!n) return "—";
+  return Math.round(n).toLocaleString("en-GB") + " gp";
+}
+
+function formatGPShort(n) {
+  if (!n) return "—";
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + "B";
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
@@ -253,7 +258,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
                   <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: l.type === "WTS" ? "rgba(231,76,60,0.12)" : "rgba(46,204,113,0.12)", color: l.type === "WTS" ? "var(--red)" : "var(--green)", border: `1px solid ${l.type === "WTS" ? "rgba(231,76,60,0.3)" : "rgba(46,204,113,0.3)"}` }}>
                     {l.type}
                   </span>
-                  {l.quantity > 1 && <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>×{l.quantity}</span>}
+                  {l.quantity > 1 && <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>×{l.quantity.toLocaleString()}</span>}
                 </div>
                 <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "var(--text-dim)", flexWrap: "wrap" }}>
                   {l.discord && <span>Discord: <span style={{ color: "var(--text)" }}>{l.discord}</span></span>}
@@ -267,9 +272,16 @@ export default function TradeBoard({ user, supabase, showToast }) {
               </div>
 
               <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <div style={{ fontFamily: "Cinzel, serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)" }}>{formatGP(l.price)}</div>
-                {l.price > MAX_CASH && (
-                  <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>Above max cash</div>
+                <div style={{ fontFamily: "Cinzel, serif", fontSize: "16px", fontWeight: 700, color: "var(--gold)" }}>
+                  {l.quantity > 1 ? formatGP(l.price * l.quantity) : formatGP(l.price)}
+                </div>
+                {l.quantity > 1 && (
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "2px" }}>
+                    {formatGP(l.price)} each · {l.quantity.toLocaleString()} qty
+                  </div>
+                )}
+                {(l.quantity > 1 ? l.price * l.quantity : l.price) > MAX_CASH && (
+                  <div style={{ fontSize: "11px", color: "var(--gold-dim)", marginTop: "2px" }}>Above max cash</div>
                 )}
                 {user?.id === l.user_id && (
                   <button onClick={() => closeListing(l.id)}
@@ -339,7 +351,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
             {/* Price + Qty */}
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px" }}>
               {[
-                { key: "price", label: "Price (gp) *", placeholder: "e.g. 2500000000" },
+                { key: "price", label: "Price per item (gp) *", placeholder: "e.g. 2500000000" },
                 { key: "quantity", label: "Quantity", placeholder: "1" },
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>
@@ -351,12 +363,24 @@ export default function TradeBoard({ user, supabase, showToast }) {
             </div>
 
             {/* Price preview */}
-            {form.price && (
-              <div style={{ fontSize: "13px", color: "var(--gold)", background: "rgba(201,168,76,0.08)", border: "1px solid var(--gold-dim)", borderRadius: "8px", padding: "8px 12px" }}>
-                {formatGP(parseInt(form.price.replace(/[^0-9]/g, "")))} gp
-                {parseInt(form.price.replace(/[^0-9]/g, "")) > MAX_CASH && " — above max cash, player-to-player trade required"}
-              </div>
-            )}
+            {form.price && (() => {
+              const perItem = parseInt(form.price.replace(/[^0-9]/g, "")) || 0;
+              const qty = parseInt(form.quantity) || 1;
+              const total = perItem * qty;
+              return (
+                <div style={{ fontSize: "13px", color: "var(--gold)", background: "rgba(201,168,76,0.08)", border: "1px solid var(--gold-dim)", borderRadius: "8px", padding: "10px 14px", display: "flex", flexDirection: "column", gap: "4px" }}>
+                  {qty > 1 ? (
+                    <>
+                      <div><span style={{ color: "var(--text-dim)" }}>Per item:</span> {formatGP(perItem)}</div>
+                      <div><span style={{ color: "var(--text-dim)" }}>Total ({qty.toLocaleString()}x):</span> <strong>{formatGP(total)}</strong></div>
+                    </>
+                  ) : (
+                    <div>{formatGP(perItem)}</div>
+                  )}
+                  {total > MAX_CASH && <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>Above max cash — player-to-player trade required</div>}
+                </div>
+              );
+            })()}
 
             {/* Contact */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
