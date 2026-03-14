@@ -1725,6 +1725,8 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     return () => sb.removeChannel(ch);
   }, [user, sb]); // eslint-disable-line react-hooks/exhaustive-deps
   const [merchantFeedFilter, setMerchantFeedFilter] = useState("all");
+  const [merchantFeedSort, setMerchantFeedSort] = useState("recent");
+  const [merchantFeedSortDir, setMerchantFeedSortDir] = useState("desc");
   const [closingPos, setClosingPos] = useState(null);
   const [posStatuses, setPosStatuses] = useState({}); // eslint-disable-line no-unused-vars
   const [dailyGoal, setDailyGoal] = useState(() => { try { return parseInt(localStorage.getItem("rt_daily_goal") || "0"); } catch { return 0; } });
@@ -2401,18 +2403,45 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   )}
                 </div>
                 {smartEvents?.length > 0 && (
-                  <div style={{ display: "flex", gap: "6px", marginBottom: "10px", flexWrap: "wrap" }}>
-                    {["all","spike","surge","dump","crash","autopilot"].map(f => (
-                      <button key={f} onClick={() => setMerchantFeedFilter(f)}
-                        style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === f ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === f ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "4px" }}>
-                        {f === "all" ? "All" : f === "spike" ? <>📈 Margin</> : f === "surge" ? <>🔥 Volume</> : f === "dump" ? <>⚠️ Dump</> : f === "autopilot" ? <>🤖 Autopilot</> : <>💥 Crash</>}
-                      </button>
-                    ))}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
+                    <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
+                      {[["all","All"],["spike","📈 Margin"],["surge","🔥 Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"],["autopilot","🤖 Autopilot"]].map(([v,l]) => (
+                        <button key={v} onClick={() => setMerchantFeedFilter(v)}
+                          style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                      <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>Sort:</span>
+                      {[["recent","Recent"],["change","% Change"],["margin","Margin"]].map(([v,l]) => (
+                        <button key={v} onClick={() => { if (merchantFeedSort === v) { setMerchantFeedSortDir(d => d === "desc" ? "asc" : "desc"); } else { setMerchantFeedSort(v); setMerchantFeedSortDir("desc"); } }}
+                          style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "3px" }}>
+                          {l}{merchantFeedSort === v && <span style={{ fontSize: "9px" }}>{merchantFeedSortDir === "desc" ? "▼" : "▲"}</span>}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
                 <div className="smart-events-list" style={{ borderRadius: "8px" }}>
                   {(() => {
-                    const feed = (smartEvents || []).filter(e => !merchantFeedFilter || merchantFeedFilter === "all" || e.badge === merchantFeedFilter);
+                    const mDir = merchantFeedSortDir === "asc" ? 1 : -1;
+                    let feed = (smartEvents || []).filter(e => !merchantFeedFilter || merchantFeedFilter === "all" || e.badge === merchantFeedFilter);
+                    if (merchantFeedSort === "change") {
+                      feed = [...feed].sort((a, b) => {
+                        const pA = a.oldVal ? Math.abs((a.newVal - a.oldVal) / Math.abs(a.oldVal)) : 0;
+                        const pB = b.oldVal ? Math.abs((b.newVal - b.oldVal) / Math.abs(b.oldVal)) : 0;
+                        return mDir * (pA - pB);
+                      });
+                    } else if (merchantFeedSort === "margin") {
+                      feed = [...feed].sort((a, b) => {
+                        const mA = allItems.find(i => i.id === a.itemId)?.margin || 0;
+                        const mB = allItems.find(i => i.id === b.itemId)?.margin || 0;
+                        return mDir * (mA - mB);
+                      });
+                    } else {
+                      feed = [...feed].sort((a, b) => mDir * (new Date(a.time) - new Date(b.time)));
+                    }
                     if (feed.length === 0) return (
                       <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
                         <div style={{ fontSize: "32px", marginBottom: "8px", opacity: 0.4 }}>📡</div>
@@ -3779,6 +3808,7 @@ export default function RuneTrader() {
   const [smartEvents, setSmartEvents] = useState([]);
   const [smartFeedFilter, setSmartFeedFilter] = useState("all"); // all | spike | surge | dump | crash
   const [smartFeedSort, setSmartFeedSort] = useState("recent");  // recent | change | margin
+  const [smartFeedSortDir, setSmartFeedSortDir] = useState("desc"); // asc | desc
   const prevItemsRef = useRef({});
   const smartCooldownRef = useRef({}); // key: `${itemId}_${type}` → timestamp
 
@@ -4970,22 +5000,24 @@ RULES:
                   </div>
 
                   {smartEvents.length > 0 && (
-                    <div className="smart-feed-controls" style={{ marginBottom: "10px" }}>
-                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Filter:</span>
-                      <select className="smart-feed-select" value={smartFeedFilter} onChange={e => setSmartFeedFilter(e.target.value)}>
-                        <option value="all">All types</option>
-                        <option value="spike">📈 Margin Spike</option>
-                        <option value="surge">🔥 Volume Surge</option>
-                        <option value="dump">⚠️ Dump Detected</option>
-                        <option value="crash">💥 Price Crash</option>
-                        <option value="autopilot">🤖 Autopilot</option>
-                      </select>
-                      <span style={{ fontSize: "11px", color: "var(--text-dim)", marginLeft: "8px" }}>Sort:</span>
-                      <select className="smart-feed-select" value={smartFeedSort} onChange={e => setSmartFeedSort(e.target.value)}>
-                        <option value="recent">Most Recent</option>
-                        <option value="change">Largest % Change</option>
-                        <option value="margin">Largest Margin</option>
-                      </select>
+                    <div className="smart-feed-controls" style={{ marginBottom: "10px", gap: "10px" }}>
+                      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
+                        {[["all","All"],["spike","📈 Margin"],["surge","🔥 Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"]].map(([v,l]) => (
+                          <button key={v} onClick={() => setSmartFeedFilter(v)}
+                            style={{ padding: "4px 11px", borderRadius: "12px", border: "1px solid var(--border)", background: smartFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: smartFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                            {l}
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", gap: "5px", marginLeft: "auto", alignItems: "center" }}>
+                        <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Sort:</span>
+                        {[["recent","Recent"],["change","% Change"],["margin","Margin"]].map(([v,l]) => (
+                          <button key={v} onClick={() => { if (smartFeedSort === v) { setSmartFeedSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSmartFeedSort(v); setSmartFeedSortDir("desc"); } }}
+                            style={{ padding: "4px 11px", borderRadius: "12px", border: "1px solid var(--border)", background: smartFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: smartFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "4px" }}>
+                            {l}{smartFeedSort === v && <span style={{ fontSize: "9px" }}>{smartFeedSortDir === "desc" ? "▼" : "▲"}</span>}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -4995,18 +5027,22 @@ RULES:
                       // Filter
                       if (smartFeedFilter !== "all") feed = feed.filter(e => e.badge === smartFeedFilter);
                       // Sort
+                      const dir = smartFeedSortDir === "asc" ? 1 : -1;
                       if (smartFeedSort === "change") {
                         feed.sort((a, b) => {
                           const pctA = a.oldVal ? Math.abs((a.newVal - a.oldVal) / Math.abs(a.oldVal)) : 0;
                           const pctB = b.oldVal ? Math.abs((b.newVal - b.oldVal) / Math.abs(b.oldVal)) : 0;
-                          return pctB - pctA;
+                          return dir * (pctA - pctB);
                         });
                       } else if (smartFeedSort === "margin") {
                         feed.sort((a, b) => {
-                          const mA = items.find(i => i.id === a.itemId)?.margin || 0;
-                          const mB = items.find(i => i.id === b.itemId)?.margin || 0;
-                          return mB - mA;
+                          const mA = allItems.find(i => i.id === a.itemId)?.margin || 0;
+                          const mB = allItems.find(i => i.id === b.itemId)?.margin || 0;
+                          return dir * (mA - mB);
                         });
+                      } else {
+                        // recent — sort by time
+                        feed.sort((a, b) => dir * (new Date(a.time) - new Date(b.time)));
                       }
                       if (feed.length === 0) return (
                         <div className="smart-empty">
