@@ -4,6 +4,36 @@ import AuthModal from "./AuthModal";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 
+// ── Changelog — add new entries at the top, bump DEPLOY_KEY on each deploy ──
+const DEPLOY_KEY = "runetrader_seen_deploy_v1"; // change this string on each deploy to trigger the modal
+const CHANGELOG = [
+  {
+    version: "Latest",
+    date: "March 2026",
+    items: [
+      { type: "new", text: "High Alch Tracker — find profitable alch items with live nature rune pricing" },
+      { type: "new", text: "Death's Coffer tool — find cheapest items to sacrifice, with potential savings calculator" },
+      { type: "new", text: "Portfolio page rebuilt — period stats, win rate donut, per-item P&L, best/worst items" },
+      { type: "new", text: "Soft gates — Merchant Mode features now shown with upgrade prompts for free users" },
+      { type: "new", text: "Shareable item URLs — share runetrader.gg/item/abyssal-whip to open any item chart" },
+      { type: "improved", text: "Alert feed items now clickable to open price chart" },
+      { type: "improved", text: "Market sub-tabs — Flips, High Alch, Death's Coffer now in one place" },
+      { type: "improved", text: "Nature rune price editable in High Alch tab — use your own cost basis" },
+    ],
+  },
+  {
+    version: "v0.9",
+    date: "February 2026",
+    items: [
+      { type: "new", text: "Merchant Mode — full trading terminal with Operations and Analytics tabs" },
+      { type: "new", text: "Live GE slot tracking via RuneLite plugin" },
+      { type: "new", text: "Smart Alerts — margin spike, volume surge, dump detection, price crash" },
+      { type: "new", text: "AI Advisor with live GE slot context" },
+      { type: "improved", text: "Market page rebuilt with 4,525 items and advanced filters" },
+    ],
+  },
+];
+
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -116,6 +146,32 @@ const STYLES = `
   .score-low { background: rgba(231,76,60,0.15); color: var(--red); }
   .skeleton { background: linear-gradient(90deg, var(--bg4) 25%, var(--bg3) 50%, var(--bg4) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; height: 14px; }
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* FLIP CARD MODAL */
+  .flip-card-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .flip-card-modal { background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 16px; width: 100%; max-width: 480px; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
+  .flip-card-title { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; color: var(--gold); }
+  .flip-card-image { width: 100%; border-radius: 8px; border: 1px solid var(--border); }
+  .flip-card-actions { display: flex; gap: 10px; }
+  .flip-card-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+  .flip-card-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .flip-card-btn.primary { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; border: none; font-weight: 700; }
+
+  /* WHATS NEW MODAL */
+  .whats-new-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .whats-new-modal { background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 16px; width: 100%; max-width: 520px; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+  .whats-new-header { padding: 24px 28px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .whats-new-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); }
+  .whats-new-body { overflow-y: auto; padding: 20px 28px; display: flex; flex-direction: column; gap: 20px; }
+  .changelog-version { display: flex; flex-direction: column; gap: 8px; }
+  .changelog-version-header { display: flex; align-items: center; gap: 10px; }
+  .changelog-version-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--text); }
+  .changelog-version-date { font-size: 11px; color: var(--text-dim); }
+  .changelog-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+  .changelog-badge-new { display: inline-flex; background: rgba(46,204,113,0.12); color: var(--green); border-radius: 4px; padding: 1px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; flex-shrink: 0; margin-top: 2px; }
+  .changelog-badge-improved { display: inline-flex; background: rgba(201,168,76,0.12); color: var(--gold); border-radius: 4px; padding: 1px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; flex-shrink: 0; margin-top: 2px; }
+  .changelog-badge-fix { display: inline-flex; background: rgba(52,152,219,0.12); color: var(--blue); border-radius: 4px; padding: 1px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; flex-shrink: 0; margin-top: 2px; }
+  .whats-new-footer { padding: 16px 28px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
 
   /* UPGRADE MODAL */
   .upgrade-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
@@ -948,7 +1004,7 @@ const MERCHANT_TOUR_STEPS = [
 
 // ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
 
-function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, refreshCooldown }) {
+function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, refreshCooldown, onShare }) {
   const [range, setRange] = useState("7D");
   const [chartData, setChartData] = useState(null);
   const [chartLoading, setChartLoading] = useState(true);
@@ -1099,6 +1155,11 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, 
           <button className="modal-ask-btn" onClick={() => { onAskAI(`Analyse ${item.name} for me. Is now a good time to flip it? Buy at ${formatGP(item.adjLow ?? item.low)}, sell at ${formatGP(item.adjHigh ?? item.high)}, margin ${formatGP(item.adjMargin ?? item.margin)}.`); onClose(); }}>
             ⚔️ Ask AI to analyse this flip →
           </button>
+          {onShare && (
+            <button className="modal-ask-btn" style={{ opacity: 0.7 }} onClick={onShare}>
+              🔗 Copy shareable link →
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -3488,6 +3549,13 @@ export default function RuneTrader() {
       url.searchParams.delete("ref");
       window.history.replaceState({}, "", url.toString());
     }
+    // Detect /item/:slug — e.g. runetrader.gg/item/abyssal-whip
+    const match = window.location.pathname.match(/^\/item\/(.+)$/);
+    if (match) {
+      const slug = decodeURIComponent(match[1]).replace(/-/g, " ");
+      setPendingItemSlug(slug.toLowerCase());
+      window.history.replaceState({}, "", "/");
+    }
   }, []);
 
   useEffect(() => {
@@ -3533,6 +3601,24 @@ export default function RuneTrader() {
           // Load ref code for returning users
           supabase.from("user_profiles").select("ref_code").eq("user_id", session.user.id).single()
             .then(({ data }) => { if (data?.ref_code) setUserRefCode(data.ref_code); });
+          // Show What's New modal if this deploy is new to them
+          const seen = localStorage.getItem(DEPLOY_KEY);
+          if (!seen) { setTimeout(() => setShowWhatsNew(true), 1200); }
+          localStorage.setItem(DEPLOY_KEY, "1");
+          // ── Login streak ──
+          const today = new Date().toISOString().slice(0, 10);
+          const lastLogin = localStorage.getItem("rt_last_login");
+          const storedStreak = parseInt(localStorage.getItem("rt_login_streak") || "0");
+          let newStreak = 1;
+          if (lastLogin) {
+            const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+            if (lastLogin === today) { newStreak = storedStreak; }
+            else if (lastLogin === yesterday) { newStreak = storedStreak + 1; }
+            else { newStreak = 1; }
+          }
+          localStorage.setItem("rt_last_login", today);
+          localStorage.setItem("rt_login_streak", String(newStreak));
+          setLoginStreak(newStreak);
         }
       }
     });
@@ -3711,7 +3797,10 @@ export default function RuneTrader() {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("market");
+  const [showWhatsNew, setShowWhatsNew] = useState(false);
+  const [loginStreak, setLoginStreak] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [pendingItemSlug, setPendingItemSlug] = useState(null); // from /item/:slug URL
   const [sortCol, setSortCol] = useState("volume");
   const [sortDir, setSortDir] = useState("desc");
   const [marketRowsShown, setMarketRowsShown] = useState(200);
@@ -3812,6 +3901,7 @@ export default function RuneTrader() {
   // ── Close flip modal ──
   const [closingFlip, setClosingFlip] = useState(null);
   const [closeFlipLoading, setCloseFlipLoading] = useState(false);
+  const [flipCard, setFlipCard] = useState(null); // { itemName, profit, roi, dataUrl }
 
   // ── Favourites ──
   const [favourites, setFavourites] = useState(() => {
@@ -4070,6 +4160,14 @@ export default function RuneTrader() {
   const volumeCacheTimeRef = useRef(0);
   useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 30 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
 
+  // ── Resolve pending /item/:slug once allItems is populated ──
+  useEffect(() => {
+    if (!pendingItemSlug || allItems.length === 0) return;
+    const match = allItems.find(i => i.name.toLowerCase() === pendingItemSlug)
+      || allItems.find(i => i.name.toLowerCase().replace(/\s+/g, "-") === pendingItemSlug.replace(/\s+/g, "-"));
+    if (match) { setSelectedItem(match); setPendingItemSlug(null); }
+  }, [pendingItemSlug, allItems]); // eslint-disable-line
+
   async function fetchPrices(isManualRefresh = false) {
     try {
       if (isManualRefresh) setRefreshing(true);
@@ -4248,6 +4346,47 @@ export default function RuneTrader() {
   }
 
   // ── Close an open flip ──
+  function generateFlipCard(itemName, totalProfit, roi) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 600; canvas.height = 200;
+    const ctx = canvas.getContext("2d");
+    // Background
+    ctx.fillStyle = "#07090c";
+    ctx.fillRect(0, 0, 600, 200);
+    // Gold border
+    ctx.strokeStyle = "#c9a84c";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(2, 2, 596, 196);
+    // Inner glow
+    ctx.fillStyle = "rgba(201,168,76,0.04)";
+    ctx.fillRect(2, 2, 596, 196);
+    // Sword icon area
+    ctx.font = "32px serif";
+    ctx.fillText("⚔️", 28, 80);
+    // RuneTrader label
+    ctx.fillStyle = "#c9a84c";
+    ctx.font = "bold 13px 'Arial'";
+    ctx.fillText("RUNETRADER.GG", 28, 110);
+    // Item name
+    ctx.fillStyle = "#e8e8e8";
+    ctx.font = "bold 22px 'Arial'";
+    ctx.fillText(itemName, 28, 145);
+    // Profit
+    const profitText = `${totalProfit >= 0 ? "+" : ""}${totalProfit >= 1_000_000 ? (totalProfit / 1_000_000).toFixed(1) + "M" : totalProfit >= 1_000 ? (totalProfit / 1_000).toFixed(0) + "K" : totalProfit} gp`;
+    ctx.fillStyle = totalProfit >= 0 ? "#2ecc71" : "#e74c3c";
+    ctx.font = "bold 36px 'Arial'";
+    ctx.fillText(profitText, 28, 185);
+    // ROI
+    ctx.fillStyle = "#c9a84c";
+    ctx.font = "14px 'Arial'";
+    ctx.fillText(`${roi > 0 ? "+" : ""}${roi}% ROI`, 350, 165);
+    // Tagline
+    ctx.fillStyle = "#4a5568";
+    ctx.font = "12px 'Arial'";
+    ctx.fillText("The OSRS flipping terminal", 350, 185);
+    return canvas.toDataURL("image/png");
+  }
+
   async function handleCloseFlipSold(flip, sellPriceStr) {
     const sell = parseInt(sellPriceStr.replace(/,/g, ""));
     if (isNaN(sell)) return;
@@ -4269,6 +4408,10 @@ export default function RuneTrader() {
       if (!error && data) {
         setFlipsLog(prev => prev.map(f => f.id === flip.id ? mapFlipRow(data) : f));
         showToast(`Sold! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
+        if (merchantMode && totalProfit > 0) {
+          const dataUrl = generateFlipCard(flip.item, totalProfit, roi);
+          setFlipCard({ itemName: flip.item, profit: totalProfit, roi, dataUrl });
+        }
       } else {
         showToast("Failed to update flip.", "error");
       }
@@ -4655,6 +4798,67 @@ RULES:
         );
       })()}
 
+      {/* FLIP CARD MODAL */}
+      {flipCard && (
+        <div className="flip-card-overlay" onClick={() => setFlipCard(null)}>
+          <div className="flip-card-modal" onClick={e => e.stopPropagation()}>
+            <div className="flip-card-title">🎉 Nice flip! Share it?</div>
+            <img src={flipCard.dataUrl} alt="Flip card" className="flip-card-image" />
+            <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>
+              Share your {formatGP(flipCard.profit)} gp profit on {flipCard.itemName} with your clan.
+            </div>
+            <div className="flip-card-actions">
+              <button className="flip-card-btn" onClick={() => setFlipCard(null)}>Skip</button>
+              <button className="flip-card-btn" onClick={() => {
+                const link = document.createElement("a");
+                link.download = `runetrader-${flipCard.itemName.replace(/\s+/g, "-").toLowerCase()}.png`;
+                link.href = flipCard.dataUrl;
+                link.click();
+              }}>↓ Download</button>
+              <button className="flip-card-btn primary" onClick={() => {
+                const slug = flipCard.itemName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+                const text = `I just made ${formatGP(flipCard.profit)} gp flipping ${flipCard.itemName} on RuneTrader.gg 📈\nrunetrader.gg/item/${slug}`;
+                navigator.clipboard.writeText(text).then(() => { showToast("Copied to clipboard! Paste in Discord 🔗", "success"); setFlipCard(null); });
+              }}>📋 Copy for Discord</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WHAT'S NEW MODAL */}
+      {showWhatsNew && (
+        <div className="whats-new-overlay" onClick={() => setShowWhatsNew(false)}>
+          <div className="whats-new-modal" onClick={e => e.stopPropagation()}>
+            <div className="whats-new-header">
+              <div className="whats-new-title">⚔️ What's New in RuneTrader</div>
+              <button onClick={() => setShowWhatsNew(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "18px", lineHeight: 1 }}>✕</button>
+            </div>
+            <div className="whats-new-body">
+              {CHANGELOG.slice(0, 1).map((release, ri) => (
+                <div key={ri} className="changelog-version">
+                  <div className="changelog-version-header">
+                    <span className="changelog-version-name">{release.version}</span>
+                    <span className="changelog-version-date">{release.date}</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {release.items.map((item, ii) => (
+                      <div key={ii} className="changelog-item">
+                        <span className={`changelog-badge-${item.type}`}>{item.type}</span>
+                        <span>{item.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="whats-new-footer">
+              <button className="refresh-btn" onClick={() => { setShowWhatsNew(false); setActiveTab("changelog"); }}>View full changelog</button>
+              <button className="upgrade-cta" style={{ width: "auto", padding: "9px 24px", fontSize: "13px", letterSpacing: "0.5px" }} onClick={() => setShowWhatsNew(false)}>Got it ✓</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* UPGRADE MODAL */}
       {upgradeModal && (
         <div className="upgrade-overlay" onClick={() => setUpgradeModal(null)}>
@@ -4692,6 +4896,11 @@ RULES:
           onRefresh={() => fetchPrices(true)}
           refreshing={refreshing}
           refreshCooldown={refreshCooldown}
+          onShare={() => {
+            const slug = selectedItem.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+            const url = `${window.location.origin}/item/${slug}`;
+            navigator.clipboard.writeText(url).then(() => showToast("Link copied! Share it on Discord or Reddit 🔗", "success"));
+          }}
         />
       )}
 
@@ -4786,9 +4995,9 @@ RULES:
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {!merchantMode && ["market", "tracker", "alerts", ...(user ? ["portfolio", "settings"] : [])].map(t => (
+            {!merchantMode && [["market","Market"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"]] : []),["changelog","What's New 🆕"]].map(([t,label]) => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
-                {t === "market" ? "Market" : t.charAt(0).toUpperCase() + t.slice(1)}
+                {label}
                 {t === "tracker" && (openFlips.length + (autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length)) > 0 && (
                   <span style={{ marginLeft: "6px", background: "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
                     {openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length}
@@ -4905,6 +5114,7 @@ RULES:
                     { label: "Flips Logged", value: totalFlips.toLocaleString(), color: "var(--gold)", sub: `${openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length} open` },
                     { label: "Avg Profit/Flip", value: formatGP(avgProfit), color: "var(--text)", sub: "Per closed flip" },
                     { label: "Best Item", value: bestItem?.item || "—", color: "var(--gold)", sub: bestItem ? formatGP(bestItem.totalProfit) + " profit" : "Log a flip first" },
+                    { label: "Login Streak", value: loginStreak > 0 ? `${loginStreak} 🔥` : "—", color: loginStreak >= 7 ? "var(--green)" : "var(--gold)", sub: loginStreak >= 7 ? "On fire!" : loginStreak > 1 ? "Keep it up!" : "Day 1" },
                   ].map((s, i) => (
                     <div key={i} className="stat-card">
                       <span className="stat-label">{s.label}</span>
@@ -4924,6 +5134,31 @@ RULES:
 
             {activeTab === "settings" && (
               <SettingsPage user={user} supabase={supabase} showToast={showToast} />
+            )}
+
+            {activeTab === "changelog" && (
+              <div style={{ maxWidth: "640px", display: "flex", flexDirection: "column", gap: "28px", padding: "8px 0" }}>
+                <div>
+                  <div className="section-title">What's New</div>
+                  <p style={{ fontSize: "13px", color: "var(--text-dim)", marginTop: "4px" }}>The latest updates and improvements to RuneTrader.</p>
+                </div>
+                {CHANGELOG.map((release, ri) => (
+                  <div key={ri} className="changelog-version">
+                    <div className="changelog-version-header">
+                      <span className="changelog-version-name">{release.version}</span>
+                      <span className="changelog-version-date">{release.date}</span>
+                    </div>
+                    <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                      {release.items.map((item, ii) => (
+                        <div key={ii} className="changelog-item">
+                          <span className={`changelog-badge-${item.type}`}>{item.type}</span>
+                          <span>{item.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
 
             {activeTab === "alerts" && (
