@@ -3521,7 +3521,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
 
 
 export default function RuneTrader() {
-  const [showApp, setShowApp] = useState(false);
+  const [showApp, setShowApp] = useState(() => /^\/item\//.test(window.location.pathname));
   const [user, setUser] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
   const [tourStep, setTourStep] = useState(-1);
