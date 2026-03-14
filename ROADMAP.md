@@ -13,7 +13,7 @@
 - **The AI Advisor** already has live slot context. It will get smarter as the user base grows.
 - **Price truth architecture** is designed and ready — just waiting on user growth to activate.
 - **Stripe is live** — $9.99/mo Pro tier, checkout flow, webhook handler, referral coupon `sAvO4kCM`.
-- **Referral system is live** — 50% off first month for both sides, Pro for life at 10 converted referrals.
+- **Referral system is live** — 50% off first month for both sides, Pro for life at 3 converted referrals. Gap fix: referrers without a Stripe account get a `pending_referral_discount` applied automatically when they upgrade.
 
 ---
 
@@ -65,8 +65,9 @@
 - `?upgrade=success` redirect handler — fires toast, sets isPro in UI
 - Referral system — `?ref=CODE` captured, stored in localStorage, written to `referrals` table on sign-up
 - Referral coupon `sAvO4kCM` — 50% off first month, applied once per account
-- Refer 10 friends → `lifetime_pro = true` → Pro free forever, Stripe subscription cancelled
-- Safety net — `invoice.payment_succeeded` webhook cancels subscription for lifetime_pro users
+- Refer 3 friends → `lifetime_pro = true` → Pro free forever, Stripe subscription cancelled
+- Gap fix — referrers without Stripe account get `pending_referral_discount = true`; discount applied automatically at their next checkout or invoice
+- Safety net — `invoice.payment_succeeded` webhook cancels subscription for lifetime_pro users and applies any pending referral discount
 - Referral tab UI (`ReferralPage.js`) — ref link, copy button, Discord/Reddit share, stats, progress bar, history
 
 ### SEO
@@ -75,7 +76,7 @@
 - Discord/Reddit/Twitter previews show live item prices (full numbers, not abbreviated)
 
 ### Supabase Schema Additions
-- `user_profiles`: `is_pro`, `stripe_customer_id`, `stripe_subscription_id`, `pro_expires_at`, `referral_count`, `lifetime_pro`, `referral_discount_used`
+- `user_profiles`: `is_pro`, `stripe_customer_id`, `stripe_subscription_id`, `pro_expires_at`, `referral_count`, `lifetime_pro`, `referral_discount_used`, `pending_referral_discount`
 
 ---
 
