@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Sparkline from "./Sparkline";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -348,7 +348,6 @@ function OnboardingWizard({ onComplete }) {
   const [draft, setDraft] = useState({ cashStack: "", risk: "low", flipSpeed: "any", membership: "both" });
   const [textVal, setTextVal] = useState("");
   const [animDir, setAnimDir] = useState("in"); // "in" | "out"
-  const [visible, setVisible] = useState(true);
 
   const current = ONBOARDING_STEPS[step];
   const isLast  = step === ONBOARDING_STEPS.length - 1;
@@ -370,7 +369,6 @@ function OnboardingWizard({ onComplete }) {
       if (current.type === "text") setTextVal("");
       setStep(s => s + 1);
       setAnimDir("in");
-      setVisible(true);
     }, 220);
   }
 
