@@ -8,6 +8,7 @@ import TradeBoard from "./TradeBoard";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 import RecommendedFlips from "./RecommendedFlips";
+import ScoreTab from "./ScoreTab";
 
 // ── Changelog — add new entries at the top, bump DEPLOY_KEY on each deploy ──
 const DEPLOY_KEY = "runetrader_seen_deploy_v1"; // change this string on each deploy to trigger the modal
@@ -5551,7 +5552,7 @@ RULES:
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {!merchantMode && [["market","Market"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],["recommended","⭐ Picks"],...(user ? [["portfolio","Portfolio"],["settings","Settings"],["referral","Refer & Earn 🔗"]] : [])].map(([t,label]) => (
+            {!merchantMode && [["market","GE Tracker"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"],["referral","Refer & Earn 🔗"]] : [])].map(([t,label]) => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
                 {label}
                 {t === "tracker" && (openFlips.length + (autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length)) > 0 && (
@@ -5747,16 +5748,6 @@ RULES:
 
             {activeTab === "settings" && (
               <SettingsPage user={user} supabase={supabase} showToast={showToast} />
-            )}
-
-            {activeTab === "recommended" && (
-              <RecommendedFlips
-                user={user}
-                items={items}
-                flipsLog={flipsLog}
-                onSignIn={() => setShowAuth(true)}
-                onOpenChart={setSelectedItem}
-              />
             )}
 
             {activeTab === "changelog" && (
@@ -6047,12 +6038,12 @@ RULES:
 
                 {/* Market sub-tabs row */}
                 <div style={{ display: "flex", gap: "4px", paddingBottom: "4px" }}>
-                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"],["tradeboard","🤝 Trade Board"]].map(([v,l]) => (
+                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"],["tradeboard","🤝 Trade Board"],["picks","⭐ Picks"],["score","🏆 Score"]].map(([v,l]) => (
                     <button key={v}
                       className={`market-sub-tab${marketSubTab === v ? " active" : ""}`}
                       onClick={() => setMarketSubTab(v)}
                     >
-                      {l}{(v === "tradeboard") && <span className="sub-tab-badge">new</span>}
+                      {l}{(v === "tradeboard") && <span className="sub-tab-badge">new</span>}{(v === "picks") && <span className="sub-tab-badge">new</span>}
                     </button>
                   ))}
                 </div>
@@ -6307,6 +6298,28 @@ RULES:
                     user={user}
                     supabase={supabase}
                     showToast={showToast}
+                  />
+                )}
+
+                {/* ── PICKS TAB ── */}
+                {marketSubTab === "picks" && (
+                  <RecommendedFlips
+                    user={user}
+                    items={items}
+                    flipsLog={flipsLog}
+                    onSignIn={() => setShowAuth(true)}
+                    onOpenChart={setSelectedItem}
+                  />
+                )}
+
+                {/* ── SCORE TAB ── */}
+                {marketSubTab === "score" && (
+                  <ScoreTab
+                    user={user}
+                    items={items}
+                    flipsLog={flipsLog}
+                    onSignIn={() => setShowAuth(true)}
+                    onOpenChart={setSelectedItem}
                   />
                 )}
 
