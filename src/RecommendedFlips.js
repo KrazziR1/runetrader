@@ -180,6 +180,18 @@ const SORT_PREF_MAP = {
   volume:    "volume",
 };
 
+// ── Goal-based pref adjustments ───────────────────────────────────────────────
+// If the user answered the first-login goal question and hasn't been onboarded
+// yet on Picks, nudge the defaults to match their stated intent.
+function getGoalAdjustedDefaults() {
+  const goal = localStorage.getItem("rt_first_goal_set");
+  if (!goal || goal === "skipped") return DEFAULT_PREFS;
+  if (goal === "grow_gp")   return { ...DEFAULT_PREFS, risk: "medium", defaultSort: "gpPerFill", flipSpeed: "medium" };
+  if (goal === "learn")     return { ...DEFAULT_PREFS, risk: "low",    defaultSort: "volume",    flipSpeed: "fast" };
+  if (goal === "track")     return { ...DEFAULT_PREFS, risk: "low",    defaultSort: "margin",    flipSpeed: "any" };
+  return DEFAULT_PREFS;
+}
+
 // ── Login Gate ────────────────────────────────────────────────────────────────
 function LoginGate({ onSignIn }) {
   return (
@@ -755,8 +767,12 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
 
   // Load prefs from localStorage
   const [prefs, setPrefs] = useState(() => {
-    try { return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") }; }
-    catch { return DEFAULT_PREFS; }
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const base = saved ? DEFAULT_PREFS : getGoalAdjustedDefaults();
+      return { ...base, ...JSON.parse(saved || "{}") };
+    }
+    catch { return getGoalAdjustedDefaults(); }
   });
 
   // Has the user completed onboarding?
