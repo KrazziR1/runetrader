@@ -84,7 +84,7 @@ const STYLES = `
   .market-sub-tab .sub-tab-badge { display: inline-block; background: rgba(52,152,219,0.15); color: var(--blue); border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
   /* ALCH / COFFER TABLE */
   .alch-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
-  .alch-header { display: grid; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .alch-header { display: grid; padding: 12px 16px; background: var(--bg4); font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
   .alch-row { display: grid; padding: 11px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; }
   .alch-row:last-child { border-bottom: none; }
   .alch-row:hover { background: var(--bg4); }
@@ -127,8 +127,8 @@ const STYLES = `
   .section-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
-  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-  .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-family: "Inter", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; }
+  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px; padding: 12px 16px; background: var(--bg4); font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; font-family: "Inter", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; }
   .sort-btn:hover { color: var(--gold); }
   .sort-btn.active { color: var(--gold); }
   .sort-arrow { font-size: 9px; opacity: 0.7; }
@@ -1728,7 +1728,7 @@ const DEMO_TOUR_STEPS = [
   {
     id: "welcome",
     title: "Welcome to RuneTrader 📈",
-    desc: "The AI-powered Grand Exchange trading advisor for OSRS. In the next 60 seconds we'll show you everything — live market data, smart alerts, and Merchant Mode. Let's go.",
+    desc: "RuneTrader is your Grand Exchange command centre. In the next 60 seconds we'll show you everything — live market data, smart alerts, and Merchant Mode. Let's go.",
     target: null,
     placement: "center",
     tab: null,

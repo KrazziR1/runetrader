@@ -77,7 +77,7 @@ const STYLES = `
     display: inline-flex; align-items: center; gap: 8px;
     border: 1px solid var(--border); border-radius: 20px;
     padding: 6px 16px; margin-bottom: 40px;
-    font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
+    font-size: 15px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold);
     background: rgba(201,168,76,0.05);
     animation: fadeInDown 0.8s ease both;
   }
@@ -105,7 +105,7 @@ const STYLES = `
   }
   .btn-primary {
     padding: 16px 40px; border-radius: 4px; font-family: 'Cinzel', serif;
-    font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
     background: linear-gradient(135deg, var(--gold-dim), var(--gold));
     color: var(--bg); border: none; cursor: pointer; text-decoration: none;
     transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px;
@@ -114,7 +114,7 @@ const STYLES = `
   .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(201,168,76,0.35); }
   .btn-secondary {
     padding: 16px 40px; border-radius: 4px; font-family: 'Cinzel', serif;
-    font-size: 14px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 16px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
     background: transparent; color: var(--text-dim); border: 1px solid var(--border);
     cursor: pointer; text-decoration: none; transition: all 0.3s;
   }
@@ -127,12 +127,12 @@ const STYLES = `
   }
   .hero-stat { text-align: center; }
   .hero-stat-value { font-family: 'Cinzel', serif; font-size: 32px; font-weight: 700; color: var(--gold); }
-  .hero-stat-label { font-size: 13px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+  .hero-stat-label { font-size: 15px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
 
   /* FEATURES */
   .section { padding: 120px 48px; position: relative; }
   .section-label {
-    font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold);
+    font-size: 16px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
     margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
   }
   .section-label::before { content: ''; width: 32px; height: 1px; background: var(--gold); }
@@ -153,8 +153,8 @@ const STYLES = `
   .feature-card:hover::before { opacity: 1; }
   .feature-card:hover { border-color: rgba(201,168,76,0.4); transform: translateY(-2px); }
   .feature-icon { font-size: 32px; margin-bottom: 20px; display: block; }
-  .feature-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
-  .feature-desc { font-size: 16px; color: var(--text-dim); line-height: 1.7; font-style: italic; }
+  .feature-title { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+  .feature-desc { font-size: 17px; color: var(--text-dim); line-height: 1.7; font-style: italic; }
   .feature-tag {
     display: inline-block; margin-top: 16px; padding: 4px 10px; border-radius: 3px;
     font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
@@ -193,7 +193,7 @@ const STYLES = `
   .pricing-badge {
     position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
     background: var(--gold); color: var(--bg); font-family: 'Cinzel', serif;
-    font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
     padding: 4px 16px; border-radius: 20px;
   }
   .pricing-name { font-family: 'Cinzel', serif; font-size: 18px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); }
@@ -394,14 +394,12 @@ export default function LandingPage({ onEnterApp }) {
             Live Grand Exchange Data
           </div>
           <h1 className="hero-title">
-            <span className="gold">Flip Smarter.</span>
+            <span className="gold">Trade Smarter.</span>
             <br />
-            Stack More Gold.
-            <span className="dim">The AI-powered OSRS trading advisor</span>
+            Profit More.
           </h1>
           <p className="hero-sub">
-            RuneTrader analyses every tradeable item on the Grand Exchange in real time,
-            then tells you exactly what to flip — and why.
+            Real-time Grand Exchange data, smart alerts, and a built-in AI advisor — everything you need to flip smarter and grow your stack.
           </p>
           <div className="hero-actions">
             <a href="/#" className="btn-primary" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp(); }}>
