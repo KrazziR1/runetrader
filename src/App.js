@@ -1624,20 +1624,6 @@ const WELCOME_MSG = {
 
 // ─── DEMO DATA ───────────────────────────────────────────────────────────────
 
-const DEMO_ITEMS = [
-  { id: 4151,  name: "Abyssal whip",       low: 1820000,  high: 1846000,  margin: 18040,  roi: 0.99, volume: 3200,   buyLimit: 8,     score: 72, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 45,  category: "Weapons" },
-  { id: 11832, name: "Bandos chestplate",  low: 18200000, high: 18460000, margin: 52000,  roi: 0.29, volume: 420,    buyLimit: 8,     score: 58, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 180, category: "Armour"  },
-  { id: 2363,  name: "Law rune",           low: 180,      high: 182,      margin: 1,      roi: 0.55, volume: 820000, buyLimit: 18000, score: 61, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 12,  category: "Runes"   },
-  { id: 385,   name: "Shark",              low: 820,      high: 833,      margin: 9,      roi: 1.10, volume: 180000, buyLimit: 10000, score: 65, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 90,  category: "Food"    },
-  { id: 2995,  name: "Dragon bones",       low: 2340,     high: 2380,     margin: 28,     roi: 1.20, volume: 90000,  buyLimit: 3000,  score: 63, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 60,  category: "Bones"   },
-  { id: 11212, name: "Rune arrow",         low: 72,       high: 75,       margin: 2,      roi: 2.77, volume: 240000, buyLimit: 11000, score: 60, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 30,  category: "Ammo"    },
-  { id: 12006, name: "Saradomin godsword", low: 20400000, high: 20800000, margin: 196000, roi: 0.96, volume: 180,    buyLimit: 8,     score: 54, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 600, category: "Weapons" },
-  { id: 3140,  name: "Mystic robe top",    low: 38500,    high: 39200,    margin: 490,    roi: 1.27, volume: 2100,   buyLimit: 8,     score: 67, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 240, category: "Armour"  },
-  { id: 1515,  name: "Magic logs",         low: 970,      high: 984,      margin: 9,      roi: 0.92, volume: 62000,  buyLimit: 10000, score: 59, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 150, category: "Logs"    },
-  { id: 4587,  name: "Dragon scimitar",    low: 58000,    high: 59200,    margin: 840,    roi: 1.44, volume: 8400,   buyLimit: 100,   score: 64, hasPrice: true,  lastTradeTime: Math.floor(Date.now()/1000) - 120, category: "Weapons" },
-];
-const DEMO_WATCHLIST_IDS = [4151, 385, 11832];
-
 // Fake live ops (ge_flips_live rows)
 const DEMO_LIVE_OPS = [
   { id: "dop1", item_name: "Abyssal whip",      slot: 0, status: "HOLDING",  buy_price: 1_810_000, quantity: 2,   buy_started_at: new Date(Date.now() - 2.1*3600000).toISOString(), profit: null, roi: null },
@@ -5597,8 +5583,8 @@ RULES:
             {activeTab === "watchlist" && (
               <WatchlistPage
                 user={user}
-                items={demoMode ? DEMO_ITEMS : items}
-                watchlist={demoMode ? DEMO_WATCHLIST_IDS : watchlist}
+                items={items}
+                watchlist={watchlist}
                 watchlistAlerts={watchlistAlerts}
                 toggleWatchlist={toggleWatchlist}
                 setWatchlistAlert={setWatchlistAlert}
