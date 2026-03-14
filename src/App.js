@@ -22,7 +22,7 @@ const CHANGELOG = [
       { type: "new", text: "High Alch Tracker â€” find profitable alch items with live nature rune pricing" },
       { type: "new", text: "Death's Coffer tool â€” find cheapest items to sacrifice, with potential savings calculator" },
       { type: "new", text: "Portfolio page rebuilt â€” period stats, win rate donut, per-item P&L, best/worst items" },
-      { type: "new", text: "Soft gates â€” Merchant Mode features now shown with upgrade prompts for free users" },
+      { type: "new", text: "Soft gates â€” Trading Terminal features now shown with upgrade prompts for free users" },
       { type: "new", text: "Shareable item URLs â€” share runetrader.gg/item/abyssal-whip to open any item chart" },
       { type: "improved", text: "Alert feed items now clickable to open price chart" },
       { type: "improved", text: "Market sub-tabs â€” Flips, High Alch, Death's Coffer now in one place" },
@@ -55,19 +55,35 @@ const STYLES = `
   .app { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 
   /* HEADER */
-  .header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 64px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; gap: 8px; }
+  .header { display: flex; flex-direction: column; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 56px; gap: 8px; }
+  .header-bottom { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 38px; border-top: 1px solid var(--border); }
   .logo { display: flex; align-items: center; gap: 10px; }
-  .logo-icon { width: 32px; height: 32px; }
-  .logo-text { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: 1px; }
-  .logo-dot { color: var(--text-dim); font-size: 14px; margin-left: 2px; }
-  .header-right { display: flex; align-items: center; gap: 16px; }
-  .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--green); }
-  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  .logo-icon { width: 28px; height: 28px; }
+  .logo-text { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); letter-spacing: 1px; }
+  .logo-dot { color: var(--text-dim); font-size: 13px; margin-left: 2px; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--green); }
+  .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  .nav-tabs { display: flex; gap: 2px; overflow-x: auto; flex-shrink: 1; min-width: 0; }
-  .nav-tab { padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.2s; white-space: nowrap; }
+  .nav-tabs { display: flex; gap: 2px; }
+  .nav-tab { padding: 4px 10px; border-radius: 5px; border: none; cursor: pointer; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.15s; white-space: nowrap; }
   .nav-tab:hover { color: var(--text); background: var(--bg3); }
   .nav-tab.active { background: var(--bg3); color: var(--gold); border: 1px solid var(--border); }
+  .terminal-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; letter-spacing: 0.3px; white-space: nowrap; }
+  .level-btn { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); background: rgba(201,168,76,0.07); color: var(--gold); font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .level-btn:hover { background: rgba(201,168,76,0.14); border-color: var(--gold-dim); }
+  .profile-wrap { position: relative; }
+  .profile-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--text-dim); cursor: pointer; font-family: 'Cinzel', serif; transition: all 0.15s; }
+  .profile-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .profile-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; min-width: 180px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 200; }
+  .profile-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 12px; color: var(--text-dim); cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.1s; border: none; background: none; width: 100%; text-align: left; }
+  .profile-dropdown-item:hover { background: var(--bg3); color: var(--text); }
+  .profile-dropdown-item.danger:hover { color: var(--red); }
+
+  /* PLAYER CARD PANEL */
+  @keyframes playerCardIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+  .player-card-panel { position: fixed; top: 0; right: 0; bottom: 0; width: 380px; background: var(--bg2); border-left: 1px solid var(--border); z-index: 550; display: flex; flex-direction: column; animation: playerCardIn 0.25s ease; overflow-y: auto; }
 
   /* LAYOUT */
   .app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -1170,7 +1186,7 @@ const TOUR_STEPS = [
 
 const MERCHANT_TOUR_STEPS = [
   // â”€â”€ Operations tab â”€â”€
-  { title: "Welcome to Merchant Mode 📈", desc: "Your war room for managing multiple GE positions at once. Four tabs cover everything: Operations, Analytics, Alerts, and Market. Let's walk through each one.", target: null, placement: "center", view: "operations" },
+  { title: "Welcome to Trading Terminal 📈", desc: "Your war room for managing multiple GE positions at once. Four tabs cover everything: Operations, Analytics, Alerts, and Market. Let's walk through each one.", target: null, placement: "center", view: "operations" },
   { title: "Capital Overview", desc: "Tracks your full GP stack at a glance. Deployed = GP locked in open positions. Idle = unused GP ready to put to work. Realised = profit closed today. Click 'Update' any time to adjust your stack.", target: ".capital-bar", placement: "bottom", view: "operations" },
   { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips. Dot colours show each position's status: 🟡 Buying · 🟢 Holding · 🔵 Selling · 🔴 Danger. Click any slot to view that item's price chart.", target: ".slots-grid", placement: "bottom", view: "operations" },
   { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Use the status dropdown to mark each flip: Buying → Holding → Selling. Hit ⚙ on any row to set Autopilot rules â€” margin floor, hold time limit, or price drop alert â€” personalised per position. Rules are stored on this device.", target: "#active-operations-section", placement: "top", view: "operations" },
@@ -1856,7 +1872,7 @@ const DEMO_TOUR_STEPS = [
   },
   {
     id: "merchant-intro",
-    title: "Meet Merchant Mode 📈",
+    title: "Meet Trading Terminal 📈",
     desc: "RuneTrader's flagship feature â€” a self-contained trading terminal. Manage all your GE slots, track live P&L, get rotation picks, set autopilot rules, and monitor risk exposure. All in one place.",
     target: null,
     placement: "center",
@@ -4021,7 +4037,7 @@ export default function RuneTrader() {
       const upgradeUrl = new URL(window.location.href);
       upgradeUrl.searchParams.delete("upgrade");
       window.history.replaceState({}, "", upgradeUrl.toString());
-      setTimeout(() => showToast("Welcome to Pro! 📈 Merchant Mode is now unlocked.", "success", 5000), 500);
+      setTimeout(() => showToast("Welcome to Pro! 📈 Trading Terminal is now unlocked.", "success", 5000), 500);
     }
     // Detect /item/:slug â€” e.g. runetrader.gg/item/abyssal-whip
     const match = window.location.pathname.match(/^\/item\/(.+)$/);
@@ -4352,7 +4368,7 @@ export default function RuneTrader() {
     setMerchantLoading(false);
     activateMerchantWithAnim(() => {
       setMerchantMode(true);
-      showToast("Merchant Mode activated!", "success");
+      showToast("Trading Terminal activated!", "success");
     });
     const tourKey = `runetrader_merchant_tour_seen_${user.id}`;
     if (!localStorage.getItem(tourKey)) {
@@ -4487,6 +4503,8 @@ export default function RuneTrader() {
   const [showCelebration, setShowCelebration] = useState(null); // getCelebrationTier result + profit
   const [newAchievements, setNewAchievements] = useState([]); // queue of newly unlocked
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showPlayerCard, setShowPlayerCard] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // ── Quest system ─────────────────────────────────────────────────────────────
   const [dailyQuests, setDailyQuests] = useState([]);
@@ -5662,7 +5680,7 @@ RULES:
       {showCapitalSetup && (
         <div className="capital-setup" onClick={e => e.target === e.currentTarget && setShowCapitalSetup(false)}>
           <div className="capital-setup-inner">
-            <div className="capital-setup-title">📈 Activate Merchant Mode</div>
+            <div className="capital-setup-title">📈 Activate Trading Terminal</div>
             <div className="capital-setup-sub">Enter your total GP stack. This helps track capital efficiency, idle GP, and expected returns. You can update it any time.</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               <label style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Capital (GP)</label>
@@ -5676,7 +5694,7 @@ RULES:
             </div>
             <button className="capital-setup-btn" disabled={!merchantCapitalInput || merchantLoading}
               onClick={() => saveMerchantCapital(merchantCapitalInput)}>
-              {merchantLoading ? "Activating..." : "Activate Merchant Mode →"}
+              {merchantLoading ? "Activating..." : "Activate Trading Terminal →"}
             </button>
           </div>
         </div>
@@ -5689,7 +5707,7 @@ RULES:
 
       {/* MERCHANT SHUTDOWN ANIMATION */}
       <div className={`merchant-shutdown-overlay${showMerchantShutdown === 'fading' ? ' merchant-shutdown-exit' : ''}`} style={{ display: showMerchantShutdown && showMerchantShutdown !== 'done' ? 'flex' : 'none' }}>
-          <div className="merchant-shutdown-title">Merchant Mode</div>
+          <div className="merchant-shutdown-title">Trading Terminal</div>
           <div className="merchant-shutdown-sub">Closing trading terminal</div>
           <div className="merchant-shutdown-bars">
             {[1,1.6,0.7,1.3,0.5,1.8,1,0.9,1.5,0.6].map((h,i) => (
@@ -5703,7 +5721,7 @@ RULES:
       <div className={`merchant-anim-overlay${showMerchantAnim === 'fading' ? ' merchant-anim-exit' : ''}`} style={{ display: showMerchantAnim && showMerchantAnim !== 'done' ? 'flex' : 'none' }}>
           <div className="merchant-anim-scan" />
           <div className="merchant-anim-logo">RuneTrader.gg</div>
-          <div className="merchant-anim-title">Merchant Mode</div>
+          <div className="merchant-anim-title">Trading Terminal</div>
           <div className="merchant-anim-subtitle">Initialising trading terminal</div>
           <div className="merchant-anim-bars">
             {[1,1.6,0.7,1.3,0.5,1.8,1,0.9,1.5,0.6].map((h,i) => (
@@ -5834,9 +5852,9 @@ RULES:
         <div className="upgrade-overlay" onClick={() => setUpgradeModal(null)}>
           <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
             <div className="upgrade-icon">📈</div>
-            <div className="upgrade-title">Merchant Mode</div>
+            <div className="upgrade-title">Trading Terminal</div>
             <div className="upgrade-desc">
-              <strong style={{ color: "var(--text)" }}>{upgradeModal.feature}</strong> is a Merchant Mode feature.
+              <strong style={{ color: "var(--text)" }}>{upgradeModal.feature}</strong> is a Trading Terminal feature.
               {upgradeModal.description && <><br /><br />{upgradeModal.description}</>}
             </div>
             {upgradeModal.bullets && (
@@ -6310,6 +6328,126 @@ RULES:
           ))}
         </div>
 
+        {/* ── PLAYER CARD PANEL ── */}
+        {showPlayerCard && user && (
+          <>
+            <div style={{ position: "fixed", inset: 0, zIndex: 549, background: "rgba(0,0,0,0.4)" }} onClick={() => setShowPlayerCard(false)} />
+            <div className="player-card-panel">
+              {/* Header */}
+              <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid var(--border)", flexShrink: 0, background: "linear-gradient(135deg, rgba(201,168,76,0.06), transparent)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: "16px", fontWeight: 700, color: "var(--gold)" }}>Player Card</div>
+                  <button onClick={() => setShowPlayerCard(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "18px" }}>✕</button>
+                </div>
+                {/* Avatar + name + title */}
+                <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                  <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "#000", flexShrink: 0 }}>
+                    {(user.user_metadata?.username || user.email?.split("@")[0] || "?")[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>{user.user_metadata?.username || user.email?.split("@")[0]}</div>
+                    {(() => {
+                      const level = xpToLevel(totalXP);
+                      const { title, emoji, color } = getLevelTitle(level);
+                      return <div style={{ fontSize: "12px", color, marginTop: "2px" }}>{emoji} {title}</div>;
+                    })()}
+                    {loginStreak >= 2 && <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>🔥 {loginStreak}-day streak</div>}
+                  </div>
+                </div>
+                {/* XP bar */}
+                {(() => {
+                  const level = xpToLevel(totalXP);
+                  const progress = xpProgress(totalXP);
+                  const toNext = xpToNextLevel(totalXP);
+                  const { color } = getLevelTitle(level);
+                  return (
+                    <div style={{ marginTop: "14px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--text-dim)", marginBottom: "5px" }}>
+                        <span>Level {level}</span>
+                        <span>{level < 99 ? `${toNext.toLocaleString()} XP to ${level + 1}` : "MAX"}</span>
+                      </div>
+                      <div style={{ background: "var(--bg4)", borderRadius: "4px", height: "8px", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${progress * 100}%`, background: `linear-gradient(90deg, ${color}88, ${color})`, borderRadius: "4px", transition: "width 0.6s ease" }} />
+                      </div>
+                      <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "4px" }}>{totalXP.toLocaleString()} total XP</div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Stats */}
+              <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+                {[
+                  { label: "Total Profit", value: formatGP(flipsLog.filter(f => f.status !== "open").reduce((s, f) => s + (f.totalProfit || 0), 0)) },
+                  { label: "Flips", value: flipsLog.filter(f => f.status !== "open").length },
+                  { label: "Achievements", value: `${unlockedAchievements.length}/${ACHIEVEMENTS.length}` },
+                ].map((s, i) => (
+                  <div key={i} style={{ background: "var(--bg3)", borderRadius: "8px", padding: "10px", textAlign: "center" }}>
+                    <div style={{ fontSize: "10px", color: "var(--text-dim)", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{s.label}</div>
+                    <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--gold)", fontFamily: "'Cinzel', serif" }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Daily quests */}
+              {questsLoaded && dailyQuests.length > 0 && (
+                <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)" }}>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>
+                    Today's Quests · 🪙 {goldCoins.toLocaleString()} coins
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    {dailyQuests.map(q => {
+                      const pct = q.target > 1 ? Math.min(100, Math.round((q.progress / q.target) * 100)) : (q.completed ? 100 : 0);
+                      const diffColor = q.difficulty === "easy" ? "var(--green)" : q.difficulty === "medium" ? "var(--gold)" : "var(--red)";
+                      return (
+                        <div key={q.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", background: "var(--bg3)", borderRadius: "8px", border: q.completed ? "1px solid rgba(46,204,113,0.2)" : "1px solid var(--border)" }}>
+                          <span style={{ fontSize: "16px" }}>{q.completed ? "✅" : q.emoji}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: "12px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</div>
+                            {q.target > 1 && !q.completed && (
+                              <div style={{ marginTop: "4px", background: "var(--bg4)", borderRadius: "3px", height: "3px", overflow: "hidden" }}>
+                                <div style={{ height: "100%", width: `${pct}%`, background: diffColor, borderRadius: "3px", transition: "width 0.4s" }} />
+                              </div>
+                            )}
+                          </div>
+                          <span style={{ fontSize: "10px", color: diffColor, fontWeight: 700, textTransform: "uppercase", flexShrink: 0 }}>{q.difficulty}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Achievements */}
+              <div style={{ padding: "14px 20px", flex: 1 }}>
+                <div style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>Achievements</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  {ACHIEVEMENTS.map(a => {
+                    const unlocked = unlockedAchievements.includes(a.id);
+                    return (
+                      <div key={a.id} style={{ background: "var(--bg3)", border: `1px solid ${unlocked ? "var(--gold-dim)" : "var(--border)"}`, borderRadius: "8px", padding: "10px", display: "flex", flexDirection: "column", gap: "4px", opacity: unlocked ? 1 : 0.4, filter: unlocked ? "none" : "grayscale(1)", transition: "all 0.2s" }}>
+                        <span style={{ fontSize: "20px" }}>{a.emoji}</span>
+                        <div style={{ fontSize: "11px", fontWeight: 700, color: unlocked ? "var(--gold)" : "var(--text-dim)" }}>{a.name}</div>
+                        <div style={{ fontSize: "10px", color: "var(--text-dim)", lineHeight: 1.4 }}>{a.desc}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Portfolio link */}
+              <div style={{ padding: "14px 20px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
+                <button onClick={() => { setShowPlayerCard(false); setActiveTab("portfolio"); }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg3)", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                  onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
+                  onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}>
+                  📊 View Full Portfolio →
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
         {/* ── QUEST PANEL ── */}
         {showQuestPanel && user && (
           <div className="quest-panel">
@@ -6451,138 +6589,135 @@ RULES:
 
         {/* HEADER */}
         <header className="header">
-          <div className="logo">
-            <svg className="logo-icon" viewBox="0 0 120 120" fill="none">
-              <defs>
-                <linearGradient id="logo_bg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#080c1c"/>
-                  <stop offset="55%" stopColor="#050810"/>
-                  <stop offset="100%" stopColor="#020308"/>
-                </linearGradient>
-                <linearGradient id="logo_ring" x1="10" y1="10" x2="110" y2="110" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#f0d898"/>
-                  <stop offset="50%" stopColor="#c8a96e"/>
-                  <stop offset="100%" stopColor="#8a6030"/>
-                </linearGradient>
-                <linearGradient id="logo_arrow" x1="28" y1="80" x2="84" y2="36" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#c8a96e"/>
-                  <stop offset="55%" stopColor="#e8d898"/>
-                  <stop offset="100%" stopColor="#60b8ff"/>
-                </linearGradient>
-                <radialGradient id="logo_tipglow" cx="80" cy="43" r="26" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#60b8ff55"/>
-                  <stop offset="100%" stopColor="transparent"/>
-                </radialGradient>
-              </defs>
-              <rect width="120" height="120" rx="26" fill="url(#logo_bg)"/>
-              <circle cx="60" cy="60" r="40" stroke="url(#logo_ring)" strokeWidth="2.5"/>
-              <circle cx="60" cy="60" r="33" stroke="#c8a96e" strokeWidth="0.75" opacity="0.15"/>
-              <line x1="60" y1="17" x2="60" y2="24" stroke="#f0d898" strokeWidth="2.5" strokeLinecap="round"/>
-              <line x1="98" y1="60" x2="103" y2="60" stroke="#c8a96e" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
-              <line x1="17" y1="60" x2="22" y2="60" stroke="#c8a96e" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
-              <line x1="60" y1="97" x2="60" y2="103" stroke="#c8a96e" strokeWidth="1.5" strokeLinecap="round" opacity="0.35"/>
-              <ellipse cx="80" cy="43" rx="22" ry="18" fill="url(#logo_tipglow)"/>
-              <path d="M32 78 L45 63 L55 71 L80 43" stroke="url(#logo_arrow)" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M73 40 L80 43 L77 51" stroke="#a0d8ff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <circle cx="80" cy="43" r="5.5" fill="#80ccff" opacity="0.98"/>
-              <circle cx="80" cy="43" r="9.5" fill="#4da6ff" opacity="0.28"/>
-            </svg>
-            <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
-          </div>
-          <div className="nav-tabs">
-            {!merchantMode && [["market","GE Tracker"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"],["referral","Refer & Earn 🔗"]] : [])].map(([t,label]) => (
-              <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)}>
-                {label}
-                {t === "tracker" && (openFlips.length + (autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length)) > 0 && (
-                  <span style={{ marginLeft: "6px", background: "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
-                    {openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length}
-                  </span>
-                )}
-                {t === "alerts" && (alerts.filter(a => a.triggered).length + smartEvents.length) > 0 && (
-                  <span style={{ marginLeft: "6px", background: "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
-                    {alerts.filter(a => a.triggered).length + smartEvents.length}
-                  </span>
-                )}
-                {t === "watchlist" && watchlist.length > 0 && (
-                  <span style={{ marginLeft: "6px", background: "var(--bg4)", color: "var(--text-dim)", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700, border: "1px solid var(--border)" }}>
-                    {watchlist.length}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
+          {/* ── TOP ROW ── */}
+          <div className="header-top">
+            <div className="logo">
+              <svg className="logo-icon" viewBox="0 0 120 120" fill="none">
+                <defs>
+                  <linearGradient id="logo_bg" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#080c1c"/><stop offset="55%" stopColor="#050810"/><stop offset="100%" stopColor="#020308"/></linearGradient>
+                  <linearGradient id="logo_ring" x1="10" y1="10" x2="110" y2="110" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#f0d898"/><stop offset="50%" stopColor="#c8a96e"/><stop offset="100%" stopColor="#8a6030"/></linearGradient>
+                  <linearGradient id="logo_arrow" x1="28" y1="80" x2="84" y2="36" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#c8a96e"/><stop offset="55%" stopColor="#e8d898"/><stop offset="100%" stopColor="#60b8ff"/></linearGradient>
+                  <radialGradient id="logo_tipglow" cx="80" cy="43" r="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="#60b8ff55"/><stop offset="100%" stopColor="transparent"/></radialGradient>
+                </defs>
+                <rect width="120" height="120" rx="26" fill="url(#logo_bg)"/>
+                <circle cx="60" cy="60" r="40" stroke="url(#logo_ring)" strokeWidth="2.5"/>
+                <ellipse cx="80" cy="43" rx="22" ry="18" fill="url(#logo_tipglow)"/>
+                <path d="M32 78 L45 63 L55 71 L80 43" stroke="url(#logo_arrow)" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M73 40 L80 43 L77 51" stroke="#a0d8ff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="80" cy="43" r="5.5" fill="#80ccff" opacity="0.98"/>
+                <circle cx="80" cy="43" r="9.5" fill="#4da6ff" opacity="0.28"/>
+              </svg>
+              <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
+            </div>
 
-          <div className="header-right">
-            <button onClick={() => setActiveTab("pricing")} style={{ padding: "5px 12px", borderRadius: "6px", border: "1px solid rgba(201,168,76,0.4)", background: activeTab === "pricing" ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}>
-              {isPro ? "✓ Pro" : "Pro ✨"}
-            </button>
-            <button onClick={() => setActiveTab("changelog")} style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid transparent", background: "transparent", color: activeTab === "changelog" ? "var(--gold)" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}>
-              What's New 🆕
-            </button>
-            {lastUpdate && <div className="live-badge"><div className="live-dot" />Live · {formatTime(lastUpdate)}</div>}
-            {user && merchantMode && (
-              <button onClick={startMerchantTour}
-                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 14px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.2s", letterSpacing: "0.3px" }}
-                onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; e.currentTarget.style.background = "rgba(201,168,76,0.06)"; }}
-                onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.background = "transparent"; }}>
-                <span style={{ fontSize: "13px" }}>📖</span> Tutorial
-              </button>
-            )}
-            {user && (
-              <button onClick={toggleMerchantMode}
-                style={{ display: "flex", alignItems: "center", gap: "7px", padding: "7px 16px", borderRadius: "8px", border: `1px solid ${merchantMode ? "var(--gold)" : "var(--border)"}`, background: merchantMode ? "rgba(201,168,76,0.12)" : "transparent", color: merchantMode ? "var(--gold)" : "var(--text-dim)", fontSize: "12px", fontWeight: merchantMode ? "600" : "400", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.2s", letterSpacing: "0.3px" }}
-                onMouseOver={e => { if (!merchantMode) { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; e.currentTarget.style.background = "rgba(201,168,76,0.06)"; }}}
-                onMouseOut={e => { if (!merchantMode) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.background = "transparent"; }}}>
-                {merchantMode && <div className="merchant-dot" style={{ background: "var(--green)" }} />}
-                <span style={{ fontSize: "13px" }}>📈</span>
-                {merchantMode ? "Exit Merchant" : "Merchant Mode"}
-              </button>
-            )}
-            {user ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                {/* Sound mute toggle */}
-                <button
-                  onClick={() => { const m = toggleMute(); setSoundMuted(m); }}
+            <div className="header-right">
+              {/* Live badge */}
+              {lastUpdate && <div className="live-badge"><div className="live-dot" />Live · {formatTime(lastUpdate)}</div>}
+
+              {/* Trading Terminal button */}
+              {user && (
+                <button onClick={toggleMerchantMode} className="terminal-btn"
+                  style={{ border: `1px solid ${merchantMode ? "var(--gold)" : "rgba(201,168,76,0.4)"}`, background: merchantMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.07)", color: "var(--gold)" }}
+                  onMouseOver={e => { if (!merchantMode) e.currentTarget.style.background = "rgba(201,168,76,0.14)"; }}
+                  onMouseOut={e => { if (!merchantMode) e.currentTarget.style.background = "rgba(201,168,76,0.07)"; }}>
+                  {merchantMode && <div className="merchant-dot" style={{ background: "var(--green)" }} />}
+                  📈 {merchantMode ? "Exit Terminal" : "Trading Terminal"}
+                </button>
+              )}
+
+              {/* Sound toggle */}
+              {user && (
+                <button onClick={() => { const m = toggleMute(); setSoundMuted(m); }}
                   title={soundMuted ? "Sounds off" : "Sounds on"}
-                  style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "16px", padding: "4px", lineHeight: 1, opacity: soundMuted ? 0.4 : 0.8 }}
-                >{soundMuted ? "🔇" : "🔊"}</button>
-                {/* Quest button */}
-                {questsLoaded && (
-                  <button onClick={() => setShowQuestPanel(v => !v)}
-                    style={{ display: "flex", alignItems: "center", gap: "6px", padding: "5px 10px", borderRadius: "8px", border: `1px solid ${dailyQuests.every(q => q.completed) ? "var(--green-dim)" : "var(--gold-dim)"}`, background: dailyQuests.every(q => q.completed) ? "rgba(46,204,113,0.08)" : "rgba(201,168,76,0.08)", color: dailyQuests.every(q => q.completed) ? "var(--green)" : "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", position: "relative" }}>
-                    📋 Quests
-                    <span style={{ background: dailyQuests.filter(q => q.completed).length === dailyQuests.length ? "var(--green)" : "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 6px", fontSize: "10px", fontWeight: 700 }}>
-                      {dailyQuests.filter(q => q.completed).length}/{dailyQuests.length}
+                  style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "15px", padding: "4px", lineHeight: 1, opacity: soundMuted ? 0.35 : 0.7 }}>
+                  {soundMuted ? "🔇" : "🔊"}
+                </button>
+              )}
+
+              {/* Combined Level + Quests button */}
+              {user && (() => {
+                const level = xpToLevel(totalXP);
+                const { title, emoji } = getLevelTitle(level);
+                const doneQuests = dailyQuests.filter(q => q.completed).length;
+                const allDone = questsLoaded && doneQuests === dailyQuests.length && dailyQuests.length > 0;
+                return (
+                  <button className="level-btn"
+                    onClick={() => setShowPlayerCard(v => !v)}
+                    style={{ borderColor: allDone ? "var(--green-dim)" : "rgba(201,168,76,0.3)", background: allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.07)", color: allDone ? "var(--green)" : "var(--gold)" }}>
+                    {emoji} Lv.{level}
+                    <span style={{ color: "var(--text-dim)", fontSize: "10px" }}>·</span>
+                    <span>📋</span>
+                    <span style={{ background: allDone ? "var(--green)" : "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
+                      {questsLoaded ? `${doneQuests}/${dailyQuests.length}` : "…"}
                     </span>
                   </button>
-                )}
-                {/* XP Bar + Level Badge */}
-                {totalXP >= 0 && (() => {
-                  const level = xpToLevel(totalXP);
-                  const progress = xpProgress(totalXP);
-                  const toNext = xpToNextLevel(totalXP);
-                  const { title, emoji } = getLevelTitle(level);
-                  return (
-                    <div className="xp-bar-wrap" onClick={() => setShowAchievements(true)} title={`Level ${level} ${title} — ${toNext.toLocaleString()} XP to next level`}>
-                      <div className="xp-bar-label">
-                        <span className="xp-level-badge">{emoji} Lv.{level} {title}</span>
-                        <span style={{ fontSize: "10px", color: "var(--text-dim)", marginLeft: "6px" }}>{level < 99 ? `${toNext.toLocaleString()} XP` : "MAX"}</span>
+                );
+              })()}
+
+              {/* Profile button + dropdown */}
+              {user ? (
+                <div className="profile-wrap">
+                  <button className="profile-btn" onClick={() => setShowProfileMenu(v => !v)}>
+                    {(user.user_metadata?.username || user.email?.split("@")[0] || "?")[0].toUpperCase()}
+                  </button>
+                  {showProfileMenu && (
+                    <div className="profile-dropdown" onClick={() => setShowProfileMenu(false)}>
+                      <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid var(--border)" }}>
+                        <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}>{user.user_metadata?.username || user.email?.split("@")[0]}</div>
+                        <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>{isPro ? "✓ Pro member" : "Free plan"}</div>
                       </div>
-                      <div className="xp-bar-track">
-                        <div className="xp-bar-fill" style={{ width: `${progress * 100}%` }} />
-                      </div>
+                      <button className="profile-dropdown-item" onClick={() => { handleSetActiveTab("settings"); }}>⚙️ Settings</button>
+                      <button className="profile-dropdown-item" onClick={() => handleSetActiveTab("referral")}>🔗 Refer & Earn</button>
+                      <button className="profile-dropdown-item" onClick={() => setActiveTab("changelog")}>🆕 What's New</button>
+                      <button className="profile-dropdown-item" onClick={() => setActiveTab("pricing")}>✨ {isPro ? "Pro Plan" : "Upgrade to Pro"}</button>
+                      {user && merchantMode && (
+                        <button className="profile-dropdown-item" onClick={startMerchantTour}>📖 Terminal Tutorial</button>
+                      )}
+                      <div style={{ borderTop: "1px solid var(--border)", margin: "4px 0" }} />
+                      <button className="profile-dropdown-item danger" onClick={handleSignOut}>Sign Out</button>
                     </div>
-                  );
-                })()}
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{user.user_metadata?.username || user.email?.split("@")[0]}</span>
-                <button onClick={handleSignOut} style={{ padding: "6px 14px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
-                  onMouseOver={e => e.target.style.color = "var(--red)"} onMouseOut={e => e.target.style.color = "var(--text-dim)"}>Sign Out</button>
-              </div>
-            ) : (
-              <button onClick={() => setShowAuth(true)} style={{ padding: "7px 18px", borderRadius: "8px", border: "1px solid var(--gold-dim)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
-                onMouseOver={e => e.target.style.background = "rgba(201,168,76,0.15)"} onMouseOut={e => e.target.style.background = "rgba(201,168,76,0.08)"}>Log In</button>
-            )}
+                  )}
+                </div>
+              ) : (
+                <button onClick={() => setShowAuth(true)} style={{ padding: "7px 18px", borderRadius: "8px", border: "1px solid var(--gold-dim)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+                  onMouseOver={e => e.target.style.background = "rgba(201,168,76,0.15)"} onMouseOut={e => e.target.style.background = "rgba(201,168,76,0.08)"}>Log In</button>
+              )}
+            </div>
           </div>
+
+          {/* ── BOTTOM ROW — primary nav ── */}
+          {!merchantMode && (
+            <div className="header-bottom">
+              <div className="nav-tabs">
+                {[["market","GE Market"],["tracker","Tracker"],["watchlist","Watchlist"],["alerts","Alerts"]].map(([t, label]) => (
+                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)}>
+                    {label}
+                    {t === "tracker" && (openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length) > 0 && (
+                      <span style={{ marginLeft: "5px", background: "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
+                        {openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length}
+                      </span>
+                    )}
+                    {t === "alerts" && (alerts.filter(a => a.triggered).length + smartEvents.length) > 0 && (
+                      <span style={{ marginLeft: "5px", background: "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
+                        {alerts.filter(a => a.triggered).length + smartEvents.length}
+                      </span>
+                    )}
+                    {t === "watchlist" && watchlist.length > 0 && (
+                      <span style={{ marginLeft: "5px", background: "var(--bg4)", color: "var(--text-dim)", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700, border: "1px solid var(--border)" }}>
+                        {watchlist.length}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+              {/* Secondary nav — right side */}
+              <div className="nav-tabs">
+                {user && [["settings","Settings"],["referral","Refer & Earn"]].map(([t, label]) => (
+                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)} style={{ fontSize: "11px" }}>{label}</button>
+                ))}
+              </div>
+            </div>
+          )}
         </header>
 
         <div className="main">
@@ -7339,7 +7474,7 @@ RULES:
                   </button>
                   <button
                     className="refresh-btn"
-                    title={merchantMode ? "Export current view to CSV" : "Merchant Mode feature"}
+                    title={merchantMode ? "Export current view to CSV" : "Trading Terminal feature"}
                     onClick={() => {
                       if (!merchantMode) { setUpgradeModal({ feature: "CSV Export", description: "Export your filtered market view to a spreadsheet for offline analysis.", bullets: ["Export all 4,525 items or filtered view", "Includes margin, ROI, volume, GP/fill", "Works with Excel & Google Sheets"] }); return; }
                       const rows = filtered.slice(0, marketRowsShown);
@@ -7559,7 +7694,7 @@ RULES:
             <div className="demo-merchant-scan" />
             <div className="demo-merchant-grid" />
             <div className="demo-merchant-eyebrow">RuneTrader.gg â€” Flagship Feature</div>
-            <div className="demo-merchant-title">Merchant Mode</div>
+            <div className="demo-merchant-title">Trading Terminal</div>
             <div className="demo-merchant-sub">Initialising trading terminal</div>
             <div className="demo-merchant-bars">
               {[1,1.6,0.7,1.3,0.5,1.8,1,0.9,1.5,0.6,1.2,0.4,1.7,0.8].map((h,i) => (
