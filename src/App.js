@@ -2762,7 +2762,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               <span className="filter-label">Filter:</span>
               {["all", "f2p", "members", "highvol", "favourites"].map(f => (
                 <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `🔖 Watchlist${watchlist.length > 0 ? ` (${watchlist.length})` : ""}`}
+                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `🔖 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                 </button>
               ))}
               <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
@@ -5943,7 +5943,7 @@ RULES:
                   <span className="filter-label">Filter:</span>
                   {["all", "f2p", "members", "highvol", "favourites"].map(f => (
                     <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `🔖 Watchlist${watchlist.length > 0 ? ` (${watchlist.length})` : ""}`}
+                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `🔖 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                     </button>
                   ))}
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
