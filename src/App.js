@@ -44,7 +44,7 @@ const STYLES = `
     --border: #2a3340; --text: #e8e8e8; --text-dim: #7a8a9a;
     --green: #2ecc71; --green-dim: #1a7a44; --red: #e74c3c; --red-dim: #7a1f1a; --blue: #3498db;
   }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; }
   .app { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 
   /* HEADER */
@@ -58,7 +58,7 @@ const STYLES = `
   .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
   .nav-tabs { display: flex; gap: 4px; }
-  .nav-tab { padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.2s; }
+  .nav-tab { padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.2s; }
   .nav-tab:hover { color: var(--text); background: var(--bg3); }
   .nav-tab.active { background: var(--bg3); color: var(--gold); border: 1px solid var(--border); }
 
@@ -135,10 +135,10 @@ const STYLES = `
   .flip-row:hover { background: var(--bg4); }
   .item-icon { width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; image-rendering: pixelated; }
   .item-icon-placeholder { width: 24px; height: 24px; flex-shrink: 0; }
-  .item-name { font-weight: 500; font-size: 13px; color: var(--text); }
+  .item-name { font-weight: 500; font-size: 14px; color: var(--text); }
   .item-category { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
-  .price { font-size: 13px; color: var(--text); }
-  .margin { font-size: 13px; font-weight: 600; color: var(--green); }
+  .price { font-size: 14px; color: var(--text); }
+  .margin { font-size: 14px; font-weight: 600; color: var(--green); }
   .margin.neg { color: var(--red); }
   .roi { font-size: 12px; color: var(--text-dim); }
   .score-badge { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 24px; border-radius: 6px; font-size: 12px; font-weight: 700; }
@@ -652,17 +652,17 @@ const STYLES = `
   .demo-tour-tooltip {
     position: fixed; z-index: 8002;
     background: var(--bg2); border: 1px solid var(--gold-dim);
-    border-radius: 14px; padding: 24px 26px; width: 340px;
-    box-shadow: 0 12px 48px rgba(0,0,0,0.7);
-    display: flex; flex-direction: column; gap: 14px;
+    border-radius: 14px; padding: 28px 30px; width: 400px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.8), 0 0 0 1px rgba(201,168,76,0.1);
+    display: flex; flex-direction: column; gap: 16px;
   }
   .demo-tour-tooltip.center {
     top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 420px;
+    width: 480px;
   }
-  .demo-tour-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dim); font-family: Cinzel, serif; }
-  .demo-tour-title { font-family: Cinzel, serif; font-size: 16px; font-weight: 700; color: var(--gold); line-height: 1.3; }
-  .demo-tour-desc { font-size: 13px; color: var(--text-dim); line-height: 1.65; }
+  .demo-tour-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dim); font-family: Cinzel, serif; }
+  .demo-tour-title { font-family: Cinzel, serif; font-size: 19px; font-weight: 700; color: var(--gold); line-height: 1.3; }
+  .demo-tour-desc { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
   .demo-tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; border-top: 1px solid var(--border); }
   .demo-tour-dots { display: flex; gap: 5px; align-items: center; }
   .demo-tour-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
@@ -678,6 +678,66 @@ const STYLES = `
   .demo-tour-end-cta:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(201,168,76,0.5); }
   .demo-tour-end-dismiss { background: none; border: none; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: Inter, sans-serif; padding: 0; transition: color 0.15s; text-decoration: underline; }
   .demo-tour-end-dismiss:hover { color: var(--text); }
+
+  /* DEMO MERCHANT INTRO OVERLAY */
+  .demo-merchant-intro {
+    position: fixed; inset: 0; z-index: 9000;
+    background: #000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0; overflow: hidden;
+  }
+  .demo-merchant-scan {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+    animation: demoScanLine 2.5s ease-in-out forwards;
+    box-shadow: 0 0 30px var(--gold), 0 0 80px rgba(201,168,76,0.4);
+  }
+  @keyframes demoScanLine { 0%{top:0;opacity:0} 5%{opacity:1} 95%{opacity:1} 100%{top:100%;opacity:0} }
+  .demo-merchant-grid {
+    position: absolute; inset: 0; opacity: 0;
+    background-image: linear-gradient(rgba(201,168,76,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    animation: demoGridFade 0.8s ease 0.3s both;
+  }
+  @keyframes demoGridFade { from{opacity:0} to{opacity:1} }
+  .demo-merchant-eyebrow {
+    font-size: 11px; letter-spacing: 6px; color: var(--gold-dim);
+    text-transform: uppercase; font-family: Cinzel, serif; font-weight: 600;
+    animation: fadeInUp 0.6s ease 0.5s both;
+    position: relative; z-index: 1;
+    margin-bottom: 16px;
+  }
+  .demo-merchant-title {
+    font-size: clamp(48px, 8vw, 96px); font-weight: 900; letter-spacing: 4px;
+    color: var(--gold); text-transform: uppercase; font-family: Inter, sans-serif;
+    text-shadow: 0 0 60px rgba(201,168,76,0.5), 0 0 120px rgba(201,168,76,0.2);
+    animation: fadeInUp 0.7s ease 0.9s both;
+    position: relative; z-index: 1;
+    line-height: 1;
+  }
+  .demo-merchant-sub {
+    font-size: 15px; letter-spacing: 8px; color: var(--text-dim);
+    text-transform: uppercase; animation: fadeInUp 0.6s ease 1.3s both;
+    position: relative; z-index: 1;
+    margin-top: 12px;
+  }
+  .demo-merchant-bars {
+    display: flex; gap: 6px; align-items: flex-end; height: 48px;
+    animation: fadeInUp 0.6s ease 1.6s both;
+    position: relative; z-index: 1; margin-top: 32px;
+  }
+  .demo-merchant-bar {
+    width: 4px; background: var(--gold); border-radius: 2px;
+    animation: demoBarPulse 0.8s ease-in-out infinite alternate;
+  }
+  @keyframes demoBarPulse { from{opacity:0.2;transform:scaleY(0.3)} to{opacity:1;transform:scaleY(1)} }
+  .demo-merchant-status {
+    font-size: 13px; letter-spacing: 5px; color: var(--green);
+    text-transform: uppercase; animation: fadeInUp 0.5s ease 2.2s both;
+    position: relative; z-index: 1; margin-top: 20px;
+  }
+  .demo-merchant-intro-exit { animation: demoIntroOut 0.6s ease forwards; }
+  @keyframes demoIntroOut { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(1.04);pointer-events:none} }
 
   /* PORTFOLIO */
   .portfolio-wrap { display: flex; flex-direction: column; gap: 20px; }
@@ -1682,7 +1742,7 @@ const DEMO_TOUR_STEPS = [
     title: "4,525 Items Tracked Live",
     desc: "Every tradeable item on the Grand Exchange, updated in real time via the OSRS Wiki API. Sorted by volume so the best opportunities surface first. Click any row to see a full price history chart.",
     target: ".flips-table",
-    placement: "top",
+    placement: "center",
     tab: "market",
     merchantView: null,
   },
@@ -1691,7 +1751,7 @@ const DEMO_TOUR_STEPS = [
     title: "24-Hour Trend Sparklines",
     desc: "Every item has a live 24hr margin trend chart. Green means the spread is widening — more profit per flip. Red means it's compressing. Spot momentum at a glance without opening the chart modal.",
     target: ".flips-table",
-    placement: "top",
+    placement: "center",
     tab: "market",
     merchantView: null,
   },
@@ -4234,6 +4294,7 @@ export default function RuneTrader() {
   const [demoTourStep, setDemoTourStep] = useState(-1); // -1 = inactive, -2 = end screen
   const [demoTourRect, setDemoTourRect] = useState(null);
   const [demoTourReady, setDemoTourReady] = useState(false);
+  const [demoMerchantIntro, setDemoMerchantIntro] = useState(false); // dramatic MM intro overlay
 
   // ── Watchlist (replaces Favourites) ──
   const [watchlist, setWatchlist] = useState(() => {
@@ -4457,16 +4518,22 @@ export default function RuneTrader() {
 
     // Activate merchant mode if needed
     if (step.activateMerchant) {
-      setMerchantCapital(DEMO_CAPITAL);
-      setMerchantMode(true);
-      setMerchantView("operations");
-      setAutoFlipsLog(DEMO_AUTO_FLIPS);
-      setPnlHistory(DEMO_PNL_HISTORY);
-      setMerchantPositions(DEMO_LIVE_OPS.map(op => ({
-        id: op.id, item_name: op.item_name, buy_price: op.buy_price,
-        quantity: op.quantity, status: op.status,
-        buy_started_at: op.buy_started_at,
-      })));
+      // Show dramatic intro overlay first, then activate
+      setDemoMerchantIntro(true);
+      setTimeout(() => {
+        setMerchantCapital(DEMO_CAPITAL);
+        setMerchantMode(true);
+        setMerchantView("operations");
+        setAutoFlipsLog(DEMO_AUTO_FLIPS);
+        setPnlHistory(DEMO_PNL_HISTORY);
+        setMerchantPositions(DEMO_LIVE_OPS.map(op => ({
+          id: op.id, item_name: op.item_name, buy_price: op.buy_price,
+          quantity: op.quantity, status: op.status,
+          buy_started_at: op.buy_started_at,
+        })));
+      }, 2600); // activate behind the overlay
+      setTimeout(() => setDemoMerchantIntro("fading"), 3000);
+      setTimeout(() => setDemoMerchantIntro(false), 3700);
     }
 
     // Set merchant sub-view
@@ -6416,14 +6483,31 @@ RULES:
           )}
         </div>
 
+        {/* ── DEMO MERCHANT INTRO OVERLAY ── */}
+        {demoMerchantIntro && (
+          <div className={`demo-merchant-intro${demoMerchantIntro === "fading" ? " demo-merchant-intro-exit" : ""}`}>
+            <div className="demo-merchant-scan" />
+            <div className="demo-merchant-grid" />
+            <div className="demo-merchant-eyebrow">RuneTrader.gg — Flagship Feature</div>
+            <div className="demo-merchant-title">Merchant Mode</div>
+            <div className="demo-merchant-sub">Initialising trading terminal</div>
+            <div className="demo-merchant-bars">
+              {[1,1.6,0.7,1.3,0.5,1.8,1,0.9,1.5,0.6,1.2,0.4,1.7,0.8].map((h,i) => (
+                <div key={i} className="demo-merchant-bar" style={{ height: `${h * 28}px`, animationDelay: `${1.6 + i * 0.06}s` }} />
+              ))}
+            </div>
+            <div className="demo-merchant-status">● System Ready</div>
+          </div>
+        )}
+
         {/* ── DEMO TOUR ── */}
         {demoMode && demoTourReady && demoTourStep >= 0 && (() => {
           const step = DEMO_TOUR_STEPS[demoTourStep];
           const isCenter = step.placement === "center" || !step.target || !demoTourRect;
           const hl = demoTourRect || {};
           const PAD = 10;
-          const TW = 340; // tooltip width
-          const TH = 260; // tooltip approx height
+          const TW = 400; // tooltip width
+          const TH = 280; // tooltip approx height
           const VW = window.innerWidth;
           const VH = window.innerHeight;
 
