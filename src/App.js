@@ -8,7 +8,6 @@ import TradeBoard from "./TradeBoard";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 import RecommendedFlips from "./RecommendedFlips";
-import ScoreTab from "./ScoreTab";
 
 // ── Changelog — add new entries at the top, bump DEPLOY_KEY on each deploy ──
 const DEPLOY_KEY = "runetrader_seen_deploy_v1"; // change this string on each deploy to trigger the modal
@@ -6038,7 +6037,7 @@ RULES:
 
                 {/* Market sub-tabs row */}
                 <div style={{ display: "flex", gap: "4px", paddingBottom: "4px" }}>
-                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"],["tradeboard","🤝 Trade Board"],["picks","⭐ Picks"],["score","🏆 Score"]].map(([v,l]) => (
+                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"],["tradeboard","🤝 Trade Board"],["picks","⭐ Picks"]].map(([v,l]) => (
                     <button key={v}
                       className={`market-sub-tab${marketSubTab === v ? " active" : ""}`}
                       onClick={() => setMarketSubTab(v)}
@@ -6304,17 +6303,6 @@ RULES:
                 {/* ── PICKS TAB ── */}
                 {marketSubTab === "picks" && (
                   <RecommendedFlips
-                    user={user}
-                    items={items}
-                    flipsLog={flipsLog}
-                    onSignIn={() => setShowAuth(true)}
-                    onOpenChart={setSelectedItem}
-                  />
-                )}
-
-                {/* ── SCORE TAB ── */}
-                {marketSubTab === "score" && (
-                  <ScoreTab
                     user={user}
                     items={items}
                     flipsLog={flipsLog}

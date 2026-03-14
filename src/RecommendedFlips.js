@@ -60,10 +60,10 @@ function scoreItem(item, prefs) {
 // ── Preference defaults ───────────────────────────────────────────────────────
 const DEFAULT_PREFS = {
   cashStack: "",
-  slots: "4",
-  risk: "balanced",
-  tradeTime: "balanced",
-  membership: "members",
+  slots: "",
+  risk: "",
+  tradeTime: "",
+  membership: "all",
   minRoi: "",
   minMargin: "",
 };
@@ -103,7 +103,7 @@ function LoginGate({ onSignIn }) {
 function PrefsPanel({ prefs, setPrefs }) {
   const [open, setOpen] = useState(true);
 
-  function set(key, val) { setPrefs(p => { const n = { ...p, [key]: val }; localStorage.setItem("rt_picks_prefs", JSON.stringify(n)); return n; }); }
+  function set(key, val) { setPrefs(p => { const n = { ...p, [key]: val, _hasBeenSet: true }; localStorage.setItem("rt_picks_prefs", JSON.stringify(n)); return n; }); }
 
   return (
     <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", overflow: "hidden" }}>
@@ -229,7 +229,12 @@ function parseCash(str) {
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOpenChart }) {
   const [prefs, setPrefs] = useState(() => {
-    try { return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem("rt_picks_prefs") || "{}") }; }
+    try {
+      const saved = JSON.parse(localStorage.getItem("rt_picks_prefs") || "{}");
+      // If saved has old "members" default, reset membership to "all"
+      if (saved.membership === "members" && !saved._hasBeenSet) saved.membership = "all";
+      return { ...DEFAULT_PREFS, ...saved };
+    }
     catch { return DEFAULT_PREFS; }
   });
   const [search, setSearch] = useState("");
