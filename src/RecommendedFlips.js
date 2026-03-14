@@ -60,6 +60,13 @@ function calcGpPerFill(item) {
 }
 
 // ── Tier Qualification ────────────────────────────────────────────────────────
+//
+// LOW:    vol/limit ≥ 70×  |  margin > 0       |  freshness ≤ 15min
+// MEDIUM: vol/limit ≥ 15×  |  buy 200k–10M     |  margin ≥ 30k   |  freshness ≤ 45min
+// HIGH:   vol/limit ≥ 8×   |  buy ≥ 10M        |  margin ≥ 90k   |  freshness ≤ 1hr
+//
+// ROI is never used — vol/limit ratio + absolute margin is the signal.
+
 function qualifiesLow(item) {
   if (!item.hasPrice || item.margin <= 0) return false;
   const vol = item.volume   || 0;
@@ -74,12 +81,11 @@ function qualifiesMedium(item) {
   if (freshnessAge(item.lastTradeTime) > 2700) return false; // >45min
   const vol = item.volume   || 0;
   const lim = item.buyLimit || 0;
-  if ((item.low    || 0) < 200_000)  return false; // buy price ≥ 200k
-  if ((item.low    || 0) >= 10_000_000) return false; // buy price < 10M (High tier)
-  if ((item.margin || 0) < 30_000)   return false; // margin ≥ 30k
-  if (vol < 50)                      return false; // vol ≥ 50/day
-  if (lim <= 0)                      return false;
-  if ((vol / lim) < 8)               return false; // vol/limit ≥ 8×
+  if (lim <= 0) return false;
+  if ((item.low    || 0) <  200_000)    return false; // buy ≥ 200k
+  if ((item.low    || 0) >= 10_000_000) return false; // buy < 10M (that's High)
+  if ((item.margin || 0) <  30_000)     return false; // margin ≥ 30k
+  if ((vol / lim)        <  15)         return false; // vol/limit ≥ 15×
   return true;
 }
 
@@ -88,11 +94,10 @@ function qualifiesHigh(item) {
   if (freshnessAge(item.lastTradeTime) > 3600) return false; // >1hr
   const vol = item.volume   || 0;
   const lim = item.buyLimit || 0;
-  if ((item.low    || 0) < 10_000_000) return false; // buy price ≥ 10M
+  if (lim <= 0) return false;
+  if ((item.low    || 0) < 10_000_000) return false; // buy ≥ 10M
   if ((item.margin || 0) < 90_000)     return false; // margin ≥ 90k
-  if (vol < 50)                        return false; // vol ≥ 50/day
-  if (lim <= 0)                        return false;
-  if ((vol / lim) < 8)                 return false; // vol/limit ≥ 8×
+  if ((vol / lim)        < 8)          return false; // vol/limit ≥ 8×
   return true;
 }
 
@@ -254,8 +259,8 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
 
   const riskMeta = {
     low:    "Vol/day ≥ 70× your buy limit. Market moves far more than you can buy — fast, reliable fills.",
-    medium: "Buy 200k–10M · Margin ≥ 30k · Vol ≥ 50/day · Vol/limit ≥ 8× · Traded in last 45min.",
-    high:   "Buy ≥ 10M · Margin ≥ 90k · Vol ≥ 50/day · Vol/limit ≥ 8× · Traded in last hour. High capital, fills not guaranteed.",
+    medium: "Buy 200k–10M · Margin ≥ 30k · Vol/limit ≥ 15× · Traded in last 45min.",
+    high:   "Buy ≥ 10M · Margin ≥ 90k · Vol/limit ≥ 8× · Traded in last hour. High capital, fills not guaranteed.",
   };
 
   return (
