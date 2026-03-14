@@ -49,7 +49,7 @@ const STYLES = `
   .app { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 
   /* HEADER */
-  .header { display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 64px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .header { display: flex; align-items: center; padding: 0 32px; height: 64px; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; gap: 16px; }
   .logo { display: flex; align-items: center; gap: 10px; }
   .logo-icon { width: 32px; height: 32px; }
   .logo-text { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); letter-spacing: 1px; }
@@ -5568,9 +5568,9 @@ RULES:
               </button>
             ))}
           </div>
-          {/* Market sub-tabs centered in header */}
+          {/* Market sub-tabs - centered using flex spacer trick */}
           {activeTab === "market" && !merchantMode && (
-            <div style={{ display: "flex", alignItems: "center", gap: "4px", position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: "1", justifyContent: "center" }}>
               {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"]].map(([v,l]) => (
                 <button key={v}
                   onClick={() => setMarketSubTab(v)}
@@ -5590,7 +5590,8 @@ RULES:
               ))}
             </div>
           )}
-          <div className="header-right">
+          {activeTab !== "market" && !merchantMode && <div style={{ flex: 1 }} />}
+          <div className="header-right" style={{ marginLeft: "auto" }}>
             {lastUpdate && <div className="live-badge"><div className="live-dot" />Live · {formatTime(lastUpdate)}</div>}
             {user && merchantMode && (
               <button onClick={startMerchantTour}
