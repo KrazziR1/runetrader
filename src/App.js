@@ -3951,88 +3951,6 @@ export default function RuneTrader() {
   }, []);
 
   function endTour() { setTourStep(-1); }
-
-  // ── Demo Tour ────────────────────────────────────────────────────────────────
-  function measureDemoTarget(selector) {
-    if (!selector) { setDemoTourRect(null); return; }
-    setTimeout(() => {
-      const el = document.querySelector(selector);
-      if (el) {
-        el.scrollIntoView({ block: "nearest", behavior: "smooth" });
-        setTimeout(() => {
-          const r = el.getBoundingClientRect();
-          setDemoTourRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-        }, 120);
-      } else {
-        setDemoTourRect(null);
-      }
-    }, 80);
-  }
-
-  function startDemoTour() {
-    setDemoTourStep(0);
-    setDemoTourRect(null);
-    setDemoTourReady(false);
-    // Small delay so the app renders before we start measuring
-    setTimeout(() => setDemoTourReady(true), 300);
-  }
-
-  function advanceDemoTour(nextIdx) {
-    if (nextIdx >= DEMO_TOUR_STEPS.length) {
-      // End — show CTA screen
-      setDemoTourStep(-2);
-      setDemoTourRect(null);
-      return;
-    }
-    const step = DEMO_TOUR_STEPS[nextIdx];
-    setDemoTourStep(nextIdx);
-
-    // Navigate to correct tab
-    if (step.tab) setActiveTab(step.tab);
-
-    // Activate merchant mode if needed
-    if (step.activateMerchant) {
-      setMerchantCapital(DEMO_CAPITAL);
-      setMerchantMode(true);
-      setMerchantView("operations");
-      setAutoFlipsLog(DEMO_AUTO_FLIPS);
-      setPnlHistory(DEMO_PNL_HISTORY);
-      setMerchantPositions(DEMO_LIVE_OPS.map(op => ({
-        id: op.id, item_name: op.item_name, buy_price: op.buy_price,
-        quantity: op.quantity, status: op.status,
-        buy_started_at: op.buy_started_at,
-      })));
-    }
-
-    // Set merchant sub-view
-    if (step.merchantView) setMerchantView(step.merchantView);
-
-    // Measure highlight target
-    measureDemoTarget(step.target);
-  }
-
-  function endDemoTour() {
-    setDemoTourStep(-1);
-    setDemoTourRect(null);
-    // Reset merchant mode fake data
-    if (!user) {
-      setMerchantMode(false);
-      setMerchantCapital(0);
-      setAutoFlipsLog([]);
-      setPnlHistory([]);
-      setMerchantPositions([]);
-    }
-  }
-
-  // Auto-start demo tour when demoMode activates
-  useEffect(() => {
-    if (demoMode) {
-      setActiveTab("market");
-      startDemoTour();
-    } else {
-      endDemoTour();
-    }
-  }, [demoMode]); // eslint-disable-line
   function advanceTour(next) {
     if (next >= TOUR_STEPS.length) { endTour(); return; }
     const target = TOUR_STEPS[next].target;
@@ -4256,6 +4174,85 @@ export default function RuneTrader() {
   // eslint-disable-next-line no-unused-vars
   const [flipsLoading, setFlipsLoading] = useState(false); // eslint-disable-line no-unused-vars
   const [autoFlipsLog, setAutoFlipsLog] = useState([]);
+
+  // ── Demo Tour ────────────────────────────────────────────────────
+  function measureDemoTarget(selector) {
+    if (!selector) { setDemoTourRect(null); return; }
+    setTimeout(() => {
+      const el = document.querySelector(selector);
+      if (el) {
+        el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        setTimeout(() => {
+          const r = el.getBoundingClientRect();
+          setDemoTourRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+        }, 120);
+      } else {
+        setDemoTourRect(null);
+      }
+    }, 80);
+  }
+
+  function startDemoTour() {
+    setDemoTourStep(0);
+    setDemoTourRect(null);
+    setDemoTourReady(false);
+    // Small delay so the app renders before we start measuring
+    setTimeout(() => setDemoTourReady(true), 300);
+  }
+
+  function advanceDemoTour(nextIdx) {
+    if (nextIdx >= DEMO_TOUR_STEPS.length) {
+      // End — show CTA screen
+      setDemoTourStep(-2);
+      setDemoTourRect(null);
+      return;
+    }
+    const step = DEMO_TOUR_STEPS[nextIdx];
+    setDemoTourStep(nextIdx);
+
+    // Navigate to correct tab
+    if (step.tab) setActiveTab(step.tab);
+
+    // Activate merchant mode if needed
+    if (step.activateMerchant) {
+      setMerchantCapital(DEMO_CAPITAL);
+      setMerchantMode(true);
+      setMerchantView("operations");
+      setAutoFlipsLog(DEMO_AUTO_FLIPS);
+      setPnlHistory(DEMO_PNL_HISTORY);
+      setMerchantPositions(DEMO_LIVE_OPS.map(op => ({
+        id: op.id, item_name: op.item_name, buy_price: op.buy_price,
+        quantity: op.quantity, status: op.status,
+        buy_started_at: op.buy_started_at,
+      })));
+    }
+
+    // Set merchant sub-view
+    if (step.merchantView) setMerchantView(step.merchantView);
+
+    // Measure highlight target
+    measureDemoTarget(step.target);
+  }
+
+  function endDemoTour() {
+    setDemoTourStep(-1);
+    setDemoTourRect(null);
+    // Reset merchant mode fake data
+    if (!user) {
+      setMerchantMode(false);
+      setMerchantCapital(0);
+      setAutoFlipsLog([]);
+      setPnlHistory([]);
+      setMerchantPositions([]);
+    }
+  }
+
+  // Auto-start demo tour when demoMode activates
+  useEffect(() => {
+    if (!demoMode) return; // don’t run on initial mount (default false)
+    setActiveTab("market");
+    startDemoTour();
+  }, [demoMode]); // eslint-disable-line
 
   // ── Merchant P&L tracking (after flipsLog is declared) ──
   useEffect(() => {
