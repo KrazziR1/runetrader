@@ -1697,7 +1697,6 @@ function getWelcomeMsg() {
   return { role: "assistant", content, time: new Date() };
 }
 
-const WELCOME_MSG = getWelcomeMsg();
 
 // â”€â”€â”€ DEMO DATA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -4217,8 +4216,6 @@ export default function RuneTrader() {
 
 
   // â”€â”€ Prefs â”€â”€
-  const [prefs] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}"); } catch { return {}; } });
-  const [budget] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_prefs") || "{}").budget || ""; } catch { return ""; } });
 
   // â”€â”€ UI state â”€â”€
   const [filter, setFilter] = useState("all");
