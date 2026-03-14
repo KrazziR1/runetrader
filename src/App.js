@@ -3,6 +3,7 @@ import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import Sparkline from "./Sparkline";
 import PricingPage from "./PricingPage";
+import ReferralPage from "./ReferralPage";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 
@@ -5548,7 +5549,7 @@ RULES:
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {!merchantMode && [["market","Market"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"]] : [])].map(([t,label]) => (
+            {!merchantMode && [["market","Market"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"],["referral","Refer & Earn 🔗"]] : [])].map(([t,label]) => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
                 {label}
                 {t === "tracker" && (openFlips.length + (autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length)) > 0 && (
@@ -5724,6 +5725,16 @@ RULES:
                 user={user}
                 isPro={isPro}
                 onSignIn={() => setShowAuth(true)}
+                onGoToReferral={() => setActiveTab("referral")}
+              />
+            )}
+
+            {/* ── REFERRAL TAB ── */}
+            {activeTab === "referral" && (
+              <ReferralPage
+                user={user}
+                supabase={supabase}
+                showToast={showToast}
               />
             )}
 

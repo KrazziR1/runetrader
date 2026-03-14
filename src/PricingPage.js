@@ -27,7 +27,7 @@ const PRO_FEATURES = [
   "Priority support",
 ];
 
-export default function PricingPage({ user, onSignIn, isPro }) {
+export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -155,6 +155,64 @@ export default function PricingPage({ user, onSignIn, isPro }) {
               Secured by Stripe · Cancel any time from your account
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Referral Section */}
+      <div style={{ marginTop: "48px", background: "var(--bg3)", border: "1px solid var(--gold-dim)", borderRadius: "16px", padding: "32px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-dim))" }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
+            <span style={{ fontSize: "32px", flexShrink: 0 }}>🔗</span>
+            <div>
+              <div style={{ fontFamily: "Cinzel, serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>
+                Refer a friend — both get 50% off
+              </div>
+              <p style={{ fontSize: "15px", color: "var(--text-dim)", lineHeight: 1.7, margin: 0 }}>
+                Share your referral link. When a friend signs up and upgrades to Pro, <strong style={{ color: "var(--text)" }}>you both get 50% off your first month</strong>. One-time deal — applied automatically at checkout.
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "10px", padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+              <span style={{ fontSize: "20px", flexShrink: 0 }}>🎁</span>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", marginBottom: "4px" }}>You get</div>
+                <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.5 }}>50% off your first month when your friend upgrades. Refer 10 friends → <span style={{ color: "var(--gold)", fontWeight: 600 }}>Pro free for life</span>.</div>
+              </div>
+            </div>
+            <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "10px", padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+              <span style={{ fontSize: "20px", flexShrink: 0 }}>👋</span>
+              <div>
+                <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", marginBottom: "4px" }}>Your friend gets</div>
+                <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.5 }}>50% off their first month of Pro — automatically applied when they checkout via your link.</div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", paddingTop: "4px" }}>
+            {user ? (
+              <button
+                onClick={onGoToReferral}
+                style={{ padding: "11px 24px", borderRadius: "8px", border: "1px solid var(--gold-dim)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                onMouseOver={e => e.currentTarget.style.background = "rgba(201,168,76,0.15)"}
+                onMouseOut={e => e.currentTarget.style.background = "rgba(201,168,76,0.08)"}
+              >
+                Get my referral link →
+              </button>
+            ) : (
+              <button
+                onClick={onSignIn}
+                style={{ padding: "11px 24px", borderRadius: "8px", border: "1px solid var(--gold-dim)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                onMouseOver={e => e.currentTarget.style.background = "rgba(201,168,76,0.15)"}
+                onMouseOut={e => e.currentTarget.style.background = "rgba(201,168,76,0.08)"}
+              >
+                Sign up to get your referral link →
+              </button>
+            )}
+            <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>50% off is a one-time reward per account</span>
+          </div>
         </div>
       </div>
 
