@@ -4244,40 +4244,6 @@ export default function RuneTrader() {
     setQuestsLoaded(true);
   }
 
-  // Market pulse — runs after items have loaded, picks a genuinely good flip
-  // Uses the same Low tier rules as the Picks tab so the claim is accurate
-  useEffect(() => {
-    if (!questsLoaded || !showLoginCinematic) return;
-    const nowSec = Math.floor(Date.now() / 1000);
-    const liveItems = itemsRef.current || [];
-    if (liveItems.length === 0) return;
-
-    // Only items that pass the Low risk tier (most reliable, broadly applicable)
-    const qualified = liveItems.filter(i => {
-      if (!i.hasPrice || i.margin <= 0) return false;
-      const lim = i.buyLimit || 0; if (lim <= 0) return false;
-      const age = nowSec - (i.lastTradeTime || 0);
-      if (age > 900) return false; // data must be < 15min old
-      return (i.volume / lim) >= 70; // vol/limit >= 70x
-    });
-
-    if (qualified.length === 0) return;
-
-    // Pick the one with the best GP/fill (most useful signal, not just raw margin)
-    qualified.sort((a, b) => {
-      const gpA = (a.margin || 0) * Math.min(a.volume / 6, a.buyLimit || 1);
-      const gpB = (b.margin || 0) * Math.min(b.volume / 6, b.buyLimit || 1);
-      return gpB - gpA;
-    });
-
-    const top = qualified[0];
-    setMarketPulse({
-      name: top.name,
-      margin: top.margin,
-      volume: top.volume,
-    });
-  }, [questsLoaded, showLoginCinematic]); // eslint-disable-line
-
   async function saveQuests(updatedQuests, updatedCoins) {
     if (!user) return;
     await supabase.from("daily_quests").upsert({
@@ -4569,6 +4535,29 @@ export default function RuneTrader() {
   const [aiLoading, setAiLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const itemsRef = useRef([]);
+
+  // Market pulse — runs after items have loaded, picks a genuinely good flip
+  useEffect(() => {
+    if (!questsLoaded || !showLoginCinematic) return;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const liveItems = itemsRef.current || [];
+    if (liveItems.length === 0) return;
+    const qualified = liveItems.filter(i => {
+      if (!i.hasPrice || i.margin <= 0) return false;
+      const lim = i.buyLimit || 0; if (lim <= 0) return false;
+      const age = nowSec - (i.lastTradeTime || 0);
+      if (age > 900) return false;
+      return (i.volume / lim) >= 70;
+    });
+    if (qualified.length === 0) return;
+    qualified.sort((a, b) => {
+      const gpA = (a.margin || 0) * Math.min(a.volume / 6, a.buyLimit || 1);
+      const gpB = (b.margin || 0) * Math.min(b.volume / 6, b.buyLimit || 1);
+      return gpB - gpA;
+    });
+    const top = qualified[0];
+    setMarketPulse({ name: top.name, margin: top.margin, volume: top.volume });
+  }, [questsLoaded, showLoginCinematic]); // eslint-disable-line
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
   useEffect(() => { merchantAIMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, merchantAIOpen]);
 
