@@ -152,8 +152,8 @@ export default function TradeBoard({ user, supabase, showToast }) {
       setItemSearch("");
       loadListings();
     } catch (e) {
-      showToast("Failed to post listing: " + e.message, "error");
-    } finally {
+      console.error("Post listing error:", e);
+      showToast("Failed to post listing. Please try again.", "error");
       setPosting(false);
     }
   }
@@ -186,10 +186,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
         <div>
           <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>
-            Player-to-player trades. All transactions occur in-game — RuneTrader does not facilitate, verify, or take responsibility for any trade.
-            <span style={{ display: "block", marginTop: "4px", color: "var(--red)", fontSize: "12px" }}>
-              The sale of account names, services, real-world trading, or anything that violates the RuneScape rules of conduct is strictly prohibited and will result in removal.
-            </span>
+Player-to-player trades. All transactions occur in-game — RuneTrader does not facilitate, verify, or take responsibility for any trade.
           </div>
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
@@ -303,7 +300,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
       )}
 
       {/* Post form modal */}
-      {showPostForm && (
+      {showPostForm && user && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}
           onClick={e => { if (e.target === e.currentTarget) setShowPostForm(false); }}>
           <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "480px", display: "flex", flexDirection: "column", gap: "16px", maxHeight: "90vh", overflowY: "auto" }}
@@ -315,6 +312,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
             <div style={{ position: "relative" }}>
               <label style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Item Name *</label>
               <input value={itemSearch} onChange={e => handleItemSearch(e.target.value)} placeholder="e.g. Twisted bow"
+                onBlur={() => setTimeout(() => setItemSuggestions([]), 200)}
                 style={{ width: "100%", background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
               {itemSuggestions.length > 0 && (
                 <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "8px", zIndex: 10, maxHeight: "200px", overflowY: "auto", marginTop: "4px" }}>
