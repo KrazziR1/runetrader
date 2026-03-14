@@ -4,9 +4,6 @@ import AuthModal from "./AuthModal";
 import Sparkline from "./Sparkline";
 import PricingPage from "./PricingPage";
 import ReferralPage from "./ReferralPage";
-import HerbRun from "./HerbRun";
-import BlastFurnace from "./BlastFurnace";
-import SkillCalc from "./SkillCalc";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 
@@ -6038,12 +6035,12 @@ RULES:
 
                 {/* Market sub-tabs row */}
                 <div style={{ display: "flex", gap: "4px", paddingBottom: "4px" }}>
-                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"],["herbs","🌿 Herb Runs"],["bf","🚧 Blast Furnace"],["skills","📊 Skill Calc"]].map(([v,l]) => (
+                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"]].map(([v,l]) => (
                     <button key={v}
                       className={`market-sub-tab${marketSubTab === v ? " active" : ""}`}
                       onClick={() => setMarketSubTab(v)}
                     >
-                      {l}{(v === "herbs" || v === "bf" || v === "skills") && <span className="sub-tab-badge">new</span>}
+                      {l}{v !== "flips" && <span className="sub-tab-badge">new</span>}
                     </button>
                   ))}
                 </div>
@@ -6293,18 +6290,6 @@ RULES:
                 })()}
 
                 {/* ── FLIPS TAB (existing content) ── */}
-                {marketSubTab === "herbs" && (
-                  <HerbRun allItems={allItems} />
-                )}
-
-                {marketSubTab === "bf" && (
-                  <BlastFurnace />
-                )}
-
-                {marketSubTab === "skills" && (
-                  <SkillCalc />
-                )}
-
                 {marketSubTab === "flips" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div className="filter-bar">
