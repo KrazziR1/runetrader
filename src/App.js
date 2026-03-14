@@ -4999,12 +4999,6 @@ export default function RuneTrader() {
   }
 
   // ── "Flip This" from item modal ──
-  function flipThisItem(item) {
-    const { adjLow, adjHigh } = applyOffset(item.low, item.high, prefs.speed);
-    setLogForm({ item: item.name, buyPrice: String(adjLow), sellPrice: String(adjHigh), qty: "1" });
-    setActiveTab("tracker");
-  }
-
   // eslint-disable-next-line no-unused-vars
   async function deleteFlip(id) { // eslint-disable-line no-unused-vars
     if (user) { await supabase.from("flips").delete().eq("id", id); }
