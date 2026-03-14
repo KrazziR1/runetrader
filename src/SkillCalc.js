@@ -18,8 +18,6 @@ function levelForXp(xp) {
   return 1;
 }
 
-const XP_TABLE = Array.from({ length: 127 }, (_, i) => xpForLevel(i + 1));
-
 const SKILLS = [
   { name: "Attack",       icon: "⚔️"  },
   { name: "Strength",     icon: "💪"  },

@@ -21,7 +21,6 @@ const HERBS = [
   { name: "Torstol",    seed: "Torstol seed",     grimy: "Grimy torstol",      clean: "Torstol",          avgYield: 8.0, reqLevel: 85 },
 ];
 
-const PATCHES = 9; // max herb patches with all diaries
 const COMPOST_COST = 500; // ultracompost approx
 
 function formatGP(n) {
