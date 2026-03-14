@@ -124,7 +124,7 @@ const STYLES = `
   .filter-btn:hover, .filter-btn.active { background: var(--bg4); color: var(--gold); border-color: var(--gold-dim); }
 
   /* FLIPS TABLE */
-  .section-title { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
   .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
   .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
@@ -153,7 +153,7 @@ const STYLES = `
   /* FLIP CARD MODAL */
   .flip-card-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
   .flip-card-modal { background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 16px; width: 100%; max-width: 480px; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
-  .flip-card-title { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; color: var(--gold); }
+  .flip-card-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); }
   .flip-card-image { width: 100%; border-radius: 8px; border: 1px solid var(--border); }
   .flip-card-actions { display: flex; gap: 10px; }
   .flip-card-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
@@ -168,7 +168,7 @@ const STYLES = `
   .whats-new-body { overflow-y: auto; padding: 20px 28px; display: flex; flex-direction: column; gap: 20px; }
   .changelog-version { display: flex; flex-direction: column; gap: 8px; }
   .changelog-version-header { display: flex; align-items: center; gap: 10px; }
-  .changelog-version-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--text); }
+  .changelog-version-name { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--text); }
   .changelog-version-date { font-size: 11px; color: var(--text-dim); }
   .changelog-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-dim); line-height: 1.5; }
   .changelog-badge-new { display: inline-flex; background: rgba(46,204,113,0.12); color: var(--green); border-radius: 4px; padding: 1px 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; flex-shrink: 0; margin-top: 2px; }
@@ -185,7 +185,7 @@ const STYLES = `
   .upgrade-features { display: flex; flex-direction: column; gap: 8px; width: 100%; background: var(--bg3); border-radius: 10px; padding: 16px; }
   .upgrade-feature-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text); }
   .upgrade-feature-row .check { color: var(--gold); font-size: 12px; flex-shrink: 0; }
-  .upgrade-cta { width: 100%; padding: 14px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 1px; transition: all 0.2s; }
+  .upgrade-cta { width: 100%; padding: 14px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 1px; transition: all 0.2s; }
   .upgrade-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(201,168,76,0.4); }
   .upgrade-dismiss { font-size: 12px; color: var(--text-dim); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; transition: color 0.15s; }
   .upgrade-dismiss:hover { color: var(--text); }
@@ -291,7 +291,7 @@ const STYLES = `
   .tracker-wrap { display: flex; flex-direction: column; gap: 24px; }
   .tracker-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   .tracker-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-  .tracker-form-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .tracker-form-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
   .tracker-form-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
   .tracker-field { display: flex; flex-direction: column; gap: 6px; position: relative; }
   .tracker-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -365,13 +365,13 @@ const STYLES = `
 
   /* PROFIT CHART */
   .profit-chart-wrap { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
-  .profit-chart-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+  .profit-chart-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
   .profit-canvas-wrap { width: 100%; height: 160px; position: relative; }
 
   /* SMART ALERTS */
   .smart-alerts-wrap { display: flex; flex-direction: column; gap: 12px; }
   .smart-alert-toggles { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-  .smart-alert-toggle-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .smart-alert-toggle-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
   .smart-alert-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .smart-alert-toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
   .smart-alert-toggle-info { display: flex; flex-direction: column; gap: 3px; }
@@ -432,7 +432,7 @@ const STYLES = `
   .merchant-right { border-left: 1px solid var(--border); background: var(--bg2); overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
   .merchant-section { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: visible; }
   .merchant-section-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); }
-  .merchant-section-title { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; }
+  .merchant-section-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; }
   .merchant-empty { padding: 32px 20px; text-align: center; }
   .capital-bar { display: grid; grid-template-columns: repeat(5,1fr); background: var(--bg3); border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .cap-cell { padding: 14px 16px 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; min-height: 76px; }
@@ -503,7 +503,7 @@ const STYLES = `
   .m-panel-section:last-child { border-bottom: none; }
   .m-smart-alert-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid var(--border); }
   .m-smart-alert-row:last-child { border-bottom: none; }
-  .m-panel-title { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
+  .m-panel-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px; }
   .gauge-wrap { display: flex; align-items: center; gap: 16px; }
   .gauge-ring { position: relative; width: 86px; height: 86px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   .gauge-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -582,7 +582,7 @@ const STYLES = `
 
   .alerts-wrap { display: flex; flex-direction: column; gap: 20px; }
   .alert-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-  .alert-form-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .alert-form-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
   .alert-form-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end; }
   .alert-field { display: flex; flex-direction: column; gap: 6px; position: relative; }
   .alert-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -642,7 +642,7 @@ const STYLES = `
   .watchlist-alert-badge.unset { background: var(--bg4); color: var(--text-dim); border-color: var(--border); }
   .watchlist-alert-badge:hover { border-color: var(--gold-dim); color: var(--gold); }
   .watchlist-alert-popover { position: absolute; z-index: 200; background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; width: 230px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
-  .watchlist-alert-popover-title { font-size: 12px; font-weight: 600; color: var(--gold); font-family: Cinzel, serif; text-transform: uppercase; letter-spacing: 0.5px; }
+  .watchlist-alert-popover-title { font-size: 18px; font-weight: 600; color: var(--gold); font-family: Cinzel, serif; text-transform: uppercase; letter-spacing: 0.5px; }
   .watchlist-alert-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: Inter, sans-serif; outline: none; width: 100%; transition: border-color 0.15s; }
   .watchlist-alert-input:focus { border-color: var(--gold-dim); }
   .watchlist-alert-set-btn { padding: 6px 12px; border-radius: 6px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: Inter, sans-serif; }
@@ -676,7 +676,7 @@ const STYLES = `
   .demo-tour-end-overlay { position: fixed; inset: 0; z-index: 9500; background: rgba(6,8,11,0.97); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; text-align: center; padding: 40px; animation: fadeInUp 0.5s ease both; }
   .demo-tour-end-title { font-family: "Cinzel", serif; font-size: clamp(36px, 5vw, 60px); font-weight: 900; color: var(--gold); line-height: 1.2; }
   .demo-tour-end-sub { font-size: 18px; color: var(--text-dim); max-width: 480px; line-height: 1.7; }
-  .demo-tour-end-cta { padding: 16px 48px; border-radius: 6px; font-family: Cinzel, serif; font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; border: none; cursor: pointer; box-shadow: 0 0 40px rgba(201,168,76,0.3); transition: all 0.3s; }
+  .demo-tour-end-cta { padding: 16px 48px; border-radius: 6px; font-family: Cinzel, serif; font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; border: none; cursor: pointer; box-shadow: 0 0 40px rgba(201,168,76,0.3); transition: all 0.3s; }
   .demo-tour-end-cta:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(201,168,76,0.5); }
   .demo-tour-end-dismiss { background: none; border: none; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: Inter, sans-serif; padding: 0; transition: color 0.15s; text-decoration: underline; }
   .demo-tour-end-dismiss:hover { color: var(--text); }
@@ -750,7 +750,7 @@ const STYLES = `
   .port-stat-sub { font-size: 11px; color: var(--text-dim); }
   .port-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .port-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-  .port-card-title { font-family: "Cinzel", serif; font-size: 12px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .port-card-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
   .alloc-bar-wrap { display: flex; flex-direction: column; gap: 8px; }
   .alloc-bar-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
   .alloc-bar-label { width: 130px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
@@ -780,7 +780,7 @@ const STYLES = `
   .close-pos-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--green-dim); background: rgba(46,204,113,0.08); color: var(--green); font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
   .close-pos-btn:hover { background: rgba(46,204,113,0.18); }
   .open-pos-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-  .open-pos-title { font-family: "Cinzel", serif; font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+  .open-pos-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
   .open-pos-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end; }
   .portfolio-login-prompt { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 80px 20px; text-align: center; color: var(--text-dim); }
   .portfolio-login-prompt .icon { font-size: 48px; opacity: 0.4; }
@@ -2285,7 +2285,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div className="merchant-dot" />
-            <span style={{ fontFamily: "'Cinzel', serif", fontSize: "14px", fontWeight: 700, color: "var(--gold)", letterSpacing: "1.5px" }}>MERCHANT MODE</span>
+            <span style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", letterSpacing: "1.5px" }}>MERCHANT MODE</span>
           </div>
           <div className="merchant-header-pills">
             {[["operations", "📈 Operations"], ["analytics", "📊 Analytics"], ["market", "📈 Market"], ["alerts", "⚡ Alerts"]].map(([v, l]) => (
@@ -3143,7 +3143,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
             )}
             </div>{/* end merchant-left */}
             <div className="merchant-right" style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ fontFamily: "'Cinzel', serif", fontSize: "12px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "4px" }}>Active Positions</div>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "4px" }}>Active Positions</div>
               {(() => { const open = (manualPositions || []).filter(p => p.status !== "closed"); return open.length === 0 ? (
                 <div style={{ fontSize: "12px", color: "var(--text-dim)", textAlign: "center", padding: "24px 0" }}>No open positions</div>
               ) : open.map(p => (
@@ -3270,7 +3270,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
       {/* Open flips */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
           📈 Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "Inter", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{openFlips.length} active</span>
         </div>
         {loading ? <div style={{ color: "var(--text-dim)", fontSize: "13px" }}>Loading...</div>
@@ -3303,7 +3303,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
 
       {/* Closed flips */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
-        <div style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
           📜 Flip History
         </div>
         {loading ? <div style={{ color: "var(--text-dim)", fontSize: "13px" }}>Loading...</div>
