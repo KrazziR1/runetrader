@@ -9,63 +9,206 @@ function formatGP(n) {
   return n.toLocaleString();
 }
 
+function formatVol(v) {
+  if (!v) return "—";
+  if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + "M";
+  if (v >= 1_000)     return (v / 1_000).toFixed(1) + "k";
+  return v.toLocaleString();
+}
+
+function timeAgo(ts) {
+  if (!ts) return "—";
+  const sec = Math.floor(Date.now() / 1000 - ts);
+  if (sec < 60)    return `${sec}s ago`;
+  if (sec < 3600)  return `${Math.floor(sec / 60)}m ago`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+  return `${Math.floor(sec / 86400)}d ago`;
+}
+
+function freshnessAge(ts) {
+  if (!ts) return Infinity;
+  return Math.floor(Date.now() / 1000 - ts);
+}
+
 function itemIconUrl(name) {
   return `https://oldschool.runescape.wiki/images/${encodeURIComponent(
     name.replace(/ /g, "_")
   )}.png?format=png`;
 }
 
-function calcGpPerFill(item) {
-  const lim = item.buyLimit > 0 ? item.buyLimit : 500;
-  const mkt4hr = item.volume / 6;
-  let expFill;
-  if      (item.volume >= 500_000) expFill = Math.min(lim, mkt4hr);
-  else if (item.volume >= 100_000) expFill = Math.min(lim, mkt4hr * 0.6);
-  else if (item.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
-  else if (item.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
-  else                             expFill = Math.min(lim, mkt4hr * 0.03);
-  return Math.round(item.margin * Math.max(expFill, 1));
+function parseCash(str) {
+  if (!str || str.trim() === "") return Infinity;
+  const s = str.trim().toLowerCase().replace(/,/g, "");
+  if (s.endsWith("b")) return parseFloat(s) * 1_000_000_000;
+  if (s.endsWith("m")) return parseFloat(s) * 1_000_000;
+  if (s.endsWith("k")) return parseFloat(s) * 1_000;
+  const n = parseFloat(s);
+  return isNaN(n) ? Infinity : n;
 }
 
-// ── Scoring ────────────────────────────────────────────────────────────────────
-// Weights tuned to user preferences
-function scoreItem(item, prefs) {
-  const margin    = item.margin   || 0;
-  const roi       = item.roi      || 0;
-  const volume    = item.volume   || 0;
-  const gpPerFill = calcGpPerFill(item);
+// ── Tier Classification ───────────────────────────────────────────────────────
 
-  if (margin <= 0 || roi <= 0) return 0;
-
-  // Base score components
-  const marginScore  = Math.min(margin / 100_000, 1)          * 25;
-  const roiScore     = Math.min(roi / 30, 1)                  * 25;
-  const volScore     = Math.min(Math.log10(volume + 1) / 5.5, 1) * 20;
-  const gpFillScore  = Math.min(gpPerFill / 2_000_000, 1)     * 20;
-
-  // Risk modifier — aggressive = reward higher ROI, safe = reward volume
-  let riskBonus = 0;
-  if (prefs.risk === "safe")       riskBonus = Math.min(volume / 500_000, 1) * 10;
-  if (prefs.risk === "balanced")   riskBonus = Math.min(roi / 20, 1)         * 5 + Math.min(volume / 200_000, 1) * 5;
-  if (prefs.risk === "aggressive") riskBonus = Math.min(roi / 15, 1)         * 10;
-
-  // Trade time modifier — fast = reward high volume, patient = reward margin
-  let timeBonus = 0;
-  if (prefs.tradeTime === "fast")    timeBonus = Math.min(volume / 300_000, 1) * 5;
-  if (prefs.tradeTime === "patient") timeBonus = Math.min(margin / 200_000, 1) * 5;
-
-  return Math.round(marginScore + roiScore + volScore + gpFillScore + riskBonus + timeBonus);
+function volTier(vol) {
+  if (vol >= 1_000_000) return "high";     // 1M+
+  if (vol >= 300_000)   return "medium";   // 300k–999k
+  if (vol >= 100_000)   return "low";      // 100k–299k
+  if (vol >= 1_000)     return "verylow";  // 1k–99k
+  return "avoid";                          // <1k
 }
 
-// ── Preference defaults ───────────────────────────────────────────────────────
+function freshnessTier(ageSec) {
+  if (ageSec <= 300)  return "live";   // ≤5 min
+  if (ageSec <= 900)  return "ok";     // 5–15 min
+  if (ageSec <= 2700) return "dated";  // 16–45 min
+  if (ageSec <= 3600) return "hour";   // 45–60 min
+  return "stale";                      // 60min+
+}
+
+// ── Qualification Rules ───────────────────────────────────────────────────────
+
+function qualifiesSafe(item) {
+  const vol    = item.volume   || 0;
+  const roi    = item.roi      || 0;
+  const lim    = item.buyLimit || 0;
+  const ageSec = freshnessAge(item.lastTradeTime);
+  const vTier  = volTier(vol);
+  const fTier  = freshnessTier(ageSec);
+
+  if (!item.hasPrice || item.margin <= 0) return false;
+
+  // Freshness: live or ok only (≤15min)
+  if (fTier !== "live" && fTier !== "ok") return false;
+
+  // Volume: High (1M+) required
+  // Medium allowed ONLY if vol ≥ 200× buyLimit
+  const mediumHighLiquidity = vTier === "medium" && lim > 0 && vol >= lim * 200;
+  if (vTier !== "high" && !mediumHighLiquidity) return false;
+
+  // ROI: must be 0.25–5%
+  if (roi < 0.25) return false;
+  if (roi > 5 && roi <= 20) return false;
+
+  // ROI 0.25–0.5%: volume must be medium or high (medium only via 200× rule)
+  if (roi >= 0.25 && roi < 0.5) {
+    if (vTier !== "high" && !mediumHighLiquidity) return false;
+  }
+
+  // ROI 21%+: only allowed if vol > 1M/day
+  if (roi > 20 && vol <= 1_000_000) return false;
+
+  return true;
+}
+
+function qualifiesBalanced(item) {
+  const vol    = item.volume   || 0;
+  const roi    = item.roi      || 0;
+  const lim    = item.buyLimit || 0;
+  const ageSec = freshnessAge(item.lastTradeTime);
+  const vTier  = volTier(vol);
+  const fTier  = freshnessTier(ageSec);
+
+  if (!item.hasPrice || item.margin <= 0) return false;
+
+  // Freshness: ≤15min
+  if (fTier !== "live" && fTier !== "ok") return false;
+
+  // Volume: ≥300k/day (medium or high)
+  if (vTier !== "high" && vTier !== "medium") return false;
+
+  // Never negative ROI or <0.1%
+  if (roi < 0.1) return false;
+
+  // Core range 1–20%: always qualifies
+  if (roi >= 1 && roi <= 20) return true;
+
+  // 21–50%: allowed if vol ≥100k OR vol ≥ 200× limit
+  if (roi > 20 && roi <= 50) {
+    if (vol >= 100_000) return true;
+    if (lim > 0 && vol >= lim * 200) return true;
+    return false;
+  }
+
+  // 51%+: medium or high volume only
+  if (roi > 50) {
+    if (vTier === "medium" || vTier === "high") return true;
+    return false;
+  }
+
+  // 0.1–0.99%: not in qualifying range
+  return false;
+}
+
+function qualifiesRisky(item) {
+  const vol    = item.volume   || 0;
+  const roi    = item.roi      || 0;
+  const lim    = item.buyLimit || 0;
+  const ageSec = freshnessAge(item.lastTradeTime);
+  const vTier  = volTier(vol);
+  const fTier  = freshnessTier(ageSec);
+
+  if (!item.hasPrice || item.margin <= 0) return false;
+
+  // Never negative ROI
+  if (roi < 0) return false;
+
+  // Freshness: ≤1hr (live, ok, dated, hour all qualify)
+  if (fTier === "stale") return false;
+
+  // Volume: ≥100k/day minimum
+  if (vTier === "verylow" || vTier === "avoid") return false;
+
+  // ROI <0.1%: allowed only if vol >100k/day
+  if (roi < 0.1) {
+    return vol > 100_000;
+  }
+
+  // ROI 0.1–5.99%: not risky enough
+  if (roi >= 0.1 && roi < 6) return false;
+
+  // ROI 6–20%: qualifies
+  if (roi >= 6 && roi <= 20) return true;
+
+  // ROI 21–50%: fine if vol ≥100k/day
+  if (roi > 20 && roi <= 50) {
+    return vol >= 100_000;
+  }
+
+  // ROI 51%+: vol ≥200k/day OR vol ≥ 70× buyLimit
+  if (roi > 50) {
+    if (vol >= 200_000) return true;
+    if (lim > 0 && vol >= lim * 70) return true;
+    return false;
+  }
+
+  return false;
+}
+
+// ── Risk Tag shown on each row ────────────────────────────────────────────────
+function RiskTag({ item }) {
+  const safe     = qualifiesSafe(item);
+  const balanced = qualifiesBalanced(item);
+  if (safe) return (
+    <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(46,204,113,0.12)", color: "var(--green)", borderRadius: "4px", padding: "1px 6px", whiteSpace: "nowrap" }}>
+      Low Risk
+    </span>
+  );
+  if (balanced) return (
+    <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(201,168,76,0.12)", color: "var(--gold)", borderRadius: "4px", padding: "1px 6px", whiteSpace: "nowrap" }}>
+      Med Risk
+    </span>
+  );
+  return (
+    <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(231,76,60,0.12)", color: "var(--red)", borderRadius: "4px", padding: "1px 6px", whiteSpace: "nowrap" }}>
+      High Risk
+    </span>
+  );
+}
+
+// ── Defaults ──────────────────────────────────────────────────────────────────
 const DEFAULT_PREFS = {
-  cashStack: "",
-  slots: "",
-  risk: "",
-  tradeTime: "",
-  membership: "all",
-  minRoi: "",
-  minMargin: "",
+  cashStack:  "",
+  risk:       "low",
+  membership: "both",
 };
 
 // ── Login Gate ────────────────────────────────────────────────────────────────
@@ -76,12 +219,18 @@ function LoginGate({ onSignIn }) {
       <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 700, color: "var(--gold)" }}>
         Personalised Flip Picks
       </div>
-      <div style={{ fontSize: "14px", color: "var(--text-dim)", lineHeight: 1.7, maxWidth: "380px" }}>
-        Sign in to get flip recommendations scored to your cash stack, risk appetite,
-        available GE slots, and how long you want to trade.
+      <div style={{ fontSize: "14px", color: "var(--text-dim)", lineHeight: 1.7, maxWidth: "400px" }}>
+        Sign in to get flip recommendations filtered to your cash stack and risk tolerance,
+        sorted by highest daily volume.
       </div>
-      <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "10px", width: "100%", maxWidth: "340px" }}>
-        {["Top picks scored to your cash stack & slots", "Filter by risk, trade speed, and membership", "Same live data as the GE Tracker", "\"You've flipped this\" badges from your history"].map((f, i) => (
+      <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "10px", width: "100%", maxWidth: "360px" }}>
+        {[
+          "Tier-based qualification — not just a sorted list",
+          "Cash stack filter — only see what you can afford",
+          "Low / Medium / High risk tolerance",
+          "Sorted by daily volume — most liquid first",
+          "\"You've flipped this\" badges from your history",
+        ].map((f, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--text)" }}>
             <span style={{ color: "var(--gold)", fontSize: "11px", flexShrink: 0 }}>◆</span>{f}
           </div>
@@ -99,145 +248,23 @@ function LoginGate({ onSignIn }) {
   );
 }
 
-// ── Preferences Panel ─────────────────────────────────────────────────────────
-function PrefsPanel({ prefs, setPrefs }) {
-  const [open, setOpen] = useState(true);
-
-  function set(key, val) { setPrefs(p => { const n = { ...p, [key]: val, _hasBeenSet: true }; localStorage.setItem("rt_picks_prefs", JSON.stringify(n)); return n; }); }
-
-  return (
-    <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", overflow: "hidden" }}>
-      <button
-        onClick={() => setOpen(v => !v)}
-        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 16px", background: "none", border: "none", cursor: "pointer", color: "var(--text)", fontFamily: "Inter, sans-serif" }}
-      >
-        <span style={{ fontWeight: 600, fontSize: "13px" }}>⚙ Personalise Your Picks</span>
-        <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{open ? "▲ Hide" : "▼ Show"}</span>
-      </button>
-
-      {open && (
-        <div style={{ padding: "0 16px 16px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "16px", borderTop: "1px solid var(--border)" }}>
-
-          {/* Cash Stack */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px", paddingTop: "14px" }}>
-            <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Cash Stack</span>
-            <input
-              className="filter-input"
-              placeholder="e.g. 10m, 500k, 1b"
-              value={prefs.cashStack}
-              onChange={e => set("cashStack", e.target.value)}
-              style={{ width: "100%" }}
-            />
-            <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>Filters out items you can't afford</span>
-          </div>
-
-          {/* GE Slots */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px", paddingTop: "14px" }}>
-            <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Free GE Slots</span>
-            <div className="toggle-group">
-              {["1","2","3","4","5","6","7","8"].map(n => (
-                <button key={n} className={`toggle-btn${prefs.slots === n ? " active-med" : ""}`} onClick={() => set("slots", n)}>{n}</button>
-              ))}
-            </div>
-          </div>
-
-          {/* Risk */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px", paddingTop: "14px" }}>
-            <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Risk Appetite</span>
-            <div className="toggle-group">
-              {[["safe","Safe"],["balanced","Balanced"],["aggressive","Aggressive"]].map(([v,l]) => (
-                <button key={v} className={`toggle-btn${prefs.risk === v ? (v === "safe" ? " active-low" : v === "balanced" ? " active-med" : " active-high") : ""}`} onClick={() => set("risk", v)}>{l}</button>
-              ))}
-            </div>
-            <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
-              {prefs.risk === "safe" && "High-volume, reliable margins. Slower but consistent."}
-              {prefs.risk === "balanced" && "Mix of volume and ROI. Good all-rounder."}
-              {prefs.risk === "aggressive" && "High ROI, thinner markets. More volatile."}
-            </span>
-          </div>
-
-          {/* Trade Time */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px", paddingTop: "14px" }}>
-            <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Trade Speed</span>
-            <div className="toggle-group">
-              {[["fast","Fast"],["balanced","Mixed"],["patient","Patient"]].map(([v,l]) => (
-                <button key={v} className={`toggle-btn${prefs.tradeTime === v ? (v === "fast" ? " active-fast" : v === "balanced" ? " active-med-speed" : " active-slow") : ""}`} onClick={() => set("tradeTime", v)}>{l}</button>
-              ))}
-            </div>
-            <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
-              {prefs.tradeTime === "fast" && "Prioritises high-volume items that fill quickly."}
-              {prefs.tradeTime === "balanced" && "Balances fill speed with margin."}
-              {prefs.tradeTime === "patient" && "Prioritises items with large margins, even if slow."}
-            </span>
-          </div>
-
-          {/* Membership */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px", paddingTop: "14px" }}>
-            <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Membership</span>
-            <div className="toggle-group">
-              {[["f2p","F2P"],["members","Members"],["all","Both"]].map(([v,l]) => (
-                <button key={v} className={`toggle-btn${prefs.membership === v ? " active-med" : ""}`} onClick={() => set("membership", v)}>{l}</button>
-              ))}
-            </div>
-          </div>
-
-          {/* Min ROI */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px", paddingTop: "14px" }}>
-            <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Min ROI %</span>
-            <input
-              className="filter-input"
-              placeholder="e.g. 5"
-              value={prefs.minRoi}
-              onChange={e => set("minRoi", e.target.value)}
-              type="number"
-              min="0"
-              style={{ width: "100%" }}
-            />
-          </div>
-
-          {/* Min Margin */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px", paddingTop: "14px" }}>
-            <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Min Margin (gp)</span>
-            <input
-              className="filter-input"
-              placeholder="e.g. 5000"
-              value={prefs.minMargin}
-              onChange={e => set("minMargin", e.target.value)}
-              type="number"
-              min="0"
-              style={{ width: "100%" }}
-            />
-          </div>
-
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Parse cash stack string like "10m", "500k", "1.5b" ───────────────────────
-function parseCash(str) {
-  if (!str) return Infinity;
-  const s = str.trim().toLowerCase().replace(/,/g, "");
-  if (s.endsWith("b")) return parseFloat(s) * 1_000_000_000;
-  if (s.endsWith("m")) return parseFloat(s) * 1_000_000;
-  if (s.endsWith("k")) return parseFloat(s) * 1_000;
-  const n = parseFloat(s);
-  return isNaN(n) ? Infinity : n;
-}
-
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOpenChart }) {
   const [prefs, setPrefs] = useState(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem("rt_picks_prefs") || "{}");
-      // If saved has old "members" default, reset membership to "all"
-      if (saved.membership === "members" && !saved._hasBeenSet) saved.membership = "all";
+      const saved = JSON.parse(localStorage.getItem("rt_picks_prefs_v2") || "{}");
       return { ...DEFAULT_PREFS, ...saved };
-    }
-    catch { return DEFAULT_PREFS; }
+    } catch { return DEFAULT_PREFS; }
   });
   const [search, setSearch] = useState("");
+
+  function setPref(key, val) {
+    setPrefs(p => {
+      const next = { ...p, [key]: val };
+      localStorage.setItem("rt_picks_prefs_v2", JSON.stringify(next));
+      return next;
+    });
+  }
 
   const flippedNames = useMemo(() => {
     const s = new Set();
@@ -246,69 +273,130 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
   }, [flipsLog]);
 
   const budget = parseCash(prefs.cashStack);
-  const minRoi = prefs.minRoi ? parseFloat(prefs.minRoi) : 0;
-  const minMargin = prefs.minMargin ? parseFloat(prefs.minMargin) : 0;
 
-  const recommendations = useMemo(() => {
+  const picks = useMemo(() => {
     if (!items || items.length === 0) return [];
 
     return items
       .filter(item => {
-        if (!item.hasPrice)          return false;
-        if (item.margin <= 0)        return false;
-        if ((item.roi || 0) < minRoi)    return false;
-        if ((item.margin || 0) < minMargin) return false;
+        if (!item.hasPrice) return false;
+
+        // Cash stack hard filter
         if ((item.low || 0) > budget) return false;
-        if (prefs.membership === "f2p" && item.members)  return false;
+
+        // Membership filter
+        if (prefs.membership === "f2p" && item.members)   return false;
         if (prefs.membership === "members" && !item.members) return false;
+
+        // Search
         if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
-        return true;
+
+        // Risk tier
+        if (prefs.risk === "low")    return qualifiesSafe(item);
+        if (prefs.risk === "medium") return qualifiesBalanced(item);
+        if (prefs.risk === "high")   return qualifiesRisky(item);
+
+        return false;
       })
-      .map(item => ({ ...item, _score: scoreItem(item, prefs), _gpPerFill: calcGpPerFill(item) }))
-      .filter(item => item._score > 0)
-      .sort((a, b) => b._score - a._score)
+      .sort((a, b) => (b.volume || 0) - (a.volume || 0))
       .slice(0, 50);
-  }, [items, prefs, budget, minRoi, minMargin, search]);
+  }, [items, prefs, budget, search]);
 
   if (!user) return <LoginGate onSignIn={onSignIn} />;
 
-  const COLS = "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 70px";
+  const COLS = "minmax(160px,2fr) 1fr 1fr 1fr 1fr 1fr 1fr 80px";
+
+  const riskDesc = {
+    low:    "High-volume items, thin reliable margins. Fastest fills, lowest variance.",
+    medium: "Mid-volume items with solid ROI. Balance of fill speed and profit.",
+    high:   "Higher ROI, more variance. Volume ≥100k/day required but fills not guaranteed.",
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
-        <div>
-          <div className="section-title">⭐ Picks</div>
-          <p style={{ fontSize: "13px", color: "var(--text-dim)", marginTop: "2px" }}>
-            Top 50 flips scored to your preferences. Click any row to open the item chart.
-          </p>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      {/* Preferences bar */}
+      <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "16px 20px", display: "flex", gap: "28px", flexWrap: "wrap", alignItems: "flex-end" }}>
+
+        {/* Cash Stack */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Cash Stack</span>
           <input
             className="filter-input"
-            placeholder="Search items..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ width: "180px" }}
+            placeholder="e.g. 10m, 500k, 1b"
+            value={prefs.cashStack}
+            onChange={e => setPref("cashStack", e.target.value)}
+            style={{ width: "160px" }}
           />
-          <span style={{ fontSize: "12px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>
-            {recommendations.length} picks
+        </div>
+
+        {/* Risk Tolerance */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Risk Tolerance</span>
+          <div style={{ display: "flex", gap: "4px" }}>
+            {[["low","Low"],["medium","Medium"],["high","High"]].map(([v, l]) => (
+              <button
+                key={v}
+                className={`toggle-btn${prefs.risk === v ? (v === "low" ? " active-low" : v === "medium" ? " active-med" : " active-high") : ""}`}
+                onClick={() => setPref("risk", v)}
+              >{l}</button>
+            ))}
+          </div>
+          <span style={{ fontSize: "10px", color: "var(--text-dim)", maxWidth: "280px", lineHeight: 1.5 }}>
+            {riskDesc[prefs.risk]}
           </span>
         </div>
-      </div>
 
-      {/* Preferences */}
-      <PrefsPanel prefs={prefs} setPrefs={setPrefs} />
+        {/* Membership */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Membership</span>
+          <div style={{ display: "flex", gap: "4px" }}>
+            {[["f2p","F2P"],["members","Members"],["both","Both"]].map(([v, l]) => (
+              <button
+                key={v}
+                className={`toggle-btn${prefs.membership === v ? " active-med" : ""}`}
+                onClick={() => setPref("membership", v)}
+              >{l}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Search + count */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginLeft: "auto" }}>
+          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Search</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <input
+              className="filter-input"
+              placeholder="Item name..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ width: "160px" }}
+            />
+            <span style={{ fontSize: "12px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>
+              {picks.length} pick{picks.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+        </div>
+
+      </div>
 
       {/* Table */}
       <div className="flips-table">
+
         {/* Header */}
         <div className="table-header" style={{ gridTemplateColumns: COLS }}>
-          {[["#",""], ["Item",""], ["Buy","Lowest current buy offer"], ["Sell","Highest current sell offer"], ["Margin","Sell − buy − GE tax"], ["ROI","Margin ÷ buy price"], ["Vol/Day","Items traded per day. Higher = easier fills."], ["Limit","Max buy per 4 hours"], ["GP/Fill","Realistic GP profit per 4hr window"], ["Score","Personalised score based on your preferences"]].map(([label, tip], i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              {label}
+          {[
+            ["Item",       null],
+            ["Buy",        "Lowest current buy offer on the GE"],
+            ["Sell",       "Highest current sell offer on the GE"],
+            ["Margin",     "Sell price minus buy price minus GE tax"],
+            ["ROI",        "Margin ÷ buy price"],
+            ["Vol / Day",  "Total items traded per day — higher means more liquid"],
+            ["Limit",      "Max you can buy every 4 hours"],
+            ["Last Trade", "When this item last traded on the GE"],
+          ].map(([label, tip], i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <span>{label}</span>
               {tip && (
                 <span className="stat-tooltip-wrap">
                   <span className="stat-help">?</span>
@@ -320,19 +408,24 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
         </div>
 
         {/* Rows */}
-        {recommendations.length === 0 ? (
+        {picks.length === 0 ? (
           <div className="empty-state">
             <div className="icon">📭</div>
-            <p>No picks match your preferences</p>
-            <small>Try loosening your cash stack, ROI, or membership filters</small>
+            <p>No picks match your filters right now</p>
+            <small>
+              {prefs.cashStack && parseCash(prefs.cashStack) < 500_000
+                ? "Your cash stack may be filtering out most items — try increasing it"
+                : "Prices and freshness update constantly — check back shortly or try a different risk level"}
+            </small>
           </div>
         ) : (
-          recommendations.map((item, i) => {
-            const score = item._score;
-            const scoreClass = score >= 65 ? "score-high" : score >= 35 ? "score-med" : "score-low";
-            const rank = i + 1;
-            const rankColor = rank === 1 ? "var(--gold)" : rank === 2 ? "#aaa" : rank === 3 ? "#cd7f32" : "var(--text-dim)";
+          picks.map(item => {
+            const ageSec     = freshnessAge(item.lastTradeTime);
+            const fTier      = freshnessTier(ageSec);
+            const tradeColor = fTier === "live" ? "var(--green)" : fTier === "ok" ? "var(--text)" : "var(--text-dim)";
             const hasFlipped = flippedNames.has((item.name || "").toLowerCase());
+            const vt         = volTier(item.volume || 0);
+            const volColor   = vt === "high" ? "var(--green)" : vt === "medium" ? "var(--text)" : "var(--text-dim)";
 
             return (
               <div
@@ -341,21 +434,24 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
                 style={{ gridTemplateColumns: COLS }}
                 onClick={() => onOpenChart(item)}
               >
-                {/* Rank */}
-                <span style={{ fontSize: "11px", fontWeight: rank <= 3 ? 700 : 400, color: rankColor }}>
-                  #{rank}
-                </span>
-
-                {/* Item name + badges */}
+                {/* Item */}
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                  <div>
+                  <img
+                    src={itemIconUrl(item.name)}
+                    alt=""
+                    className="item-icon"
+                    onError={e => { e.target.style.display = "none"; }}
+                  />
+                  <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
                     <div className="item-name">{item.name}</div>
-                    {hasFlipped && (
-                      <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(201,168,76,0.12)", color: "var(--gold)", borderRadius: "4px", padding: "1px 5px" }}>
-                        ✓ Flipped
-                      </span>
-                    )}
+                    <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                      <RiskTag item={item} />
+                      {hasFlipped && (
+                        <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(201,168,76,0.12)", color: "var(--gold)", borderRadius: "4px", padding: "1px 5px" }}>
+                          ✓ Flipped
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -366,7 +462,9 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
                 <span className="price">{formatGP(item.high)}</span>
 
                 {/* Margin */}
-                <span className={`margin${item.margin < 0 ? " neg" : ""}`}>{formatGP(item.margin)}</span>
+                <span className={`margin${item.margin < 0 ? " neg" : ""}`}>
+                  {formatGP(item.margin)}
+                </span>
 
                 {/* ROI */}
                 <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>
@@ -374,39 +472,32 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
                 </span>
 
                 {/* Volume */}
-                <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
-                  {item.volume >= 1000 ? (item.volume / 1000).toFixed(1) + "k" : item.volume.toLocaleString()}
-                  {item.buyLimit > 0 && item.volume < item.buyLimit && (
-                    <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit">⚠</span>
-                  )}
+                <span style={{ fontSize: "13px", color: volColor }}>
+                  {formatVol(item.volume)}
                 </span>
 
                 {/* Buy Limit */}
-                <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
-
-                {/* GP/Fill */}
-                <span style={{ fontSize: "12px", fontWeight: 600, color: item._gpPerFill >= 1_000_000 ? "var(--green)" : item._gpPerFill >= 200_000 ? "var(--gold)" : "var(--text-dim)" }}>
-                  {formatGP(item._gpPerFill)}
+                <span className="price" style={{ color: "var(--text-dim)" }}>
+                  {item.buyLimit ? item.buyLimit.toLocaleString() : "?"}
                 </span>
 
-                {/* Score badge */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }} onClick={e => e.stopPropagation()}>
-                  <span className={`score-badge ${scoreClass}`} title={`Score: ${score}/100`}>{score}</span>
-                </div>
+                {/* Last Trade */}
+                <span style={{ fontSize: "11px", color: tradeColor }}>
+                  {item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}
+                </span>
+
               </div>
             );
           })
         )}
       </div>
 
-      {/* Legend */}
-      <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "11px", color: "var(--text-dim)", padding: "0 4px" }}>
-        <span>Score:</span>
-        <span><span className="score-badge score-high" style={{ display: "inline-flex" }}>65+</span> Strong</span>
-        <span><span className="score-badge score-med"  style={{ display: "inline-flex" }}>35–64</span> Decent</span>
-        <span><span className="score-badge score-low"  style={{ display: "inline-flex" }}>&lt;35</span> Weak</span>
-        <span style={{ marginLeft: "auto", opacity: 0.5 }}>Score factors: net margin · ROI · volume · GP/fill · your risk &amp; speed prefs</span>
-      </div>
+      {picks.length > 0 && (
+        <div style={{ fontSize: "11px", color: "var(--text-dim)", padding: "0 4px", opacity: 0.6 }}>
+          Up to 50 picks · Sorted by daily volume · Click any row to open the item chart
+        </div>
+      )}
+
     </div>
   );
 }
