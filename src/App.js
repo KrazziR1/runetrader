@@ -616,8 +616,8 @@ const STYLES = `
   .notif-active-banner { display: flex; align-items: center; gap: 8px; background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; font-size: 12px; color: var(--green); }
 
   /* DEMO BANNER */
-  .demo-banner { position: sticky; top: 64px; z-index: 90; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 32px; background: rgba(52,152,219,0.1); border-bottom: 1px solid rgba(52,152,219,0.25); font-size: 13px; color: #4fc3f7; flex-wrap: wrap; }
-  .demo-banner-text { display: flex; align-items: center; gap: 8px; }
+  .demo-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 24px; background: rgba(52,152,219,0.12); border-bottom: 1px solid rgba(52,152,219,0.3); font-size: 13px; color: #4fc3f7; flex-shrink: 0; }
+  .demo-banner-text { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
   .demo-cta-btn { padding: 7px 18px; border-radius: 6px; border: 1px solid rgba(201,168,76,0.5); background: rgba(201,168,76,0.1); color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; font-family: Inter, sans-serif; transition: all 0.15s; white-space: nowrap; }
   .demo-cta-btn:hover { background: rgba(201,168,76,0.2); }
 
@@ -5482,16 +5482,18 @@ RULES:
         {demoMode && (
           <div className="demo-banner">
             <div className="demo-banner-text">
-              <span style={{ fontSize: "16px" }}>👁</span>
-              <span>You’re viewing a <strong>demo</strong> — live prices are real, but Watchlist, Tracker and Portfolio use sample data. {user ? "Exit demo to return to your account." : "Create a free account to track your own flips."}</span>
+              <span style={{ fontSize: "14px", flexShrink: 0 }}>&#128065;</span>
+              <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <strong>Demo mode</strong> &mdash; live prices, simulated positions.
+              </span>
             </div>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
               {!user && (
                 <button className="demo-cta-btn" onClick={() => { setDemoMode(false); setShowAuth(true); }}>
-                  Create Free Account →
+                  Sign Up Free &rarr;
                 </button>
               )}
-              <button onClick={() => setDemoMode(false)} style={{ padding: "7px 14px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.15)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}>
+              <button onClick={() => { setDemoMode(false); endDemoTour(); }} style={{ padding: "6px 12px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.15)", background: "transparent", color: "rgba(255,255,255,0.45)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}>
                 Exit Demo
               </button>
             </div>
