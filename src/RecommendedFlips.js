@@ -147,7 +147,7 @@ function SortBtn({ col, label, sortCol, sortDir, onSort, tip }) {
 const DEFAULT_PREFS = {
   cashStack:  "",
   risk:       "low",
-  membership: "both",
+  membership: "members",
   flipSpeed:  "any",
 };
 const DEFAULT_ADV = { minMargin: "", maxMargin: "", minRoi: "", maxRoi: "", minVolume: "", maxVolume: "" };
@@ -303,17 +303,8 @@ const ONBOARDING_STEPS = [
         color: "var(--green)",
         border: "rgba(46,204,113,0.35)",
         bg: "rgba(46,204,113,0.07)",
-        desc: "Free-to-play only items. Smaller pool but still profitable.",
+        desc: "Free-to-play only. Smaller pool but still profitable.",
         emoji: "🆓",
-      },
-      {
-        value: "both",
-        label: "Show Both",
-        color: "var(--text-dim)",
-        border: "rgba(255,255,255,0.12)",
-        bg: "rgba(255,255,255,0.03)",
-        desc: "Include everything — members and F2P items.",
-        emoji: "🌐",
       },
     ],
   },
@@ -651,14 +642,14 @@ function PrefsBar({ prefs, setPref, onResetOnboarding }) {
       <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
         <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Membership</span>
         <div style={{ display: "flex", gap: "4px", height: "32px" }}>
-          {[["f2p","F2P"],["members","Members"],["both","Both"]].map(([v, l]) => (
+          {[["f2p","F2P"],["members","Members"]].map(([v, l]) => (
             <button key={v}
               className={`toggle-btn${prefs.membership === v ? " active-med" : ""}`}
               onClick={() => setPref("membership", v)}
             >{l}</button>
           ))}
         </div>
-        <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>Filter by account type</span>
+        <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>F2P hides members-only items</span>
       </div>
 
       {/* Re-run wizard button — pushed right */}
@@ -756,8 +747,8 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
         if (!qualifies(item))                                              return false;
         if ((item.low || 0) > budget)                                      return false;
         if (!passesFlipSpeed(item, prefs.flipSpeed))                       return false;
-        if (prefs.membership === "f2p"     && item.members)                return false;
-        if (prefs.membership === "members" && !item.members)               return false;
+        if (prefs.membership === "f2p" && item.members) return false;
+        // "members" shows all items (members + f2p)
         if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
 
         // Advanced filters
