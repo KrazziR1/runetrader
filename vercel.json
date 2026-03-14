@@ -1,5 +1,16 @@
 {
   "rewrites": [
+    {
+      "source": "/item/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(Discordbot|Twitterbot|facebookexternalhit|LinkedInBot|Slackbot|TelegramBot|WhatsApp|redditbot|Pinterest|Googlebot|bingbot|DuckDuckBot|Applebot|curl|python-requests|Go-http-client|java|okhttp).*"
+        }
+      ],
+      "destination": "/api/og?item=:slug"
+    },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
