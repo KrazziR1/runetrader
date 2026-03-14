@@ -3933,8 +3933,9 @@ export default function RuneTrader() {
     const upgradeStatus = params.get("upgrade");
     if (upgradeStatus === "success") {
       setIsPro(true);
-      url.searchParams.delete("upgrade");
-      window.history.replaceState({}, "", url.toString());
+      const upgradeUrl = new URL(window.location.href);
+      upgradeUrl.searchParams.delete("upgrade");
+      window.history.replaceState({}, "", upgradeUrl.toString());
       setTimeout(() => showToast("Welcome to Pro! 📈 Merchant Mode is now unlocked.", "success", 5000), 500);
     }
     // Detect /item/:slug — e.g. runetrader.gg/item/abyssal-whip
