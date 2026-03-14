@@ -7,7 +7,6 @@ import ReferralPage from "./ReferralPage";
 import TradeBoard from "./TradeBoard";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
-import RecommendedFlips from "./RecommendedFlips";
 
 // ── Changelog — add new entries at the top, bump DEPLOY_KEY on each deploy ──
 const DEPLOY_KEY = "runetrader_seen_deploy_v1"; // change this string on each deploy to trigger the modal
@@ -3063,7 +3062,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   ["buylimit", "Limit", "Max items you can buy every 4 hours"],
                   ["gpPerFill", "GP/Fill", "Realistic GP profit per 4hr window"],
                   ["lastTradeTime", "Last Trade", "When this item last traded."],
-                  ["sparkline", "Trend", null],
+                  ["sparkline", "24hr Trend", null],
                 ].map(([col, label, tip]) => (
                   <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
                     {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
@@ -5551,7 +5550,7 @@ RULES:
             <span className="logo-text">RuneTrader<span className="logo-dot">.gg</span></span>
           </div>
           <div className="nav-tabs">
-            {!merchantMode && [["market","GE Tracker"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"],["referral","Refer & Earn 🔗"]] : [])].map(([t,label]) => (
+            {!merchantMode && [["market","Market"],["watchlist","Watchlist"],["tracker","Tracker"],["alerts","Alerts"],...(user ? [["portfolio","Portfolio"],["settings","Settings"],["referral","Refer & Earn 🔗"]] : [])].map(([t,label]) => (
               <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => setActiveTab(t)}>
                 {label}
                 {t === "tracker" && (openFlips.length + (autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length)) > 0 && (
@@ -6037,12 +6036,12 @@ RULES:
 
                 {/* Market sub-tabs row */}
                 <div style={{ display: "flex", gap: "4px", paddingBottom: "4px" }}>
-                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"],["tradeboard","🤝 Trade Board"],["picks","⭐ Picks"]].map(([v,l]) => (
+                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"],["tradeboard","🤝 Trade Board"]].map(([v,l]) => (
                     <button key={v}
                       className={`market-sub-tab${marketSubTab === v ? " active" : ""}`}
                       onClick={() => setMarketSubTab(v)}
                     >
-                      {l}{(v === "tradeboard") && <span className="sub-tab-badge">new</span>}{(v === "picks") && <span className="sub-tab-badge">new</span>}
+                      {l}{(v === "tradeboard") && <span className="sub-tab-badge">new</span>}
                     </button>
                   ))}
                 </div>
@@ -6300,17 +6299,6 @@ RULES:
                   />
                 )}
 
-                {/* ── PICKS TAB ── */}
-                {marketSubTab === "picks" && (
-                  <RecommendedFlips
-                    user={user}
-                    items={items}
-                    flipsLog={flipsLog}
-                    onSignIn={() => setShowAuth(true)}
-                    onOpenChart={setSelectedItem}
-                  />
-                )}
-
                 {marketSubTab === "flips" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div className="filter-bar">
@@ -6464,7 +6452,7 @@ RULES:
                         ["buylimit", "Limit", "Max items you can buy every 4 hours"],
                         ["gpPerFill", "GP/Fill", "Realistic GP profit per 4hr window, scaled by market volume"],
                         ["lastTradeTime", "Last Trade", "When this item last traded. Stale = low activity."],
-                        ["sparkline", "Trend", null],
+                        ["sparkline", "24hr Trend", null],
                       ].map(([col, label, tip]) => (
                         <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
                           {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
