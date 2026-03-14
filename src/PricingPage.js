@@ -166,10 +166,10 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
             <span style={{ fontSize: "32px", flexShrink: 0 }}>🔗</span>
             <div>
               <div style={{ fontFamily: "Cinzel, serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>
-                Refer a friend — both get 50% off
+                Refer a friend — both get 50% off. Refer 3 → Pro for life.
               </div>
               <p style={{ fontSize: "15px", color: "var(--text-dim)", lineHeight: 1.7, margin: 0 }}>
-                Share your referral link. When a friend signs up and upgrades to Pro, <strong style={{ color: "var(--text)" }}>you both get 50% off your first month</strong>. One-time deal — applied automatically at checkout.
+                Share your referral link. When a friend signs up and upgrades to Pro, <strong style={{ color: "var(--text)" }}>you both get 50% off your first month</strong>. Refer <strong style={{ color: "var(--gold)" }}>3 paying friends</strong> and get <strong style={{ color: "var(--gold)" }}>RuneTrader Pro free for life</strong>.
               </p>
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
               <span style={{ fontSize: "20px", flexShrink: 0 }}>🎁</span>
               <div>
                 <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", marginBottom: "4px" }}>You get</div>
-                <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.5 }}>50% off your first month when your friend upgrades. Refer 3 friends → <span style={{ color: "var(--gold)", fontWeight: 600 }}>Pro free for life</span>.</div>
+                <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.5 }}>50% off your first month when your friend upgrades. Refer 3 paying friends → <span style={{ color: "var(--gold)", fontWeight: 600 }}>Pro free for life</span>. No need to be Pro yourself — referrals count on any plan.</div>
               </div>
             </div>
             <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "10px", padding: "16px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
