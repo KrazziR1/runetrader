@@ -8,6 +8,7 @@ import TradeBoard from "./TradeBoard";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 import RecommendedFlips from "./RecommendedFlips";
+import { xpToLevel, xpProgress, xpToNextLevel, calcFlipXP, getLevelTitle, getCelebrationTier, checkNewAchievements, ACHIEVEMENTS } from "./XPSystem";
 
 // â”€â”€ Changelog â€” add new entries at the top, bump DEPLOY_KEY on each deploy â”€â”€
 const DEPLOY_KEY = "runetrader_seen_deploy_v1"; // change this string on each deploy to trigger the modal
@@ -837,6 +838,34 @@ const STYLES = `
 
   /* TOAST */
   .toast-container { position: fixed; bottom: 24px; right: 90px; z-index: 400; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: 320px; }
+
+  /* XP BAR */
+  .xp-bar-wrap { display: flex; flex-direction: column; gap: 3px; min-width: 120px; cursor: pointer; }
+  .xp-bar-label { display: flex; justify-content: space-between; align-items: center; }
+  .xp-level-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(201,168,76,0.12); border: 1px solid var(--gold-dim); border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700; color: var(--gold); font-family: 'Cinzel', serif; white-space: nowrap; }
+  .xp-bar-track { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; width: 100%; }
+  .xp-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); transition: width 0.6s ease; }
+
+  /* LEVEL UP MODAL */
+  @keyframes levelUpPop { 0%{transform:scale(0.6);opacity:0} 60%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
+  .levelup-overlay { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; animation: fadeIn 0.3s ease; }
+  .levelup-card { background: #070a0f; border: 2px solid var(--gold); border-radius: 20px; padding: 48px 40px; text-align: center; display: flex; flex-direction: column; gap: 16px; max-width: 420px; width: 90%; animation: levelUpPop 0.5s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 0 80px rgba(201,168,76,0.4); }
+  @keyframes xpRays { 0%{opacity:0.6;transform:scale(0.8)} 100%{opacity:0;transform:scale(2)} }
+  .levelup-rays { position: absolute; inset: 0; border-radius: 20px; border: 2px solid var(--gold); animation: xpRays 1.2s ease-out 0.3s both; pointer-events: none; }
+
+  /* CELEBRATION OVERLAY */
+  @keyframes celebIn { from{opacity:0;transform:translateY(-20px) scale(0.9)} to{opacity:1;transform:translateY(0) scale(1)} }
+  .celebration-banner { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 800; padding: 14px 32px; border-radius: 12px; font-family: 'Cinzel', serif; font-weight: 700; font-size: 18px; letter-spacing: 2px; text-transform: uppercase; animation: celebIn 0.4s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 8px 40px rgba(0,0,0,0.6); pointer-events: none; white-space: nowrap; }
+
+  /* ACHIEVEMENT TOAST */
+  @keyframes achieveIn { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
+  .achievement-toast { display: flex; align-items: center; gap: 12px; background: #0f1218; border: 1px solid var(--gold-dim); border-radius: 10px; padding: 12px 16px; animation: achieveIn 0.4s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 8px 24px rgba(0,0,0,0.6); pointer-events: all; max-width: 300px; }
+
+  /* ACHIEVEMENTS PAGE */
+  .achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .achievement-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s; }
+  .achievement-card.unlocked { border-color: var(--gold-dim); background: rgba(201,168,76,0.05); }
+  .achievement-card.locked { opacity: 0.45; filter: grayscale(1); }
   .toast { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; font-family: "Inter", sans-serif; box-shadow: 0 8px 32px rgba(0,0,0,0.5); pointer-events: all; animation: toastIn 0.3s cubic-bezier(0.4,0,0.2,1); max-width: 320px; }
   @keyframes toastIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
   .toast.success { background: #0f1218; border: 1px solid var(--green-dim); color: var(--green); }
@@ -4113,6 +4142,78 @@ export default function RuneTrader() {
     }
   }
 
+  async function loadXP() {
+    if (!user) return;
+    const { data } = await supabase.from("trader_xp").select("*").eq("user_id", user.id).single();
+    if (data) {
+      setTotalXP(data.total_xp || 0);
+      setUnlockedAchievements(data.achievements || []);
+    }
+  }
+
+  async function awardXP(profit, context = {}) {
+    if (!user || !profit || profit <= 0) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const lastFlipDay = localStorage.getItem("rt_last_flip_day");
+    const isFirstFlipOfDay = lastFlipDay !== today;
+    if (isFirstFlipOfDay) localStorage.setItem("rt_last_flip_day", today);
+
+    const earned = calcFlipXP(profit, isFirstFlipOfDay);
+    if (earned <= 0) return;
+
+    const oldLevel = xpToLevel(totalXP);
+    const newTotalXP = totalXP + earned;
+    const newLevel = xpToLevel(newTotalXP);
+
+    setTotalXP(newTotalXP);
+
+    // Level up?
+    if (newLevel > oldLevel) {
+      setShowLevelUp({ oldLevel, newLevel });
+      setTimeout(() => setShowLevelUp(null), 6000);
+    }
+
+    // Profit celebration?
+    const celebration = getCelebrationTier(profit);
+    if (celebration) {
+      setShowCelebration({ ...celebration, profit });
+      setTimeout(() => setShowCelebration(null), 4000);
+    }
+
+    // Check achievements
+    const ctx = {
+      flipsLog: context.flipsLog || [],
+      lastFlipProfit: profit,
+      level: newLevel,
+      loginStreak: context.loginStreak || 0,
+    };
+    const newly = checkNewAchievements(ctx, unlockedAchievements);
+    if (newly.length > 0) {
+      const newIds = newly.map(a => a.id);
+      const combined = [...unlockedAchievements, ...newIds];
+      setUnlockedAchievements(combined);
+      setNewAchievements(prev => [...prev, ...newly]);
+      setTimeout(() => setNewAchievements([]), 5000);
+      // Save achievements
+      await supabase.from("trader_xp").upsert({
+        user_id: user.id,
+        total_xp: newTotalXP,
+        level: newLevel,
+        achievements: combined,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    } else {
+      // Save XP without achievement change
+      await supabase.from("trader_xp").upsert({
+        user_id: user.id,
+        total_xp: newTotalXP,
+        level: newLevel,
+        achievements: unlockedAchievements,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    }
+  }
+
   async function saveMerchantCapital(val) {
     const gp = parseInt(val.replace(/[^0-9]/g, ""));
     if (isNaN(gp) || gp <= 0) return;
@@ -4171,7 +4272,7 @@ export default function RuneTrader() {
     }
   }
 
-  useEffect(() => { if (user) loadMerchantSettings(); }, [user]); // eslint-disable-line
+  useEffect(() => { if (user) { loadMerchantSettings(); loadXP(); } }, [user]); // eslint-disable-line
 
   // Load manual positions for Merchant Mode (read-only copy)
   const [merchantPositions, setMerchantPositions] = useState([]);
@@ -4250,6 +4351,15 @@ export default function RuneTrader() {
   // First profitable flip confetti
   const [showFlipConfetti, setShowFlipConfetti] = useState(false);
   const [flipConfettiData, setFlipConfettiData] = useState(null);
+
+  // ── XP / Levelling system ────────────────────────────────────────────────────
+  const [totalXP, setTotalXP] = useState(0);
+  const [unlockedAchievements, setUnlockedAchievements] = useState([]);
+  const [showLevelUp, setShowLevelUp] = useState(null);       // { oldLevel, newLevel }
+  const [showCelebration, setShowCelebration] = useState(null); // getCelebrationTier result + profit
+  const [newAchievements, setNewAchievements] = useState([]); // queue of newly unlocked
+  const [showAchievements, setShowAchievements] = useState(false);
+  // ─────────────────────────────────────────────────────────────────────────────
   // ─────────────────────────────────────────────────────────────────────────────
 
   const [selectedItem, setSelectedItem] = useState(null);
@@ -5002,6 +5112,10 @@ export default function RuneTrader() {
       if (!error && data) {
         setFlipsLog(prev => prev.map(f => f.id === flip.id ? mapFlipRow(data) : f));
         showToast(`Sold! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
+        // Award XP
+        if (totalProfit > 0) {
+          awardXP(totalProfit, { flipsLog, loginStreak });
+        }
         // First profitable flip celebration (one-time ever)
         if (totalProfit > 0 && !localStorage.getItem("rt_first_profit_celebrated")) {
           localStorage.setItem("rt_first_profit_celebrated", "1");
@@ -5854,6 +5968,125 @@ RULES:
           </div>
         )}
 
+        {/* ── LEVEL-UP MODAL ── */}
+        {showLevelUp && (() => {
+          const { newLevel } = showLevelUp;
+          const { title, emoji, color } = getLevelTitle(newLevel);
+          const isMax = newLevel >= 99;
+          return (
+            <div className="levelup-overlay" onClick={() => setShowLevelUp(null)}>
+              <div className="levelup-card" style={{ position: "relative" }}>
+                <div className="levelup-rays" />
+                <div style={{ fontSize: "64px", lineHeight: 1 }}>{isMax ? "🎓" : emoji}</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", letterSpacing: "3px", textTransform: "uppercase", color: "var(--text-dim)" }}>
+                  {isMax ? "CONGRATULATIONS" : "LEVEL UP"}
+                </div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "48px", fontWeight: 900, color, lineHeight: 1 }}>
+                  {isMax ? "99" : `${newLevel}`}
+                </div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color }}>
+                  {title}
+                </div>
+                {isMax && (
+                  <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>
+                    You've reached the pinnacle of Grand Exchange mastery.<br />The Max Cape is yours.
+                  </div>
+                )}
+                <div style={{ display: "flex", gap: "6px", justifyContent: "center", flexWrap: "wrap" }}>
+                  {Array.from({ length: Math.min(newLevel, 10) }).map((_, i) => (
+                    <div key={i} style={{ width: "8px", height: "8px", borderRadius: "50%", background: color, opacity: 0.6 + i * 0.04 }} />
+                  ))}
+                </div>
+                <button onClick={() => setShowLevelUp(null)} style={{ padding: "10px 28px", borderRadius: "8px", border: `1px solid ${color}`, background: "transparent", color, fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                  Keep flipping →
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ── PROFIT CELEBRATION BANNER ── */}
+        {showCelebration && (
+          <div className="celebration-banner" style={{ background: `rgba(0,0,0,0.9)`, border: `2px solid ${showCelebration.color}`, color: showCelebration.color, boxShadow: `0 0 40px ${showCelebration.color}66` }}>
+            {showCelebration.emoji} {showCelebration.label} — +{formatGP(showCelebration.profit)} gp
+          </div>
+        )}
+
+        {/* ── ACHIEVEMENT TOASTS ── */}
+        <div style={{ position: "fixed", bottom: "80px", right: "24px", zIndex: 810, display: "flex", flexDirection: "column", gap: "8px", pointerEvents: "none" }}>
+          {newAchievements.map((a, i) => (
+            <div key={a.id} className="achievement-toast" style={{ animationDelay: `${i * 0.15}s` }}>
+              <span style={{ fontSize: "28px" }}>{a.emoji}</span>
+              <div>
+                <div style={{ fontSize: "10px", color: "var(--gold-dim)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "2px" }}>Achievement Unlocked</div>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--gold)" }}>{a.name}</div>
+                <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{a.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* ── ACHIEVEMENTS PAGE MODAL ── */}
+        {showAchievements && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.88)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
+            onClick={e => { if (e.target === e.currentTarget) setShowAchievements(false); }}>
+            <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "680px", maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+              <div style={{ padding: "24px 28px 16px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+                <div>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)" }}>Trading Record</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "4px" }}>
+                    {(() => {
+                      const level = xpToLevel(totalXP);
+                      const { title, emoji } = getLevelTitle(level);
+                      return `${emoji} Level ${level} ${title} · ${totalXP.toLocaleString()} XP · ${unlockedAchievements.length}/${ACHIEVEMENTS.length} achievements`;
+                    })()}
+                  </div>
+                </div>
+                <button onClick={() => setShowAchievements(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "20px" }}>✕</button>
+              </div>
+
+              {/* XP Progress */}
+              <div style={{ padding: "16px 28px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+                {(() => {
+                  const level = xpToLevel(totalXP);
+                  const progress = xpProgress(totalXP);
+                  const toNext = xpToNextLevel(totalXP);
+                  const { color } = getLevelTitle(level);
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                        <span style={{ color: "var(--text-dim)" }}>Level {level}</span>
+                        <span style={{ color: "var(--text-dim)" }}>{level < 99 ? `${toNext.toLocaleString()} XP to level ${level + 1}` : "MAX LEVEL"}</span>
+                      </div>
+                      <div style={{ background: "var(--bg4)", borderRadius: "4px", height: "10px", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${progress * 100}%`, background: `linear-gradient(90deg, ${color}88, ${color})`, borderRadius: "4px", transition: "width 0.6s ease" }} />
+                      </div>
+                      <div style={{ fontSize: "11px", color: "var(--text-dim)", textAlign: "right" }}>{totalXP.toLocaleString()} total XP</div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Achievements grid */}
+              <div style={{ padding: "20px 28px", overflowY: "auto" }}>
+                <div className="achievement-grid">
+                  {ACHIEVEMENTS.map(a => {
+                    const unlocked = unlockedAchievements.includes(a.id);
+                    return (
+                      <div key={a.id} className={`achievement-card ${unlocked ? "unlocked" : "locked"}`}>
+                        <div style={{ fontSize: "32px" }}>{a.emoji}</div>
+                        <div style={{ fontSize: "13px", fontWeight: 700, color: unlocked ? "var(--gold)" : "var(--text-dim)" }}>{a.name}</div>
+                        <div style={{ fontSize: "11px", color: "var(--text-dim)", lineHeight: 1.5 }}>{a.desc}</div>
+                        {unlocked && <div style={{ fontSize: "10px", color: "var(--green)", fontWeight: 600 }}>✓ Unlocked</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* DEMO BANNER */}
         {demoMode && (
           <div className="demo-banner">
@@ -5967,6 +6200,24 @@ RULES:
             )}
             {user ? (
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {/* XP Bar + Level Badge */}
+                {totalXP >= 0 && (() => {
+                  const level = xpToLevel(totalXP);
+                  const progress = xpProgress(totalXP);
+                  const toNext = xpToNextLevel(totalXP);
+                  const { title, emoji } = getLevelTitle(level);
+                  return (
+                    <div className="xp-bar-wrap" onClick={() => setShowAchievements(true)} title={`Level ${level} ${title} — ${toNext.toLocaleString()} XP to next level`}>
+                      <div className="xp-bar-label">
+                        <span className="xp-level-badge">{emoji} Lv.{level} {title}</span>
+                        <span style={{ fontSize: "10px", color: "var(--text-dim)", marginLeft: "6px" }}>{level < 99 ? `${toNext.toLocaleString()} XP` : "MAX"}</span>
+                      </div>
+                      <div className="xp-bar-track">
+                        <div className="xp-bar-fill" style={{ width: `${progress * 100}%` }} />
+                      </div>
+                    </div>
+                  );
+                })()}
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{user.user_metadata?.username || user.email?.split("@")[0]}</span>
                 <button onClick={handleSignOut} style={{ padding: "6px 14px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
                   onMouseOver={e => e.target.style.color = "var(--red)"} onMouseOut={e => e.target.style.color = "var(--text-dim)"}>Sign Out</button>
