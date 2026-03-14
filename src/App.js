@@ -4888,7 +4888,7 @@ RULES:
   const avgProfit = totalFlips ? Math.round(totalProfit / totalFlips) : 0;
   const bestItem = allClosedFlips.length ? allClosedFlips.reduce((best, f) => (f.totalProfit || 0) > (best.totalProfit || 0) ? f : best, allClosedFlips[0]) : null;
 
-  if (!showApp) return <LandingPage onEnterApp={(mode) => { setShowApp(true); if (mode === "demo" && !user) setDemoMode(true); }} />;
+  if (!showApp) return <LandingPage onEnterApp={(mode) => { setShowApp(true); if (mode === "demo") setDemoMode(true); }} />;
 
   return (
     <>
@@ -5172,15 +5172,22 @@ RULES:
         </div>
 
         {/* DEMO BANNER */}
-        {demoMode && !user && (
+        {demoMode && (
           <div className="demo-banner">
             <div className="demo-banner-text">
               <span style={{ fontSize: "16px" }}>👁</span>
-              <span>You’re viewing a <strong>demo</strong> — data is simulated. Create a free account to see live prices and track your own flips.</span>
+              <span>You’re viewing a <strong>demo</strong> — live prices are real, but Watchlist, Tracker and Portfolio use sample data. {user ? "Exit demo to return to your account." : "Create a free account to track your own flips."}</span>
             </div>
-            <button className="demo-cta-btn" onClick={() => { setDemoMode(false); setShowAuth(true); }}>
-              Create Free Account →
-            </button>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              {!user && (
+                <button className="demo-cta-btn" onClick={() => { setDemoMode(false); setShowAuth(true); }}>
+                  Create Free Account →
+                </button>
+              )}
+              <button onClick={() => setDemoMode(false)} style={{ padding: "7px 14px", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.15)", background: "transparent", color: "rgba(255,255,255,0.5)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}>
+                Exit Demo
+              </button>
+            </div>
           </div>
         )}
 
