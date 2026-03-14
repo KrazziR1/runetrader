@@ -4226,25 +4226,41 @@ export default function RuneTrader() {
     }
     setCinematicQuests(quests);
     setQuestsLoaded(true);
-
-    // Market pulse — find the top margin mover from live items
-    const liveItems = itemsRef.current || [];
-    if (liveItems.length > 0) {
-      const fresh = liveItems.filter(i => {
-        const age = i.lastTradeTime ? Math.floor(Date.now() / 1000 - i.lastTradeTime) : 9999;
-        return i.margin > 0 && age < 600 && i.volume > 5000;
-      });
-      if (fresh.length > 0) {
-        fresh.sort((a, b) => b.margin - a.margin);
-        const top = fresh[0];
-        setMarketPulse({
-          name: top.name,
-          margin: top.margin,
-          volume: top.volume,
-        });
-      }
-    }
   }
+
+  // Market pulse — runs after items have loaded, picks a genuinely good flip
+  // Uses the same Low tier rules as the Picks tab so the claim is accurate
+  useEffect(() => {
+    if (!questsLoaded || !showLoginCinematic) return;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const liveItems = itemsRef.current || [];
+    if (liveItems.length === 0) return;
+
+    // Only items that pass the Low risk tier (most reliable, broadly applicable)
+    const qualified = liveItems.filter(i => {
+      if (!i.hasPrice || i.margin <= 0) return false;
+      const lim = i.buyLimit || 0; if (lim <= 0) return false;
+      const age = nowSec - (i.lastTradeTime || 0);
+      if (age > 900) return false; // data must be < 15min old
+      return (i.volume / lim) >= 70; // vol/limit >= 70x
+    });
+
+    if (qualified.length === 0) return;
+
+    // Pick the one with the best GP/fill (most useful signal, not just raw margin)
+    qualified.sort((a, b) => {
+      const gpA = (a.margin || 0) * Math.min(a.volume / 6, a.buyLimit || 1);
+      const gpB = (b.margin || 0) * Math.min(b.volume / 6, b.buyLimit || 1);
+      return gpB - gpA;
+    });
+
+    const top = qualified[0];
+    setMarketPulse({
+      name: top.name,
+      margin: top.margin,
+      volume: top.volume,
+    });
+  }, [questsLoaded, showLoginCinematic]); // eslint-disable-line
 
   async function saveQuests(updatedQuests, updatedCoins) {
     if (!user) return;
@@ -5938,7 +5954,7 @@ RULES:
               )}
               {marketPulse && (
                 <div className="cinematic-pulse">
-                  📈 {marketPulse.name} — top margin right now
+                  📈 {marketPulse.name} — {marketPulse.margin >= 1_000_000 ? (marketPulse.margin / 1_000_000).toFixed(1) + "M" : marketPulse.margin >= 1_000 ? (marketPulse.margin / 1_000).toFixed(0) + "k" : marketPulse.margin} gp margin · best GP/fill right now
                 </div>
               )}
             </div>
