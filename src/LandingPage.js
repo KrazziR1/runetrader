@@ -196,7 +196,7 @@ const STYLES = `
     font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
     padding: 4px 16px; border-radius: 20px;
   }
-  .pricing-name { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); }
+  .pricing-name { font-family: 'Cinzel', serif; font-size: 18px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); }
   .pricing-price { font-family: 'Cinzel', serif; font-size: 58px; font-weight: 700; color: var(--gold); margin: 16px 0 4px; }
   .pricing-period { font-size: 14px; color: var(--text-dim); }
   .pricing-features { list-style: none; margin: 32px 0; text-align: left; display: flex; flex-direction: column; gap: 12px; }
@@ -232,7 +232,7 @@ const STYLES = `
     display: flex; align-items: center; justify-content: space-between;
     font-size: 13px; color: var(--text-dim);
   }
-  .footer-logo { font-family: 'Cinzel', serif; color: var(--gold); font-size: 16px; letter-spacing: 2px; }
+  .footer-logo { font-family: 'Cinzel', serif; color: var(--gold); font-size: 18px; letter-spacing: 2px; }
   .footer-links { display: flex; gap: 24px; }
   .footer-link { color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
   .footer-link:hover { color: var(--gold); }
@@ -251,7 +251,7 @@ const STYLES = `
     animation: ticker 30s linear infinite;
   }
   .ticker-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); }
-  .ticker-item .name { color: var(--text); font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 0.5px; }
+  .ticker-item .name { color: var(--text); font-family: 'Cinzel', serif; font-size: 18px; letter-spacing: 0.5px; }
   .ticker-item .up { color: var(--green); }
   .ticker-item .down { color: var(--red); }
   @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
@@ -462,7 +462,7 @@ export default function LandingPage({ onEnterApp }) {
               { num: "03", title: "Open the GE and flip", desc: "Your GE slots sync in real time. Open Merchant Mode, check the AI advisor, and start stacking gold.", icon: "📈" },
             ].map((step, i) => (
               <div key={i} className="feature-card" style={{ textAlign: "left" }}>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "11px", letterSpacing: "3px", color: "var(--gold-dim)", marginBottom: "16px" }}>{step.num}</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", letterSpacing: "3px", color: "var(--gold-dim)", marginBottom: "16px" }}>{step.num}</div>
                 <span className="feature-icon">{step.icon}</span>
                 <div className="feature-title">{step.title}</div>
                 <div className="feature-desc">{step.desc}</div>

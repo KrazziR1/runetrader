@@ -74,7 +74,7 @@ export default function ReferralPage({ user, supabase, showToast }) {
         <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "rgba(201,168,76,0.1)", border: "1px solid var(--gold-dim)", borderRadius: "12px", padding: "16px 20px" }}>
           <span style={{ fontSize: "24px" }}>👑</span>
           <div>
-            <div style={{ fontFamily: "Cinzel, serif", fontSize: "14px", fontWeight: 700, color: "var(--gold)" }}>Pro for Life — Unlocked</div>
+            <div style={{ fontFamily: "Cinzel, serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)" }}>Pro for Life — Unlocked</div>
             <div style={{ fontSize: "13px", color: "var(--text-dim)", marginTop: "2px" }}>You referred 3 friends. RuneTrader Pro is yours forever, free of charge.</div>
           </div>
         </div>
@@ -82,7 +82,7 @@ export default function ReferralPage({ user, supabase, showToast }) {
 
       {/* Your referral link */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "12px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-        <div style={{ fontFamily: "Cinzel, serif", fontSize: "13px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px" }}>
+        <div style={{ fontFamily: "Cinzel, serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px" }}>
           Your Referral Link
         </div>
         <p style={{ fontSize: "14px", color: "var(--text-dim)", lineHeight: 1.6, margin: 0 }}>
@@ -143,7 +143,7 @@ export default function ReferralPage({ user, supabase, showToast }) {
       {!lifetimePro && (
         <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontFamily: "Cinzel, serif", fontSize: "13px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "1px" }}>
+            <div style={{ fontFamily: "Cinzel, serif", fontSize: "18px", fontWeight: 700, color: "var(--text)", textTransform: "uppercase", letterSpacing: "1px" }}>
               👑 Pro for Life Progress
             </div>
             <div style={{ fontSize: "13px", color: "var(--gold)", fontWeight: 600 }}>
@@ -164,7 +164,7 @@ export default function ReferralPage({ user, supabase, showToast }) {
       {/* Referral history */}
       {referrals.length > 0 && (
         <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "12px", overflow: "hidden" }}>
-          <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)", fontFamily: "Cinzel, serif", fontSize: "12px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px" }}>
+          <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)", fontFamily: "Cinzel, serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px" }}>
             Referral History
           </div>
           {referrals.slice(0, 10).map((r, i) => (

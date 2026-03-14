@@ -185,7 +185,7 @@ const STYLES = `
   .upgrade-features { display: flex; flex-direction: column; gap: 8px; width: 100%; background: var(--bg3); border-radius: 10px; padding: 16px; }
   .upgrade-feature-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text); }
   .upgrade-feature-row .check { color: var(--gold); font-size: 12px; flex-shrink: 0; }
-  .upgrade-cta { width: 100%; padding: 14px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 16px; font-weight: 700; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 1px; transition: all 0.2s; }
+  .upgrade-cta { width: 100%; padding: 14px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 18px; font-weight: 700; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 1px; transition: all 0.2s; }
   .upgrade-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(201,168,76,0.4); }
   .upgrade-dismiss { font-size: 12px; color: var(--text-dim); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; transition: color 0.15s; }
   .upgrade-dismiss:hover { color: var(--text); }
@@ -273,7 +273,7 @@ const STYLES = `
   .prefs-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   .pref-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
   .pref-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-  .pref-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--gold); font-size: 14px; font-family: "Cinzel", serif; outline: none; width: 100%; transition: border-color 0.2s; }
+  .pref-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--gold); font-size: 18px; font-family: "Cinzel", serif; outline: none; width: 100%; transition: border-color 0.2s; }
   .pref-input:focus { border-color: var(--gold-dim); }
   .pref-input::placeholder { color: var(--text-dim); font-family: "Inter", sans-serif; font-size: 13px; }
   .pref-sub { font-size: 11px; color: var(--text-dim); }
@@ -342,7 +342,7 @@ const STYLES = `
   /* CLOSE FLIP MODAL */
   .close-flip-modal { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
   .close-flip-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 440px; padding: 28px; display: flex; flex-direction: column; gap: 18px; }
-  .close-flip-title { font-family: "Cinzel", serif; font-size: 16px; font-weight: 700; color: var(--gold); }
+  .close-flip-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); }
   .close-flip-subtitle { font-size: 13px; color: var(--text-dim); margin-top: -8px; }
   .close-flip-options { display: flex; flex-direction: column; gap: 10px; }
   .close-flip-option-btn { padding: 14px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; font-family: "Inter", sans-serif; transition: all 0.2s; text-align: left; display: flex; flex-direction: column; gap: 3px; }
@@ -438,7 +438,7 @@ const STYLES = `
   .cap-cell { padding: 14px 16px 16px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 3px; min-height: 76px; }
   .cap-cell:last-child { border-right: none; }
   .cap-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; }
-  .cap-value { font-size: 17px; font-weight: 600; font-family: 'Cinzel', serif; line-height: 1.3; }
+  .cap-value { font-size: 18px; font-weight: 600; font-family: 'Cinzel', serif; line-height: 1.3; }
   .cap-sub { font-size: 11px; color: var(--text-dim); }
   .slots-grid { display: grid; grid-template-columns: repeat(8,1fr); gap: 8px; padding: 12px 16px; }
   .ge-slot { aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; position: relative; transition: all 0.2s; overflow: hidden; background: var(--bg2); }
@@ -529,14 +529,14 @@ const STYLES = `
   .analytics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 12px 16px; }
   .analytics-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; }
   .analytics-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-  .analytics-val { font-size: 15px; font-weight: 600; font-family: 'Cinzel', serif; }
+  .analytics-val { font-size: 18px; font-weight: 600; font-family: 'Cinzel', serif; }
   .capital-setup { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 24px; }
   .capital-setup-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 420px; padding: 32px; display: flex; flex-direction: column; gap: 20px; }
   .capital-setup-title { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); }
   .capital-setup-sub { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-top: -8px; }
   .capital-setup-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: var(--text); font-size: 16px; font-family: 'Inter', sans-serif; outline: none; width: 100%; transition: border-color 0.2s; }
   .capital-setup-input:focus { border-color: var(--gold-dim); }
-  .capital-setup-btn { padding: 12px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 0.5px; transition: opacity 0.2s; }
+  .capital-setup-btn { padding: 12px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 18px; font-weight: 700; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 0.5px; transition: opacity 0.2s; }
   .capital-setup-btn:hover { opacity: 0.85; }
   .capital-setup-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .merchant-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
@@ -662,7 +662,7 @@ const STYLES = `
     top: 50%; left: 50%; transform: translate(-50%, -50%);
     width: 480px;
   }
-  .demo-tour-label { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dim); font-family: Cinzel, serif; }
+  .demo-tour-label { font-size: 18px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dim); font-family: Cinzel, serif; }
   .demo-tour-title { font-family: Cinzel, serif; font-size: 19px; font-weight: 700; color: var(--gold); line-height: 1.3; }
   .demo-tour-desc { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
   .demo-tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; border-top: 1px solid var(--border); }
@@ -676,7 +676,7 @@ const STYLES = `
   .demo-tour-end-overlay { position: fixed; inset: 0; z-index: 9500; background: rgba(6,8,11,0.97); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; text-align: center; padding: 40px; animation: fadeInUp 0.5s ease both; }
   .demo-tour-end-title { font-family: "Cinzel", serif; font-size: clamp(36px, 5vw, 60px); font-weight: 900; color: var(--gold); line-height: 1.2; }
   .demo-tour-end-sub { font-size: 18px; color: var(--text-dim); max-width: 480px; line-height: 1.7; }
-  .demo-tour-end-cta { padding: 16px 48px; border-radius: 6px; font-family: Cinzel, serif; font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; border: none; cursor: pointer; box-shadow: 0 0 40px rgba(201,168,76,0.3); transition: all 0.3s; }
+  .demo-tour-end-cta { padding: 16px 48px; border-radius: 6px; font-family: Cinzel, serif; font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; border: none; cursor: pointer; box-shadow: 0 0 40px rgba(201,168,76,0.3); transition: all 0.3s; }
   .demo-tour-end-cta:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(201,168,76,0.5); }
   .demo-tour-end-dismiss { background: none; border: none; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: Inter, sans-serif; padding: 0; transition: color 0.15s; text-decoration: underline; }
   .demo-tour-end-dismiss:hover { color: var(--text); }
@@ -790,7 +790,7 @@ const STYLES = `
   .portfolio-signin-btn:hover { background: rgba(201,168,76,0.2); }
   .close-pos-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
   .close-pos-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 420px; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
-  .close-pos-title { font-family: "Cinzel", serif; font-size: 16px; font-weight: 700; color: var(--gold); }
+  .close-pos-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); }
   .close-pos-field { display: flex; flex-direction: column; gap: 6px; }
   .close-pos-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
   .close-pos-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: "Inter", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
@@ -1590,7 +1590,7 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
                       {lossDash > 0 && <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e74c3c" strokeWidth="12"
                         strokeDasharray={`${lossDash} ${circ - lossDash}`}
                         strokeDashoffset={circ / 4 - winDash} strokeLinecap="butt" />}
-                      <text x={cx} y={cy - 4} textAnchor="middle" fill="var(--text)" fontSize="16" fontWeight="700" fontFamily="Cinzel, serif">{periodWinRate}%</text>
+                      <text x={cx} y={cy - 4} textAnchor="middle" fill="var(--text)" fontSize="18" fontWeight="700" fontFamily="Cinzel, serif">{periodWinRate}%</text>
                       <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--text-dim)" fontSize="9" fontFamily="Inter, sans-serif">WIN RATE</text>
                     </>
                   );
@@ -3583,7 +3583,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
             padding: "12px 16px", borderBottom: "1px solid var(--border)",
             display: "flex", alignItems: "center", gap: "8px",
           }}>
-            <span style={{ fontFamily: "'Cinzel', serif", fontSize: "13px",
+            <span style={{ fontFamily: "'Cinzel', serif", fontSize: "18px",
               fontWeight: 700, color: "var(--red)", textTransform: "uppercase",
               letterSpacing: "1px" }}>
               ⚠ Slot Alerts
@@ -3685,7 +3685,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
         borderRadius: "10px", padding: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between",
           alignItems: "center", marginBottom: "16px" }}>
-          <span style={{ fontFamily: "'Cinzel', serif", fontSize: "13px",
+          <span style={{ fontFamily: "'Cinzel', serif", fontSize: "18px",
             fontWeight: 700, color: "var(--gold)", textTransform: "uppercase",
             letterSpacing: "1px" }}>
             🔴 Live GE Slots
@@ -3842,7 +3842,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
       {autoFlips.length > 0 && (
         <div style={{ background: "var(--bg3)", border: "1px solid var(--border)",
           borderRadius: "10px", padding: "20px" }}>
-          <div style={{ fontFamily: "'Cinzel', serif", fontSize: "13px",
+          <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px",
             fontWeight: 700, color: "var(--gold)", textTransform: "uppercase",
             letterSpacing: "1px", marginBottom: "16px" }}>
             ⚡ Auto-Detected Flips

@@ -69,7 +69,7 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "48px" }}>
-        <div style={{ fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase", color: "var(--gold-dim)", fontFamily: "Cinzel, serif", marginBottom: "12px" }}>Pricing</div>
+        <div style={{ fontSize: "18px", letterSpacing: "3px", textTransform: "uppercase", color: "var(--gold-dim)", fontFamily: "Cinzel, serif", marginBottom: "12px" }}>Pricing</div>
         <h1 style={{ fontFamily: "Cinzel, serif", fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 700, color: "var(--text)", marginBottom: "16px", lineHeight: 1.2 }}>
           Simple, transparent pricing
         </h1>
@@ -84,7 +84,7 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
         {/* FREE */}
         <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "16px", padding: "32px", display: "flex", flexDirection: "column", gap: "24px" }}>
           <div>
-            <div style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "var(--text-dim)", fontFamily: "Cinzel, serif", marginBottom: "8px" }}>Free</div>
+            <div style={{ fontSize: "18px", letterSpacing: "2px", textTransform: "uppercase", color: "var(--text-dim)", fontFamily: "Cinzel, serif", marginBottom: "8px" }}>Free</div>
             <div style={{ fontFamily: "Cinzel, serif", fontSize: "42px", fontWeight: 700, color: "var(--text)", lineHeight: 1 }}>$0</div>
             <div style={{ fontSize: "13px", color: "var(--text-dim)", marginTop: "6px" }}>Forever free</div>
           </div>
@@ -113,7 +113,7 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
 
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-              <div style={{ fontSize: "11px", letterSpacing: "2px", textTransform: "uppercase", color: "var(--gold)", fontFamily: "Cinzel, serif" }}>Pro</div>
+              <div style={{ fontSize: "18px", letterSpacing: "2px", textTransform: "uppercase", color: "var(--gold)", fontFamily: "Cinzel, serif" }}>Pro</div>
               <span style={{ background: "rgba(201,168,76,0.15)", color: "var(--gold)", border: "1px solid var(--gold-dim)", borderRadius: "20px", padding: "2px 10px", fontSize: "10px", fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase" }}>Most Popular</span>
             </div>
             <div style={{ fontFamily: "Cinzel, serif", fontSize: "42px", fontWeight: 700, color: "var(--gold)", lineHeight: 1 }}>$9.99</div>
@@ -140,7 +140,7 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
               width: "100%", padding: "14px", borderRadius: "8px", border: "none",
               background: isPro ? "rgba(46,204,113,0.15)" : "linear-gradient(135deg, var(--gold-dim), var(--gold))",
               color: isPro ? "var(--green)" : "#000",
-              fontSize: "14px", fontWeight: 700, fontFamily: "Cinzel, serif",
+              fontSize: "18px", fontWeight: 700, fontFamily: "Cinzel, serif",
               letterSpacing: "1px", cursor: isPro ? "default" : "pointer",
               transition: "all 0.2s", opacity: loading ? 0.7 : 1,
             }}
