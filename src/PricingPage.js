@@ -1,8 +1,6 @@
 // PricingPage.js
 import { useState } from "react";
 
-const PUBLISHABLE_KEY = "pk_live_51TAjnlCNKvvsYZxGI0Ae4ymANLBxOs4iWhA6I5H6ZFHTZOgiY6BW7cAtUKeKIq3bhjxqjyV2l0VABLvcTDNEdnWF00Q0SToeMf";
-
 const FREE_FEATURES = [
   "Live market data — 4,525 items",
   "Price history charts",
