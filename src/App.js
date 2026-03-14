@@ -3566,7 +3566,7 @@ export default function RuneTrader() {
   // ── Merchant Mode ──
   const [merchantMode, setMerchantMode] = useState(false);
   const [upgradeModal, setUpgradeModal] = useState(null);
-  const [userRefCode, setUserRefCode] = useState(null);
+  const [userRefCode, setUserRefCode] = useState(null); // eslint-disable-line no-unused-vars
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
   const [showMerchantShutdown, setShowMerchantShutdown] = useState(false);
   const [merchantTransitioning, setMerchantTransitioning] = useState(false);
