@@ -6637,7 +6637,7 @@ RULES:
               {/* Combined Level + Quests button */}
               {user && (() => {
                 const level = xpToLevel(totalXP);
-                const { title, emoji } = getLevelTitle(level);
+                const { emoji } = getLevelTitle(level);
                 const doneQuests = dailyQuests.filter(q => q.completed).length;
                 const allDone = questsLoaded && doneQuests === dailyQuests.length && dailyQuests.length > 0;
                 return (
