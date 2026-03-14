@@ -13,13 +13,6 @@ function formatGP(n) {
   return Math.round(n).toLocaleString("en-GB") + " gp";
 }
 
-function formatGPShort(n) {
-  if (!n) return "—";
-  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + "B";
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
-  return n.toLocaleString();
-}
 
 function timeAgo(ts) {
   const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
