@@ -154,6 +154,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
     } catch (e) {
       console.error("Post listing error:", e);
       showToast("Failed to post listing. Please try again.", "error");
+    } finally {
       setPosting(false);
     }
   }
