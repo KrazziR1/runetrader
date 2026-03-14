@@ -1129,7 +1129,7 @@ const MERCHANT_TOUR_STEPS = [
 
 // ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
 
-function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, refreshCooldown, onShare }) {
+function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCooldown, onShare, isWatchlisted, onToggleWatchlist }) {
   const [range, setRange] = useState("7D");
   const [chartData, setChartData] = useState(null);
   const [chartLoading, setChartLoading] = useState(true);
@@ -1274,8 +1274,8 @@ function ItemChart({ item, onClose, onAskAI, onFlipThis, onRefresh, refreshing, 
           </div>
         </div>
         <div className="modal-body">
-          <button className="modal-flip-btn" onClick={() => { onFlipThis(item); onClose(); }}>
-            📋 Log this flip in Tracker →
+          <button className="modal-ask-btn" onClick={() => { onToggleWatchlist && onToggleWatchlist(); }} style={{ background: isWatchlisted ? "rgba(201,168,76,0.12)" : undefined, borderColor: isWatchlisted ? "var(--gold-dim)" : undefined, color: isWatchlisted ? "var(--gold)" : undefined }}>
+            {isWatchlisted ? "🔖 Remove from Watchlist" : "🔖 Add to Watchlist"}
           </button>
           <button className="modal-ask-btn" onClick={() => { onAskAI(`Analyse ${item.name} for me. Is now a good time to flip it? Buy at ${formatGP(item.adjLow ?? item.low)}, sell at ${formatGP(item.adjHigh ?? item.high)}, margin ${formatGP(item.adjMargin ?? item.margin)}.`); onClose(); }}>
             ⚔️ Ask AI to analyse this flip →
@@ -5418,7 +5418,6 @@ RULES:
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
           onAskAI={msg => { setInput(msg); sendMessage(msg); }}
-          onFlipThis={flipThisItem}
           onRefresh={() => fetchPrices(true)}
           refreshing={refreshing}
           refreshCooldown={refreshCooldown}
@@ -5427,6 +5426,8 @@ RULES:
             const url = `${window.location.origin}/item/${slug}`;
             navigator.clipboard.writeText(url).then(() => showToast("Link copied! Share it on Discord or Reddit 🔗", "success"));
           }}
+          isWatchlisted={watchlist.includes(selectedItem?.id)}
+          onToggleWatchlist={() => toggleWatchlist(selectedItem?.id)}
         />
       )}
 
