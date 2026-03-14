@@ -4,6 +4,7 @@ import AuthModal from "./AuthModal";
 import Sparkline from "./Sparkline";
 import PricingPage from "./PricingPage";
 import ReferralPage from "./ReferralPage";
+import TradeBoard from "./TradeBoard";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 
@@ -6035,12 +6036,12 @@ RULES:
 
                 {/* Market sub-tabs row */}
                 <div style={{ display: "flex", gap: "4px", paddingBottom: "4px" }}>
-                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"]].map(([v,l]) => (
+                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"],["tradeboard","🤝 Trade Board"]].map(([v,l]) => (
                     <button key={v}
                       className={`market-sub-tab${marketSubTab === v ? " active" : ""}`}
                       onClick={() => setMarketSubTab(v)}
                     >
-                      {l}{v !== "flips" && <span className="sub-tab-badge">new</span>}
+                      {l}{(v === "tradeboard") && <span className="sub-tab-badge">new</span>}
                     </button>
                   ))}
                 </div>
@@ -6290,6 +6291,14 @@ RULES:
                 })()}
 
                 {/* ── FLIPS TAB (existing content) ── */}
+                {marketSubTab === "tradeboard" && (
+                  <TradeBoard
+                    user={user}
+                    supabase={supabase}
+                    showToast={showToast}
+                  />
+                )}
+
                 {marketSubTab === "flips" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div className="filter-bar">
