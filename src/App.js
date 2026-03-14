@@ -2420,15 +2420,16 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       </div>
                     );
                     return feed.map(e => {
-                      const liveItem = items.find(i => i.id === e.itemId);
+                      const liveItem = allItems.find(i => i.id === e.itemId) || allItems.find(i => i.name === e.itemName);
                       return (
                         <div key={e.id} className="smart-event-row" style={{ cursor: liveItem ? "pointer" : "default" }}
                           onClick={() => liveItem && setSelectedItem(liveItem)}>
                           <span className="smart-event-icon">{e.icon}</span>
                           <div style={{ flex: 1 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                              <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)" }}>{e.itemName}</span>
+                              <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)", cursor: liveItem ? "pointer" : "default" }}>{e.itemName}</span>
                               <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
+                              {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view →</span>}
                             </div>
                             <div className="smart-event-msg">{e.message}</div>
                             {liveItem && (
@@ -5013,7 +5014,7 @@ RULES:
                         </div>
                       );
                       return feed.map(e => {
-                        const liveItem = items.find(i => i.id === e.itemId);
+                        const liveItem = allItems.find(i => i.id === e.itemId) || allItems.find(i => i.name === e.itemName);
                         return (
                           <div key={e.id} className="smart-event-row"
                             style={{ cursor: liveItem ? "pointer" : "default" }}
