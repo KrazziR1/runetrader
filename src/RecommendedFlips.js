@@ -46,153 +46,51 @@ function parseCash(str) {
   return isNaN(n) ? Infinity : n;
 }
 
-// ── Tier Classification ───────────────────────────────────────────────────────
+// ── Tier Qualification ────────────────────────────────────────────────────────
+//
+// LOW:    vol / buyLimit ≥ 70×  |  margin > 0  |  freshness ≤ 15min
+// MEDIUM: buy ≥ 200k  |  margin ≥ 30k  |  freshness ≤ 45min
+// HIGH:   buy ≥ 10M   |  margin ≥ 90k  |  freshness ≤ 1hr
+//
+// All tiers: positive margin only, hasPrice required
+// Items can qualify for multiple tiers — shown with lowest applicable risk tag
 
-function volTier(vol) {
-  if (vol >= 1_000_000) return "high";     // 1M+
-  if (vol >= 300_000)   return "medium";   // 300k–999k
-  if (vol >= 100_000)   return "low";      // 100k–299k
-  if (vol >= 1_000)     return "verylow";  // 1k–99k
-  return "avoid";                          // <1k
-}
-
-function freshnessTier(ageSec) {
-  if (ageSec <= 300)  return "live";   // ≤5 min
-  if (ageSec <= 900)  return "ok";     // 5–15 min
-  if (ageSec <= 2700) return "dated";  // 16–45 min
-  if (ageSec <= 3600) return "hour";   // 45–60 min
-  return "stale";                      // 60min+
-}
-
-// ── Qualification Rules ───────────────────────────────────────────────────────
-
-function qualifiesSafe(item) {
-  const vol    = item.volume   || 0;
-  const roi    = item.roi      || 0;
-  const lim    = item.buyLimit || 0;
-  const ageSec = freshnessAge(item.lastTradeTime);
-  const vTier  = volTier(vol);
-  const fTier  = freshnessTier(ageSec);
-
+function qualifiesLow(item) {
   if (!item.hasPrice || item.margin <= 0) return false;
+  const vol = item.volume   || 0;
+  const lim = item.buyLimit || 0;
+  if (lim <= 0) return false;
+  const age = freshnessAge(item.lastTradeTime);
+  if (age > 900) return false; // > 15min
+  return (vol / lim) >= 70;
+}
 
-  // Freshness: live or ok only (≤15min)
-  if (fTier !== "live" && fTier !== "ok") return false;
-
-  // Volume: High (1M+) required
-  // Medium allowed ONLY if vol ≥ 200× buyLimit
-  const mediumHighLiquidity = vTier === "medium" && lim > 0 && vol >= lim * 200;
-  if (vTier !== "high" && !mediumHighLiquidity) return false;
-
-  // ROI: must be 0.25–5%
-  if (roi < 0.25) return false;
-  if (roi > 5 && roi <= 20) return false;
-
-  // ROI 0.25–0.5%: volume must be medium or high (medium only via 200× rule)
-  if (roi >= 0.25 && roi < 0.5) {
-    if (vTier !== "high" && !mediumHighLiquidity) return false;
-  }
-
-  // ROI 21%+: only allowed if vol > 1M/day
-  if (roi > 20 && vol <= 1_000_000) return false;
-
+function qualifiesMedium(item) {
+  if (!item.hasPrice || item.margin <= 0) return false;
+  const age = freshnessAge(item.lastTradeTime);
+  if (age > 2700) return false; // > 45min
+  if ((item.low || 0) < 200_000) return false;
+  if ((item.margin || 0) < 30_000) return false;
   return true;
 }
 
-function qualifiesBalanced(item) {
-  const vol    = item.volume   || 0;
-  const roi    = item.roi      || 0;
-  const lim    = item.buyLimit || 0;
-  const ageSec = freshnessAge(item.lastTradeTime);
-  const vTier  = volTier(vol);
-  const fTier  = freshnessTier(ageSec);
-
+function qualifiesHigh(item) {
   if (!item.hasPrice || item.margin <= 0) return false;
-
-  // Freshness: ≤15min
-  if (fTier !== "live" && fTier !== "ok") return false;
-
-  // Volume: ≥300k/day (medium or high)
-  if (vTier !== "high" && vTier !== "medium") return false;
-
-  // Never negative ROI or <0.1%
-  if (roi < 0.1) return false;
-
-  // Core range 1–20%: always qualifies
-  if (roi >= 1 && roi <= 20) return true;
-
-  // 21–50%: allowed if vol ≥100k OR vol ≥ 200× limit
-  if (roi > 20 && roi <= 50) {
-    if (vol >= 100_000) return true;
-    if (lim > 0 && vol >= lim * 200) return true;
-    return false;
-  }
-
-  // 51%+: medium or high volume only
-  if (roi > 50) {
-    if (vTier === "medium" || vTier === "high") return true;
-    return false;
-  }
-
-  // 0.1–0.99%: not in qualifying range
-  return false;
+  const age = freshnessAge(item.lastTradeTime);
+  if (age > 3600) return false; // > 1hr
+  if ((item.low || 0) < 10_000_000) return false;
+  if ((item.margin || 0) < 90_000) return false;
+  return true;
 }
 
-function qualifiesRisky(item) {
-  const vol    = item.volume   || 0;
-  const roi    = item.roi      || 0;
-  const lim    = item.buyLimit || 0;
-  const ageSec = freshnessAge(item.lastTradeTime);
-  const vTier  = volTier(vol);
-  const fTier  = freshnessTier(ageSec);
-
-  if (!item.hasPrice || item.margin <= 0) return false;
-
-  // Never negative ROI
-  if (roi < 0) return false;
-
-  // Freshness: ≤1hr (live, ok, dated, hour all qualify)
-  if (fTier === "stale") return false;
-
-  // Volume: ≥100k/day minimum
-  if (vTier === "verylow" || vTier === "avoid") return false;
-
-  // ROI <0.1%: allowed only if vol >100k/day
-  if (roi < 0.1) {
-    return vol > 100_000;
-  }
-
-  // ROI 0.1–5.99%: not risky enough
-  if (roi >= 0.1 && roi < 6) return false;
-
-  // ROI 6–20%: qualifies
-  if (roi >= 6 && roi <= 20) return true;
-
-  // ROI 21–50%: fine if vol ≥100k/day
-  if (roi > 20 && roi <= 50) {
-    return vol >= 100_000;
-  }
-
-  // ROI 51%+: vol ≥200k/day OR vol ≥ 70× buyLimit
-  if (roi > 50) {
-    if (vol >= 200_000) return true;
-    if (lim > 0 && vol >= lim * 70) return true;
-    return false;
-  }
-
-  return false;
-}
-
-// ── Risk Tag shown on each row ────────────────────────────────────────────────
+// ── Risk Tag ──────────────────────────────────────────────────────────────────
 function RiskTag({ item }) {
-  const safe     = qualifiesSafe(item);
-  const balanced = qualifiesBalanced(item);
-  if (safe) return (
+  if (qualifiesLow(item)) return (
     <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(46,204,113,0.12)", color: "var(--green)", borderRadius: "4px", padding: "1px 6px", whiteSpace: "nowrap" }}>
       Low Risk
     </span>
   );
-  if (balanced) return (
+  if (qualifiesMedium(item)) return (
     <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(201,168,76,0.12)", color: "var(--gold)", borderRadius: "4px", padding: "1px 6px", whiteSpace: "nowrap" }}>
       Med Risk
     </span>
@@ -225,9 +123,8 @@ function LoginGate({ onSignIn }) {
       </div>
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "10px", width: "100%", maxWidth: "360px" }}>
         {[
-          "Tier-based qualification — not just a sorted list",
+          "Low / Medium / High risk — real qualification rules",
           "Cash stack filter — only see what you can afford",
-          "Low / Medium / High risk tolerance",
           "Sorted by daily volume — most liquid first",
           "\"You've flipped this\" badges from your history",
         ].map((f, i) => (
@@ -252,7 +149,7 @@ function LoginGate({ onSignIn }) {
 export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOpenChart }) {
   const [prefs, setPrefs] = useState(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem("rt_picks_prefs_v2") || "{}");
+      const saved = JSON.parse(localStorage.getItem("rt_picks_prefs_v3") || "{}");
       return { ...DEFAULT_PREFS, ...saved };
     } catch { return DEFAULT_PREFS; }
   });
@@ -261,7 +158,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
   function setPref(key, val) {
     setPrefs(p => {
       const next = { ...p, [key]: val };
-      localStorage.setItem("rt_picks_prefs_v2", JSON.stringify(next));
+      localStorage.setItem("rt_picks_prefs_v3", JSON.stringify(next));
       return next;
     });
   }
@@ -274,42 +171,56 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
 
   const budget = parseCash(prefs.cashStack);
 
+  // Select the qualifier function for the chosen risk tier
+  const qualifies = useMemo(() => {
+    if (prefs.risk === "low")    return qualifiesLow;
+    if (prefs.risk === "medium") return qualifiesMedium;
+    if (prefs.risk === "high")   return qualifiesHigh;
+    return () => false;
+  }, [prefs.risk]);
+
   const picks = useMemo(() => {
     if (!items || items.length === 0) return [];
 
     return items
       .filter(item => {
-        if (!item.hasPrice) return false;
+        // Must pass the tier qualification
+        if (!qualifies(item)) return false;
 
-        // Cash stack hard filter
+        // Cash stack — can't afford it
         if ((item.low || 0) > budget) return false;
 
-        // Membership filter
-        if (prefs.membership === "f2p" && item.members)   return false;
+        // Membership
+        if (prefs.membership === "f2p"     && item.members)  return false;
         if (prefs.membership === "members" && !item.members) return false;
 
         // Search
         if (search && !item.name.toLowerCase().includes(search.toLowerCase())) return false;
 
-        // Risk tier
-        if (prefs.risk === "low")    return qualifiesSafe(item);
-        if (prefs.risk === "medium") return qualifiesBalanced(item);
-        if (prefs.risk === "high")   return qualifiesRisky(item);
-
-        return false;
+        return true;
       })
+      // Highest daily volume first
       .sort((a, b) => (b.volume || 0) - (a.volume || 0))
       .slice(0, 50);
-  }, [items, prefs, budget, search]);
+  }, [items, qualifies, prefs.membership, budget, search]);
 
   if (!user) return <LoginGate onSignIn={onSignIn} />;
 
   const COLS = "minmax(160px,2fr) 1fr 1fr 1fr 1fr 1fr 1fr 80px";
 
-  const riskDesc = {
-    low:    "High-volume items, thin reliable margins. Fastest fills, lowest variance.",
-    medium: "Mid-volume items with solid ROI. Balance of fill speed and profit.",
-    high:   "Higher ROI, more variance. Volume ≥100k/day required but fills not guaranteed.",
+  const riskMeta = {
+    low: {
+      label: "Low Risk",
+      desc: "Vol/day ≥ 70× your buy limit. Market moves far more than you can buy — fast, reliable fills. Think runes, food, ammunition.",
+    },
+    medium: {
+      label: "Medium Risk",
+      desc: "Buy price ≥ 200k · Margin ≥ 30k · Traded in last 45min. Mid-tier gear and supplies with meaningful profit per flip.",
+    },
+    high: {
+      label: "High Risk",
+      desc: "Buy price ≥ 10M · Margin ≥ 90k · Traded in last hour. High capital, high reward. Fills not guaranteed — price can move while you wait.",
+    },
   };
 
   return (
@@ -320,7 +231,9 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
 
         {/* Cash Stack */}
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Cash Stack</span>
+          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>
+            Cash Stack
+          </span>
           <input
             className="filter-input"
             placeholder="e.g. 10m, 500k, 1b"
@@ -332,38 +245,50 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
 
         {/* Risk Tolerance */}
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Risk Tolerance</span>
+          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>
+            Risk Tolerance
+          </span>
           <div style={{ display: "flex", gap: "4px" }}>
             {[["low","Low"],["medium","Medium"],["high","High"]].map(([v, l]) => (
               <button
                 key={v}
-                className={`toggle-btn${prefs.risk === v ? (v === "low" ? " active-low" : v === "medium" ? " active-med" : " active-high") : ""}`}
+                className={`toggle-btn${prefs.risk === v
+                  ? v === "low" ? " active-low" : v === "medium" ? " active-med" : " active-high"
+                  : ""}`}
                 onClick={() => setPref("risk", v)}
-              >{l}</button>
+              >
+                {l}
+              </button>
             ))}
           </div>
-          <span style={{ fontSize: "10px", color: "var(--text-dim)", maxWidth: "280px", lineHeight: 1.5 }}>
-            {riskDesc[prefs.risk]}
+          <span style={{ fontSize: "10px", color: "var(--text-dim)", maxWidth: "320px", lineHeight: 1.5 }}>
+            {riskMeta[prefs.risk].desc}
           </span>
         </div>
 
         {/* Membership */}
         <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Membership</span>
+          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>
+            Membership
+          </span>
           <div style={{ display: "flex", gap: "4px" }}>
             {[["f2p","F2P"],["members","Members"],["both","Both"]].map(([v, l]) => (
               <button
                 key={v}
                 className={`toggle-btn${prefs.membership === v ? " active-med" : ""}`}
                 onClick={() => setPref("membership", v)}
-              >{l}</button>
+              >
+                {l}
+              </button>
             ))}
           </div>
         </div>
 
         {/* Search + count */}
         <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginLeft: "auto" }}>
-          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>Search</span>
+          <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>
+            Search
+          </span>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <input
               className="filter-input"
@@ -391,7 +316,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
             ["Sell",       "Highest current sell offer on the GE"],
             ["Margin",     "Sell price minus buy price minus GE tax"],
             ["ROI",        "Margin ÷ buy price"],
-            ["Vol / Day",  "Total items traded per day — higher means more liquid"],
+            ["Vol / Day",  "Total items traded per day"],
             ["Limit",      "Max you can buy every 4 hours"],
             ["Last Trade", "When this item last traded on the GE"],
           ].map(([label, tip], i) => (
@@ -411,21 +336,21 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
         {picks.length === 0 ? (
           <div className="empty-state">
             <div className="icon">📭</div>
-            <p>No picks match your filters right now</p>
+            <p>No picks right now</p>
             <small>
-              {prefs.cashStack && parseCash(prefs.cashStack) < 500_000
-                ? "Your cash stack may be filtering out most items — try increasing it"
-                : "Prices and freshness update constantly — check back shortly or try a different risk level"}
+              {prefs.cashStack && parseCash(prefs.cashStack) < 200_000
+                ? "Your cash stack is below 200k — most items won't qualify"
+                : "Prices update constantly — check back shortly or try a different risk level"}
             </small>
           </div>
         ) : (
           picks.map(item => {
-            const ageSec     = freshnessAge(item.lastTradeTime);
-            const fTier      = freshnessTier(ageSec);
-            const tradeColor = fTier === "live" ? "var(--green)" : fTier === "ok" ? "var(--text)" : "var(--text-dim)";
+            const age        = freshnessAge(item.lastTradeTime);
+            const tradeColor = age <= 300 ? "var(--green)" : age <= 900 ? "var(--text)" : "var(--text-dim)";
             const hasFlipped = flippedNames.has((item.name || "").toLowerCase());
-            const vt         = volTier(item.volume || 0);
-            const volColor   = vt === "high" ? "var(--green)" : vt === "medium" ? "var(--text)" : "var(--text-dim)";
+            const volColor   = (item.volume || 0) >= 1_000_000 ? "var(--green)"
+                             : (item.volume || 0) >= 300_000   ? "var(--text)"
+                             : "var(--text-dim)";
 
             return (
               <div
