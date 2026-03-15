@@ -1228,12 +1228,13 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
   const [range, setRange] = useState("7D");
   const [chartData, setChartData] = useState(null);
   const [chartLoading, setChartLoading] = useState(true);
+  const [showMarginLine, setShowMarginLine] = useState(false);
   const canvasRef = useRef(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchChartData(); }, [range, item.id]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (chartData) drawChart(); }, [chartData]);
+  useEffect(() => { if (chartData) drawChart(); }, [chartData, showMarginLine]);
 
   async function fetchChartData() {
     setChartLoading(true);
@@ -1304,6 +1305,30 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
       lowPoints.forEach(d => ctx.lineTo(xPos(d.timestamp), yPos(d.avgLowPrice)));
       ctx.strokeStyle = "#4caf7d"; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
     }
+    // ── Margin line (optional) ──
+    if (showMarginLine) {
+      const marginPoints = chartData.filter(d => d.avgHighPrice && d.avgLowPrice).map(d => ({
+        timestamp: d.timestamp,
+        margin: Math.round((d.avgHighPrice - d.avgLowPrice) * 0.98), // approx after 2% tax
+      }));
+      if (marginPoints.length > 1) {
+        // Margin has its own scale — use a right-axis projection
+        const marginVals = marginPoints.map(d => d.margin);
+        const minM = Math.min(0, ...marginVals);
+        const maxM = Math.max(...marginVals) * 1.1 || 1;
+        const yPosM = v => pad.top + (1 - (v - minM) / (maxM - minM)) * (H - pad.top - pad.bottom);
+        // Draw right-axis labels for margin
+        ctx.fillStyle = "rgba(52,152,219,0.7)"; ctx.font = "10px Inter"; ctx.textAlign = "left";
+        for (let i = 0; i <= 3; i++) {
+          const v = minM + (i / 3) * (maxM - minM);
+          const y = yPosM(v);
+          ctx.fillText(fmtYLabel(Math.round(v)), W - pad.right + 4, y + 3);
+        }
+        ctx.beginPath(); ctx.moveTo(xPos(marginPoints[0].timestamp), yPosM(marginPoints[0].margin));
+        marginPoints.forEach(d => ctx.lineTo(xPos(d.timestamp), yPosM(d.margin)));
+        ctx.strokeStyle = "#3498db"; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.stroke(); ctx.setLineDash([]);
+      }
+    }
     ctx.fillStyle = "#4a5a6a"; ctx.font = "11px Inter"; ctx.textAlign = "center";
     for (let i = 0; i <= 5; i++) {
       const t = minT + (i / 5) * (maxT - minT);
@@ -1363,9 +1388,15 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
           <div className="chart-container">
             {chartLoading ? <div className="chart-loading">Loading price history...</div> : !chartData ? <div className="chart-loading">No price history available</div> : <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />}
           </div>
-          <div style={{ display: "flex", gap: "20px", marginTop: "12px" }}>
+          <div style={{ display: "flex", gap: "20px", marginTop: "12px", alignItems: "center", flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)" }}><div style={{ width: "20px", height: "2px", background: "#c9a84c" }} />Sell Price</div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)" }}><div style={{ width: "20px", height: "2px", background: "#4caf7d" }} />Buy Price</div>
+            <button
+              onClick={() => setShowMarginLine(v => !v)}
+              style={{ display: "flex", alignItems: "center", gap: "6px", padding: "3px 10px", borderRadius: "6px", border: `1px solid ${showMarginLine ? "rgba(52,152,219,0.5)" : "var(--border)"}`, background: showMarginLine ? "rgba(52,152,219,0.1)" : "transparent", color: showMarginLine ? "#3498db" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+              <div style={{ width: "20px", height: "2px", background: "#3498db", opacity: showMarginLine ? 1 : 0.35 }} />
+              Margin {showMarginLine ? "✓" : ""}
+            </button>
           </div>
         </div>
         <div className="modal-body">
@@ -4582,6 +4613,15 @@ export default function RuneTrader() {
   function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } }
   useEffect(() => { setMarketRowsShown(200); }, [filter, search]);
 
+  // ── Quick-alert from market row ──
+  const [quickAlert, setQuickAlert] = useState(null); // { item } — the item to set an alert for
+  const [quickAlertPrice, setQuickAlertPrice] = useState("");
+  const [quickAlertType, setQuickAlertType] = useState("above");
+
+  // ── Category filter ──
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  useEffect(() => { setMarketRowsShown(200); }, [categoryFilter]);
+
   // ── Advanced filters ──
   const [showAdvFilters, setShowAdvFilters] = useState(false);
   const [advFilters, setAdvFilters] = useState({
@@ -5690,6 +5730,31 @@ RULES:
 
   const filtered = sourceItems.filter(item => {
     if (!passesPicksFilter(item)) return false;
+    // Category filter
+    if (categoryFilter !== "All") {
+      const cat = (item.category || "").toLowerCase();
+      const name = (item.name || "").toLowerCase();
+      if (categoryFilter === "Runes"    && !cat.includes("rune") && !name.includes("rune") && !name.includes("rune")) return false;
+      if (categoryFilter === "Food"     && !["food","fish","meat","pie","cake","bread","stew","wine","beer","ale","milk","potato","egg"].some(k => name.includes(k) || cat.includes(k))) return false;
+      if (categoryFilter === "Armour"   && !["helm","platebody","platelegs","plateskirt","chainbody","shield","kite","sq shield","armour","chaps","coif","dhide","body","legs"].some(k => name.includes(k) || cat.includes(k))) return false;
+      if (categoryFilter === "Weapons"  && !["sword","scimitar","dagger","mace","axe","halberd","spear","warhammer","bow","crossbow","staff","wand","whip","claws","knife","dart","javelin"].some(k => name.includes(k) || cat.includes(k))) return false;
+      if (categoryFilter === "Potions"  && !["potion","(1)","(2)","(3)","(4)","brew","restore","prayer","strength","attack","defence","ranging","magic","super"].some(k => name.includes(k))) return false;
+      if (categoryFilter === "Seeds"    && !name.includes("seed") && !name.includes("sapling") && !name.includes("spore")) return false;
+      if (categoryFilter === "Ammo"     && !["arrow","bolt","dart","javelin","bullet","cannonball","thrownaxe","chinchompa"].some(k => name.includes(k))) return false;
+      if (categoryFilter === "Misc"     && [
+        "Runes","Food","Armour","Weapons","Potions","Seeds","Ammo"
+      ].some(fc => {
+        // Return true if item passes any non-Misc category — then filter it out of Misc
+        if (fc === "Runes"   && ((item.category||"").toLowerCase().includes("rune") || (item.name||"").toLowerCase().includes("rune"))) return true;
+        if (fc === "Food"    && ["food","fish","meat","pie","cake","bread","stew","wine","beer","ale","milk","potato","egg"].some(k => (item.name||"").toLowerCase().includes(k))) return true;
+        if (fc === "Armour"  && ["helm","platebody","platelegs","plateskirt","chainbody","shield","kite","sq shield","armour","chaps","coif","dhide","body","legs"].some(k => (item.name||"").toLowerCase().includes(k))) return true;
+        if (fc === "Weapons" && ["sword","scimitar","dagger","mace","axe","halberd","spear","warhammer","bow","crossbow","staff","wand","whip","claws","knife","dart","javelin"].some(k => (item.name||"").toLowerCase().includes(k))) return true;
+        if (fc === "Potions" && ["potion","(1)","(2)","(3)","(4)","brew","restore","prayer","strength","attack","defence","ranging","magic","super"].some(k => (item.name||"").toLowerCase().includes(k))) return true;
+        if (fc === "Seeds"   && ((item.name||"").toLowerCase().includes("seed") || (item.name||"").toLowerCase().includes("sapling") || (item.name||"").toLowerCase().includes("spore"))) return true;
+        if (fc === "Ammo"    && ["arrow","bolt","dart","javelin","bullet","cannonball","thrownaxe","chinchompa"].some(k => (item.name||"").toLowerCase().includes(k))) return true;
+        return false;
+      })) return false;
+    }
     if (search.trim()) return item.name.toLowerCase().includes(search.toLowerCase());
     if (filter === "favourites") return favourites.includes(item.id);
     if (filter === "f2p") return item.category === "F2P";
@@ -5990,6 +6055,79 @@ RULES:
               See Pro Plans →
             </button>
             <button className="upgrade-dismiss" onClick={() => setUpgradeModal(null)}>Maybe later</button>
+          </div>
+        </div>
+      )}
+
+      {/* QUICK ALERT MODAL */}
+      {quickAlert && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
+          onClick={e => { if (e.target === e.currentTarget) setQuickAlert(null); }}>
+          <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "16px", width: "100%", maxWidth: "400px", padding: "28px", display: "flex", flexDirection: "column", gap: "18px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "17px", fontWeight: 700, color: "var(--gold)" }}>🔔 Set Price Alert</div>
+                <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "3px" }}>{quickAlert.item.name}</div>
+              </div>
+              <button onClick={() => setQuickAlert(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "18px" }}>✕</button>
+            </div>
+            {quickAlert.item.hasPrice && (
+              <div style={{ display: "flex", gap: "8px" }}>
+                {[
+                  { label: "Buy Price", val: quickAlert.item.low,  type: "below" },
+                  { label: "Sell Price", val: quickAlert.item.high, type: "above" },
+                ].map(s => (
+                  <button key={s.label} onClick={() => { setQuickAlertPrice(String(s.val)); setQuickAlertType(s.type); }}
+                    style={{ flex: 1, padding: "8px", borderRadius: "8px", border: `1px solid ${quickAlertPrice === String(s.val) ? "var(--gold-dim)" : "var(--border)"}`, background: quickAlertPrice === String(s.val) ? "rgba(201,168,76,0.1)" : "var(--bg3)", color: quickAlertPrice === String(s.val) ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                    <div style={{ fontWeight: 600, marginBottom: "2px" }}>{s.label}</div>
+                    <div style={{ fontSize: "13px", color: "var(--text)" }}>{formatGP(s.val)}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: "8px" }}>
+              <select value={quickAlertType} onChange={e => setQuickAlertType(e.target.value)}
+                style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", fontSize: "13px", padding: "8px 10px", fontFamily: "Inter, sans-serif", flexShrink: 0 }}>
+                <option value="above">Price goes above</option>
+                <option value="below">Price goes below</option>
+              </select>
+              <input
+                type="number"
+                value={quickAlertPrice}
+                onChange={e => setQuickAlertPrice(e.target.value)}
+                placeholder="Target price (gp)"
+                style={{ flex: 1, background: "var(--bg3)", border: "1px solid var(--gold-dim)", borderRadius: "8px", color: "var(--text)", fontSize: "13px", padding: "8px 12px", fontFamily: "Inter, sans-serif", outline: "none" }}
+                onKeyDown={e => {
+                  if (e.key === "Enter" && quickAlertPrice) {
+                    const price = parseInt(quickAlertPrice.replace(/,/g, ""));
+                    if (!isNaN(price)) {
+                      const liveItem = items.find(i => i.name.toLowerCase() === quickAlert.item.name.toLowerCase());
+                      const newAlert = { id: Date.now(), item: quickAlert.item.name, price, type: quickAlertType, currentPrice: liveItem?.high || null, triggered: false };
+                      setAlerts(prev => { const next = [newAlert, ...prev]; localStorage.setItem("runetrader_alerts", JSON.stringify(next)); return next; });
+                      showToast(`Alert set for ${quickAlert.item.name} 🔔`, "success");
+                      setQuickAlert(null);
+                    }
+                  }
+                }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
+              <button onClick={() => setQuickAlert(null)} style={{ padding: "9px 18px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>Cancel</button>
+              <button
+                disabled={!quickAlertPrice}
+                onClick={() => {
+                  const price = parseInt(String(quickAlertPrice).replace(/,/g, ""));
+                  if (isNaN(price)) return;
+                  const liveItem = items.find(i => i.name.toLowerCase() === quickAlert.item.name.toLowerCase());
+                  const newAlert = { id: Date.now(), item: quickAlert.item.name, price, type: quickAlertType, currentPrice: liveItem?.high || null, triggered: false };
+                  setAlerts(prev => { const next = [newAlert, ...prev]; localStorage.setItem("runetrader_alerts", JSON.stringify(next)); return next; });
+                  showToast(`Alert set for ${quickAlert.item.name} 🔔`, "success");
+                  setQuickAlert(null);
+                }}
+                style={{ padding: "9px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif", opacity: quickAlertPrice ? 1 : 0.4 }}>
+                Set Alert
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -7797,6 +7935,28 @@ RULES:
                   </button>
                 </div>
 
+                {/* ── CATEGORY FILTER PILLS ── */}
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Category:</span>
+                  {["All","Runes","Food","Armour","Weapons","Potions","Seeds","Ammo","Misc"].map(cat => (
+                    <button key={cat}
+                      onClick={() => setCategoryFilter(cat)}
+                      style={{
+                        padding: "3px 11px", borderRadius: "12px", border: `1px solid ${categoryFilter === cat ? "var(--gold-dim)" : "var(--border)"}`,
+                        background: categoryFilter === cat ? "rgba(201,168,76,0.12)" : "transparent",
+                        color: categoryFilter === cat ? "var(--gold)" : "var(--text-dim)",
+                        fontSize: "11px", fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap"
+                      }}>
+                      {cat}
+                    </button>
+                  ))}
+                  {categoryFilter !== "All" && (
+                    <span style={{ fontSize: "11px", color: "var(--text-dim)", marginLeft: "4px" }}>
+                      — {filtered.length.toLocaleString()} items
+                    </span>
+                  )}
+                </div>
+
                 {showAdvFilters && (
                   <div className="adv-filter-panel">
                     <div className="adv-filter-group">
@@ -7917,6 +8077,7 @@ RULES:
                           <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }} onClick={() => setSelectedItem(item)}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <button onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: watchlist.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={watchlist.includes(item.id) ? "Remove from Watchlist" : "Add to Watchlist"}>🔗</button>
+                              <button onClick={e => { e.stopPropagation(); setQuickAlert({ item }); setQuickAlertPrice(item.hasPrice ? String(item.high) : ""); setQuickAlertType("above"); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", opacity: alerts.some(a => a.item.toLowerCase() === item.name.toLowerCase()) ? 1 : 0.22, transition: "opacity 0.15s", padding: "0", flexShrink: 0, lineHeight: 1 }} title="Set price alert">🔔</button>
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                               <div className="item-name">{item.name}</div>
                             </div>
