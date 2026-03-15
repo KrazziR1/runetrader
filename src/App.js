@@ -2159,7 +2159,7 @@ function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct
   );
 }
 
-function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView, filter, setFilter, search, setSearch, favourites, toggleFavourite, sortCol, sortDir, handleSort, filtered, marketRowsShown, setMarketRowsShown, showAdvFilters, setShowAdvFilters, advFilters, advFilterCount, setAdv, resetAdvFilters, loading }) {
+function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView, filter, setFilter, search, setSearch, favourites, toggleFavourite, sortCol, sortDir, handleSort, filtered, marketRowsShown, setMarketRowsShown, showAdvFilters, setShowAdvFilters, advFilters, advFilterCount, setAdv, resetAdvFilters, loading, marginCompression = {} }) {
 
   // liveOps must be declared before allOpenPositions calculation below
   const [liveOps, setLiveOps] = useState([]);
@@ -2575,17 +2575,38 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       const hasRules = autopilotRules[op.item_name] && Object.values(autopilotRules[op.item_name]).some(v => v !== "");
                       const isAutopilotOpen = autopilotOpen === op.item_name;
                       return (
-                        <AutopilotRow key={op.id}
-                          op={op} liveItem={liveItem} statusColor={statusColor} statusLabel={statusLabel}
-                          pnlTotal={pnlTotal} pnlPct={pnlPct} fillPct={fillPct}
-                          hasRules={hasRules} isAutopilotOpen={isAutopilotOpen}
-                          autopilotRules={autopilotRules}
-                          setAutopilotOpen={setAutopilotOpen}
-                          saveAutopilotRules={saveAutopilotRules}
-                          clearAutopilotRules={clearAutopilotRules}
-                          formatGP={formatGP} setSelectedItem={setSelectedItem}
-                          getHoldTime={getHoldTime}
-                        />
+                        <div key={op.id}>
+                          {(() => {
+                            const liveItemId = liveItem?.id;
+                            const comp = liveItemId && marginCompression[liveItemId];
+                            if (!comp) return null;
+                            const bg = comp.direction === "crash" ? "rgba(231,76,60,0.1)" : comp.direction === "recover" ? "rgba(52,152,219,0.1)" : "rgba(243,156,18,0.08)";
+                            const border = comp.direction === "crash" ? "rgba(231,76,60,0.35)" : comp.direction === "recover" ? "rgba(52,152,219,0.35)" : "rgba(243,156,18,0.3)";
+                            const color = comp.direction === "crash" ? "#e74c3c" : comp.direction === "recover" ? "#3498db" : "#f39c12";
+                            const msg = comp.direction === "crash"
+                              ? `Margin crashed ${Math.abs(comp.pct)}% in 24hrs — was ${formatGP(comp.oldMargin)} gp, now ${formatGP(comp.newMargin)} gp`
+                              : comp.direction === "recover"
+                              ? `Margin recovering +${comp.pct}% in 24hrs — was ${formatGP(comp.oldMargin)} gp, now ${formatGP(comp.newMargin)} gp`
+                              : `Margin compressed ${Math.abs(comp.pct)}% in 24hrs — was ${formatGP(comp.oldMargin)} gp, now ${formatGP(comp.newMargin)} gp`;
+                            return (
+                              <div style={{ margin: "0 16px 0 16px", padding: "5px 10px", background: bg, border: `1px solid ${border}`, borderRadius: "6px", display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", color }}>
+                                <span style={{ fontWeight: 700 }}>{comp.direction === "recover" ? "▲" : "▼"} Margin signal:</span>
+                                <span>{msg}</span>
+                              </div>
+                            );
+                          })()}
+                          <AutopilotRow key={op.id}
+                            op={op} liveItem={liveItem} statusColor={statusColor} statusLabel={statusLabel}
+                            pnlTotal={pnlTotal} pnlPct={pnlPct} fillPct={fillPct}
+                            hasRules={hasRules} isAutopilotOpen={isAutopilotOpen}
+                            autopilotRules={autopilotRules}
+                            setAutopilotOpen={setAutopilotOpen}
+                            saveAutopilotRules={saveAutopilotRules}
+                            clearAutopilotRules={clearAutopilotRules}
+                            formatGP={formatGP} setSelectedItem={setSelectedItem}
+                            getHoldTime={getHoldTime}
+                          />
+                        </div>
                       );
                     })}
                   </div>
@@ -4836,6 +4857,10 @@ export default function RuneTrader() {
   // ── Margin compression tracking ──
   const marginHistoryRef = useRef({}); // itemId → [{ margin, time }] (last 24hr)
   const [marginCompression, setMarginCompression] = useState({}); // itemId → { pct, direction, oldMargin, newMargin }
+  const [mwatchOrder, setMwatchOrder] = useState("crashed-first"); // "crashed-first" | "compressed-first" | "recover-first"
+  const [mwatchSearch, setMwatchSearch] = useState("");
+  const [mwatchSortCol, setMwatchSortCol] = useState("pct"); // "pct" | "newMargin" | "oldMargin" | "name"
+  const [mwatchSortDir, setMwatchSortDir] = useState("asc"); // asc = most crashed first
 
   function saveSmartAlertSettings(key, val) {
     const updated = { ...smartAlertSettings, [key]: val };
@@ -7301,6 +7326,7 @@ RULES:
               setAdv={setAdv}
               resetAdvFilters={resetAdvFilters}
               loading={loading}
+              marginCompression={marginCompression}
             />
 
           </>) : (
@@ -7936,70 +7962,136 @@ RULES:
 
                 {/* ── MARGIN WATCH TAB ── */}
                 {marketSubTab === "marginwatch" && (() => {
-                  const compressionList = Object.entries(marginCompression)
+                  const allComp = Object.entries(marginCompression)
                     .map(([id, c]) => ({ ...c, id: parseInt(id), liveItem: allItems.find(i => i.id === parseInt(id)) }))
-                    .filter(c => c.liveItem)
-                    .sort((a, b) => a.pct - b.pct); // most crashed first
-                  const crashed  = compressionList.filter(c => c.direction === "crash");
-                  const warn     = compressionList.filter(c => c.direction === "warn");
-                  const recover  = compressionList.filter(c => c.direction === "recover");
+                    .filter(c => c.liveItem);
+
+                  // Search filter
+                  const searchedComp = mwatchSearch.trim()
+                    ? allComp.filter(c => c.name.toLowerCase().includes(mwatchSearch.toLowerCase()))
+                    : allComp;
+
+                  // Sort within each group
+                  function sortGroup(items) {
+                    const dir = mwatchSortDir === "asc" ? 1 : -1;
+                    return [...items].sort((a, b) => {
+                      if (mwatchSortCol === "pct")       return dir * (a.pct - b.pct);
+                      if (mwatchSortCol === "newMargin") return dir * (a.newMargin - b.newMargin);
+                      if (mwatchSortCol === "oldMargin") return dir * (a.oldMargin - b.oldMargin);
+                      if (mwatchSortCol === "name")      return dir * a.name.localeCompare(b.name);
+                      return dir * (a.pct - b.pct);
+                    });
+                  }
+                  function handleMwatchSort(col) {
+                    if (mwatchSortCol === col) setMwatchSortDir(d => d === "asc" ? "desc" : "asc");
+                    else { setMwatchSortCol(col); setMwatchSortDir("asc"); }
+                  }
+
+                  const crashed = sortGroup(searchedComp.filter(c => c.direction === "crash"));
+                  const warn    = sortGroup(searchedComp.filter(c => c.direction === "warn"));
+                  const recover = sortGroup(searchedComp.filter(c => c.direction === "recover"));
+
+                  const orderMap = {
+                    "crashed-first":    [{ items: crashed, label: "Crashed — margin down >60%",     lc: "var(--red)" }, { items: warn, label: "Compressed — margin down 30–60%", lc: "#f39c12" }, { items: recover, label: "Recovering — margin up >30%", lc: "var(--blue)" }],
+                    "compressed-first": [{ items: warn, label: "Compressed — margin down 30–60%", lc: "#f39c12" }, { items: crashed, label: "Crashed — margin down >60%", lc: "var(--red)" }, { items: recover, label: "Recovering — margin up >30%", lc: "var(--blue)" }],
+                    "recover-first":    [{ items: recover, label: "Recovering — margin up >30%", lc: "var(--blue)" }, { items: warn, label: "Compressed — margin down 30–60%", lc: "#f39c12" }, { items: crashed, label: "Crashed — margin down >60%", lc: "var(--red)" }],
+                  };
+                  const groups = orderMap[mwatchOrder].filter(g => g.items.length > 0);
                   const totalFlagged = crashed.length + warn.length;
+
+                  const COL = "1.8fr 0.9fr 0.9fr 90px 130px";
 
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                      {/* Header summary */}
+                      {/* Header */}
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
                         <div>
                           <div className="section-title" style={{ marginBottom: "4px" }}>Margin Compression Detector</div>
                           <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>
-                            Items where margin moved >30% in the last 24hrs · Refreshes every 30s · Min 500 vol/day
+                            Items where margin moved &gt;30% in 24hrs · Refreshes every 30s · Min 500 vol/day
                           </div>
                         </div>
-                        <div style={{ display: "flex", gap: "12px", flexShrink: 0 }}>
+                        <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
                           {[
-                            { label: "Crashed (>60%)", val: crashed.length, color: "var(--red)" },
-                            { label: "Compressed (30–60%)", val: warn.length, color: "#f39c12" },
+                            { label: "Crashed", val: crashed.length, color: "var(--red)" },
+                            { label: "Compressed", val: warn.length, color: "#f39c12" },
                             { label: "Recovering", val: recover.length, color: "var(--blue)" },
                           ].map((s, i) => (
-                            <div key={i} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 16px", textAlign: "center", minWidth: "110px" }}>
-                              <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>{s.label}</div>
-                              <div style={{ fontSize: "22px", fontWeight: 700, fontFamily: "'Cinzel', serif", color: s.color }}>{s.val}</div>
+                            <div key={i} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", padding: "8px 14px", textAlign: "center", minWidth: "90px" }}>
+                              <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "3px" }}>{s.label}</div>
+                              <div style={{ fontSize: "20px", fontWeight: 700, fontFamily: "'Cinzel', serif", color: s.color }}>{s.val}</div>
                             </div>
                           ))}
                         </div>
                       </div>
 
-                      {compressionList.length === 0 ? (
+                      {/* Controls row */}
+                      <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+                        <input
+                          className="filter-input"
+                          placeholder="Search items..."
+                          value={mwatchSearch}
+                          onChange={e => setMwatchSearch(e.target.value)}
+                          style={{ width: "200px" }}
+                        />
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                          <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Show first:</span>
+                          {[
+                            { v: "crashed-first",    label: "Crashed" },
+                            { v: "compressed-first", label: "Compressed" },
+                            { v: "recover-first",    label: "Recovering" },
+                          ].map(o => (
+                            <button key={o.v} onClick={() => setMwatchOrder(o.v)}
+                              style={{ padding: "3px 10px", borderRadius: "12px", border: `1px solid ${mwatchOrder === o.v ? "var(--gold-dim)" : "var(--border)"}`, background: mwatchOrder === o.v ? "rgba(201,168,76,0.1)" : "transparent", color: mwatchOrder === o.v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                              {o.label}
+                            </button>
+                          ))}
+                        </div>
+                        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>
+                          {allComp.length} items flagged
+                        </span>
+                      </div>
+
+                      {allComp.length === 0 ? (
                         <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "60px 24px", textAlign: "center" }}>
                           <div style={{ fontSize: "32px", marginBottom: "12px", opacity: 0.4 }}>📊</div>
                           <div style={{ fontSize: "14px", color: "var(--text-dim)", marginBottom: "6px" }}>No compression detected yet</div>
                           <div style={{ fontSize: "12px", color: "var(--text-dim)", opacity: 0.7 }}>Data builds up over time — check back after a few price refreshes.</div>
                         </div>
+                      ) : groups.length === 0 ? (
+                        <div style={{ padding: "40px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>No items match your search.</div>
                       ) : (
                         <>
-                          {[
-                            { items: crashed,  label: "Crashed — margin down >60%",     labelColor: "var(--red)" },
-                            { items: warn,     label: "Compressed — margin down 30–60%", labelColor: "#f39c12"    },
-                            { items: recover,  label: "Recovering — margin up >30%",     labelColor: "var(--blue)" },
-                          ].filter(g => g.items.length > 0).map(group => (
+                          {groups.map(group => (
                             <div key={group.label}>
-                              <div style={{ fontSize: "11px", color: group.labelColor, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>
+                              <div style={{ fontSize: "11px", color: group.lc, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>
                                 {group.label}
                               </div>
                               <div className="mwatch-table">
-                                <div className="mwatch-header">
-                                  <span>Item</span>
-                                  <span>Margin now</span>
-                                  <span>24hr change</span>
-                                  <span>Was</span>
-                                  <span>Verdict</span>
+                                {/* Sortable header */}
+                                <div className="mwatch-header" style={{ gridTemplateColumns: COL }}>
+                                  {[
+                                    { col: "name",      label: "Item" },
+                                    { col: "oldMargin", label: "Was" },
+                                    { col: "newMargin", label: "Margin now" },
+                                    { col: "pct",       label: "24hr change" },
+                                    { col: null,        label: "Verdict" },
+                                  ].map(({ col, label }) => (
+                                    col ? (
+                                      <button key={label} className={`sort-btn${mwatchSortCol === col ? " active" : ""}`} onClick={() => handleMwatchSort(col)} style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                        {label} {mwatchSortCol === col && <span className="sort-arrow">{mwatchSortDir === "asc" ? "▲" : "▼"}</span>}
+                                      </button>
+                                    ) : <span key={label} style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</span>
+                                  ))}
                                 </div>
                                 {group.items.map(c => {
                                   const cls = c.direction === "crash" ? "crash" : c.direction === "recover" ? "recover" : "warn";
                                   const verdictLabel = c.direction === "crash" ? "Avoid — crashing" : c.direction === "recover" ? "Recovering — watch" : "Caution — compressing";
                                   const verdictCls   = c.direction === "crash" ? "avoid" : c.direction === "recover" ? "recover" : "caution";
+                                  const marginColor  = c.direction === "recover" ? "var(--green)" : c.direction === "crash" ? "var(--red)" : "#f39c12";
                                   return (
                                     <div key={c.id} className={`mwatch-row ${cls === "crash" ? "crash-row" : cls === "warn" ? "warn-row" : ""}`}
+                                      style={{ gridTemplateColumns: COL }}
                                       onClick={() => setSelectedItem(c.liveItem)}>
                                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                         <img src={itemIconUrl(c.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
@@ -8008,13 +8100,11 @@ RULES:
                                           <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{c.category} · {c.volume >= 1000 ? (c.volume/1000).toFixed(1)+"k" : c.volume} vol/day</div>
                                         </div>
                                       </div>
-                                      <span style={{ fontSize: "13px", fontWeight: 600, color: c.direction === "recover" ? "var(--green)" : c.direction === "crash" ? "var(--red)" : "#f39c12" }}>
-                                        {formatGP(c.newMargin)}
-                                      </span>
-                                      <span className={`compress-pill ${cls}`} style={{ marginLeft: 0 }}>
+                                      <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(c.oldMargin)}</span>
+                                      <span style={{ fontSize: "13px", fontWeight: 600, color: marginColor }}>{formatGP(c.newMargin)}</span>
+                                      <span className={`compress-pill ${cls}`} style={{ marginLeft: 0, width: "fit-content" }}>
                                         {c.pct > 0 ? "▲" : "▼"} {c.pct > 0 ? "+" : ""}{c.pct}%
                                       </span>
-                                      <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(c.oldMargin)}</span>
                                       <span className={`mwatch-verdict ${verdictCls}`}>{verdictLabel}</span>
                                     </div>
                                   );
@@ -8023,7 +8113,7 @@ RULES:
                             </div>
                           ))}
                           <div style={{ fontSize: "11px", color: "var(--text-dim)", textAlign: "center", paddingTop: "4px" }}>
-                            {totalFlagged} item{totalFlagged !== 1 ? "s" : ""} flagged · Data accuracy improves over time as more snapshots accumulate
+                            {totalFlagged} item{totalFlagged !== 1 ? "s" : ""} flagged · Click any row to open price chart · Accuracy improves as more snapshots accumulate
                           </div>
                         </>
                       )}
