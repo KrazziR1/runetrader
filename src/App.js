@@ -12,19 +12,41 @@ import { generateDailyQuests, updateQuestProgress, calcQuestRewards, todayStr } 
 import { initAudio, playLoginChime, playCoinClink, playBigProfit, playEpicProfit, playLevelUp, playQuestComplete, playNudge, toggleMute, getSoundMuted } from "./SoundEngine";
 
 // ── Changelog — add new entries at the top, bump DEPLOY_KEY on each deploy ──
-const DEPLOY_KEY = "runetrader_seen_deploy_v1"; // change this string on each deploy to trigger the modal
+const DEPLOY_KEY = "runetrader_seen_deploy_v3"; // change this string on each deploy to trigger the modal
 const CHANGELOG = [
   {
-    version: "Latest",
+    version: "v1.1",
+    date: "March 2026",
+    items: [
+      { type: "new",      text: "Margin Compression Detector — tracks 24hr margin movement per item, flags crashes, compression and recoveries with inline pills on every row" },
+      { type: "new",      text: "Market tab — Flips renamed to Market with Margin Watch and Alerts consolidated as inner tabs" },
+      { type: "new",      text: "Session Summary — exiting the Trading Terminal now shows GP made, flips closed, GP/hr and best flip instead of a blank screen" },
+      { type: "new",      text: "Drift badges on GE slot cards — buying/selling slots show price drift % and exact relist price when your offer falls behind the market" },
+      { type: "new",      text: "Beat-the-market relist pricing — relist suggestions now price +2 to +10 gp ahead of market (scaled by item price tier) to beat the queue instead of matching it" },
+      { type: "new",      text: "Margin signals in Trading Terminal — active positions show inline compression/recovery signals below each row" },
+      { type: "new",      text: "Slot attention link — GE Slots header shows pulsing dot and count when slots need relisting" },
+      { type: "improved", text: "Personalised Picks filters completely reworked — relaxed age thresholds, vol/limit ratios, and clean price banding (Low ≤5M, Medium ≤50M, High unrestricted)" },
+      { type: "improved", text: "Filters and Export buttons now free for all users — no Trading Terminal required" },
+      { type: "improved", text: "Market table no longer flickers or loses scroll position during background price updates — rows update in-place" },
+      { type: "improved", text: "Sparklines no longer remount on price updates — memoised FlipRow component across all tables" },
+      { type: "improved", text: "WatchlistPage and PortfolioPage memoised — skip re-render on background price polls" },
+      { type: "improved", text: "Trading Terminal stays mounted during exit — no flash of market screen behind session summary" },
+      { type: "fixed",    text: "Scale emoji mojibake (âšâ€€) fixed in risk tolerance step" },
+      { type: "fixed",    text: "Build errors: React import, stale sourceItems reference" },
+    ],
+  },
+  {
+    version: "v1.0",
     date: "March 2026",
     items: [
       { type: "new", text: "High Alch Tracker — find profitable alch items with live nature rune pricing" },
       { type: "new", text: "Death's Coffer tool — find cheapest items to sacrifice, with potential savings calculator" },
       { type: "new", text: "Portfolio page rebuilt — period stats, win rate donut, per-item P&L, best/worst items" },
-      { type: "new", text: "Soft gates — Trading Terminal features now shown with upgrade prompts for free users" },
       { type: "new", text: "Shareable item URLs — share runetrader.gg/item/abyssal-whip to open any item chart" },
+      { type: "new", text: "Category filter pills — filter by Runes, Food, Armour, Weapons, Potions, Seeds, Ammo, Misc" },
+      { type: "new", text: "Quick alert bell — set price alerts directly from any flip row without opening the item" },
+      { type: "new", text: "Trade Board tab — community price listings" },
       { type: "improved", text: "Alert feed items now clickable to open price chart" },
-      { type: "improved", text: "Market sub-tabs — Flips, High Alch, Death's Coffer now in one place" },
       { type: "improved", text: "Nature rune price editable in High Alch tab — use your own cost basis" },
     ],
   },
@@ -35,7 +57,9 @@ const CHANGELOG = [
       { type: "new", text: "Merchant Mode — full trading terminal with Operations and Analytics tabs" },
       { type: "new", text: "Live GE slot tracking via RuneLite plugin" },
       { type: "new", text: "Smart Alerts — margin spike, volume surge, dump detection, price crash" },
-      { type: "new", text: "AI Advisor with live GE slot context" },
+      { type: "new", text: "AI Advisor with live GE slot context and personalised flip recommendations" },
+      { type: "new", text: "Daily quests and XP system — earn XP for flips, level up, unlock titles" },
+      { type: "new", text: "Autopilot rules — set margin floors and hold time limits per position" },
       { type: "improved", text: "Market page rebuilt with 4,525 items and advanced filters" },
     ],
   },
@@ -189,8 +213,8 @@ const STYLES = `
 
   /* MARGIN WATCH TAB */
   .mwatch-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .mwatch-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-  .mwatch-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr; padding: 11px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.15s; }
+  .mwatch-header { display: grid; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .mwatch-row { display: grid; padding: 11px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.15s; }
   .mwatch-row:last-child { border-bottom: none; }
   .mwatch-row:hover { background: var(--bg4); }
   .mwatch-row.crash-row { background: rgba(231,76,60,0.03); }
@@ -8240,6 +8264,9 @@ RULES:
                       if (mwatchSortCol === "newMargin") return dir * (a.newMargin - b.newMargin);
                       if (mwatchSortCol === "oldMargin") return dir * (a.oldMargin - b.oldMargin);
                       if (mwatchSortCol === "name")      return dir * a.name.localeCompare(b.name);
+                      if (mwatchSortCol === "price")     return dir * ((a.liveItem?.low || 0) - (b.liveItem?.low || 0));
+                      if (mwatchSortCol === "volume")    return dir * ((a.volume || 0) - (b.volume || 0));
+                      if (mwatchSortCol === "roi")       return dir * ((a.liveItem?.roi || 0) - (b.liveItem?.roi || 0));
                       return dir * (a.pct - b.pct);
                     });
                   }
@@ -8260,7 +8287,7 @@ RULES:
                   const groups = orderMap[mwatchOrder].filter(g => g.items.length > 0);
                   const totalFlagged = crashed.length + warn.length;
 
-                  const COL = "1.8fr 0.9fr 0.9fr 90px 130px";
+                  const COL = "1.6fr 0.8fr 0.8fr 0.8fr 0.7fr 0.7fr 90px 120px";
 
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -8336,6 +8363,9 @@ RULES:
                                     { col: "oldMargin", label: "Was" },
                                     { col: "newMargin", label: "Margin now" },
                                     { col: "pct",       label: "24hr change" },
+                                    { col: "price",     label: "Buy price" },
+                                    { col: "volume",    label: "Vol/day" },
+                                    { col: "roi",       label: "ROI" },
                                     { col: null,        label: "Verdict" },
                                   ].map(({ col, label }) => (
                                     col ? (
@@ -8358,13 +8388,22 @@ RULES:
                                         <img src={itemIconUrl(c.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                                         <div>
                                           <div style={{ fontWeight: 500, fontSize: "13px", color: "var(--text)" }}>{c.name}</div>
-                                          <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{c.category} · {c.volume >= 1000 ? (c.volume/1000).toFixed(1)+"k" : c.volume} vol/day</div>
+                                          <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{c.category}</div>
                                         </div>
                                       </div>
                                       <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(c.oldMargin)}</span>
                                       <span style={{ fontSize: "13px", fontWeight: 600, color: marginColor }}>{formatGP(c.newMargin)}</span>
                                       <span className={`compress-pill ${cls}`} style={{ marginLeft: 0, width: "fit-content" }}>
                                         {c.pct > 0 ? "▲" : "▼"} {c.pct > 0 ? "+" : ""}{c.pct}%
+                                      </span>
+                                      <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>
+                                        {c.liveItem?.low ? formatGP(c.liveItem.low) : "—"}
+                                      </span>
+                                      <span style={{ fontSize: "12px", color: (c.volume || 0) >= 500 ? "var(--green)" : "var(--text-dim)" }}>
+                                        {(c.volume || 0) >= 1000 ? ((c.volume||0)/1000).toFixed(1)+"k" : (c.volume||0).toLocaleString()}
+                                      </span>
+                                      <span style={{ fontSize: "12px", color: (c.liveItem?.roi || 0) > 4 ? "var(--gold)" : (c.liveItem?.roi || 0) >= 1 ? "var(--green)" : "var(--text-dim)" }}>
+                                        {c.liveItem?.roi != null ? c.liveItem.roi + "%" : "—"}
                                       </span>
                                       <span className={`mwatch-verdict ${verdictCls}`}>{verdictLabel}</span>
                                     </div>
