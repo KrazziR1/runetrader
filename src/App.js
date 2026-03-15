@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import Sparkline from "./Sparkline";
@@ -5845,15 +5845,12 @@ RULES:
   useEffect(() => {
     if (priceVersion === 0) return; // skip initial load
     const panel = leftPanelRef.current;
-    if (panel) savedScrollRef.current = panel.scrollTop;
-  }, [priceVersion]);
-  useEffect(() => {
-    if (priceVersion === 0) return;
-    const panel = leftPanelRef.current;
-    if (panel && savedScrollRef.current > 0) {
+    if (panel) {
+      savedScrollRef.current = panel.scrollTop;
+      // Restore after React flushes the re-render
       requestAnimationFrame(() => { panel.scrollTop = savedScrollRef.current; });
     }
-  }, [sourceItems, priceVersion]); // eslint-disable-line
+  }, [priceVersion]); // eslint-disable-line
 
   // €€€€ Picks mode filter — same tier logic as the Picks tab €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
   const picksNowSec = Math.floor(Date.now() / 1000);
@@ -5885,7 +5882,7 @@ RULES:
     return ratio >= 70 && age <= 900;
   }
 
-  const filtered = sourceItems.filter(item => {
+  const filtered = (allItems.length ? allItems : items).filter(item => {
     if (!passesPicksFilter(item)) return false;
     // Category filter
     if (categoryFilter !== "All") {
