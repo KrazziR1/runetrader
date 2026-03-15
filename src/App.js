@@ -1244,6 +1244,80 @@ const MERCHANT_TOUR_STEPS = [
   { title: "You're fully set up 📈", desc: "Start a buy offer in the GE in-game — the RuneTrader plugin picks it up automatically and opens a position here. Close or sell in-game and it updates in real time. Good luck on the GE.", target: null, placement: "center", view: "operations" },
 ];
 
+// ─── FLIP ROW (memoised to prevent sparkline flicker on price updates) ────────
+
+const FlipRow = React.memo(function FlipRow({ item, compression, isWatchlisted, hasAlert, onSelect, onToggleWatchlist, onQuickAlert, onGoToMarginWatch, formatGP, timeAgo, itemIconUrl }) {
+  const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
+  const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
+  const lim = item.buyLimit > 0 ? item.buyLimit : 500;
+  const mkt4hr = item.volume / 6;
+  let expFill;
+  if      (item.volume >= 500_000) expFill = Math.min(lim, mkt4hr);
+  else if (item.volume >= 100_000) expFill = Math.min(lim, mkt4hr * 0.6);
+  else if (item.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
+  else if (item.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
+  else                             expFill = Math.min(lim, mkt4hr * 0.03);
+  const gpPerFill = Math.round(item.margin * Math.max(expFill, 1));
+  const gpPerFillMax = Math.round(item.margin * Math.min(lim, mkt4hr));
+  return (
+    <div className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }} onClick={() => onSelect(item)}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <button onClick={e => { e.stopPropagation(); onToggleWatchlist(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: isWatchlisted ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={isWatchlisted ? "Remove from Watchlist" : "Add to Watchlist"}>🔗</button>
+        <button onClick={e => { e.stopPropagation(); onQuickAlert(item); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", opacity: hasAlert ? 1 : 0.22, transition: "opacity 0.15s", padding: "0", flexShrink: 0, lineHeight: 1 }} title="Set price alert">🔔</button>
+        <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: "4px", minWidth: 0 }}>
+          <div className="item-name" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
+          {compression && (() => {
+            const cls = compression.direction === "crash" ? "crash" : compression.direction === "recover" ? "recover" : "warn";
+            const arrow = compression.pct > 0 ? "▲" : "▼";
+            const tooltipText = compression.direction === "crash"
+              ? `Margin crashed ${Math.abs(compression.pct)}% in 24hrs — was ${formatGP(compression.oldMargin)} gp, now ${formatGP(compression.newMargin)} gp. Avoid until it stabilises.`
+              : compression.direction === "recover"
+              ? `Margin recovering +${compression.pct}% in 24hrs — was ${formatGP(compression.oldMargin)} gp, now ${formatGP(compression.newMargin)} gp. Potential entry point.`
+              : `Margin compressed ${Math.abs(compression.pct)}% in 24hrs — was ${formatGP(compression.oldMargin)} gp, now ${formatGP(compression.newMargin)} gp. Trade with caution.`;
+            return (
+              <span className={`compress-pill ${cls}`} onClick={e => { e.stopPropagation(); onGoToMarginWatch(); }}>
+                {arrow} {compression.pct > 0 ? "+" : ""}{compression.pct}%
+                <span className="compress-tooltip">{tooltipText}</span>
+              </span>
+            );
+          })()}
+        </div>
+      </div>
+      <span className="price">{item.hasPrice ? formatGP(item.low) : "—"}</span>
+      <span className="price">{item.hasPrice ? formatGP(item.high) : "—"}</span>
+      <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
+      <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "—"}</span>
+      <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
+        {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
+        {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit — hard to fill">⚠</span>}
+      </span>
+      <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
+      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+        {item.hasPrice ? (
+          <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1000000 ? "var(--green)" : gpPerFill >= 200000 ? "var(--gold)" : "var(--text-dim)" }}
+            title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case (full limit): ${formatGP(gpPerFillMax)} GP`}>
+            {formatGP(gpPerFill)}
+          </span>
+        ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
+      </div>
+      <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
+      <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center" }}>
+        <Sparkline itemId={item.id} width={78} height={30} />
+      </div>
+    </div>
+  );
+}, (prev, next) => {
+  // Only re-render if prices, compression, or watchlist/alert status changed
+  return prev.item.high === next.item.high &&
+    prev.item.low === next.item.low &&
+    prev.item.margin === next.item.margin &&
+    prev.item.lastTradeTime === next.item.lastTradeTime &&
+    prev.isWatchlisted === next.isWatchlisted &&
+    prev.hasAlert === next.hasAlert &&
+    prev.compression === next.compression;
+});
+
 // ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
 
 function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCooldown, onShare, isWatchlisted, onToggleWatchlist }) {
@@ -1575,7 +1649,7 @@ function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }
 
 // ─── PORTFOLIO PAGE ───────────────────────────────────────────────────────────
 
-function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
+const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
   const [portPeriod, setPortPeriod] = useState("month"); // "week" | "month" | "all"
 
   if (!user) {
@@ -1803,7 +1877,7 @@ function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
 
     </div>
   );
-}
+}); // end React.memo(PortfolioPage)
 
 // ─── WELCOME MESSAGE ─────────────────────────────────────────────────────────
 
@@ -1962,7 +2036,7 @@ const DEMO_TOUR_STEPS = [
 
 // ─── WATCHLIST PAGE ────────────────────────────────────────────
 
-function WatchlistPage({
+const WatchlistPage = React.memo(function WatchlistPage({
   user, items, watchlist, watchlistAlerts,
   toggleWatchlist, setWatchlistAlert, clearWatchlistAlert,
   watchlistAlertOpen, setWatchlistAlertOpen,
@@ -2083,7 +2157,7 @@ function WatchlistPage({
       )}
     </div>
   );
-}
+}); // end React.memo(WatchlistPage)
 
 // ─── MAIN APP ────────────────────────────────────────────────────────────────
 
@@ -3255,50 +3329,22 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               ) : filtered.length === 0 ? (
                 <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
               ) : (
-                filtered.slice(0, marketRowsShown).map(item => {
-                  const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
-                  const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
-                  const lim = item.buyLimit > 0 ? item.buyLimit : 500;
-                  const mkt4hr = item.volume / 6;
-                  let expFill;
-                  if      (item.volume >= 500_000) expFill = Math.min(lim, mkt4hr);
-                  else if (item.volume >= 100_000) expFill = Math.min(lim, mkt4hr * 0.6);
-                  else if (item.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
-                  else if (item.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
-                  else                             expFill = Math.min(lim, mkt4hr * 0.03);
-                  const gpPerFill = Math.round(item.margin * Math.max(expFill, 1));
-                  const gpPerFillMax = Math.round(item.margin * Math.min(lim, mkt4hr));
-                  return (
-                    <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }} onClick={() => setSelectedItem(item)}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <button onClick={e => { e.stopPropagation(); toggleFavourite(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: favourites.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={favourites.includes(item.id) ? "Remove from Watchlist" : "Add to Watchlist"}>🔗</button>
-                        <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                        <div className="item-name">{item.name}</div>
-                      </div>
-                      <span className="price">{item.hasPrice ? formatGP(item.low) : "—"}</span>
-                      <span className="price">{item.hasPrice ? formatGP(item.high) : "—"}</span>
-                      <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
-                      <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "—"}</span>
-                      <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
-                        {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
-                        {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }}>⚠</span>}
-                      </span>
-                      <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
-                      <div>
-                        {item.hasPrice ? (
-                          <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1000000 ? "var(--green)" : gpPerFill >= 200000 ? "var(--gold)" : "var(--text-dim)" }}
-                            title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case: ${formatGP(gpPerFillMax)} GP`}>
-                            {formatGP(gpPerFill)}
-                          </span>
-                        ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
-                      </div>
-                      <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
-                      <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center" }}>
-                        <Sparkline itemId={item.id} width={78} height={30} />
-                      </div>
-                    </div>
-                  );
-                })
+                filtered.slice(0, marketRowsShown).map(item => (
+                  <FlipRow
+                    key={item.id}
+                    item={item}
+                    compression={null}
+                    isWatchlisted={favourites.includes(item.id)}
+                    hasAlert={false}
+                    onSelect={setSelectedItem}
+                    onToggleWatchlist={toggleFavourite}
+                    onQuickAlert={() => {}}
+                    onGoToMarginWatch={() => {}}
+                    formatGP={formatGP}
+                    timeAgo={timeAgo}
+                    itemIconUrl={itemIconUrl}
+                  />
+                ))
               )}
             </div>
             {!loading && filtered.length > marketRowsShown && (
@@ -5157,6 +5203,8 @@ export default function RuneTrader() {
   // /volumes updates daily, refreshed every 10 min
   // /latest updates every ~60s on wiki's end — poll every 30s to catch it fast
   const volumeCacheTimeRef = useRef(0);
+  const leftPanelRef = useRef(null); // for scroll preservation
+  const [priceVersion, setPriceVersion] = useState(0); // lightweight counter — increments on background update instead of replacing arrays
   useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 30 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
 
   // ── Resolve pending /item/:slug once allItems is populated ──
@@ -5226,9 +5274,36 @@ export default function RuneTrader() {
       }
       const validFlips = flips.filter(isValidFlip);
       validFlips.sort((a, b) => b.score - a.score);
-      setItems(validFlips);
-      setAllItems(flips); // all items including invalid — for search
-      itemsRef.current = validFlips;
+
+      if (isManualRefresh || !itemsRef.current.length) {
+        // Full replace only on manual refresh or first load
+        setItems(validFlips);
+        setAllItems(flips);
+        itemsRef.current = validFlips;
+      } else {
+        // Background poll — update prices in-place to preserve scroll position
+        // Build a fast lookup map of new prices
+        const priceMap = {};
+        flips.forEach(f => { priceMap[f.id] = f; });
+        // Mutate existing array entries in-place — React won't see a new array reference
+        itemsRef.current.forEach((item, idx) => {
+          const updated = priceMap[item.id];
+          if (updated) {
+            itemsRef.current[idx] = { ...item, high: updated.high, low: updated.low, margin: updated.margin, roi: updated.roi, score: updated.score, lastTradeTime: updated.lastTradeTime, hasPrice: updated.hasPrice };
+          }
+        });
+        // Also update allItems in-place
+        setAllItems(prev => {
+          const next = [...prev];
+          next.forEach((item, idx) => {
+            const updated = priceMap[item.id];
+            if (updated) next[idx] = { ...item, high: updated.high, low: updated.low, margin: updated.margin, roi: updated.roi, score: updated.score, lastTradeTime: updated.lastTradeTime, hasPrice: updated.hasPrice };
+          });
+          return next;
+        });
+        // Increment version counter to trigger re-render of price-sensitive parts only
+        setPriceVersion(v => v + 1);
+      }
       runSmartAlerts(flips);
 
       // ── Margin compression tracking ──
@@ -5765,7 +5840,20 @@ RULES:
     } finally { setAiLoading(false); }
   }
 
-  const sourceItems = allItems.length ? allItems : items;
+  // ── Preserve scroll position on background price updates ──
+  const savedScrollRef = useRef(0);
+  useEffect(() => {
+    if (priceVersion === 0) return; // skip initial load
+    const panel = leftPanelRef.current;
+    if (panel) savedScrollRef.current = panel.scrollTop;
+  }, [priceVersion]);
+  useEffect(() => {
+    if (priceVersion === 0) return;
+    const panel = leftPanelRef.current;
+    if (panel && savedScrollRef.current > 0) {
+      requestAnimationFrame(() => { panel.scrollTop = savedScrollRef.current; });
+    }
+  }, [sourceItems, priceVersion]); // eslint-disable-line
 
   // €€€€ Picks mode filter — same tier logic as the Picks tab €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
   const picksNowSec = Math.floor(Date.now() / 1000);
@@ -7331,7 +7419,7 @@ RULES:
 
           </>) : (
           <>
-          <div className="left-panel">
+          <div className="left-panel" ref={leftPanelRef}>
 
             {/* ── WATCHLIST TAB ── */}
             {activeTab === "watchlist" && (
@@ -8324,70 +8412,22 @@ RULES:
                     ) : filtered.length === 0 ? (
                       <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
                     ) : (
-                      filtered.slice(0, marketRowsShown).map(item => {
-                        const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
-                        const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
-                        const lim = item.buyLimit > 0 ? item.buyLimit : 500;
-                        const mkt4hr = item.volume / 6;
-                        let expFill;
-                        if      (item.volume >= 500_000) expFill = Math.min(lim, mkt4hr);
-                        else if (item.volume >= 100_000) expFill = Math.min(lim, mkt4hr * 0.6);
-                        else if (item.volume >= 20_000)  expFill = Math.min(lim, mkt4hr * 0.2);
-                        else if (item.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
-                        else                             expFill = Math.min(lim, mkt4hr * 0.03);
-                        const gpPerFill = Math.round(item.margin * Math.max(expFill, 1));
-                        const gpPerFillMax = Math.round(item.margin * Math.min(lim, mkt4hr));
-
-                        return (
-                          <div key={item.id} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }} onClick={() => setSelectedItem(item)}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <button onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: watchlist.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={watchlist.includes(item.id) ? "Remove from Watchlist" : "Add to Watchlist"}>🔗</button>
-                              <button onClick={e => { e.stopPropagation(); setQuickAlert({ item }); setQuickAlertPrice(item.hasPrice ? String(item.high) : ""); setQuickAlertType("above"); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", opacity: alerts.some(a => a.item.toLowerCase() === item.name.toLowerCase()) ? 1 : 0.22, transition: "opacity 0.15s", padding: "0", flexShrink: 0, lineHeight: 1 }} title="Set price alert">🔔</button>
-                              <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                              <div style={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: "4px", minWidth: 0 }}>
-                                <div className="item-name" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
-                                {marginCompression[item.id] && (() => {
-                                  const c = marginCompression[item.id];
-                                  const cls = c.direction === "crash" ? "crash" : c.direction === "recover" ? "recover" : "warn";
-                                  const arrow = c.pct > 0 ? "▲" : "▼";
-                                  const tooltipText = c.direction === "crash"
-                                    ? `Margin crashed ${Math.abs(c.pct)}% in 24hrs — was ${formatGP(c.oldMargin)} gp, now ${formatGP(c.newMargin)} gp. Avoid until it stabilises.`
-                                    : c.direction === "recover"
-                                    ? `Margin recovering +${c.pct}% in 24hrs — was ${formatGP(c.oldMargin)} gp, now ${formatGP(c.newMargin)} gp. Potential entry point.`
-                                    : `Margin compressed ${Math.abs(c.pct)}% in 24hrs — was ${formatGP(c.oldMargin)} gp, now ${formatGP(c.newMargin)} gp. Trade with caution.`;
-                                  return (
-                                    <span className={`compress-pill ${cls}`} onClick={e => { e.stopPropagation(); setMarketSubTab("marginwatch"); }}>
-                                      {arrow} {c.pct > 0 ? "+" : ""}{c.pct}%
-                                      <span className="compress-tooltip">{tooltipText}</span>
-                                    </span>
-                                  );
-                                })()}
-                              </div>
-                            </div>
-                            <span className="price">{item.hasPrice ? formatGP(item.low) : "—"}</span>
-                            <span className="price">{item.hasPrice ? formatGP(item.high) : "—"}</span>
-                            <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
-                            <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "—"}</span>
-                            <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
-                              {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
-                              {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit — hard to fill">⚠</span>}
-                            </span>
-                            <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                              {item.hasPrice ? (
-                                <span style={{ fontSize: "12px", fontWeight: 600, color: gpPerFill >= 1000000 ? "var(--green)" : gpPerFill >= 200000 ? "var(--gold)" : "var(--text-dim)" }}
-                                  title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case (full limit): ${formatGP(gpPerFillMax)} GP`}>
-                                  {formatGP(gpPerFill)}
-                                </span>
-                              ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
-                            </div>
-                            <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
-                            <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center" }}>
-                              <Sparkline itemId={item.id} width={78} height={30} />
-                            </div>
-                          </div>
-                        );
-                      })
+                      filtered.slice(0, marketRowsShown).map(item => (
+                        <FlipRow
+                          key={item.id}
+                          item={item}
+                          compression={marginCompression[item.id] || null}
+                          isWatchlisted={watchlist.includes(item.id)}
+                          hasAlert={alerts.some(a => a.item.toLowerCase() === item.name.toLowerCase())}
+                          onSelect={setSelectedItem}
+                          onToggleWatchlist={toggleWatchlist}
+                          onQuickAlert={item => { setQuickAlert({ item }); setQuickAlertPrice(item.hasPrice ? String(item.high) : ""); setQuickAlertType("above"); }}
+                          onGoToMarginWatch={() => setMarketSubTab("marginwatch")}
+                          formatGP={formatGP}
+                          timeAgo={timeAgo}
+                          itemIconUrl={itemIconUrl}
+                        />
+                      ))
                     )}
                   </div>
                   {!loading && filtered.length > marketRowsShown && (
