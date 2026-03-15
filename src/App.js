@@ -178,7 +178,29 @@ const STYLES = `
   .skeleton { background: linear-gradient(90deg, var(--bg4) 25%, var(--bg3) 50%, var(--bg4) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; height: 14px; }
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-  /* FLIP CARD MODAL */
+  /* COMPRESSION PILLS */
+  .compress-pill { display: inline-flex; align-items: center; gap: 2px; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 6px; cursor: pointer; white-space: nowrap; position: relative; vertical-align: middle; text-decoration: none; }
+  .compress-pill.crash { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+  .compress-pill.warn  { background: rgba(243,156,18,0.12); color: #f39c12; border: 1px solid rgba(243,156,18,0.3); }
+  .compress-pill.recover { background: rgba(52,152,219,0.12); color: #3498db; border: 1px solid rgba(52,152,219,0.3); }
+  .compress-pill .compress-tooltip { display: none; position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: #0a0c0f; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 11px; font-weight: 400; color: var(--text); white-space: nowrap; z-index: 600; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,0.6); min-width: 200px; text-align: left; line-height: 1.5; }
+  .compress-pill .compress-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--border); }
+  .compress-pill:hover .compress-tooltip { display: block; }
+
+  /* MARGIN WATCH TAB */
+  .mwatch-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .mwatch-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .mwatch-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.2fr; padding: 11px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.15s; }
+  .mwatch-row:last-child { border-bottom: none; }
+  .mwatch-row:hover { background: var(--bg4); }
+  .mwatch-row.crash-row { background: rgba(231,76,60,0.03); }
+  .mwatch-row.warn-row  { background: rgba(243,156,18,0.02); }
+  .mwatch-verdict { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; white-space: nowrap; display: inline-flex; align-items: center; }
+  .mwatch-verdict.avoid   { background: rgba(231,76,60,0.12); color: #e74c3c; border: 1px solid rgba(231,76,60,0.25); }
+  .mwatch-verdict.caution { background: rgba(243,156,18,0.1); color: #f39c12; border: 1px solid rgba(243,156,18,0.25); }
+  .mwatch-verdict.recover { background: rgba(52,152,219,0.1); color: #3498db; border: 1px solid rgba(52,152,219,0.25); }
+  .mwatch-sparkbar { display: flex; align-items: flex-end; gap: 2px; height: 20px; }
+  .mwatch-bar { width: 5px; border-radius: 2px; }
   .flip-card-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
   .flip-card-modal { background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 16px; width: 100%; max-width: 480px; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
   .flip-card-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); }
@@ -4811,6 +4833,9 @@ export default function RuneTrader() {
   const [smartFeedSortDir, setSmartFeedSortDir] = useState("desc"); // asc | desc
   const prevItemsRef = useRef({});
   const smartCooldownRef = useRef({}); // key: `${itemId}_${type}` → timestamp
+  // ── Margin compression tracking ──
+  const marginHistoryRef = useRef({}); // itemId → [{ margin, time }] (last 24hr)
+  const [marginCompression, setMarginCompression] = useState({}); // itemId → { pct, direction, oldMargin, newMargin }
 
   function saveSmartAlertSettings(key, val) {
     const updated = { ...smartAlertSettings, [key]: val };
@@ -5180,6 +5205,43 @@ export default function RuneTrader() {
       setAllItems(flips); // all items including invalid — for search
       itemsRef.current = validFlips;
       runSmartAlerts(flips);
+
+      // ── Margin compression tracking ──
+      const now24 = Date.now();
+      const WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
+      const MIN_VOLUME = 500; // ignore very thin markets
+      const THRESHOLD = 30; // % change to flag
+      const hist = marginHistoryRef.current;
+      const newCompression = {};
+      flips.forEach(item => {
+        if (!item.hasPrice || !item.margin || Math.abs(item.margin) < 50) return;
+        if ((item.volume || 0) < MIN_VOLUME) return;
+        // Initialise history array for this item
+        if (!hist[item.id]) hist[item.id] = [];
+        // Prune entries older than 24hr
+        hist[item.id] = hist[item.id].filter(e => now24 - e.time < WINDOW_MS);
+        // Add current snapshot
+        hist[item.id].push({ margin: item.margin, time: now24 });
+        // Need at least 2 snapshots to compute a delta
+        const entries = hist[item.id];
+        if (entries.length < 2) return;
+        const oldest = entries[0].margin;
+        const newest = entries[entries.length - 1].margin;
+        if (!oldest || oldest === 0) return;
+        const pct = Math.round(((newest - oldest) / Math.abs(oldest)) * 100);
+        if (Math.abs(pct) >= THRESHOLD) {
+          newCompression[item.id] = {
+            pct,
+            direction: pct > 0 ? "recover" : pct < -60 ? "crash" : "warn",
+            oldMargin: oldest,
+            newMargin: newest,
+            name: item.name,
+            volume: item.volume,
+            category: item.category,
+          };
+        }
+      });
+      setMarginCompression(newCompression);
       setLastUpdate(new Date());
       if (isManualRefresh) {
         showToast("Prices refreshed!", "success");
@@ -5869,7 +5931,7 @@ RULES:
         <div className="merchant-anim-scan" />
         <div className="merchant-anim-logo">RuneTrader.gg</div>
         <div className="merchant-anim-title">Entering the Market</div>
-        <div className="merchant-anim-divider" style={{ width: "200px" }} />
+        <div className="merchant-anim-divider" style={{ width: "200px", marginBottom: "8px" }} />
         {(() => {
           const level = xpToLevel(totalXP);
           const { title, emoji } = getLevelTitle(level);
@@ -5892,7 +5954,7 @@ RULES:
           );
         })()}
         {dailyQuests.length > 0 && (
-          <div className="merchant-anim-quests">
+          <div className="merchant-anim-quests" style={{ marginTop: "24px" }}>
             {dailyQuests.map((q, i) => {
               const diffColor = q.difficulty === "easy" ? "var(--green)" : q.difficulty === "medium" ? "var(--gold)" : "var(--red)";
               return (
@@ -7142,11 +7204,17 @@ RULES:
                   { v: "alch",       label: "High Alch" },
                   { v: "coffer",     label: "Death's Coffer" },
                   { v: "tradeboard", label: "Trade Board" },
-                ].map(({ v, label }) => (
+                  { v: "marginwatch", label: "Margin Watch", badge: Object.values(marginCompression).filter(c => c.direction !== "recover").length },
+                ].map(({ v, label, badge }) => (
                   <button key={v}
                     className={`nav-tab ${activeTab === "market" && marketSubTab === v ? "active" : ""}`}
                     onClick={() => { handleSetActiveTab("market"); setMarketSubTab(v); if (v !== "flips") setPicksMode(false); }}>
                     {label}
+                    {badge > 0 && (
+                      <span style={{ marginLeft: "5px", background: v === "marginwatch" ? "rgba(231,76,60,0.8)" : "var(--gold)", color: "#fff", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
+                        {badge}
+                      </span>
+                    )}
                   </button>
                 ))}
 
@@ -7866,6 +7934,103 @@ RULES:
                   />
                 )}
 
+                {/* ── MARGIN WATCH TAB ── */}
+                {marketSubTab === "marginwatch" && (() => {
+                  const compressionList = Object.entries(marginCompression)
+                    .map(([id, c]) => ({ ...c, id: parseInt(id), liveItem: allItems.find(i => i.id === parseInt(id)) }))
+                    .filter(c => c.liveItem)
+                    .sort((a, b) => a.pct - b.pct); // most crashed first
+                  const crashed  = compressionList.filter(c => c.direction === "crash");
+                  const warn     = compressionList.filter(c => c.direction === "warn");
+                  const recover  = compressionList.filter(c => c.direction === "recover");
+                  const totalFlagged = crashed.length + warn.length;
+
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      {/* Header summary */}
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
+                        <div>
+                          <div className="section-title" style={{ marginBottom: "4px" }}>Margin Compression Detector</div>
+                          <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>
+                            Items where margin moved >30% in the last 24hrs · Refreshes every 30s · Min 500 vol/day
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: "12px", flexShrink: 0 }}>
+                          {[
+                            { label: "Crashed (>60%)", val: crashed.length, color: "var(--red)" },
+                            { label: "Compressed (30–60%)", val: warn.length, color: "#f39c12" },
+                            { label: "Recovering", val: recover.length, color: "var(--blue)" },
+                          ].map((s, i) => (
+                            <div key={i} style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 16px", textAlign: "center", minWidth: "110px" }}>
+                              <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "4px" }}>{s.label}</div>
+                              <div style={{ fontSize: "22px", fontWeight: 700, fontFamily: "'Cinzel', serif", color: s.color }}>{s.val}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {compressionList.length === 0 ? (
+                        <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "60px 24px", textAlign: "center" }}>
+                          <div style={{ fontSize: "32px", marginBottom: "12px", opacity: 0.4 }}>📊</div>
+                          <div style={{ fontSize: "14px", color: "var(--text-dim)", marginBottom: "6px" }}>No compression detected yet</div>
+                          <div style={{ fontSize: "12px", color: "var(--text-dim)", opacity: 0.7 }}>Data builds up over time — check back after a few price refreshes.</div>
+                        </div>
+                      ) : (
+                        <>
+                          {[
+                            { items: crashed,  label: "Crashed — margin down >60%",     labelColor: "var(--red)" },
+                            { items: warn,     label: "Compressed — margin down 30–60%", labelColor: "#f39c12"    },
+                            { items: recover,  label: "Recovering — margin up >30%",     labelColor: "var(--blue)" },
+                          ].filter(g => g.items.length > 0).map(group => (
+                            <div key={group.label}>
+                              <div style={{ fontSize: "11px", color: group.labelColor, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>
+                                {group.label}
+                              </div>
+                              <div className="mwatch-table">
+                                <div className="mwatch-header">
+                                  <span>Item</span>
+                                  <span>Margin now</span>
+                                  <span>24hr change</span>
+                                  <span>Was</span>
+                                  <span>Verdict</span>
+                                </div>
+                                {group.items.map(c => {
+                                  const cls = c.direction === "crash" ? "crash" : c.direction === "recover" ? "recover" : "warn";
+                                  const verdictLabel = c.direction === "crash" ? "Avoid — crashing" : c.direction === "recover" ? "Recovering — watch" : "Caution — compressing";
+                                  const verdictCls   = c.direction === "crash" ? "avoid" : c.direction === "recover" ? "recover" : "caution";
+                                  return (
+                                    <div key={c.id} className={`mwatch-row ${cls === "crash" ? "crash-row" : cls === "warn" ? "warn-row" : ""}`}
+                                      onClick={() => setSelectedItem(c.liveItem)}>
+                                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                        <img src={itemIconUrl(c.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
+                                        <div>
+                                          <div style={{ fontWeight: 500, fontSize: "13px", color: "var(--text)" }}>{c.name}</div>
+                                          <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{c.category} · {c.volume >= 1000 ? (c.volume/1000).toFixed(1)+"k" : c.volume} vol/day</div>
+                                        </div>
+                                      </div>
+                                      <span style={{ fontSize: "13px", fontWeight: 600, color: c.direction === "recover" ? "var(--green)" : c.direction === "crash" ? "var(--red)" : "#f39c12" }}>
+                                        {formatGP(c.newMargin)}
+                                      </span>
+                                      <span className={`compress-pill ${cls}`} style={{ marginLeft: 0 }}>
+                                        {c.pct > 0 ? "▲" : "▼"} {c.pct > 0 ? "+" : ""}{c.pct}%
+                                      </span>
+                                      <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(c.oldMargin)}</span>
+                                      <span className={`mwatch-verdict ${verdictCls}`}>{verdictLabel}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                          <div style={{ fontSize: "11px", color: "var(--text-dim)", textAlign: "center", paddingTop: "4px" }}>
+                            {totalFlagged} item{totalFlagged !== 1 ? "s" : ""} flagged · Data accuracy improves over time as more snapshots accumulate
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 {/* ── PICKS TAB ── */}
                 {marketSubTab === "flips" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -8089,7 +8254,25 @@ RULES:
                               <button onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: watchlist.includes(item.id) ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={watchlist.includes(item.id) ? "Remove from Watchlist" : "Add to Watchlist"}>🔗</button>
                               <button onClick={e => { e.stopPropagation(); setQuickAlert({ item }); setQuickAlertPrice(item.hasPrice ? String(item.high) : ""); setQuickAlertType("above"); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", opacity: alerts.some(a => a.item.toLowerCase() === item.name.toLowerCase()) ? 1 : 0.22, transition: "opacity 0.15s", padding: "0", flexShrink: 0, lineHeight: 1 }} title="Set price alert">🔔</button>
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
-                              <div className="item-name">{item.name}</div>
+                              <div style={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: "4px", minWidth: 0 }}>
+                                <div className="item-name" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
+                                {marginCompression[item.id] && (() => {
+                                  const c = marginCompression[item.id];
+                                  const cls = c.direction === "crash" ? "crash" : c.direction === "recover" ? "recover" : "warn";
+                                  const arrow = c.pct > 0 ? "▲" : "▼";
+                                  const tooltipText = c.direction === "crash"
+                                    ? `Margin crashed ${Math.abs(c.pct)}% in 24hrs — was ${formatGP(c.oldMargin)} gp, now ${formatGP(c.newMargin)} gp. Avoid until it stabilises.`
+                                    : c.direction === "recover"
+                                    ? `Margin recovering +${c.pct}% in 24hrs — was ${formatGP(c.oldMargin)} gp, now ${formatGP(c.newMargin)} gp. Potential entry point.`
+                                    : `Margin compressed ${Math.abs(c.pct)}% in 24hrs — was ${formatGP(c.oldMargin)} gp, now ${formatGP(c.newMargin)} gp. Trade with caution.`;
+                                  return (
+                                    <span className={`compress-pill ${cls}`} onClick={e => { e.stopPropagation(); setMarketSubTab("marginwatch"); }}>
+                                      {arrow} {c.pct > 0 ? "+" : ""}{c.pct}%
+                                      <span className="compress-tooltip">{tooltipText}</span>
+                                    </span>
+                                  );
+                                })()}
+                              </div>
                             </div>
                             <span className="price">{item.hasPrice ? formatGP(item.low) : "—"}</span>
                             <span className="price">{item.hasPrice ? formatGP(item.high) : "—"}</span>
