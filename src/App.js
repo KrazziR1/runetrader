@@ -581,8 +581,8 @@ const STYLES = `
   .merchant-anim-logo { font-size: 12px; letter-spacing: 6px; color: var(--gold-dim); text-transform: uppercase; font-weight: 600; animation: fadeInUp 0.6s ease 0.3s both; margin-bottom: 16px; }
   .merchant-anim-title { font-family: 'Cinzel', serif; font-size: 42px; font-weight: 800; color: var(--gold); animation: fadeInScale 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.8s both; letter-spacing: 2px; text-align: center; }
   .merchant-anim-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--gold-dim), transparent); animation: goldLineDraw 0.6s ease 1.6s both; margin: 24px 0; }
-  .merchant-anim-stats { display: flex; gap: 16px; animation: fadeInUp 0.5s ease 2.0s both; }
-  .merchant-anim-stat { background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.18); border-radius: 12px; padding: 14px 20px; text-align: center; min-width: 110px; }
+  .merchant-anim-stats { display: flex; gap: 24px; animation: fadeInUp 0.5s ease 2.0s both; }
+  .merchant-anim-stat { background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.18); border-radius: 12px; padding: 16px 28px; text-align: center; min-width: 120px; }
   .merchant-anim-stat-val { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700; color: var(--gold); }
   .merchant-anim-stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
   .merchant-anim-quests { display: flex; flex-direction: column; gap: 8px; animation: fadeInUp 0.5s ease 2.5s both; width: 360px; }
@@ -5841,8 +5841,28 @@ RULES:
       )}
 
       {/* MERCHANT TRANSITION BACKDROP - prevents any flash between states */}
-      {merchantTransitioning && (
+      {merchantTransitioning && showMerchantShutdown !== 'active' && showMerchantShutdown !== 'fading' && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 99998, background: '#0a0a0a', pointerEvents: 'all' }} />
+      )}
+
+      {/* EXITING TERMINAL SCREEN */}
+      {(showMerchantShutdown === 'active' || showMerchantShutdown === 'fading') && (
+        <div className={`merchant-shutdown-overlay${showMerchantShutdown === 'fading' ? ' merchant-shutdown-exit' : ''}`}>
+          <div className="merchant-anim-scan" />
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px)", backgroundSize: "40px 40px", opacity: 0, animation: "fadeIn 0.5s ease 0.2s both" }} />
+          <div className="merchant-anim-logo">RuneTrader.gg</div>
+          <div className="merchant-shutdown-title">Exiting Terminal</div>
+          <div className="merchant-anim-divider" style={{ width: "180px" }} />
+          <div className="merchant-shutdown-bars">
+            {[1.2,0.7,1.6,0.4,1.0,1.4,0.6,1.8,0.9,1.3,0.5,1.1].map((h, i) => (
+              <div key={i} className="merchant-shutdown-bar" style={{ height: `${h * 24}px`, animationDelay: `${0.8 + i * 0.06}s` }} />
+            ))}
+          </div>
+          <div className="merchant-shutdown-status">
+            <span className="merchant-anim-ready-dot" style={{ background: "var(--red)" }} />
+            Terminal Closed
+          </div>
+        </div>
       )}
       {/* TRADING TERMINAL ACTIVATION ANIMATION */}
       <div className={`merchant-anim-overlay${showMerchantAnim === 'fading' ? ' merchant-anim-exit' : ''}`} style={{ display: showMerchantAnim && showMerchantAnim !== 'done' ? 'flex' : 'none' }}>
@@ -6331,17 +6351,20 @@ RULES:
                     {[
                       { v: "fast",   emoji: "⚡", label: "Constantly",           desc: "You check your offers frequently. Prioritises high trade volume items." },
                       { v: "medium", emoji: "🕐", label: "Every few hours",       desc: "Standard 4hr GE cycle. Good balance of volume and margin." },
-                      { v: "slow",   emoji: "📅", label: "Once or twice a day",   desc: "Patient flips. Focuses on higher margins." },
+                      { v: "slow",   emoji: "📅", label: "Once or twice a day", desc: "Patient flips. Focuses on higher margins.", warn: true },
                       { v: "any",    emoji: "🌐", label: "Show everything",        desc: "No filter on flip speed." },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, flipSpeed: opt.v }))}
                         style={{ padding: "12px 16px", borderRadius: "10px", border: `1px solid ${customizePrefs.flipSpeed === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.flipSpeed === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", textAlign: "left", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
                         <span style={{ fontSize: "20px", flexShrink: 0 }}>{opt.emoji}</span>
-                        <div>
-                          <div style={{ fontSize: "13px", fontWeight: 600, color: customizePrefs.flipSpeed === opt.v ? "var(--gold)" : "var(--text)", marginBottom: "2px" }}>{opt.label}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+                            <span style={{ fontSize: "13px", fontWeight: 600, color: customizePrefs.flipSpeed === opt.v ? "var(--gold)" : "var(--text)" }}>{opt.label}</span>
+                            {opt.warn && <span style={{ fontSize: "9px", fontWeight: 700, color: "#f39c12", background: "rgba(243,156,18,0.12)", border: "1px solid rgba(243,156,18,0.3)", borderRadius: "4px", padding: "1px 5px", textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap" }}>Not Recommended</span>}
+                          </div>
                           <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{opt.desc}</div>
                         </div>
-                        {customizePrefs.flipSpeed === opt.v && <span style={{ marginLeft: "auto", color: "var(--gold)", fontSize: "14px" }}>✓</span>}
+                        {customizePrefs.flipSpeed === opt.v && <span style={{ marginLeft: "auto", color: "var(--gold)", fontSize: "14px", flexShrink: 0 }}>✓</span>}
                       </button>
                     ))}
                   </div>
@@ -7568,11 +7591,16 @@ RULES:
 
                 {/* Picks mode hint — shown when picks is on */}
                 {marketSubTab === "flips" && picksMode && (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "12px", borderBottom: "1px solid var(--border)", marginBottom: "12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "12px", borderBottom: "1px solid var(--border)", marginBottom: "12px", gap: "12px", flexWrap: "wrap" }}>
                     <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>
-                       <strong style={{ color: "var(--gold)" }}>Personalised Picks</strong> — <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong> items match your preferences
+                      <strong style={{ color: "var(--gold)" }}>Personalised Picks</strong> — <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong> items match your preferences
+                      {filtered.length < 20 && (
+                        <span style={{ marginLeft: "8px", fontSize: "12px", color: "var(--text-dim)" }}>
+                          · Few results? Try <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>adjusting your prefs</button> or <button onClick={() => setPicksMode(false)} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>show all items</button>
+                        </span>
+                      )}
                     </div>
-                    <div style={{ display: "flex", gap: "8px" }}>
+                    <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
                       <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(52,152,219,0.35)", background: "rgba(52,152,219,0.07)", color: "#3498db", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>⚙ Edit Prefs</button>
                       <button className="picks-toggle-btn" onClick={() => setPicksMode(false)} style={{ fontSize: "11px", padding: "4px 10px" }}>✕ Clear</button>
                     </div>
@@ -7853,7 +7881,7 @@ RULES:
                     style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 12px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.35)", background: picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
                     onMouseOver={e => { e.currentTarget.style.background = "rgba(201,168,76,0.14)"; }}
                     onMouseOut={e => { e.currentTarget.style.background = picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)"; }}>
-                    ✨ Help me decide{picksMode ? " â—" : ""}
+                    ✨ Help me decide{picksMode ? " ●" : ""}
                   </button>
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
                   <button
