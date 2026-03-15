@@ -1240,13 +1240,12 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
     setChartLoading(true);
     try {
       const rangeObj = TIME_RANGES.find(r => r.label === range);
-      // Fix: use correct timestep for each range
       let endpoint;
       if (range === "24H") endpoint = "5m";
       else if (range === "3D") endpoint = "1h";
       else if (range === "7D") endpoint = "6h";
       else if (range === "1M") endpoint = "6h";
-      else endpoint = "24h"; // 6M, 1Y
+      else endpoint = "6h"; // 6M, 1Y — was "24h", now 6h for 4× more data points
 
       const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/timeseries?timestep=${endpoint}&id=${item.id}`, { headers: { "User-Agent": "RuneTrader/1.0" } });
       const data = await res.json();
@@ -1269,8 +1268,22 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
     ctx.clearRect(0, 0, W, H);
     const allPrices = [...chartData.map(d => d.avgHighPrice), ...chartData.map(d => d.avgLowPrice)].filter(Boolean);
     if (!allPrices.length) return;
-    const minP = Math.min(...allPrices) * 0.995, maxP = Math.max(...allPrices) * 1.005;
-    const minT = chartData[0].timestamp, maxT = chartData[chartData.length - 1].timestamp;
+
+    // Outlier filtering for price lines — remove candles >3× median price
+    const sortedPrices = [...allPrices].sort((a, b) => a - b);
+    const medianPrice = sortedPrices[Math.floor(sortedPrices.length / 2)] || 1;
+    const cleanData = chartData.filter(d =>
+      (!d.avgHighPrice || d.avgHighPrice <= medianPrice * 3) &&
+      (!d.avgLowPrice  || d.avgLowPrice  <= medianPrice * 3) &&
+      (!d.avgHighPrice || d.avgHighPrice >= medianPrice * 0.33) &&
+      (!d.avgLowPrice  || d.avgLowPrice  >= medianPrice * 0.33)
+    );
+    const cleanPrices = [...cleanData.map(d => d.avgHighPrice), ...cleanData.map(d => d.avgLowPrice)].filter(Boolean);
+    if (!cleanPrices.length) return;
+
+    const minP = Math.min(...cleanPrices) * 0.995, maxP = Math.max(...cleanPrices) * 1.005;
+    const minT = cleanData[0]?.timestamp ?? chartData[0].timestamp;
+    const maxT = cleanData[cleanData.length - 1]?.timestamp ?? chartData[chartData.length - 1].timestamp;
     const xPos = t => pad.left + ((t - minT) / (maxT - minT)) * (W - pad.left - pad.right);
     const yPos = p => pad.top + (1 - (p - minP) / (maxP - minP)) * (H - pad.top - pad.bottom);
     function fmtYLabel(n) {
@@ -1286,7 +1299,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
       ctx.fillStyle = "#4a5a6a"; ctx.font = "11px Inter"; ctx.textAlign = "right";
       ctx.fillText(fmtYLabel(Math.round(maxP - (i / 4) * (maxP - minP))), pad.left - 8, y + 4);
     }
-    const highPoints = chartData.filter(d => d.avgHighPrice);
+    const highPoints = cleanData.filter(d => d.avgHighPrice);
     if (highPoints.length > 1) {
       ctx.beginPath(); ctx.moveTo(xPos(highPoints[0].timestamp), yPos(highPoints[0].avgHighPrice));
       highPoints.forEach(d => ctx.lineTo(xPos(d.timestamp), yPos(d.avgHighPrice)));
@@ -1299,7 +1312,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
       highPoints.forEach(d => ctx.lineTo(xPos(d.timestamp), yPos(d.avgHighPrice)));
       ctx.strokeStyle = "#c9a84c"; ctx.lineWidth = 2; ctx.stroke();
     }
-    const lowPoints = chartData.filter(d => d.avgLowPrice);
+    const lowPoints = cleanData.filter(d => d.avgLowPrice);
     if (lowPoints.length > 1) {
       ctx.beginPath(); ctx.moveTo(xPos(lowPoints[0].timestamp), yPos(lowPoints[0].avgLowPrice));
       lowPoints.forEach(d => ctx.lineTo(xPos(d.timestamp), yPos(d.avgLowPrice)));
@@ -1307,62 +1320,87 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
     }
     // ── Margin line (optional) — drawn on its own independent Y scale ──
     if (showMarginLine) {
-      const marginPoints = chartData
+      // Step 1: compute raw margin per candle with correct 2% GE tax capped at 5M
+      const rawMarginPoints = cleanData
         .filter(d => d.avgHighPrice && d.avgLowPrice && d.avgHighPrice > d.avgLowPrice)
-        .map(d => ({
-          timestamp: d.timestamp,
-          margin: Math.max(0, Math.round(d.avgHighPrice - d.avgLowPrice - d.avgHighPrice * 0.01)),
-        }));
-      if (marginPoints.length > 1) {
-        const marginVals = marginPoints.map(d => d.margin);
-        const minM = 0;
-        const maxM = Math.max(...marginVals) * 1.15 || 1;
-        // Map margin values independently across the full chart height
-        const yPosM = v => pad.top + (1 - (v - minM) / (maxM - minM)) * (H - pad.top - pad.bottom);
+        .map(d => {
+          const tax = Math.min(Math.round(d.avgHighPrice * 0.02), 5_000_000);
+          return {
+            timestamp: d.timestamp,
+            margin: Math.max(0, d.avgHighPrice - d.avgLowPrice - tax),
+          };
+        });
 
-        // Right-axis labels — blue, right of chart
-        ctx.save();
-        ctx.fillStyle = "rgba(52,152,219,0.75)";
-        ctx.font = "10px Inter";
-        ctx.textAlign = "left";
-        for (let i = 0; i <= 4; i++) {
-          const v = (i / 4) * maxM;
-          const y = yPosM(v);
-          ctx.fillText(fmtYLabel(Math.round(v)), W - pad.right + 6, y + 3);
+      if (rawMarginPoints.length > 1) {
+        // Step 2: outlier filtering — compute median, remove candles >3× median
+        const vals = [...rawMarginPoints.map(d => d.margin)].sort((a, b) => a - b);
+        const median = vals[Math.floor(vals.length / 2)] || 1;
+        const marginPoints = rawMarginPoints.filter(d => d.margin <= median * 3);
+
+        if (marginPoints.length > 1) {
+          // Step 3: light smoothing — 3-point rolling average to remove noise
+          const smoothed = marginPoints.map((d, i) => {
+            const prev = marginPoints[Math.max(0, i - 1)].margin;
+            const next = marginPoints[Math.min(marginPoints.length - 1, i + 1)].margin;
+            return { timestamp: d.timestamp, margin: Math.round((prev + d.margin + next) / 3) };
+          });
+
+          const marginVals = smoothed.map(d => d.margin);
+          const minM = 0;
+          const maxM = Math.max(...marginVals) * 1.2 || 1;
+          const yPosM = v => pad.top + (1 - (v - minM) / (maxM - minM)) * (H - pad.top - pad.bottom);
+
+          // Right-axis labels — blue
+          ctx.save();
+          ctx.fillStyle = "rgba(52,152,219,0.75)";
+          ctx.font = "10px Inter";
+          ctx.textAlign = "left";
+          for (let i = 0; i <= 4; i++) {
+            const v = (i / 4) * maxM;
+            const y = yPosM(v);
+            ctx.fillText(fmtYLabel(Math.round(v)), W - pad.right + 6, y + 3);
+          }
+          // "MARGIN" axis label rotated on right edge
+          ctx.save();
+          ctx.translate(W - 4, pad.top + (H - pad.top - pad.bottom) / 2);
+          ctx.rotate(-Math.PI / 2);
+          ctx.fillStyle = "rgba(52,152,219,0.45)";
+          ctx.font = "9px Inter";
+          ctx.textAlign = "center";
+          ctx.fillText("MARGIN", 0, 0);
+          ctx.restore();
+          ctx.restore();
+
+          // Subtle fill under margin line
+          const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+          grad.addColorStop(0, "rgba(52,152,219,0.1)");
+          grad.addColorStop(1, "rgba(52,152,219,0)");
+          ctx.beginPath();
+          ctx.moveTo(xPos(smoothed[0].timestamp), yPosM(smoothed[0].margin));
+          smoothed.forEach(d => ctx.lineTo(xPos(d.timestamp), yPosM(d.margin)));
+          ctx.lineTo(xPos(smoothed[smoothed.length - 1].timestamp), H - pad.bottom);
+          ctx.lineTo(xPos(smoothed[0].timestamp), H - pad.bottom);
+          ctx.closePath();
+          ctx.fillStyle = grad;
+          ctx.fill();
+
+          // Margin line itself
+          ctx.beginPath();
+          ctx.moveTo(xPos(smoothed[0].timestamp), yPosM(smoothed[0].margin));
+          smoothed.forEach(d => ctx.lineTo(xPos(d.timestamp), yPosM(d.margin)));
+          ctx.strokeStyle = "#3498db";
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Current margin dot
+          const last = smoothed[smoothed.length - 1];
+          ctx.beginPath();
+          ctx.arc(xPos(last.timestamp), yPosM(last.margin), 3, 0, Math.PI * 2);
+          ctx.fillStyle = "#3498db";
+          ctx.fill();
         }
-        // Axis label
-        ctx.save();
-        ctx.translate(W - 4, pad.top + (H - pad.top - pad.bottom) / 2);
-        ctx.rotate(-Math.PI / 2);
-        ctx.fillStyle = "rgba(52,152,219,0.5)";
-        ctx.font = "9px Inter";
-        ctx.textAlign = "center";
-        ctx.fillText("MARGIN", 0, 0);
-        ctx.restore();
-        ctx.restore();
-
-        // Draw the margin line
-        ctx.beginPath();
-        ctx.moveTo(xPos(marginPoints[0].timestamp), yPosM(marginPoints[0].margin));
-        marginPoints.forEach(d => ctx.lineTo(xPos(d.timestamp), yPosM(d.margin)));
-        ctx.strokeStyle = "#3498db";
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 4]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Fill under margin line subtly
-        const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-        grad.addColorStop(0, "rgba(52,152,219,0.08)");
-        grad.addColorStop(1, "rgba(52,152,219,0)");
-        ctx.beginPath();
-        ctx.moveTo(xPos(marginPoints[0].timestamp), yPosM(marginPoints[0].margin));
-        marginPoints.forEach(d => ctx.lineTo(xPos(d.timestamp), yPosM(d.margin)));
-        ctx.lineTo(xPos(marginPoints[marginPoints.length - 1].timestamp), H - pad.bottom);
-        ctx.lineTo(xPos(marginPoints[0].timestamp), H - pad.bottom);
-        ctx.closePath();
-        ctx.fillStyle = grad;
-        ctx.fill();
       }
     }
     ctx.fillStyle = "#4a5a6a"; ctx.font = "11px Inter"; ctx.textAlign = "center";
