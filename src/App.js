@@ -4279,6 +4279,27 @@ export default function RuneTrader() {
     }, { onConflict: "user_id,quest_date" });
   }
 
+  const REROLL_COST = 15;
+
+  async function rerollQuest(questId) {
+    const quest = dailyQuests.find(q => q.id === questId);
+    if (!quest || quest.completed) return;
+    if (goldCoins < REROLL_COST) { showToast(`Need ${REROLL_COST} coins to reroll. Complete quests to earn more! 🪙`, "error", 3000); return; }
+
+    // Generate a replacement quest of the same difficulty, different type
+    const today = todayStr();
+    const seed = Math.abs((user.id + today + questId + Date.now()).split("").reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0));
+    const newQuests = generateDailyQuests(user.id, today + "_reroll_" + questId + "_" + seed);
+    const replacement = newQuests.find(q => q.difficulty === quest.difficulty && q.id !== quest.id) || newQuests[0];
+
+    const updated = dailyQuests.map(q => q.id === questId ? { ...replacement, difficulty: quest.difficulty } : q);
+    const newCoins = goldCoins - REROLL_COST;
+    setGoldCoins(newCoins);
+    setDailyQuests(updated);
+    saveQuests(updated, newCoins);
+    showToast(`Quest rerolled! -${REROLL_COST} 🪙`, "info", 2500);
+  }
+
   async function awardXP(profit, context = {}) {
     if (!user || !profit || profit <= 0) return;
     const today = new Date().toISOString().slice(0, 10);
@@ -6610,20 +6631,34 @@ RULES:
               {/* Daily quests */}
               {questsLoaded && dailyQuests.length > 0 && (
                 <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--border)" }}>
-                  <div style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>
-                    Today's Quests · 🪙 {goldCoins.toLocaleString()} coins
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                    <div style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px" }}>
+                      Today's Quests
+                    </div>
+                    <div style={{ fontSize: "11px", color: "var(--gold)" }}>🪙 {goldCoins.toLocaleString()} coins</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     {dailyQuests.map(q => {
                       const pct = q.target > 1 ? Math.min(100, Math.round((q.progress / q.target) * 100)) : (q.completed ? 100 : 0);
                       const diffColor = q.difficulty === "easy" ? "var(--green)" : q.difficulty === "medium" ? "var(--gold)" : "var(--red)";
+                      const canAffordReroll = goldCoins >= REROLL_COST;
                       return (
                         <div key={q.id} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "10px 12px", background: "var(--bg3)", borderRadius: "8px", border: q.completed ? "1px solid rgba(46,204,113,0.2)" : "1px solid var(--border)" }}>
                           <span style={{ fontSize: "18px", flexShrink: 0, marginTop: "1px" }}>{q.completed ? "✅" : q.emoji}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px", marginBottom: "2px" }}>
                               <div style={{ fontSize: "12px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</div>
-                              <span style={{ fontSize: "10px", color: diffColor, fontWeight: 700, textTransform: "uppercase", flexShrink: 0 }}>{q.difficulty}</span>
+                              <div style={{ display: "flex", alignItems: "center", gap: "5px", flexShrink: 0 }}>
+                                <span style={{ fontSize: "10px", color: diffColor, fontWeight: 700, textTransform: "uppercase" }}>{q.difficulty}</span>
+                                {!q.completed && (
+                                  <button
+                                    onClick={() => rerollQuest(q.id)}
+                                    title={canAffordReroll ? `Reroll for ${REROLL_COST} coins` : `Need ${REROLL_COST} coins`}
+                                    style={{ padding: "1px 6px", borderRadius: "4px", border: `1px solid ${canAffordReroll ? "rgba(201,168,76,0.3)" : "var(--border)"}`, background: "transparent", color: canAffordReroll ? "var(--gold)" : "var(--text-dim)", fontSize: "9px", cursor: canAffordReroll ? "pointer" : "not-allowed", fontFamily: "Inter, sans-serif", opacity: canAffordReroll ? 1 : 0.5 }}>
+                                    🎲{REROLL_COST}
+                                  </button>
+                                )}
+                              </div>
                             </div>
                             <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "4px", lineHeight: 1.4 }}>{q.desc}</div>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -6694,6 +6729,7 @@ RULES:
               const diffColor = q.difficulty === "easy" ? "var(--green)" : q.difficulty === "medium" ? "var(--gold)" : "var(--red)";
               const pct = q.target > 0 ? Math.min(100, Math.round((q.progress / q.target) * 100)) : (q.completed ? 100 : 0);
               const barColor = q.completed ? "var(--green)" : diffColor;
+              const canAffordReroll = goldCoins >= REROLL_COST;
               return (
                 <div key={q.id} className={`quest-card${q.completed ? " completed" : ""}`}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
@@ -6713,6 +6749,14 @@ RULES:
                           </span>
                         )}
                         {q.completed && <span style={{ fontSize: "10px", color: "var(--green)", marginLeft: "auto", fontWeight: 600 }}>Done!</span>}
+                        {!q.completed && (
+                          <button
+                            onClick={() => rerollQuest(q.id)}
+                            title={canAffordReroll ? `Reroll this quest for ${REROLL_COST} coins` : `Need ${REROLL_COST} coins to reroll`}
+                            style={{ marginLeft: q.target > 1 ? "0" : "auto", padding: "2px 7px", borderRadius: "5px", border: `1px solid ${canAffordReroll ? "rgba(201,168,76,0.3)" : "var(--border)"}`, background: "transparent", color: canAffordReroll ? "var(--gold)" : "var(--text-dim)", fontSize: "10px", cursor: canAffordReroll ? "pointer" : "not-allowed", fontFamily: "Inter, sans-serif", opacity: canAffordReroll ? 1 : 0.5, transition: "all 0.15s", whiteSpace: "nowrap" }}>
+                            🎲 {REROLL_COST}🪙
+                          </button>
+                        )}
                       </div>
                       {q.target > 1 && (
                         <div className="quest-progress-bar">
@@ -6726,7 +6770,7 @@ RULES:
             })}
 
             <div style={{ padding: "10px 16px", background: "rgba(201,168,76,0.04)", display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Quests reset daily at midnight · Coins redeemable for cosmetics soon</span>
+              <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Resets daily at midnight · 🎲 Reroll any quest for {REROLL_COST} coins</span>
             </div>
           </div>
         )}
