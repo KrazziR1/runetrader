@@ -7,7 +7,6 @@ import ReferralPage from "./ReferralPage";
 import TradeBoard from "./TradeBoard";
 import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
-import RecommendedFlips from "./RecommendedFlips";
 import { xpToLevel, xpProgress, xpToNextLevel, calcFlipXP, getLevelTitle, getCelebrationTier, checkNewAchievements, ACHIEVEMENTS } from "./XPSystem";
 import { generateDailyQuests, updateQuestProgress, calcQuestRewards, todayStr } from "./QuestSystem";
 import { initAudio, playLoginChime, playCoinClink, playBigProfit, playEpicProfit, playLevelUp, playQuestComplete, playNudge, toggleMute, getSoundMuted } from "./SoundEngine";
@@ -1381,6 +1380,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
 
 // â”€â”€â”€ PROFIT CHART â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+// eslint-disable-next-line no-unused-vars
 function ProfitChart({ flipsLog, autoFlipsLog = [] }) {
   const canvasRef = useRef(null);
   useEffect(() => {
@@ -3331,6 +3331,7 @@ function ThresholdPopover({ alertKey, label, unit, min, max, step, thresholds, o
 // â”€â”€ LIVE GE SLOTS COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // â”€â”€ AUTO FLIP HISTORY COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// eslint-disable-next-line no-unused-vars
 function AutoFlipHistory({ user, supabase: sb, formatGP }) {
   const [flips, setFlips] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -3371,6 +3372,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
   };
 
   if (!user) return null;
+  // eslint-disable-next-line no-unused-vars
   const openFlips = flips.filter(f => !["SOLD", "CANCELLED"].includes(f.status));
   const closedFlips = flips.filter(f => ["SOLD", "CANCELLED"].includes(f.status));
 
@@ -3486,6 +3488,7 @@ const getRelistPrice = (offerType, wikiData) => {
 };
 
 // â”€â”€â”€ UPGRADED LiveGESlots COMPONENT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// eslint-disable-next-line no-unused-vars
 function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
   const [offers, setOffers]         = useState([]);
   const [autoFlips, setAutoFlips]   = useState([]);
@@ -4403,6 +4406,7 @@ export default function RuneTrader() {
   // Load manual positions for Merchant Mode (read-only copy)
   const [merchantPositions, setMerchantPositions] = useState([]);
   const [geOffers, setGeOffers] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [liveWikiPrices, setLiveWikiPrices] = useState({}); // item_id → {high,low} — populated by LiveGESlots poll
   useEffect(() => {
     if (!user) return;
@@ -4460,6 +4464,7 @@ export default function RuneTrader() {
   // ── Engagement features ──────────────────────────────────────────────────────
   // Daily GP goal
   const [showDailyGoalPrompt, setShowDailyGoalPrompt] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [dailyGoalSession, setDailyGoalSession] = useState(() => {
     try { return JSON.parse(sessionStorage.getItem("rt_session_goal") || "null"); } catch { return null; }
   });
@@ -5687,12 +5692,15 @@ RULES:
 
   // â”€â”€ Tracker stats (manual + auto-tracked flips combined) â”€â”€
   const closedFlips = flipsLog.filter(f => f.status !== "open");
+  // eslint-disable-next-line no-unused-vars
   const openFlips = flipsLog.filter(f => f.status === "open");
   const autoClosedFlips = autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, date: f.sell_completed_at }));
   const allClosedFlips = [...closedFlips, ...autoClosedFlips];
   const totalProfit = allClosedFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
   const totalFlips = allClosedFlips.length;
+  // eslint-disable-next-line no-unused-vars
   const avgProfit = totalFlips ? Math.round(totalProfit / totalFlips) : 0;
+  // eslint-disable-next-line no-unused-vars
   const bestItem = allClosedFlips.length ? allClosedFlips.reduce((best, f) => (f.totalProfit || 0) > (best.totalProfit || 0) ? f : best, allClosedFlips[0]) : null;
 
   if (!showApp) return <LandingPage onEnterApp={(mode) => { setShowApp(true); if (mode === "demo") setDemoMode(true); }} />;
