@@ -6994,16 +6994,8 @@ RULES:
                   )}
                 </div>
 
-                {/* Customize Picks button */}
-                <button
-                  onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); setShowMarketDropdown(false); }}
-                  style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 12px", borderRadius: "8px", border: "1px solid rgba(52,152,219,0.4)", background: picksMode ? "rgba(52,152,219,0.1)" : "rgba(52,152,219,0.05)", color: "#3498db", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
-                  title="Customise your Picks preferences">
-                  ⚙ Customize{picksMode ? " ●" : ""}
-                </button>
-
-                {/* Watchlist, Alerts */}
-                {[["watchlist","Watchlist"],["alerts","Alerts"]].map(([t, label]) => (
+                {/* Alerts only in nav — Watchlist is accessible via filter bar */}
+                {[["alerts","Alerts"]].map(([t, label]) => (
                   <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => { handleSetActiveTab(t); setShowMarketDropdown(false); }}>
                     {label}
                     {t === "alerts" && (alerts.filter(a => a.triggered).length + smartEvents.length) > 0 && (
@@ -7011,28 +7003,21 @@ RULES:
                         {alerts.filter(a => a.triggered).length + smartEvents.length}
                       </span>
                     )}
-                    {t === "watchlist" && watchlist.length > 0 && (
-                      <span style={{ marginLeft: "5px", background: "var(--bg4)", color: "var(--text-dim)", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700, border: "1px solid var(--border)" }}>
-                        {watchlist.length}
-                      </span>
-                    )}
                   </button>
                 ))}
-
-                {/* Customize button */}
-                <button
-                  onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }}
-                  style={{ display: "flex", alignItems: "center", gap: "5px", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(52,152,219,0.35)", background: "rgba(52,152,219,0.07)", color: "#3498db", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
-                  onMouseOver={e => { e.currentTarget.style.background = "rgba(52,152,219,0.14)"; e.currentTarget.style.borderColor = "rgba(52,152,219,0.6)"; }}
-                  onMouseOut={e => { e.currentTarget.style.background = "rgba(52,152,219,0.07)"; e.currentTarget.style.borderColor = "rgba(52,152,219,0.35)"; }}>
-                  ⚙ Customize
-                </button>
               </div>
 
               {/* Secondary nav — right side */}
               <div className="nav-tabs">
-                {user && [["settings","Settings"],["referral","Refer & Earn"]].map(([t, label]) => (
-                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)} style={{ fontSize: "11px" }}>{label}</button>
+                {user && [["watchlist","Watchlist"],["settings","Settings"],["referral","Refer & Earn"]].map(([t, label]) => (
+                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)} style={{ fontSize: "11px" }}>
+                    {label}
+                    {t === "watchlist" && watchlist.length > 0 && (
+                      <span style={{ marginLeft: "4px", background: "var(--bg4)", color: "var(--text-dim)", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700, border: "1px solid var(--border)" }}>
+                        {watchlist.length}
+                      </span>
+                    )}
+                  </button>
                 ))}
               </div>
             </div>
@@ -7730,6 +7715,13 @@ RULES:
                       {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `🔖 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                     </button>
                   ))}
+                  <button
+                    onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }}
+                    style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 12px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.35)", background: picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
+                    onMouseOver={e => { e.currentTarget.style.background = "rgba(201,168,76,0.14)"; }}
+                    onMouseOut={e => { e.currentTarget.style.background = picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)"; }}>
+                    ✨ Help me decide{picksMode ? " ●" : ""}
+                  </button>
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
                   <button
                     className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
