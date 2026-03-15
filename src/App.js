@@ -1228,13 +1228,12 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
   const [range, setRange] = useState("7D");
   const [chartData, setChartData] = useState(null);
   const [chartLoading, setChartLoading] = useState(true);
-  const [showMarginLine, setShowMarginLine] = useState(false);
   const canvasRef = useRef(null);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchChartData(); }, [range, item.id]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { if (chartData) drawChart(); }, [chartData, showMarginLine]);
+  useEffect(() => { if (chartData) drawChart(); }, [chartData]);
 
   async function fetchChartData() {
     setChartLoading(true);
@@ -1264,7 +1263,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
-    const W = rect.width, H = rect.height, pad = { top: 20, right: showMarginLine ? 54 : 20, bottom: 40, left: 82 };
+    const W = rect.width, H = rect.height, pad = { top: 20, right: 20, bottom: 40, left: 82 };
     ctx.clearRect(0, 0, W, H);
     const allPrices = [...chartData.map(d => d.avgHighPrice), ...chartData.map(d => d.avgLowPrice)].filter(Boolean);
     if (!allPrices.length) return;
@@ -1317,91 +1316,6 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
       ctx.beginPath(); ctx.moveTo(xPos(lowPoints[0].timestamp), yPos(lowPoints[0].avgLowPrice));
       lowPoints.forEach(d => ctx.lineTo(xPos(d.timestamp), yPos(d.avgLowPrice)));
       ctx.strokeStyle = "#4caf7d"; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
-    }
-    // ── Margin line (optional) — drawn on its own independent Y scale ──
-    if (showMarginLine) {
-      // Step 1: compute raw margin per candle with correct 2% GE tax capped at 5M
-      const rawMarginPoints = cleanData
-        .filter(d => d.avgHighPrice && d.avgLowPrice && d.avgHighPrice > d.avgLowPrice)
-        .map(d => {
-          const tax = Math.min(Math.round(d.avgHighPrice * 0.02), 5_000_000);
-          return {
-            timestamp: d.timestamp,
-            margin: Math.max(0, d.avgHighPrice - d.avgLowPrice - tax),
-          };
-        });
-
-      if (rawMarginPoints.length > 1) {
-        // Step 2: outlier filtering — compute median, remove candles >3× median
-        const vals = [...rawMarginPoints.map(d => d.margin)].sort((a, b) => a - b);
-        const median = vals[Math.floor(vals.length / 2)] || 1;
-        const marginPoints = rawMarginPoints.filter(d => d.margin <= median * 3);
-
-        if (marginPoints.length > 1) {
-          // Step 3: light smoothing — 3-point rolling average to remove noise
-          const smoothed = marginPoints.map((d, i) => {
-            const prev = marginPoints[Math.max(0, i - 1)].margin;
-            const next = marginPoints[Math.min(marginPoints.length - 1, i + 1)].margin;
-            return { timestamp: d.timestamp, margin: Math.round((prev + d.margin + next) / 3) };
-          });
-
-          const marginVals = smoothed.map(d => d.margin);
-          const minM = 0;
-          const maxM = Math.max(...marginVals) * 1.2 || 1;
-          const yPosM = v => pad.top + (1 - (v - minM) / (maxM - minM)) * (H - pad.top - pad.bottom);
-
-          // Right-axis labels — blue
-          ctx.save();
-          ctx.fillStyle = "rgba(52,152,219,0.75)";
-          ctx.font = "10px Inter";
-          ctx.textAlign = "left";
-          for (let i = 0; i <= 4; i++) {
-            const v = (i / 4) * maxM;
-            const y = yPosM(v);
-            ctx.fillText(fmtYLabel(Math.round(v)), W - pad.right + 6, y + 3);
-          }
-          // "MARGIN" axis label rotated on right edge
-          ctx.save();
-          ctx.translate(W - 4, pad.top + (H - pad.top - pad.bottom) / 2);
-          ctx.rotate(-Math.PI / 2);
-          ctx.fillStyle = "rgba(52,152,219,0.45)";
-          ctx.font = "9px Inter";
-          ctx.textAlign = "center";
-          ctx.fillText("MARGIN", 0, 0);
-          ctx.restore();
-          ctx.restore();
-
-          // Subtle fill under margin line
-          const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
-          grad.addColorStop(0, "rgba(52,152,219,0.1)");
-          grad.addColorStop(1, "rgba(52,152,219,0)");
-          ctx.beginPath();
-          ctx.moveTo(xPos(smoothed[0].timestamp), yPosM(smoothed[0].margin));
-          smoothed.forEach(d => ctx.lineTo(xPos(d.timestamp), yPosM(d.margin)));
-          ctx.lineTo(xPos(smoothed[smoothed.length - 1].timestamp), H - pad.bottom);
-          ctx.lineTo(xPos(smoothed[0].timestamp), H - pad.bottom);
-          ctx.closePath();
-          ctx.fillStyle = grad;
-          ctx.fill();
-
-          // Margin line itself
-          ctx.beginPath();
-          ctx.moveTo(xPos(smoothed[0].timestamp), yPosM(smoothed[0].margin));
-          smoothed.forEach(d => ctx.lineTo(xPos(d.timestamp), yPosM(d.margin)));
-          ctx.strokeStyle = "#3498db";
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([4, 4]);
-          ctx.stroke();
-          ctx.setLineDash([]);
-
-          // Current margin dot
-          const last = smoothed[smoothed.length - 1];
-          ctx.beginPath();
-          ctx.arc(xPos(last.timestamp), yPosM(last.margin), 3, 0, Math.PI * 2);
-          ctx.fillStyle = "#3498db";
-          ctx.fill();
-        }
-      }
     }
     ctx.fillStyle = "#4a5a6a"; ctx.font = "11px Inter"; ctx.textAlign = "center";
     for (let i = 0; i <= 5; i++) {
@@ -1465,12 +1379,6 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
           <div style={{ display: "flex", gap: "20px", marginTop: "12px", alignItems: "center", flexWrap: "wrap" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)" }}><div style={{ width: "20px", height: "2px", background: "#c9a84c" }} />Sell Price</div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)" }}><div style={{ width: "20px", height: "2px", background: "#4caf7d" }} />Buy Price</div>
-            <button
-              onClick={() => setShowMarginLine(v => !v)}
-              style={{ display: "flex", alignItems: "center", gap: "6px", padding: "3px 10px", borderRadius: "6px", border: `1px solid ${showMarginLine ? "rgba(52,152,219,0.5)" : "var(--border)"}`, background: showMarginLine ? "rgba(52,152,219,0.1)" : "transparent", color: showMarginLine ? "#3498db" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
-              <div style={{ width: "20px", height: "2px", background: "#3498db", opacity: showMarginLine ? 1 : 0.35 }} />
-              Margin {showMarginLine ? "✓" : ""}
-            </button>
           </div>
         </div>
         <div className="modal-body">
