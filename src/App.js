@@ -80,7 +80,7 @@ const STYLES = `
   .profile-dropdown-item:hover { background: var(--bg3); color: var(--text); }
   .profile-dropdown-item.danger:hover { color: var(--red); }
   .market-dropdown-wrap { position: relative; }
-  .market-dropdown { position: absolute; top: calc(100% + 6px); left: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; min-width: 200px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 300; }
+  .market-dropdown { position: absolute; top: calc(100% + 6px); left: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; min-width: 220px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 400; }
   .market-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; color: var(--text-dim); cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: 'Inter', sans-serif; transition: background 0.1s; }
   .market-dropdown-item:hover { background: var(--bg3); color: var(--text); }
   .market-dropdown-item.active { color: var(--gold); background: rgba(201,168,76,0.06); }
@@ -5538,7 +5538,7 @@ export default function RuneTrader() {
     }).join("\n");
 
     const tierDesc = {
-      low:    "LOW RISK: vol/limit >= 70x, margin > 0, data <= 15min. Ultra-liquid, near-instant fills.",
+      low:    "LOW RISK: vol/limit >= 70x, margin > 0, data <= 15min. Extremely high trade volume and liquidity.",
       medium: "MEDIUM RISK: vol/limit >= 15x, buy 200k-10M, margin >= 30k, data <= 45min. Solid margins, reliable fills.",
       high:   "HIGH RISK: vol/limit >= 8x, buy >= 10M, margin >= 90k, data <= 1hr. High capital, fills not guaranteed.",
     };
@@ -6444,17 +6444,26 @@ RULES:
                       const pct = q.target > 1 ? Math.min(100, Math.round((q.progress / q.target) * 100)) : (q.completed ? 100 : 0);
                       const diffColor = q.difficulty === "easy" ? "var(--green)" : q.difficulty === "medium" ? "var(--gold)" : "var(--red)";
                       return (
-                        <div key={q.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", background: "var(--bg3)", borderRadius: "8px", border: q.completed ? "1px solid rgba(46,204,113,0.2)" : "1px solid var(--border)" }}>
-                          <span style={{ fontSize: "16px" }}>{q.completed ? "✅" : q.emoji}</span>
+                        <div key={q.id} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "10px 12px", background: "var(--bg3)", borderRadius: "8px", border: q.completed ? "1px solid rgba(46,204,113,0.2)" : "1px solid var(--border)" }}>
+                          <span style={{ fontSize: "18px", flexShrink: 0, marginTop: "1px" }}>{q.completed ? "✅" : q.emoji}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: "12px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</div>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px", marginBottom: "2px" }}>
+                              <div style={{ fontSize: "12px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</div>
+                              <span style={{ fontSize: "10px", color: diffColor, fontWeight: 700, textTransform: "uppercase", flexShrink: 0 }}>{q.difficulty}</span>
+                            </div>
+                            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "4px", lineHeight: 1.4 }}>{q.desc}</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                              <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>+{calcQuestRewards(q).xp.toLocaleString()} XP</span>
+                              <span style={{ fontSize: "10px", color: "var(--gold)" }}>+{calcQuestRewards(q).coins} 🪙</span>
+                              {q.target > 1 && !q.completed && <span style={{ fontSize: "10px", color: "var(--text-dim)", marginLeft: "auto" }}>{q.progress}/{q.target}</span>}
+                              {q.completed && <span style={{ fontSize: "10px", color: "var(--green)", marginLeft: "auto", fontWeight: 600 }}>Done!</span>}
+                            </div>
                             {q.target > 1 && !q.completed && (
-                              <div style={{ marginTop: "4px", background: "var(--bg4)", borderRadius: "3px", height: "3px", overflow: "hidden" }}>
+                              <div style={{ marginTop: "5px", background: "var(--bg4)", borderRadius: "3px", height: "3px", overflow: "hidden" }}>
                                 <div style={{ height: "100%", width: `${pct}%`, background: diffColor, borderRadius: "3px", transition: "width 0.4s" }} />
                               </div>
                             )}
                           </div>
-                          <span style={{ fontSize: "10px", color: diffColor, fontWeight: 700, textTransform: "uppercase", flexShrink: 0 }}>{q.difficulty}</span>
                         </div>
                       );
                     })}
@@ -6714,9 +6723,7 @@ RULES:
                       <button className="profile-dropdown-item" onClick={() => handleSetActiveTab("referral")}>🔗 Refer & Earn</button>
                       <button className="profile-dropdown-item" onClick={() => setActiveTab("changelog")}>🆕 What's New</button>
                       <button className="profile-dropdown-item" onClick={() => setActiveTab("pricing")}>✨ {isPro ? "Pro Plan" : "Upgrade to Pro"}</button>
-                      {user && merchantMode && (
-                        <button className="profile-dropdown-item" onClick={startMerchantTour}>📖 Terminal Tutorial</button>
-                      )}
+                      <button className="profile-dropdown-item" onClick={() => { toggleMerchantMode(); setTimeout(startMerchantTour, 600); }}>📖 Terminal Tutorial</button>
                       <div style={{ borderTop: "1px solid var(--border)", margin: "4px 0" }} />
                       <button className="profile-dropdown-item danger" onClick={handleSignOut}>Sign Out</button>
                     </div>
@@ -6737,11 +6744,11 @@ RULES:
                 {/* GE Market dropdown */}
                 <div className="market-dropdown-wrap">
                   <button
-                    className={`nav-tab ${activeTab === "market" ? "active" : ""}`}
                     onClick={() => { handleSetActiveTab("market"); setShowMarketDropdown(v => !v); }}
-                    style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 14px", borderRadius: "8px", border: `2px solid ${activeTab === "market" ? "var(--gold)" : "rgba(201,168,76,0.35)"}`, background: activeTab === "market" ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif", letterSpacing: "0.3px", transition: "all 0.15s" }}>
+                    <span>📈</span>
                     GE Market
-                    <span style={{ fontSize: "9px", opacity: 0.6 }}>▾</span>
+                    <span style={{ fontSize: "10px", opacity: 0.8, marginLeft: "2px" }}>{showMarketDropdown ? "▴" : "▾"}</span>
                   </button>
                   {showMarketDropdown && activeTab === "market" && (
                     <div className="market-dropdown" onClick={() => setShowMarketDropdown(false)}>
@@ -6793,8 +6800,8 @@ RULES:
           )}
         </header>
 
-        {/* Close market dropdown on outside click */}
-        {showMarketDropdown && <div style={{ position: "fixed", inset: 0, zIndex: 299 }} onClick={() => setShowMarketDropdown(false)} />}
+        {/* Close market dropdown on outside click — transparent, doesn't block content */}
+        {showMarketDropdown && <div style={{ position: "fixed", inset: 0, zIndex: 299, background: "transparent" }} onClick={() => setShowMarketDropdown(false)} />}
 
         <div className="main">
           {merchantMode && (user || demoMode) ? (

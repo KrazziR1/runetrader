@@ -118,7 +118,7 @@ function qualifiesHigh(item) {
 }
 
 // ── Flip Speed filter — overlaid on top of risk tier ──────────────────────────
-// fast:   vol/limit ≥ 50× (fills quickly, in and out within minutes)
+// fast:   vol/limit ≥ 50× (high trade volume and liquidity)
 // medium: vol/limit ≥ 15× (standard fill time)
 // slow:   no extra vol/limit restriction, but margin ≥ 50k (worth the wait)
 function passesFlipSpeed(item, speed) {
@@ -251,7 +251,7 @@ const ONBOARDING_STEPS = [
         color: "var(--green)",
         border: "rgba(46,204,113,0.35)",
         bg: "rgba(46,204,113,0.07)",
-        desc: "Ultra-high volume items. Vol/limit ≥ 70×. Fills are nearly instant.",
+        desc: "Ultra-high volume items. Vol/limit ≥ 70×. Extremely high trade volume.",
         emoji: "🛡️",
       },
       {
