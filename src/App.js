@@ -5796,24 +5796,22 @@ export default function RuneTrader() {
     function qualifiesLow(i) {
       if (!i.hasPrice || i.margin <= 0) return false;
       const lim = i.buyLimit || 0; if (lim <= 0) return false;
-      if ((nowSec - (i.lastTradeTime || 0)) > 900) return false;
-      return (i.volume / lim) >= 70;
+      if ((nowSec - (i.lastTradeTime || 0)) > 1800) return false;
+      return (i.volume / lim) >= 50;
     }
     function qualifiesMedium(i) {
       if (!i.hasPrice || i.margin <= 0) return false;
-      if ((nowSec - (i.lastTradeTime || 0)) > 2700) return false;
+      if ((nowSec - (i.lastTradeTime || 0)) > 7200) return false;
       const lim = i.buyLimit || 0; if (lim <= 0) return false;
-      if ((i.low || 0) < 200_000 || (i.low || 0) >= 10_000_000) return false;
-      if ((i.margin || 0) < 30_000) return false;
-      return (i.volume / lim) >= 15;
+      if ((i.margin || 0) < 15_000) return false;
+      return (i.volume / lim) >= 10;
     }
     function qualifiesHigh(i) {
       if (!i.hasPrice || i.margin <= 0) return false;
-      if ((nowSec - (i.lastTradeTime || 0)) > 3600) return false;
+      if ((nowSec - (i.lastTradeTime || 0)) > 21600) return false;
       const lim = i.buyLimit || 0; if (lim <= 0) return false;
-      if ((i.low || 0) < 10_000_000) return false;
-      if ((i.margin || 0) < 90_000) return false;
-      return (i.volume / lim) >= 8;
+      if ((i.margin || 0) < 50_000) return false;
+      return (i.volume / lim) >= 5;
     }
     function passesFlipSpeed(i, speed) {
       const ratio = (i.volume || 0) / (i.buyLimit || 1);
@@ -5861,9 +5859,9 @@ export default function RuneTrader() {
     }).join("\n");
 
     const tierDesc = {
-      low:    "LOW RISK: vol/limit >= 70x, margin > 0, data <= 15min. Extremely high trade volume and liquidity.",
-      medium: "MEDIUM RISK: vol/limit >= 15x, buy 200k-10M, margin >= 30k, data <= 45min. Solid margins, reliable fills.",
-      high:   "HIGH RISK: vol/limit >= 8x, buy >= 10M, margin >= 90k, data <= 1hr. High capital, fills not guaranteed.",
+      low:    "LOW RISK: vol/limit >= 50x, margin > 0, data <= 30min. High liquidity, reliable fills.",
+      medium: "MEDIUM RISK: vol/limit >= 10x, margin >= 15k, data <= 2hr. Solid margins, good fills.",
+      high:   "HIGH RISK: vol/limit >= 5x, margin >= 50k, data <= 6hr. Higher margins, fills less predictable.",
     };
     const speedDesc = {
       fast: "FAST speed filter (vol/limit >= 50x)",
@@ -5967,10 +5965,10 @@ RULES:
     if (speed === "medium" && ratio < 15) return false;
     if (speed === "slow" && item.margin < 50_000) return false;
     const risk = picksPrefsForFilter.risk;
-    if (risk === "low")    return ratio >= 70 && age <= 900;
-    if (risk === "medium") return ratio >= 15 && age <= 2700 && (item.low || 0) >= 200_000 && (item.low || 0) < 10_000_000 && item.margin >= 30_000;
-    if (risk === "high")   return ratio >= 8  && age <= 3600 && (item.low || 0) >= 10_000_000 && item.margin >= 90_000;
-    return ratio >= 70 && age <= 900;
+    if (risk === "low")    return ratio >= 50 && age <= 1800;
+    if (risk === "medium") return ratio >= 10 && age <= 7200  && item.margin >= 15_000;
+    if (risk === "high")   return ratio >= 5  && age <= 21600 && item.margin >= 50_000;
+    return ratio >= 50 && age <= 1800;
   }
 
   const filtered = (allItems.length ? allItems : items).filter(item => {
@@ -6648,9 +6646,9 @@ RULES:
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {[
-                      { v: "low",    emoji: "🛡️", label: "Low Risk",    desc: "Ultra-liquid items. Vol/limit ≥ 70×. Reliable and consistent." },
-                      { v: "medium", emoji: "⚖️", label: "Medium Risk", desc: "Solid margins. 200k–10M items. Vol/limit ≥ 15×." },
-                      { v: "high",   emoji: "🔥", label: "High Risk",   desc: "High capital. 10M+ items. Bigger margins, less certainty." },
+                      { v: "low",    emoji: "🛡️", label: "Low Risk",    desc: "Liquid items. Vol/limit ≥ 50×. Consistent fills, lower margins." },
+                      { v: "medium", emoji: "⚖️", label: "Medium Risk", desc: "Solid margins. Margin ≥ 15k. Vol/limit ≥ 10×." },
+                      { v: "high",   emoji: "🔥", label: "High Risk",   desc: "Bigger margins. Margin ≥ 50k. Slower fills." },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, risk: opt.v }))}
                         style={{ padding: "14px 18px", borderRadius: "10px", border: `1px solid ${customizePrefs.risk === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.risk === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
@@ -7459,7 +7457,7 @@ RULES:
           </div>
 
           {/* €€€€ BOTTOM ROW — primary nav €€€€ */}
-          {!merchantMode && (
+          {!merchantMode && !merchantTransitioning && (
             <div className="header-bottom">
               <div className="nav-tabs">
 
@@ -7511,7 +7509,7 @@ RULES:
 
 
         <div className="main">
-          {merchantMode && (user || demoMode) ? (
+          {(merchantMode || merchantTransitioning) && (user || demoMode) ? (
             <>
             <MerchantMode
               items={items}
