@@ -5797,6 +5797,7 @@ export default function RuneTrader() {
       if (!i.hasPrice || i.margin <= 0) return false;
       const lim = i.buyLimit || 0; if (lim <= 0) return false;
       if ((nowSec - (i.lastTradeTime || 0)) > 1800) return false;
+      if ((i.low || 0) > 5_000_000) return false;
       return (i.volume / lim) >= 50;
     }
     function qualifiesMedium(i) {
@@ -5804,6 +5805,7 @@ export default function RuneTrader() {
       if ((nowSec - (i.lastTradeTime || 0)) > 7200) return false;
       const lim = i.buyLimit || 0; if (lim <= 0) return false;
       if ((i.margin || 0) < 15_000) return false;
+      if ((i.low || 0) > 50_000_000) return false;
       return (i.volume / lim) >= 10;
     }
     function qualifiesHigh(i) {
@@ -5859,9 +5861,9 @@ export default function RuneTrader() {
     }).join("\n");
 
     const tierDesc = {
-      low:    "LOW RISK: vol/limit >= 50x, margin > 0, data <= 30min. High liquidity, reliable fills.",
-      medium: "MEDIUM RISK: vol/limit >= 10x, margin >= 15k, data <= 2hr. Solid margins, good fills.",
-      high:   "HIGH RISK: vol/limit >= 5x, margin >= 50k, data <= 6hr. Higher margins, fills less predictable.",
+      low:    "LOW RISK: vol/limit >= 50x, price <= 5M, data <= 30min. Liquid, accessible items.",
+      medium: "MEDIUM RISK: vol/limit >= 10x, price <= 50M, margin >= 15k, data <= 2hr. Mid-tier items.",
+      high:   "HIGH RISK: vol/limit >= 5x, price > 50M, margin >= 50k, data <= 6hr. High-value items.",
     };
     const speedDesc = {
       fast: "FAST speed filter (vol/limit >= 50x)",
@@ -5965,8 +5967,8 @@ RULES:
     if (speed === "medium" && ratio < 15) return false;
     if (speed === "slow" && item.margin < 50_000) return false;
     const risk = picksPrefsForFilter.risk;
-    if (risk === "low")    return ratio >= 50 && age <= 1800;
-    if (risk === "medium") return ratio >= 10 && age <= 7200  && item.margin >= 15_000;
+    if (risk === "low")    return ratio >= 50 && age <= 1800 && (item.low || 0) <= 5_000_000;
+    if (risk === "medium") return ratio >= 10 && age <= 7200  && item.margin >= 15_000 && (item.low || 0) <= 50_000_000;
     if (risk === "high")   return ratio >= 5  && age <= 21600 && item.margin >= 50_000;
     return ratio >= 50 && age <= 1800;
   }
@@ -6640,15 +6642,15 @@ RULES:
               {customizeStep === 1 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>âšâ€️</div>
+                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>⚖️</div>
                     <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>Risk tolerance?</div>
                     <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>How aggressive do you want to flip?</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {[
-                      { v: "low",    emoji: "🛡️", label: "Low Risk",    desc: "Liquid items. Vol/limit ≥ 50×. Consistent fills, lower margins." },
-                      { v: "medium", emoji: "⚖️", label: "Medium Risk", desc: "Solid margins. Margin ≥ 15k. Vol/limit ≥ 10×." },
-                      { v: "high",   emoji: "🔥", label: "High Risk",   desc: "Bigger margins. Margin ≥ 50k. Slower fills." },
+                      { v: "low",    emoji: "🛡️", label: "Low Risk",    desc: "Items under 5M. Vol/limit ≥ 50×. Consistent fills." },
+                      { v: "medium", emoji: "⚖️", label: "Medium Risk", desc: "Items 5M–50M. Margin ≥ 15k. Vol/limit ≥ 10×." },
+                      { v: "high",   emoji: "🔥", label: "High Risk",   desc: "Items 50M+. Bigger margins, slower fills." },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, risk: opt.v }))}
                         style={{ padding: "14px 18px", borderRadius: "10px", border: `1px solid ${customizePrefs.risk === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.risk === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
@@ -6775,7 +6777,7 @@ RULES:
             <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "480px", padding: "36px", display: "flex", flexDirection: "column", gap: "24px", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }} />
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "36px", marginBottom: "12px" }}>âšâ€️</div>
+                <div style={{ fontSize: "36px", marginBottom: "12px" }}>⚖️</div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>Welcome to RuneTrader</div>
                 <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>What's your main goal right now?</div>
               </div>
