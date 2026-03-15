@@ -7503,7 +7503,9 @@ RULES:
                       className={`nav-tab ${activeTab === "market" && marketSubTab === v ? "active" : ""}`}
                       onClick={() => { handleSetActiveTab("market"); setMarketSubTab(v); if (v !== "flips") setPicksMode(false); }}
                       style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      {label}
+                      {v === "flips" && activeTab === "market"
+                        ? (marketInnerView === "marginwatch" ? "Margin Watch" : marketInnerView === "alerts" ? "Alerts" : "Market")
+                        : label}
                       {dropdown && <span style={{ fontSize: "9px", opacity: 0.6 }}>▾</span>}
                     </button>
                     {dropdown && (
@@ -7515,6 +7517,7 @@ RULES:
                         ].map(item => (
                           <button key={item.v}
                             className="market-nav-dropdown-item"
+                            style={{ color: marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : undefined, background: marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : undefined }}
                             onClick={e => { e.stopPropagation(); handleSetActiveTab("market"); setMarketSubTab("flips"); setMarketInnerView(item.v); if (item.v !== "items") setPicksMode(false); }}>
                             {item.label}
                             {item.badge > 0 && (
@@ -7966,35 +7969,6 @@ RULES:
             {activeTab === "market" && (
               <>
                 {error && <div className="error-banner">⚠️ {error}</div>}
-
-                {/* ── MARKET SECONDARY NAV — always visible on Market tab ── */}
-                {activeTab === "market" && marketSubTab === "flips" && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px", borderBottom: "1px solid var(--border)", paddingBottom: "10px" }}>
-                    {[
-                      { v: "items", label: "Items" },
-                      { v: "marginwatch", label: "Margin Watch", badge: Object.values(marginCompression).filter(c => c.direction !== "recover").length, badgeColor: "rgba(231,76,60,0.85)" },
-                      { v: "alerts", label: "Alerts", badge: alerts.filter(a => a.triggered).length + smartEvents.length, badgeColor: "var(--gold)" },
-                    ].map(({ v, label, badge, badgeColor }) => (
-                      <button key={v}
-                        onClick={() => { setMarketInnerView(v); if (v !== "items") setPicksMode(false); }}
-                        style={{
-                          padding: "4px 14px", borderRadius: "20px", border: `1px solid ${marketInnerView === v ? "var(--gold-dim)" : "var(--border)"}`,
-                          background: marketInnerView === v ? "rgba(201,168,76,0.1)" : "transparent",
-                          color: marketInnerView === v ? "var(--gold)" : "var(--text-dim)",
-                          fontSize: "12px", fontWeight: marketInnerView === v ? 600 : 400,
-                          cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s",
-                          display: "flex", alignItems: "center", gap: "5px",
-                        }}>
-                        {label}
-                        {badge > 0 && (
-                          <span style={{ background: badgeColor, color: badgeColor === "var(--gold)" ? "#000" : "#fff", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
-                            {badge}
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
 
                 {/* Picks mode hint — shown when picks is on */}
                 {marketSubTab === "flips" && marketInnerView === "items" && picksMode && (
