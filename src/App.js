@@ -4086,13 +4086,18 @@ export default function RuneTrader() {
               }
             })();
           }
-          // Give new user their own ref code
+          // Give new user their own ref code + start 3-day Pro trial
           (async () => {
             const newCode = session.user.id.slice(0, 8).toUpperCase();
+            const trialEndsAt = new Date(Date.now() + 3 * 86400000).toISOString();
             const { data } = await supabase.from("user_profiles")
-              .upsert({ user_id: session.user.id, ref_code: newCode }, { onConflict: "user_id" })
-              .select("ref_code").single();
+              .upsert({ user_id: session.user.id, ref_code: newCode, trial_ends_at: trialEndsAt }, { onConflict: "user_id" })
+              .select("ref_code, trial_ends_at").single();
             if (data?.ref_code) setUserRefCode(data.ref_code);
+            if (data?.trial_ends_at) {
+              const daysLeft = Math.ceil((new Date(data.trial_ends_at) - Date.now()) / 86400000);
+              if (daysLeft > 0) { setIsOnTrial(true); setTrialDaysLeft(daysLeft); setIsPro(true); }
+            }
           })();
           setTimeout(() => {
             const el = document.querySelector(TOUR_STEPS[0].target);
@@ -4100,9 +4105,17 @@ export default function RuneTrader() {
             setTourStep(0);
           }, 800);
         } else if (session?.user?.id) {
-          // Load ref code and pro status for returning users
-          supabase.from("user_profiles").select("ref_code, is_pro").eq("user_id", session.user.id).single()
-            .then(({ data }) => { if (data?.ref_code) setUserRefCode(data.ref_code); if (data?.is_pro) setIsPro(true); });
+          // Load ref code, pro status, and trial for returning users
+          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at").eq("user_id", session.user.id).single()
+            .then(({ data }) => {
+              if (data?.ref_code) setUserRefCode(data.ref_code);
+              if (data?.is_pro) { setIsPro(true); return; }
+              // Check active trial
+              if (data?.trial_ends_at) {
+                const daysLeft = Math.ceil((new Date(data.trial_ends_at) - Date.now()) / 86400000);
+                if (daysLeft > 0) { setIsOnTrial(true); setTrialDaysLeft(daysLeft); setIsPro(true); }
+              }
+            });
           // Show What's New modal if this deploy is new to them
           const seen = localStorage.getItem(DEPLOY_KEY);
           if (!seen) { setTimeout(() => setShowWhatsNew(true), 1200); }
@@ -4491,6 +4504,13 @@ export default function RuneTrader() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMarketDropdown, setShowMarketDropdown] = useState(false);
   const [picksMode, setPicksMode] = useState(false); // toggle inside Flips view
+  const [showCustomizeModal, setShowCustomizeModal] = useState(false);
+  const [customizeStep, setCustomizeStep] = useState(0);
+  const [customizePrefs, setCustomizePrefs] = useState(() => {
+    try { return { cashStack: "", risk: "low", membership: "members", flipSpeed: "any", ...JSON.parse(localStorage.getItem("rt_picks_prefs_v5") || "{}") }; } catch { return { cashStack: "", risk: "low", membership: "members", flipSpeed: "any" }; }
+  });
+  const [isOnTrial, setIsOnTrial] = useState(false);
+  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
 
   // ── Quest system ─────────────────────────────────────────────────────────────
   const [dailyQuests, setDailyQuests] = useState([]);
@@ -6052,6 +6072,160 @@ RULES:
           </div>
         )}
 
+        {/* ── CUSTOMIZE MODAL ── */}
+        {showCustomizeModal && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.88)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.25s ease" }}
+            onClick={e => { if (e.target === e.currentTarget) setShowCustomizeModal(false); }}>
+            <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "520px", padding: "36px", display: "flex", flexDirection: "column", gap: "28px", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, #3498db, transparent)" }} />
+
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "#3498db" }}>⚙ Customize Your Picks</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "4px" }}>Tell us how you flip and we'll filter to your perfect items</div>
+                </div>
+                <button onClick={() => setShowCustomizeModal(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "20px" }}>✕</button>
+              </div>
+
+              {/* Step dots */}
+              <div style={{ display: "flex", gap: "6px", justifyContent: "center" }}>
+                {["Cash Stack", "Risk", "Speed", "Membership"].map((label, i) => (
+                  <div key={i} onClick={() => setCustomizeStep(i)}
+                    style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer", opacity: i <= customizeStep ? 1 : 0.4, transition: "opacity 0.2s" }}>
+                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: i === customizeStep ? "#3498db" : i < customizeStep ? "rgba(52,152,219,0.3)" : "var(--bg4)", border: `2px solid ${i <= customizeStep ? "#3498db" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: i === customizeStep ? "#fff" : i < customizeStep ? "#3498db" : "var(--text-dim)", transition: "all 0.2s" }}>{i < customizeStep ? "✓" : i + 1}</div>
+                    <div style={{ fontSize: "9px", color: i === customizeStep ? "#3498db" : "var(--text-dim)", whiteSpace: "nowrap" }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Step content */}
+              {customizeStep === 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>💰</div>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>What's your cash stack?</div>
+                    <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>We'll only show items you can actually afford to flip.</div>
+                  </div>
+                  <input className="filter-input" placeholder="e.g. 5m, 50m, 500k..." value={customizePrefs.cashStack}
+                    onChange={e => setCustomizePrefs(p => ({ ...p, cashStack: e.target.value }))}
+                    style={{ fontSize: "16px", padding: "12px 16px", textAlign: "center", background: "var(--bg3)" }} />
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" }}>
+                    {["1m", "5m", "10m", "50m", "100m"].map(v => (
+                      <button key={v} onClick={() => setCustomizePrefs(p => ({ ...p, cashStack: v }))}
+                        style={{ padding: "6px 16px", borderRadius: "8px", border: `1px solid ${customizePrefs.cashStack === v ? "var(--gold)" : "var(--border)"}`, background: customizePrefs.cashStack === v ? "rgba(201,168,76,0.12)" : "var(--bg3)", color: customizePrefs.cashStack === v ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'Cinzel', serif", fontWeight: 600 }}>
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {customizeStep === 1 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>⚔️</div>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>Risk tolerance?</div>
+                    <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>How aggressive do you want to flip?</div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {[
+                      { v: "low",    emoji: "🛡️", label: "Low Risk",    desc: "Ultra-liquid items. Vol/limit ≥ 70×. Reliable and consistent." },
+                      { v: "medium", emoji: "⚖️", label: "Medium Risk", desc: "Solid margins. 200k–10M items. Vol/limit ≥ 15×." },
+                      { v: "high",   emoji: "🔥", label: "High Risk",   desc: "High capital. 10M+ items. Bigger margins, less certainty." },
+                    ].map(opt => (
+                      <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, risk: opt.v }))}
+                        style={{ padding: "14px 18px", borderRadius: "10px", border: `1px solid ${customizePrefs.risk === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.risk === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                        <span style={{ fontSize: "24px", flexShrink: 0 }}>{opt.emoji}</span>
+                        <div>
+                          <div style={{ fontSize: "14px", fontWeight: 600, color: customizePrefs.risk === opt.v ? "var(--gold)" : "var(--text)", marginBottom: "2px" }}>{opt.label}</div>
+                          <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>{opt.desc}</div>
+                        </div>
+                        {customizePrefs.risk === opt.v && <span style={{ marginLeft: "auto", color: "var(--gold)", fontSize: "16px" }}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {customizeStep === 2 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>⏱️</div>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>How often do you flip?</div>
+                    <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>We'll match items to how active you are.</div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {[
+                      { v: "fast",   emoji: "⚡", label: "Constantly",           desc: "You check your offers frequently. Prioritises high trade volume items." },
+                      { v: "medium", emoji: "🕐", label: "Every few hours",       desc: "Standard 4hr GE cycle. Good balance of volume and margin." },
+                      { v: "slow",   emoji: "📅", label: "Once or twice a day",   desc: "Patient flips. Focuses on higher margins." },
+                      { v: "any",    emoji: "🌐", label: "Show everything",        desc: "No filter on flip speed." },
+                    ].map(opt => (
+                      <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, flipSpeed: opt.v }))}
+                        style={{ padding: "12px 16px", borderRadius: "10px", border: `1px solid ${customizePrefs.flipSpeed === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.flipSpeed === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", textAlign: "left", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                        <span style={{ fontSize: "20px", flexShrink: 0 }}>{opt.emoji}</span>
+                        <div>
+                          <div style={{ fontSize: "13px", fontWeight: 600, color: customizePrefs.flipSpeed === opt.v ? "var(--gold)" : "var(--text)", marginBottom: "2px" }}>{opt.label}</div>
+                          <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{opt.desc}</div>
+                        </div>
+                        {customizePrefs.flipSpeed === opt.v && <span style={{ marginLeft: "auto", color: "var(--gold)", fontSize: "14px" }}>✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {customizeStep === 3 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>👥</div>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>F2P or Members?</div>
+                    <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>Filters out member-only items if needed.</div>
+                  </div>
+                  <div style={{ display: "flex", gap: "12px" }}>
+                    {[
+                      { v: "members", emoji: "💎", label: "Members", desc: "All items including members-only" },
+                      { v: "f2p",     emoji: "🆓", label: "F2P Only", desc: "Free-to-play items only" },
+                    ].map(opt => (
+                      <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, membership: opt.v }))}
+                        style={{ flex: 1, padding: "20px 16px", borderRadius: "12px", border: `2px solid ${customizePrefs.membership === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.membership === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", textAlign: "center", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                        <div style={{ fontSize: "28px", marginBottom: "8px" }}>{opt.emoji}</div>
+                        <div style={{ fontSize: "14px", fontWeight: 600, color: customizePrefs.membership === opt.v ? "var(--gold)" : "var(--text)", marginBottom: "4px" }}>{opt.label}</div>
+                        <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{opt.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation buttons */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <button onClick={() => customizeStep > 0 ? setCustomizeStep(s => s - 1) : setShowCustomizeModal(false)}
+                  style={{ padding: "10px 20px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                  {customizeStep === 0 ? "Cancel" : "← Back"}
+                </button>
+                {customizeStep < 3 ? (
+                  <button onClick={() => setCustomizeStep(s => s + 1)}
+                    style={{ padding: "10px 28px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #1a6fa0, #3498db)", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                    Next →
+                  </button>
+                ) : (
+                  <button onClick={() => {
+                    localStorage.setItem("rt_picks_prefs_v5", JSON.stringify(customizePrefs));
+                    setShowCustomizeModal(false);
+                    setPicksMode(true);
+                    showToast("Preferences saved — Picks is now active ⭐", "success");
+                  }}
+                    style={{ padding: "10px 28px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>
+                    Save & Apply Picks ⭐
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── QUEST NUDGE BANNER ── */}
         {questNudge && (
           <div className="quest-nudge">
@@ -6717,7 +6891,11 @@ RULES:
                     <div className="profile-dropdown" onClick={() => setShowProfileMenu(false)}>
                       <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid var(--border)" }}>
                         <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}>{user.user_metadata?.username || user.email?.split("@")[0]}</div>
-                        <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>{isPro ? "✓ Pro member" : "Free plan"}</div>
+                        <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>
+                          {isOnTrial
+                            ? <span style={{ color: "#f39c12" }}>⏳ Pro Trial — {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} left</span>
+                            : isPro ? "✓ Pro member" : "Free plan"}
+                        </div>
                       </div>
                       <button className="profile-dropdown-item" onClick={() => { handleSetActiveTab("settings"); }}>⚙️ Settings</button>
                       <button className="profile-dropdown-item" onClick={() => handleSetActiveTab("referral")}>🔗 Refer & Earn</button>
@@ -6746,8 +6924,8 @@ RULES:
                   <button
                     onClick={() => { handleSetActiveTab("market"); setShowMarketDropdown(v => !v); }}
                     style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 14px", borderRadius: "8px", border: `2px solid ${activeTab === "market" ? "var(--gold)" : "rgba(201,168,76,0.35)"}`, background: activeTab === "market" ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif", letterSpacing: "0.3px", transition: "all 0.15s" }}>
-                    <span>📈</span>
-                    GE Market
+                    <span>☰</span>
+                    Menu
                     <span style={{ fontSize: "10px", opacity: 0.8, marginLeft: "2px" }}>{showMarketDropdown ? "▴" : "▾"}</span>
                   </button>
                   {showMarketDropdown && activeTab === "market" && (
@@ -6772,6 +6950,14 @@ RULES:
                   )}
                 </div>
 
+                {/* Customize Picks button */}
+                <button
+                  onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); setShowMarketDropdown(false); }}
+                  style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 12px", borderRadius: "8px", border: "1px solid rgba(52,152,219,0.4)", background: picksMode ? "rgba(52,152,219,0.1)" : "rgba(52,152,219,0.05)", color: "#3498db", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
+                  title="Customise your Picks preferences">
+                  ⚙ Customize{picksMode ? " ●" : ""}
+                </button>
+
                 {/* Watchlist, Alerts */}
                 {[["watchlist","Watchlist"],["alerts","Alerts"]].map(([t, label]) => (
                   <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => { handleSetActiveTab(t); setShowMarketDropdown(false); }}>
@@ -6788,6 +6974,15 @@ RULES:
                     )}
                   </button>
                 ))}
+
+                {/* Customize button */}
+                <button
+                  onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }}
+                  style={{ display: "flex", alignItems: "center", gap: "5px", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(52,152,219,0.35)", background: "rgba(52,152,219,0.07)", color: "#3498db", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
+                  onMouseOver={e => { e.currentTarget.style.background = "rgba(52,152,219,0.14)"; e.currentTarget.style.borderColor = "rgba(52,152,219,0.6)"; }}
+                  onMouseOut={e => { e.currentTarget.style.background = "rgba(52,152,219,0.07)"; e.currentTarget.style.borderColor = "rgba(52,152,219,0.35)"; }}>
+                  ⚙ Customize
+                </button>
               </div>
 
               {/* Secondary nav — right side */}
@@ -7214,17 +7409,16 @@ RULES:
               <>
                 {error && <div className="error-banner">⚠️ {error}</div>}
 
-                {/* Picks toggle — only shown on Flips sub-view */}
-                {marketSubTab === "flips" && (
+                {/* Picks mode hint — shown when picks is on */}
+                {marketSubTab === "flips" && picksMode && (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "12px", borderBottom: "1px solid var(--border)", marginBottom: "12px" }}>
                     <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>
-                      {picksMode
-                        ? <span>Showing <strong style={{ color: "var(--gold)" }}>Personalised Picks</strong> — <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong> items match your preferences</span>
-                        : <span>{sourceItems.length.toLocaleString()} items · sorted by volume</span>}
+                      ⭐ <strong style={{ color: "var(--gold)" }}>Personalised Picks</strong> — <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong> items match your preferences
                     </div>
-                    <button className={`picks-toggle-btn${picksMode ? "" : " off"}`} onClick={() => setPicksMode(v => !v)}>
-                      ⭐ {picksMode ? "Picks On" : "Picks Off"}
-                    </button>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(52,152,219,0.35)", background: "rgba(52,152,219,0.07)", color: "#3498db", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>⚙ Edit Prefs</button>
+                      <button className="picks-toggle-btn" onClick={() => setPicksMode(false)} style={{ fontSize: "11px", padding: "4px 10px" }}>✕ Clear</button>
+                    </div>
                   </div>
                 )}
 
@@ -7368,13 +7562,14 @@ RULES:
                   const targetMult = rawTarget.endsWith("m") ? 1_000_000 : rawTarget.endsWith("k") ? 1_000 : 1;
                   const targetGP = parseFloat(rawTarget) * targetMult || 0;
                   const cofferItems = (allItems || [])
-                    .filter(item => item.hasPrice && item.itemValue > 0 && item.low > 0 && item.volume > 100 && (item.buyLimit || 0) > 0)
+                    .filter(item => item.hasPrice && (item.itemValue > 0 || item.highalch > 0) && item.low > 0 && item.volume > 10 && (item.buyLimit || 0) > 0)
                     .map(item => {
-                      const savings = item.itemValue - item.low;
+                      const effectiveValue = item.itemValue > 0 ? item.itemValue : Math.round(item.highalch / 0.6);
+      const savings = effectiveValue - item.low;
                       const potentialSavings = savings * (item.buyLimit || 0);
-                      const qtyNeeded = targetGP > 0 ? Math.ceil(targetGP / item.itemValue) : null;
+                      const qtyNeeded = targetGP > 0 ? Math.ceil(targetGP / effectiveValue) : null;
                       const totalCost = qtyNeeded ? qtyNeeded * item.low : null;
-                      return { ...item, savings, potentialSavings, qtyNeeded, totalCost };
+                      return { ...item, savings, potentialSavings, qtyNeeded, totalCost, effectiveValue };
                     })
                     .filter(item => cofferShowLosses || item.savings > 0)
                     .filter(item => !cofferSearch || item.name.toLowerCase().includes(cofferSearch.toLowerCase()))
@@ -7439,7 +7634,7 @@ RULES:
                               </div>
                             </div>
                             <span className="price">{formatGP(item.low)}</span>
-                            <span className="price">{formatGP(item.itemValue)}</span>
+                            <span className="price">{formatGP(item.effectiveValue || item.itemValue)}</span>
                             <span className={item.savings >= 0 ? "profit-positive" : "profit-negative"}>
                               {item.savings >= 0 ? "+" : ""}{formatGP(item.savings)}
                             </span>
