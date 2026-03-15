@@ -4380,6 +4380,8 @@ export default function RuneTrader() {
   // eslint-disable-next-line no-unused-vars
   const [showMerchantShutdown, setShowMerchantShutdown] = useState(false);
   const [merchantTransitioning, setMerchantTransitioning] = useState(false);
+  const [merchantSessionStart, setMerchantSessionStart] = useState(null);
+  const [sessionSummary, setSessionSummary] = useState(null); // snapshot at exit
   const [merchantAIOpen, setMerchantAIOpen] = useState(false);
   const merchantAIMessagesEndRef = useRef(null);
 
@@ -4597,15 +4599,31 @@ export default function RuneTrader() {
     if (!merchantMode) {
       if (merchantCapital === 0) { setShowCapitalSetup(true); return; }
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
+      setMerchantSessionStart(Date.now());
       activateMerchantWithAnim(() => { setMerchantMode(true); });
     } else {
+      // Snapshot session summary before clearing state
+      const sessionMs = merchantSessionStart ? Date.now() - merchantSessionStart : 0;
+      const sessionH = Math.floor(sessionMs / 3600000);
+      const sessionM = Math.floor((sessionMs % 3600000) / 60000);
+      const sessionTime = sessionH > 0 ? `${sessionH}h ${sessionM}m` : `${sessionM}m`;
+      const today = new Date().toDateString();
+      const todayManual = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === today);
+      const todayAuto = autoFlipsLog.filter(f => f.sell_completed_at && new Date(f.sell_completed_at).toDateString() === today);
+      const allToday = [...todayManual.map(f => ({ item: f.item, profit: f.totalProfit || 0 })), ...todayAuto.map(f => ({ item: f.item_name, profit: f.profit || 0 }))];
+      const totalGP = allToday.reduce((s, f) => s + f.profit, 0);
+      const flipsCount = allToday.length;
+      const bestFlip = allToday.length ? allToday.reduce((b, f) => f.profit > b.profit ? f : b, allToday[0]) : null;
+      const gpHr = sessionMs > 60000 ? Math.round(totalGP / (sessionMs / 3600000)) : null;
+      setSessionSummary({ sessionTime, totalGP, flipsCount, bestFlip, gpHr });
+
       setMerchantTransitioning(true);
       setShowMerchantShutdown('active');
       setMerchantAIOpen(false);
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
-      setTimeout(() => setShowMerchantShutdown('fading'), 2400);
-      setTimeout(() => { setMerchantMode(false); }, 2850);
-      setTimeout(() => { setShowMerchantShutdown('done'); setMerchantTransitioning(false); }, 2950);
+      setTimeout(() => setShowMerchantShutdown('fading'), 5500);
+      setTimeout(() => { setMerchantMode(false); setMerchantSessionStart(null); }, 6000);
+      setTimeout(() => { setShowMerchantShutdown('done'); setMerchantTransitioning(false); setSessionSummary(null); }, 6200);
     }
   }
 
@@ -6089,22 +6107,85 @@ RULES:
         <div style={{ position: 'fixed', inset: 0, zIndex: 99998, background: '#0a0a0a', pointerEvents: 'all' }} />
       )}
 
-      {/* EXITING TERMINAL SCREEN */}
-      {(showMerchantShutdown === 'active' || showMerchantShutdown === 'fading') && (
-        <div className={`merchant-shutdown-overlay${showMerchantShutdown === 'fading' ? ' merchant-shutdown-exit' : ''}`}>
+      {/* SESSION SUMMARY SCREEN */}
+      {(showMerchantShutdown === 'active' || showMerchantShutdown === 'fading') && sessionSummary && (
+        <div className={`merchant-shutdown-overlay${showMerchantShutdown === 'fading' ? ' merchant-shutdown-exit' : ''}`}
+          style={{ gap: 0, justifyContent: "center", padding: "40px 24px" }}>
           <div className="merchant-anim-scan" />
-          <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px)", backgroundSize: "40px 40px", opacity: 0, animation: "fadeIn 0.5s ease 0.2s both" }} />
-          <div className="merchant-anim-logo">RuneTrader.gg</div>
-          <div className="merchant-shutdown-title">Exiting Terminal</div>
-          <div className="merchant-anim-divider" style={{ width: "180px" }} />
-          <div className="merchant-shutdown-bars">
-            {[1.2,0.7,1.6,0.4,1.0,1.4,0.6,1.8,0.9,1.3,0.5,1.1].map((h, i) => (
-              <div key={i} className="merchant-shutdown-bar" style={{ height: `${h * 24}px`, animationDelay: `${0.8 + i * 0.06}s` }} />
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(201,168,76,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.025) 1px, transparent 1px)", backgroundSize: "40px 40px", opacity: 0, animation: "fadeIn 0.6s ease 0.2s both" }} />
+
+          {/* Header */}
+          <div style={{ textAlign: "center", animation: "fadeInUp 0.6s ease 0.1s both", marginBottom: "32px", position: "relative", zIndex: 1 }}>
+            <div className="merchant-anim-logo" style={{ marginBottom: "10px" }}>RuneTrader.gg</div>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: "32px", fontWeight: 800, color: "var(--gold)", letterSpacing: "3px", textTransform: "uppercase" }}>
+              Session Complete
+            </div>
+            <div style={{ fontSize: "13px", color: "var(--text-dim)", marginTop: "6px", letterSpacing: "2px", textTransform: "uppercase" }}>
+              {sessionSummary.sessionTime} in the market
+            </div>
+          </div>
+
+          {/* Stat cards */}
+          <div style={{ display: "flex", gap: "16px", animation: "fadeInUp 0.6s ease 0.35s both", position: "relative", zIndex: 1, marginBottom: "28px", flexWrap: "wrap", justifyContent: "center" }}>
+            {[
+              {
+                label: "Total GP",
+                value: sessionSummary.totalGP >= 0 ? `+${sessionSummary.totalGP >= 1_000_000 ? (sessionSummary.totalGP / 1_000_000).toFixed(1) + "M" : sessionSummary.totalGP >= 1_000 ? (sessionSummary.totalGP / 1_000).toFixed(0) + "k" : sessionSummary.totalGP.toLocaleString()}` : `-${Math.abs(sessionSummary.totalGP).toLocaleString()}`,
+                color: sessionSummary.totalGP >= 0 ? "var(--green)" : "var(--red)",
+                sub: "realised today",
+              },
+              {
+                label: "Flips Closed",
+                value: sessionSummary.flipsCount,
+                color: "var(--gold)",
+                sub: "this session",
+              },
+              {
+                label: "GP / Hour",
+                value: sessionSummary.gpHr !== null
+                  ? (sessionSummary.gpHr >= 0 ? "+" : "") + (Math.abs(sessionSummary.gpHr) >= 1_000_000 ? (sessionSummary.gpHr / 1_000_000).toFixed(1) + "M" : Math.abs(sessionSummary.gpHr) >= 1_000 ? (sessionSummary.gpHr / 1_000).toFixed(0) + "k" : sessionSummary.gpHr.toLocaleString())
+                  : "—",
+                color: sessionSummary.gpHr !== null && sessionSummary.gpHr >= 0 ? "var(--green)" : "var(--text-dim)",
+                sub: "avg rate",
+              },
+            ].map((s, i) => (
+              <div key={i} style={{ background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.18)", borderRadius: "12px", padding: "18px 28px", textAlign: "center", minWidth: "130px" }}>
+                <div style={{ fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "6px" }}>{s.label}</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "26px", fontWeight: 700, color: s.color }}>{s.value}</div>
+                <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "4px" }}>{s.sub}</div>
+              </div>
             ))}
           </div>
-          <div className="merchant-shutdown-status">
-            <span className="merchant-anim-ready-dot" style={{ background: "var(--red)" }} />
-            Terminal Closed
+
+          {/* Best flip */}
+          {sessionSummary.bestFlip && sessionSummary.bestFlip.profit > 0 && (
+            <div style={{ animation: "fadeInUp 0.5s ease 0.6s both", position: "relative", zIndex: 1, marginBottom: "24px", textAlign: "center" }}>
+              <div style={{ fontSize: "11px", color: "var(--text-dim)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "8px" }}>Best flip today</div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "12px", background: "rgba(46,204,113,0.08)", border: "1px solid rgba(46,204,113,0.2)", borderRadius: "10px", padding: "10px 20px" }}>
+                <span style={{ fontSize: "18px" }}>🏆</span>
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text)" }}>{sessionSummary.bestFlip.item}</div>
+                  <div style={{ fontSize: "12px", color: "var(--green)", fontWeight: 600 }}>
+                    +{sessionSummary.bestFlip.profit >= 1_000_000
+                      ? (sessionSummary.bestFlip.profit / 1_000_000).toFixed(1) + "M"
+                      : sessionSummary.bestFlip.profit >= 1_000
+                      ? (sessionSummary.bestFlip.profit / 1_000).toFixed(0) + "k"
+                      : sessionSummary.bestFlip.profit.toLocaleString()} gp profit
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div style={{ animation: "fadeInUp 0.4s ease 0.85s both", position: "relative", zIndex: 1, textAlign: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", justifyContent: "center", fontSize: "12px", color: "var(--text-dim)" }}>
+              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--red)", display: "inline-block" }} />
+              Terminal offline
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "6px", opacity: 0.5 }}>
+              Good session{sessionSummary.totalGP > 0 ? " 📈" : ""}
+            </div>
           </div>
         </div>
       )}
