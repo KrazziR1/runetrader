@@ -4760,6 +4760,7 @@ export default function RuneTrader() {
   const [sortDir, setSortDir] = useState("desc");
   const [marketRowsShown, setMarketRowsShown] = useState(200);
   const [marketSubTab, setMarketSubTab] = useState("flips");
+  const [marketInnerView, setMarketInnerView] = useState("items"); // "items" | "marginwatch" | "alerts"
   const [natureRunePrice, setNatureRunePrice] = useState(0);
   const [customNatureRunePrice, setCustomNatureRunePrice] = useState(""); // empty = use live price
   const [alchShowLosses, setAlchShowLosses] = useState(false);
@@ -7464,32 +7465,17 @@ RULES:
               <div className="nav-tabs">
 
                 {[
-                  { v: "flips",      label: "Flips" },
+                  { v: "flips",      label: "Market" },
                   { v: "alch",       label: "High Alch" },
                   { v: "coffer",     label: "Death's Coffer" },
                   { v: "tradeboard", label: "Trade Board" },
-                  { v: "marginwatch", label: "Margin Watch", badge: Object.values(marginCompression).filter(c => c.direction !== "recover").length },
-                ].map(({ v, label, badge }) => (
+                ].map(({ v, label }) => (
                   <button key={v}
                     className={`nav-tab ${activeTab === "market" && marketSubTab === v ? "active" : ""}`}
                     onClick={() => { handleSetActiveTab("market"); setMarketSubTab(v); if (v !== "flips") setPicksMode(false); }}>
                     {label}
-                    {badge > 0 && (
-                      <span style={{ marginLeft: "5px", background: v === "marginwatch" ? "rgba(231,76,60,0.8)" : "var(--gold)", color: "#fff", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
-                        {badge}
-                      </span>
-                    )}
                   </button>
                 ))}
-
-                <button className={`nav-tab ${activeTab === "alerts" ? "active" : ""}`} onClick={() => handleSetActiveTab("alerts")}>
-                  Alerts
-                  {(alerts.filter(a => a.triggered).length + smartEvents.length) > 0 && (
-                    <span style={{ marginLeft: "5px", background: "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
-                      {alerts.filter(a => a.triggered).length + smartEvents.length}
-                    </span>
-                  )}
-                </button>
               </div>
 
               {/* Secondary nav — right side */}
@@ -7662,7 +7648,12 @@ RULES:
               </div>
             )}
 
-            {activeTab === "alerts" && (
+            {(activeTab === "alerts" || (activeTab === "market" && marketSubTab === "flips" && marketInnerView === "alerts")) && (() => {
+              // If accessed directly via old alerts tab, redirect to Market > Alerts
+              if (activeTab === "alerts") {
+                setTimeout(() => { handleSetActiveTab("market"); setMarketSubTab("flips"); setMarketInnerView("alerts"); }, 0);
+              }
+              return (
               <div className="alerts-wrap">
                 {notifPermission !== "granted" && (
                   <div className="notif-banner">
@@ -7905,7 +7896,8 @@ RULES:
                   </div>
                 </div>
               </div>
-            )}
+              );
+            })()}
 
             {/* ── PORTFOLIO TAB ── */}
             {activeTab === "portfolio" && (
@@ -7923,8 +7915,37 @@ RULES:
               <>
                 {error && <div className="error-banner">⚠️ {error}</div>}
 
+                {/* ── MARKET SECONDARY NAV — only shows when on Market/Flips subtab ── */}
+                {marketSubTab === "flips" && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px", borderBottom: "1px solid var(--border)", paddingBottom: "10px" }}>
+                    {[
+                      { v: "items", label: "Items" },
+                      { v: "marginwatch", label: "Margin Watch", badge: Object.values(marginCompression).filter(c => c.direction !== "recover").length, badgeColor: "rgba(231,76,60,0.85)" },
+                      { v: "alerts", label: "Alerts", badge: alerts.filter(a => a.triggered).length + smartEvents.length, badgeColor: "var(--gold)" },
+                    ].map(({ v, label, badge, badgeColor }) => (
+                      <button key={v}
+                        onClick={() => { setMarketInnerView(v); if (v !== "items") setPicksMode(false); }}
+                        style={{
+                          padding: "4px 14px", borderRadius: "20px", border: `1px solid ${marketInnerView === v ? "var(--gold-dim)" : "var(--border)"}`,
+                          background: marketInnerView === v ? "rgba(201,168,76,0.1)" : "transparent",
+                          color: marketInnerView === v ? "var(--gold)" : "var(--text-dim)",
+                          fontSize: "12px", fontWeight: marketInnerView === v ? 600 : 400,
+                          cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s",
+                          display: "flex", alignItems: "center", gap: "5px",
+                        }}>
+                        {label}
+                        {badge > 0 && (
+                          <span style={{ background: badgeColor, color: badgeColor === "var(--gold)" ? "#000" : "#fff", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
+                            {badge}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* Picks mode hint — shown when picks is on */}
-                {marketSubTab === "flips" && picksMode && (
+                {marketSubTab === "flips" && marketInnerView === "items" && picksMode && (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "12px", borderBottom: "1px solid var(--border)", marginBottom: "12px", gap: "12px", flexWrap: "wrap" }}>
                     <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>
                       <strong style={{ color: "var(--gold)" }}>Personalised Picks</strong> — <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong> items match your preferences
@@ -8200,8 +8221,8 @@ RULES:
                   />
                 )}
 
-                {/* ── MARGIN WATCH TAB ── */}
-                {marketSubTab === "marginwatch" && (() => {
+                {/* ── MARGIN WATCH (inside Market tab) ── */}
+                {marketSubTab === "flips" && marketInnerView === "marginwatch" && (() => {
                   const allComp = Object.entries(marginCompression)
                     .map(([id, c]) => ({ ...c, id: parseInt(id), liveItem: allItems.find(i => i.id === parseInt(id)) }))
                     .filter(c => c.liveItem);
@@ -8361,8 +8382,8 @@ RULES:
                   );
                 })()}
 
-                {/* ── PICKS TAB ── */}
-                {marketSubTab === "flips" && (
+                {/* ── ITEMS VIEW (inside Market tab) ── */}
+                {marketSubTab === "flips" && marketInnerView === "items" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div className="filter-bar">
                   <span className="filter-label">Filter:</span>
@@ -8381,10 +8402,9 @@ RULES:
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
                   <button
                     className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
-                    onClick={() => merchantMode ? setShowAdvFilters(v => !v) : setUpgradeModal({ feature: "Advanced Filters", description: "Filter by margin range, ROI, GP/fill, buy limit and more to find exactly the flips you want.", bullets: ["Min/max margin & ROI filters", "GP/fill threshold filtering", "Price data freshness filter", "Stacks with all other filters"] })}
+                    onClick={() => setShowAdvFilters(v => !v)}
                   >
-                    {!merchantMode && <span style={{ fontSize: "11px", marginRight: "2px" }}>🔒</span>}
-                    ⚙ Filters {advFilterCount > 0 && merchantMode && <span className="adv-filter-badge">{advFilterCount}</span>}
+                    ⚙ Filters {advFilterCount > 0 && <span className="adv-filter-badge">{advFilterCount}</span>}
                   </button>
                   <button
                     className="refresh-btn"
@@ -8397,9 +8417,8 @@ RULES:
                   </button>
                   <button
                     className="refresh-btn"
-                    title={merchantMode ? "Export current view to CSV" : "Trading Terminal feature"}
+                    title="Export current view to CSV"
                     onClick={() => {
-                      if (!merchantMode) { setUpgradeModal({ feature: "CSV Export", description: "Export your filtered market view to a spreadsheet for offline analysis.", bullets: ["Export all 4,525 items or filtered view", "Includes margin, ROI, volume, GP/fill", "Works with Excel & Google Sheets"] }); return; }
                       const rows = filtered.slice(0, marketRowsShown);
                       const headers = ["Name", "Category", "Buy Price", "Sell Price", "Margin", "ROI %", "Vol/Day", "Buy Limit", "GP/Fill", "Last Trade"];
                       const csvRows = rows.map(item => {
@@ -8436,7 +8455,7 @@ RULES:
                       URL.revokeObjectURL(url);
                     }}
                   >
-                    {!merchantMode ? "🔒 Export" : "↓ Export"}
+                    ↓ Export
                   </button>
                 </div>
 
@@ -8574,7 +8593,7 @@ RULES:
                           onSelect={setSelectedItem}
                           onToggleWatchlist={toggleWatchlist}
                           onQuickAlert={item => { setQuickAlert({ item }); setQuickAlertPrice(item.hasPrice ? String(item.high) : ""); setQuickAlertType("above"); }}
-                          onGoToMarginWatch={() => setMarketSubTab("marginwatch")}
+                          onGoToMarginWatch={() => { setMarketSubTab("flips"); setMarketInnerView("marginwatch"); }}
                           formatGP={formatGP}
                           timeAgo={timeAgo}
                           itemIconUrl={itemIconUrl}
