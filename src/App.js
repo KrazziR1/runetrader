@@ -1265,7 +1265,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
-    const W = rect.width, H = rect.height, pad = { top: 20, right: 20, bottom: 40, left: 82 };
+    const W = rect.width, H = rect.height, pad = { top: 20, right: showMarginLine ? 54 : 20, bottom: 40, left: 82 };
     ctx.clearRect(0, 0, W, H);
     const allPrices = [...chartData.map(d => d.avgHighPrice), ...chartData.map(d => d.avgLowPrice)].filter(Boolean);
     if (!allPrices.length) return;
@@ -1305,28 +1305,64 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
       lowPoints.forEach(d => ctx.lineTo(xPos(d.timestamp), yPos(d.avgLowPrice)));
       ctx.strokeStyle = "#4caf7d"; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
     }
-    // ── Margin line (optional) ──
+    // ── Margin line (optional) — drawn on its own independent Y scale ──
     if (showMarginLine) {
-      const marginPoints = chartData.filter(d => d.avgHighPrice && d.avgLowPrice).map(d => ({
-        timestamp: d.timestamp,
-        margin: Math.round((d.avgHighPrice - d.avgLowPrice) * 0.98), // approx after 2% tax
-      }));
+      const marginPoints = chartData
+        .filter(d => d.avgHighPrice && d.avgLowPrice && d.avgHighPrice > d.avgLowPrice)
+        .map(d => ({
+          timestamp: d.timestamp,
+          margin: Math.max(0, Math.round(d.avgHighPrice - d.avgLowPrice - d.avgHighPrice * 0.01)),
+        }));
       if (marginPoints.length > 1) {
-        // Margin has its own scale — use a right-axis projection
         const marginVals = marginPoints.map(d => d.margin);
-        const minM = Math.min(0, ...marginVals);
-        const maxM = Math.max(...marginVals) * 1.1 || 1;
+        const minM = 0;
+        const maxM = Math.max(...marginVals) * 1.15 || 1;
+        // Map margin values independently across the full chart height
         const yPosM = v => pad.top + (1 - (v - minM) / (maxM - minM)) * (H - pad.top - pad.bottom);
-        // Draw right-axis labels for margin
-        ctx.fillStyle = "rgba(52,152,219,0.7)"; ctx.font = "10px Inter"; ctx.textAlign = "left";
-        for (let i = 0; i <= 3; i++) {
-          const v = minM + (i / 3) * (maxM - minM);
+
+        // Right-axis labels — blue, right of chart
+        ctx.save();
+        ctx.fillStyle = "rgba(52,152,219,0.75)";
+        ctx.font = "10px Inter";
+        ctx.textAlign = "left";
+        for (let i = 0; i <= 4; i++) {
+          const v = (i / 4) * maxM;
           const y = yPosM(v);
-          ctx.fillText(fmtYLabel(Math.round(v)), W - pad.right + 4, y + 3);
+          ctx.fillText(fmtYLabel(Math.round(v)), W - pad.right + 6, y + 3);
         }
-        ctx.beginPath(); ctx.moveTo(xPos(marginPoints[0].timestamp), yPosM(marginPoints[0].margin));
+        // Axis label
+        ctx.save();
+        ctx.translate(W - 4, pad.top + (H - pad.top - pad.bottom) / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillStyle = "rgba(52,152,219,0.5)";
+        ctx.font = "9px Inter";
+        ctx.textAlign = "center";
+        ctx.fillText("MARGIN", 0, 0);
+        ctx.restore();
+        ctx.restore();
+
+        // Draw the margin line
+        ctx.beginPath();
+        ctx.moveTo(xPos(marginPoints[0].timestamp), yPosM(marginPoints[0].margin));
         marginPoints.forEach(d => ctx.lineTo(xPos(d.timestamp), yPosM(d.margin)));
-        ctx.strokeStyle = "#3498db"; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.strokeStyle = "#3498db";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Fill under margin line subtly
+        const grad = ctx.createLinearGradient(0, pad.top, 0, H - pad.bottom);
+        grad.addColorStop(0, "rgba(52,152,219,0.08)");
+        grad.addColorStop(1, "rgba(52,152,219,0)");
+        ctx.beginPath();
+        ctx.moveTo(xPos(marginPoints[0].timestamp), yPosM(marginPoints[0].margin));
+        marginPoints.forEach(d => ctx.lineTo(xPos(d.timestamp), yPosM(d.margin)));
+        ctx.lineTo(xPos(marginPoints[marginPoints.length - 1].timestamp), H - pad.bottom);
+        ctx.lineTo(xPos(marginPoints[0].timestamp), H - pad.bottom);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
       }
     }
     ctx.fillStyle = "#4a5a6a"; ctx.font = "11px Inter"; ctx.textAlign = "center";
