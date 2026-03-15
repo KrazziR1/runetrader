@@ -80,6 +80,14 @@ const STYLES = `
   .profile-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 12px; color: var(--text-dim); cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.1s; border: none; background: none; width: 100%; text-align: left; }
   .profile-dropdown-item:hover { background: var(--bg3); color: var(--text); }
   .profile-dropdown-item.danger:hover { color: var(--red); }
+  .market-dropdown-wrap { position: relative; }
+  .market-dropdown { position: absolute; top: calc(100% + 6px); left: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; min-width: 200px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 300; }
+  .market-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; color: var(--text-dim); cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: 'Inter', sans-serif; transition: background 0.1s; }
+  .market-dropdown-item:hover { background: var(--bg3); color: var(--text); }
+  .market-dropdown-item.active { color: var(--gold); background: rgba(201,168,76,0.06); }
+  .picks-toggle-btn { display: flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); background: rgba(201,168,76,0.07); color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .picks-toggle-btn.off { border-color: var(--border); background: transparent; color: var(--text-dim); }
+  .picks-toggle-btn:hover { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.1); }
 
   /* PLAYER CARD PANEL */
   @keyframes playerCardIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
@@ -4445,9 +4453,6 @@ export default function RuneTrader() {
     if (tab === "market" && user && !localStorage.getItem("rt_market_wizard_seen")) {
       setTimeout(() => setShowMarketWizard(true), 400);
     }
-    if (tab === "tracker" && user && !localStorage.getItem("rt_tracker_wizard_seen")) {
-      setTimeout(() => setShowTrackerWizard(true), 400);
-    }
   }
   const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [loginStreak, setLoginStreak] = useState(0);
@@ -4479,6 +4484,8 @@ export default function RuneTrader() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showPlayerCard, setShowPlayerCard] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMarketDropdown, setShowMarketDropdown] = useState(false);
+  const [picksMode, setPicksMode] = useState(false); // toggle inside Flips view
 
   // ── Quest system ─────────────────────────────────────────────────────────────
   const [dailyQuests, setDailyQuests] = useState([]);
@@ -5596,7 +5603,39 @@ RULES:
   }
 
   const sourceItems = allItems.length ? allItems : items;
+
+  // ── Picks mode filter — same tier logic as the Picks tab ──────────────────
+  const picksNowSec = Math.floor(Date.now() / 1000);
+  let picksPrefsForFilter = { risk: "low", flipSpeed: "any", cashStack: "", membership: "members" };
+  try { picksPrefsForFilter = { ...picksPrefsForFilter, ...JSON.parse(localStorage.getItem("rt_picks_prefs_v5") || "{}") }; } catch {}
+  const picksBudgetFilter = picksPrefsForFilter.cashStack ? (() => {
+    const s = picksPrefsForFilter.cashStack.trim().toLowerCase().replace(/,/g, "");
+    if (s.endsWith("b")) return parseFloat(s) * 1e9;
+    if (s.endsWith("m")) return parseFloat(s) * 1e6;
+    if (s.endsWith("k")) return parseFloat(s) * 1e3;
+    return parseFloat(s) || Infinity;
+  })() : Infinity;
+  function passesPicksFilter(item) {
+    if (!picksMode) return true;
+    const lim = item.buyLimit || 0; if (lim <= 0) return false;
+    if (!item.hasPrice || item.margin <= 0) return false;
+    if ((item.low || 0) > picksBudgetFilter) return false;
+    if (picksPrefsForFilter.membership === "f2p" && item.members) return false;
+    const ratio = item.volume / lim;
+    const age = picksNowSec - (item.lastTradeTime || 0);
+    const speed = picksPrefsForFilter.flipSpeed;
+    if (speed === "fast" && ratio < 50) return false;
+    if (speed === "medium" && ratio < 15) return false;
+    if (speed === "slow" && item.margin < 50_000) return false;
+    const risk = picksPrefsForFilter.risk;
+    if (risk === "low")    return ratio >= 70 && age <= 900;
+    if (risk === "medium") return ratio >= 15 && age <= 2700 && (item.low || 0) >= 200_000 && (item.low || 0) < 10_000_000 && item.margin >= 30_000;
+    if (risk === "high")   return ratio >= 8  && age <= 3600 && (item.low || 0) >= 10_000_000 && item.margin >= 90_000;
+    return ratio >= 70 && age <= 900;
+  }
+
   const filtered = sourceItems.filter(item => {
+    if (!passesPicksFilter(item)) return false;
     if (search.trim()) return item.name.toLowerCase().includes(search.toLowerCase());
     if (filter === "favourites") return favourites.includes(item.id);
     if (filter === "f2p") return item.category === "F2P";
@@ -6686,14 +6725,42 @@ RULES:
           {!merchantMode && (
             <div className="header-bottom">
               <div className="nav-tabs">
-                {[["market","GE Market"],["tracker","Tracker"],["watchlist","Watchlist"],["alerts","Alerts"]].map(([t, label]) => (
-                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)}>
+
+                {/* GE Market dropdown */}
+                <div className="market-dropdown-wrap">
+                  <button
+                    className={`nav-tab ${activeTab === "market" ? "active" : ""}`}
+                    onClick={() => { handleSetActiveTab("market"); setShowMarketDropdown(v => !v); }}
+                    style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    GE Market
+                    <span style={{ fontSize: "9px", opacity: 0.6 }}>▾</span>
+                  </button>
+                  {showMarketDropdown && activeTab === "market" && (
+                    <div className="market-dropdown" onClick={() => setShowMarketDropdown(false)}>
+                      {[
+                        { v: "flips",      icon: "📈", label: "Flips",           desc: "Buy low, sell high" },
+                        { v: "alch",       icon: "🔥", label: "High Alch",       desc: "Profitable alch items" },
+                        { v: "coffer",     icon: "💀", label: "Death's Coffer",  desc: "Cheapest sacrifices" },
+                        { v: "tradeboard", icon: "🤝", label: "Trade Board",     desc: "Community trades" },
+                      ].map(({ v, icon, label, desc }) => (
+                        <button key={v} className={`market-dropdown-item${marketSubTab === v ? " active" : ""}`}
+                          onClick={() => { setMarketSubTab(v); if (v !== "flips") setPicksMode(false); }}>
+                          <span style={{ fontSize: "16px", flexShrink: 0 }}>{icon}</span>
+                          <div>
+                            <div style={{ fontWeight: 600, marginBottom: "1px" }}>{label}</div>
+                            <div style={{ fontSize: "11px", opacity: 0.6 }}>{desc}</div>
+                          </div>
+                          {marketSubTab === v && <span style={{ marginLeft: "auto", fontSize: "12px" }}>✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Watchlist, Alerts */}
+                {[["watchlist","Watchlist"],["alerts","Alerts"]].map(([t, label]) => (
+                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => { handleSetActiveTab(t); setShowMarketDropdown(false); }}>
                     {label}
-                    {t === "tracker" && (openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length) > 0 && (
-                      <span style={{ marginLeft: "5px", background: "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
-                        {openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length}
-                      </span>
-                    )}
                     {t === "alerts" && (alerts.filter(a => a.triggered).length + smartEvents.length) > 0 && (
                       <span style={{ marginLeft: "5px", background: "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
                         {alerts.filter(a => a.triggered).length + smartEvents.length}
@@ -6707,6 +6774,7 @@ RULES:
                   </button>
                 ))}
               </div>
+
               {/* Secondary nav — right side */}
               <div className="nav-tabs">
                 {user && [["settings","Settings"],["referral","Refer & Earn"]].map(([t, label]) => (
@@ -6716,6 +6784,9 @@ RULES:
             </div>
           )}
         </header>
+
+        {/* Close market dropdown on outside click */}
+        {showMarketDropdown && <div style={{ position: "fixed", inset: 0, zIndex: 299 }} onClick={() => setShowMarketDropdown(false)} />}
 
         <div className="main">
           {merchantMode && (user || demoMode) ? (
@@ -6823,59 +6894,20 @@ RULES:
               />
             )}
 
-            {/* â”€â”€ TRACKER TAB â”€â”€ */}
-            {activeTab === "tracker" && (
-              <div className="tracker-wrap">
-
-                {/* Session goal progress bar */}
-                {dailyGoalSession && (() => {
-                  const todayProfit = allClosedFlips
-                    .filter(f => f.date && new Date(f.date).toDateString() === new Date().toDateString())
-                    .reduce((s, f) => s + (f.totalProfit || 0), 0);
-                  const pct = Math.min(100, Math.round((todayProfit / dailyGoalSession.gp) * 100));
-                  const reached = todayProfit >= dailyGoalSession.gp;
-                  return (
-                    <div style={{ background: "var(--bg3)", border: `1px solid ${reached ? "var(--green-dim)" : "var(--border)"}`, borderRadius: "10px", padding: "14px 18px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "13px", fontWeight: 600, color: reached ? "var(--green)" : "var(--gold)" }}>
-                          🎯 Today's goal: {dailyGoalSession.label} GP {reached ? "✓ Reached!" : ""}
-                        </span>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{formatGP(todayProfit)} / {dailyGoalSession.label}</span>
-                          <button onClick={() => { sessionStorage.removeItem("rt_session_goal"); setDailyGoalSession(null); }} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "12px", fontFamily: "Inter, sans-serif" }}>✕</button>
-                        </div>
-                      </div>
-                      <div style={{ background: "var(--bg4)", borderRadius: "6px", height: "8px", overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${pct}%`, background: reached ? "var(--green)" : "linear-gradient(90deg, var(--gold-dim), var(--gold))", borderRadius: "6px", transition: "width 0.6s ease" }} />
-                      </div>
-                      {!reached && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{pct}% — {formatGP(dailyGoalSession.gp - todayProfit)} to go</span>}
-                    </div>
-                  );
-                })()}
-
-                <div className="tracker-summary">
-                  {[
-                    { label: "Total Profit", value: formatGP(totalProfit), color: totalProfit >= 0 ? "var(--green)" : "var(--red)", sub: "Closed flips only" },
-                    { label: "Flips Logged", value: totalFlips.toLocaleString(), color: "var(--gold)", sub: `${openFlips.length + autoFlipsLog.filter(f => !["SOLD","CANCELLED"].includes(f.status)).length} open` },
-                    { label: "Avg Profit/Flip", value: formatGP(avgProfit), color: "var(--text)", sub: "Per closed flip" },
-                    { label: "Best Item", value: bestItem?.item || "—", color: "var(--gold)", sub: bestItem ? formatGP(bestItem.totalProfit) + " profit" : "Log a flip first" },
-                    { label: "Login Streak", value: loginStreak > 0 ? `${loginStreak} 🔥` : "—", color: loginStreak >= 7 ? "var(--green)" : "var(--gold)", sub: loginStreak >= 7 ? "On fire!" : loginStreak > 1 ? "Keep it up!" : "Day 1" },
-                  ].map((s, i) => (
-                    <div key={i} className="stat-card">
-                      <span className="stat-label">{s.label}</span>
-                      <span className="stat-value" style={{ color: s.color, fontSize: s.label === "Best Item" ? "14px" : "22px" }}>{s.value}</span>
-                      <span className="stat-sub">{s.sub}</span>
-                    </div>
-                  ))}
+            {/* ── TRACKER TAB — redirects to Trading Terminal ── */}
+            {activeTab === "tracker" && (() => {
+              setTimeout(() => setActiveTab("market"), 0);
+              return (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 24px", gap: "16px", textAlign: "center" }}>
+                  <div style={{ fontSize: "48px" }}>📈</div>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)" }}>Flip tracking moved</div>
+                  <div style={{ fontSize: "13px", color: "var(--text-dim)", maxWidth: "360px", lineHeight: 1.6 }}>
+                    Your flip history and open positions now live inside the Trading Terminal.
+                  </div>
                 </div>
+              );
+            })()}
 
-                <ProfitChart flipsLog={flipsLog} autoFlipsLog={autoFlipsLog} />
-
-                <LiveGESlots user={user} supabase={supabase} items={items} onLiveWiki={setLiveWikiPrices} />
-
-                <AutoFlipHistory user={user} supabase={supabase} formatGP={formatGP} />
-              </div>
-            )}
 
             {activeTab === "settings" && (
               <SettingsPage user={user} supabase={supabase} showToast={showToast} />
@@ -7162,22 +7194,24 @@ RULES:
               />
             )}
 
-            {/* â”€â”€ FLIPS TAB â”€â”€ */}
+            {/* ── FLIPS TAB ── */}
             {activeTab === "market" && (
               <>
-                {error && <div className="error-banner">âš ï¸ {error}</div>}
+                {error && <div className="error-banner">⚠️ {error}</div>}
 
-                {/* Market sub-tabs row */}
-                <div style={{ display: "flex", gap: "4px", paddingBottom: "4px" }}>
-                  {[["flips","📈 Flips"],["alch","🔥 High Alch"],["coffer","💀 Death's Coffer"],["tradeboard","🤝 Trade Board"],["picks","⭐ Picks"]].map(([v,l]) => (
-                    <button key={v}
-                      className={`market-sub-tab${marketSubTab === v ? " active" : ""}`}
-                      onClick={() => setMarketSubTab(v)}
-                    >
-                      {l}{(v === "tradeboard") && <span className="sub-tab-badge">new</span>}{(v === "picks") && <span className="sub-tab-badge">new</span>}
+                {/* Picks toggle — only shown on Flips sub-view */}
+                {marketSubTab === "flips" && (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "12px", borderBottom: "1px solid var(--border)", marginBottom: "12px" }}>
+                    <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>
+                      {picksMode
+                        ? <span>Showing <strong style={{ color: "var(--gold)" }}>Personalised Picks</strong> — <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong> items match your preferences</span>
+                        : <span>{sourceItems.length.toLocaleString()} items · sorted by volume</span>}
+                    </div>
+                    <button className={`picks-toggle-btn${picksMode ? "" : " off"}`} onClick={() => setPicksMode(v => !v)}>
+                      ⭐ {picksMode ? "Picks On" : "Picks Off"}
                     </button>
-                  ))}
-                </div>
+                  </div>
+                )}
 
 
                 {/* â”€â”€ HIGH ALCH TAB â”€â”€ */}
@@ -7433,16 +7467,6 @@ RULES:
                 )}
 
                 {/* â”€â”€ PICKS TAB â”€â”€ */}
-                {marketSubTab === "picks" && (
-                  <RecommendedFlips
-                    user={user}
-                    items={items}
-                    flipsLog={flipsLog}
-                    onSignIn={() => setShowAuth(true)}
-                    onOpenChart={setSelectedItem}
-                  />
-                )}
-
                 {marketSubTab === "flips" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div className="filter-bar">
