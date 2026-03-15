@@ -4204,6 +4204,7 @@ export default function RuneTrader() {
   const [isPro, setIsPro] = useState(false);
   const [userRefCode, setUserRefCode] = useState(null); // eslint-disable-line no-unused-vars
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [showMerchantShutdown, setShowMerchantShutdown] = useState(false);
   const [merchantTransitioning, setMerchantTransitioning] = useState(false);
   const [merchantAIOpen, setMerchantAIOpen] = useState(false);
