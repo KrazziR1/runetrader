@@ -203,7 +203,8 @@ const STYLES = `
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
   .market-nav-dropdown-wrap { position: relative; }
-  .market-nav-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; min-width: 160px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 200; }
+  .market-nav-dropdown-wrap::after { content: ''; position: absolute; top: 100%; left: 0; right: 0; height: 8px; } 
+  .market-nav-dropdown { display: none; position: absolute; top: calc(100% + 2px); left: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; min-width: 160px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 200; padding-top: 4px; }
   .market-nav-dropdown-wrap:hover .market-nav-dropdown { display: block; }
   .market-nav-dropdown-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 14px; background: none; border: none; color: var(--text-dim); font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.1s; text-align: left; }
   .market-nav-dropdown-item:hover { background: var(--bg3); color: var(--text); }
@@ -4789,6 +4790,7 @@ export default function RuneTrader() {
   const [marketRowsShown, setMarketRowsShown] = useState(200);
   const [marketSubTab, setMarketSubTab] = useState("flips");
   const [marketInnerView, setMarketInnerView] = useState("items"); // "items" | "marginwatch" | "alerts"
+  const [marketDropdownOpen, setMarketDropdownOpen] = useState(false);
   const [natureRunePrice, setNatureRunePrice] = useState(0);
   const [customNatureRunePrice, setCustomNatureRunePrice] = useState(""); // empty = use live price
   const [alchShowLosses, setAlchShowLosses] = useState(false);
@@ -7498,36 +7500,44 @@ RULES:
                   { v: "coffer",     label: "Death's Coffer" },
                   { v: "tradeboard", label: "Trade Board" },
                 ].map(({ v, label, dropdown }) => (
-                  <div key={v} style={{ position: "relative" }} className={dropdown ? "market-nav-dropdown-wrap" : ""}>
+                  <div key={v} style={{ position: "relative" }}>
                     <button
                       className={`nav-tab ${activeTab === "market" && marketSubTab === v ? "active" : ""}`}
-                      onClick={() => { handleSetActiveTab("market"); setMarketSubTab(v); if (v !== "flips") setPicksMode(false); }}
+                      onClick={() => {
+                        if (dropdown) { setMarketDropdownOpen(o => !o); handleSetActiveTab("market"); setMarketSubTab(v); }
+                        else { handleSetActiveTab("market"); setMarketSubTab(v); setPicksMode(false); setMarketDropdownOpen(false); }
+                      }}
                       style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       {v === "flips" && activeTab === "market"
                         ? (marketInnerView === "marginwatch" ? "Margin Watch" : marketInnerView === "alerts" ? "Alerts" : "Market")
                         : label}
-                      {dropdown && <span style={{ fontSize: "9px", opacity: 0.6 }}>▾</span>}
+                      {dropdown && <span style={{ fontSize: "9px", opacity: 0.6, transition: "transform 0.15s", display: "inline-block", transform: marketDropdownOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>}
                     </button>
-                    {dropdown && (
-                      <div className="market-nav-dropdown">
-                        {[
-                          { v: "items",       label: "Items" },
-                          { v: "marginwatch", label: "Margin Watch", badge: Object.values(marginCompression).filter(c => c.direction !== "recover").length },
-                          { v: "alerts",      label: "Alerts", badge: alerts.filter(a => a.triggered).length + smartEvents.length },
-                        ].map(item => (
-                          <button key={item.v}
-                            className="market-nav-dropdown-item"
-                            style={{ color: marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : undefined, background: marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : undefined }}
-                            onClick={e => { e.stopPropagation(); handleSetActiveTab("market"); setMarketSubTab("flips"); setMarketInnerView(item.v); if (item.v !== "items") setPicksMode(false); }}>
-                            {item.label}
-                            {item.badge > 0 && (
-                              <span style={{ marginLeft: "auto", background: item.v === "marginwatch" ? "rgba(231,76,60,0.8)" : "var(--gold)", color: item.v === "marginwatch" ? "#fff" : "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
-                                {item.badge}
-                              </span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
+                    {dropdown && marketDropdownOpen && (
+                      <>
+                        {/* invisible backdrop to catch outside clicks */}
+                        <div style={{ position: "fixed", inset: 0, zIndex: 199 }} onClick={() => setMarketDropdownOpen(false)} />
+                        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "8px", minWidth: "160px", overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)", zIndex: 200 }}>
+                          {[
+                            { v: "items",       label: "Items" },
+                            { v: "marginwatch", label: "Margin Watch", badge: Object.values(marginCompression).filter(c => c.direction !== "recover").length },
+                            { v: "alerts",      label: "Alerts", badge: alerts.filter(a => a.triggered).length + smartEvents.length },
+                          ].map(item => (
+                            <button key={item.v}
+                              style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "9px 14px", background: marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none", border: "none", color: marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)", fontSize: "12px", fontFamily: "Inter, sans-serif", cursor: "pointer", transition: "background 0.1s", textAlign: "left" }}
+                              onMouseOver={e => { e.currentTarget.style.background = "var(--bg3)"; e.currentTarget.style.color = "var(--text)"; }}
+                              onMouseOut={e => { e.currentTarget.style.background = marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none"; e.currentTarget.style.color = marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)"; }}
+                              onClick={e => { e.stopPropagation(); handleSetActiveTab("market"); setMarketSubTab("flips"); setMarketInnerView(item.v); if (item.v !== "items") setPicksMode(false); setMarketDropdownOpen(false); }}>
+                              {item.label}
+                              {item.badge > 0 && (
+                                <span style={{ marginLeft: "auto", background: item.v === "marginwatch" ? "rgba(231,76,60,0.8)" : "var(--gold)", color: item.v === "marginwatch" ? "#fff" : "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
+                                  {item.badge}
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </>
                     )}
                   </div>
                 ))}
