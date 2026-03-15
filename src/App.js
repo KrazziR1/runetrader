@@ -202,7 +202,11 @@ const STYLES = `
   .skeleton { background: linear-gradient(90deg, var(--bg4) 25%, var(--bg3) 50%, var(--bg4) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; height: 14px; }
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-  /* COMPRESSION PILLS */
+  .market-nav-dropdown-wrap { position: relative; }
+  .market-nav-dropdown { display: none; position: absolute; top: calc(100% + 4px); left: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; min-width: 160px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 200; }
+  .market-nav-dropdown-wrap:hover .market-nav-dropdown { display: block; }
+  .market-nav-dropdown-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 14px; background: none; border: none; color: var(--text-dim); font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.1s; text-align: left; }
+  .market-nav-dropdown-item:hover { background: var(--bg3); color: var(--text); }
   .compress-pill { display: inline-flex; align-items: center; gap: 2px; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 6px; cursor: pointer; white-space: nowrap; position: relative; vertical-align: middle; text-decoration: none; }
   .compress-pill.crash { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
   .compress-pill.warn  { background: rgba(243,156,18,0.12); color: #f39c12; border: 1px solid rgba(243,156,18,0.3); }
@@ -7489,16 +7493,40 @@ RULES:
               <div className="nav-tabs">
 
                 {[
-                  { v: "flips",      label: "Market" },
+                  { v: "flips",      label: "Market", dropdown: true },
                   { v: "alch",       label: "High Alch" },
                   { v: "coffer",     label: "Death's Coffer" },
                   { v: "tradeboard", label: "Trade Board" },
-                ].map(({ v, label }) => (
-                  <button key={v}
-                    className={`nav-tab ${activeTab === "market" && marketSubTab === v ? "active" : ""}`}
-                    onClick={() => { handleSetActiveTab("market"); setMarketSubTab(v); if (v !== "flips") setPicksMode(false); }}>
-                    {label}
-                  </button>
+                ].map(({ v, label, dropdown }) => (
+                  <div key={v} style={{ position: "relative" }} className={dropdown ? "market-nav-dropdown-wrap" : ""}>
+                    <button
+                      className={`nav-tab ${activeTab === "market" && marketSubTab === v ? "active" : ""}`}
+                      onClick={() => { handleSetActiveTab("market"); setMarketSubTab(v); if (v !== "flips") setPicksMode(false); }}
+                      style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      {label}
+                      {dropdown && <span style={{ fontSize: "9px", opacity: 0.6 }}>▾</span>}
+                    </button>
+                    {dropdown && (
+                      <div className="market-nav-dropdown">
+                        {[
+                          { v: "items",       label: "Items" },
+                          { v: "marginwatch", label: "Margin Watch", badge: Object.values(marginCompression).filter(c => c.direction !== "recover").length },
+                          { v: "alerts",      label: "Alerts", badge: alerts.filter(a => a.triggered).length + smartEvents.length },
+                        ].map(item => (
+                          <button key={item.v}
+                            className="market-nav-dropdown-item"
+                            onClick={e => { e.stopPropagation(); handleSetActiveTab("market"); setMarketSubTab("flips"); setMarketInnerView(item.v); if (item.v !== "items") setPicksMode(false); }}>
+                            {item.label}
+                            {item.badge > 0 && (
+                              <span style={{ marginLeft: "auto", background: item.v === "marginwatch" ? "rgba(231,76,60,0.8)" : "var(--gold)", color: item.v === "marginwatch" ? "#fff" : "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
+                                {item.badge}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
 
@@ -7939,8 +7967,8 @@ RULES:
               <>
                 {error && <div className="error-banner">⚠️ {error}</div>}
 
-                {/* ── MARKET SECONDARY NAV — only shows when on Market/Flips subtab ── */}
-                {marketSubTab === "flips" && (
+                {/* ── MARKET SECONDARY NAV — always visible on Market tab ── */}
+                {activeTab === "market" && marketSubTab === "flips" && (
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px", borderBottom: "1px solid var(--border)", paddingBottom: "10px" }}>
                     {[
                       { v: "items", label: "Items" },
