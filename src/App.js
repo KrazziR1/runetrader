@@ -4621,9 +4621,10 @@ export default function RuneTrader() {
       setShowMerchantShutdown('active');
       setMerchantAIOpen(false);
       await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
-      setTimeout(() => setShowMerchantShutdown('fading'), 5500);
-      setTimeout(() => { setMerchantMode(false); setMerchantSessionStart(null); }, 6000);
-      setTimeout(() => { setShowMerchantShutdown('done'); setMerchantTransitioning(false); setSessionSummary(null); }, 6200);
+      setTimeout(() => setShowMerchantShutdown('fading'), 5500);       // start fade-out
+      setTimeout(() => setShowMerchantShutdown('done'), 6100);         // overlay gone
+      setTimeout(() => { setMerchantMode(false); setMerchantSessionStart(null); }, 6150); // NOW swap to market
+      setTimeout(() => { setMerchantTransitioning(false); setSessionSummary(null); }, 6300);
     }
   }
 
@@ -6102,8 +6103,8 @@ RULES:
         </div>
       )}
 
-      {/* MERCHANT TRANSITION BACKDROP - prevents any flash between states */}
-      {merchantTransitioning && showMerchantShutdown !== 'active' && showMerchantShutdown !== 'fading' && (
+      {/* MERCHANT TRANSITION BACKDROP - covers the gap between overlay gone and market render */}
+      {merchantTransitioning && (showMerchantShutdown === 'done' || (showMerchantShutdown !== 'active' && showMerchantShutdown !== 'fading')) && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 99998, background: '#0a0a0a', pointerEvents: 'all' }} />
       )}
 
