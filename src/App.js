@@ -2233,7 +2233,7 @@ function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct
   );
 }
 
-function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView, filter, setFilter, search, setSearch, favourites, toggleFavourite, sortCol, sortDir, handleSort, filtered, marketRowsShown, setMarketRowsShown, showAdvFilters, setShowAdvFilters, advFilters, advFilterCount, setAdv, resetAdvFilters, loading, marginCompression = {} }) {
+function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPositions, geOffers = [], supabase: sb, user, merchantCapital, pnlHistory, pnlCanvasRef, formatGP, setSelectedItem, onUpdateCapital, onAddPosition, smartAlertSettings, saveSmartAlertSettings, thresholds, saveThreshold, openPopover, setOpenPopover, smartEvents, setSmartEvents, onRefresh, refreshing, refreshCooldown, onCloseFlip, onClosePortfolioPos, activeView, setActiveView, filter, setFilter, search, setSearch, favourites, toggleFavourite, sortCol, sortDir, handleSort, filtered, marketRowsShown, setMarketRowsShown, showAdvFilters, setShowAdvFilters, advFilters, advFilterCount, setAdv, resetAdvFilters, loading, marginCompression = {}, liveWikiPrices = {} }) {
 
   // liveOps must be declared before allOpenPositions calculation below
   const [liveOps, setLiveOps] = useState([]);
@@ -2560,7 +2560,27 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               <div className="merchant-section">
                 <div className="merchant-section-header">
                   <span className="merchant-section-title">GE Slots</span>
-                  <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{Math.max(geOffers.filter(o => o.status !== "EMPTY").length, allOpenPositions.length)} / 8 occupied</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{Math.max(geOffers.filter(o => o.status !== "EMPTY").length, allOpenPositions.length)} / 8 occupied</span>
+                    {(() => {
+                      // Count drifted slots for attention link
+                      const driftCount = geOffers.filter(o => {
+                        if (!["BUYING","SELLING"].includes(o.status)) return false;
+                        const itemId = items.find(i => i.name?.toLowerCase() === o.item_name?.toLowerCase())?.id;
+                        const wiki = itemId ? liveWikiPrices[itemId] : null;
+                        if (!wiki || !o.offer_price) return false;
+                        const drift = o.offer_type === "BUY" ? (wiki.high - o.offer_price) / o.offer_price : (o.offer_price - wiki.low) / o.offer_price;
+                        return drift >= 0.03;
+                      }).length;
+                      if (!driftCount) return null;
+                      return (
+                        <span style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "11px", color: "#f39c12", fontWeight: 700, cursor: "pointer" }}>
+                          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#e74c3c", display: "inline-block", animation: "pulse 1.5s infinite" }} />
+                          {driftCount} slot{driftCount > 1 ? "s" : ""} need attention
+                        </span>
+                      );
+                    })()}
+                  </div>
                 </div>
                 <div className="slots-grid">
                   {Array.from({ length: 8 }).map((_, i) => {
@@ -2573,14 +2593,51 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     if (liveOffer) {
                       const slotColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[liveOffer.status] || "var(--border)";
                       const pct = liveOffer.qty_total > 0 ? Math.round((liveOffer.qty_filled / liveOffer.qty_total) * 100) : 0;
+                      // Compute drift for BUYING/SELLING slots
+                      const driftAlert = (() => {
+                        if (!["BUYING","SELLING"].includes(liveOffer.status)) return null;
+                        if (!liveOffer.offer_price) return null;
+                        const itemId = items.find(it => it.name?.toLowerCase() === liveOffer.item_name?.toLowerCase())?.id;
+                        const wiki = itemId ? liveWikiPrices[itemId] : null;
+                        if (!wiki) return null;
+                        const drift = liveOffer.offer_type === "BUY"
+                          ? (wiki.high - liveOffer.offer_price) / liveOffer.offer_price
+                          : (liveOffer.offer_price - wiki.low) / liveOffer.offer_price;
+                        if (drift < 0.03) return null; // within tolerance
+                        const beatIncrement = (p) => p >= 10_000_000 ? 10 : p >= 1_000_000 ? 5 : p >= 10_000 ? 3 : 2;
+                        const relistAt = liveOffer.offer_type === "BUY"
+                          ? wiki.high + beatIncrement(wiki.high)
+                          : Math.max(1, wiki.low - beatIncrement(wiki.low));
+                        return {
+                          pct: (drift * 100).toFixed(1),
+                          level: drift >= 0.05 ? "red" : "amber",
+                          relistAt,
+                        };
+                      })();
                       return (
                         <div key={i} className="ge-slot active" title={`${liveOffer.item_name} · ${liveOffer.status} · ${pct}% filled`}
+                          style={{ borderColor: driftAlert ? (driftAlert.level === "red" ? "rgba(231,76,60,0.6)" : "rgba(243,156,18,0.6)") : undefined,
+                                   background: driftAlert ? (driftAlert.level === "red" ? "rgba(231,76,60,0.05)" : "rgba(243,156,18,0.05)") : undefined }}
                           onClick={() => { const it = items.find(x => x.name.toLowerCase() === liveOffer.item_name.toLowerCase()); if (it) setSelectedItem(it); }}>
                           <div className="slot-dot" style={{ background: slotColor }} />
                           <img src={itemIconUrl(liveOffer.item_name)} alt="" style={{ width: 64, height: 64, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
                           <div className="slot-name">{liveOffer.item_name.length > 14 ? liveOffer.item_name.slice(0, 13) + "…" : liveOffer.item_name}</div>
                           <div className="slot-status-label" style={{ color: slotColor }}>{liveOffer.status}</div>
-                          <div className="slot-pnl" style={{ color: "var(--text-dim)", fontSize: "11px" }}>{pct}% filled</div>
+                          {driftAlert ? (
+                            <div style={{ marginTop: "4px" }}>
+                              <div style={{ display: "inline-flex", alignItems: "center", gap: "2px", fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px",
+                                background: driftAlert.level === "red" ? "rgba(231,76,60,0.15)" : "rgba(243,156,18,0.12)",
+                                color: driftAlert.level === "red" ? "#e74c3c" : "#f39c12",
+                                border: `1px solid ${driftAlert.level === "red" ? "rgba(231,76,60,0.3)" : "rgba(243,156,18,0.3)"}` }}>
+                                ▲ {driftAlert.pct}% off
+                              </div>
+                              <div style={{ fontSize: "9px", color: "var(--text-dim)", marginTop: "2px" }}>
+                                Relist: {formatGP(driftAlert.relistAt)}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="slot-pnl" style={{ color: "var(--text-dim)", fontSize: "11px" }}>{pct}% filled</div>
+                          )}
                         </div>
                       );
                     }
@@ -3588,12 +3645,26 @@ const getUrgency = (driftPct, ageMinutes, pctFilled) => {
 };
 
 // What price should they relist at?
-// For buys: 1gp above current instabuy (to be at top of queue)
-// For sells: 1gp below current instasell
+// Strategy: beat the market by enough to jump the queue past 1gp-above bots.
+// Most competitors relist at market+1 — so we go market+2 on buys, market-2 on sells.
+// For higher-value items we scale slightly so the increment is meaningful but not wasteful.
 const getRelistPrice = (offerType, wikiData) => {
   if (!wikiData) return null;
-  if (offerType === "BUY")  return (wikiData.high || 0) + 1;
-  if (offerType === "SELL") return (wikiData.low  || 0) - 1;
+  const high = wikiData.high || 0;
+  const low  = wikiData.low  || 0;
+  // Beat increment: +2 baseline, scales up for expensive items
+  // <10k gp   → +2 gp  (commodities — every gp counts)
+  // 10k–1M    → +3 gp  (mid-tier — small edge)
+  // 1M–10M    → +5 gp  (high-value — need clear queue priority)
+  // >10M      → +10 gp (ultra-high — bots use bigger increments here too)
+  const beatIncrement = (price) => {
+    if (price >= 10_000_000) return 10;
+    if (price >= 1_000_000)  return 5;
+    if (price >= 10_000)     return 3;
+    return 2;
+  };
+  if (offerType === "BUY")  return high + beatIncrement(high);
+  if (offerType === "SELL") return Math.max(1, low - beatIncrement(low));
   return null;
 };
 
@@ -5791,7 +5862,8 @@ export default function RuneTrader() {
       const drift = marketPrice && o.offer_price ? ((o.offer_type === "BUY" ? (marketPrice - o.offer_price) : (o.offer_price - marketPrice)) / o.offer_price * 100).toFixed(1) : null;
       const fillPct = o.qty_total > 0 ? Math.round((o.qty_filled / o.qty_total) * 100) : 0;
       const ageMin = o.buy_started_at ? Math.round((Date.now() - new Date(o.buy_started_at).getTime()) / 60000) : null;
-      const relistAt = wikiNow ? (o.offer_type === "BUY" ? wikiNow.high + 1 : wikiNow.low - 1) : null;
+      const beatIncrement = (price) => price >= 10_000_000 ? 10 : price >= 1_000_000 ? 5 : price >= 10_000 ? 3 : 2;
+      const relistAt = wikiNow ? (o.offer_type === "BUY" ? wikiNow.high + beatIncrement(wikiNow.high) : Math.max(1, wikiNow.low - beatIncrement(wikiNow.low))) : null;
       let driftNote = "";
       if (drift !== null) {
         const d = parseFloat(drift);
@@ -7412,6 +7484,7 @@ RULES:
               resetAdvFilters={resetAdvFilters}
               loading={loading}
               marginCompression={marginCompression}
+              liveWikiPrices={liveWikiPrices}
             />
 
           </>) : (
