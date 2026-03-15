@@ -1211,10 +1211,10 @@ const MERCHANT_TOUR_STEPS = [
   { title: "📋 Flip Queue", desc: "A wishlist of items you want to flip next. Add anything here, and the live margin updates automatically. When a slot opens up, your queue tells you exactly what to buy.", target: "#tour-flip-queue", placement: "top", view: "operations" },
   // ── Analytics tab ──
   { title: "📊 Session Intel", desc: "A full breakdown of your current session: duration, GP/hr rate, flips closed, return on capital, and more. All updated live as you trade.", target: "#tour-session-intel", placement: "right", view: "analytics" },
-  { title: "⚠️ Risk Exposure", desc: "See how concentrated your capital is across items. Any position above 40% of your stack triggers a warning — over-concentration is one of the biggest risks in GE flipping.", target: "#tour-risk-exposure", placement: "right", view: "analytics" },
+  { title: "⚠ï¸ÂÂ Risk Exposure", desc: "See how concentrated your capital is across items. Any position above 40% of your stack triggers a warning — over-concentration is one of the biggest risks in GE flipping.", target: "#tour-risk-exposure", placement: "right", view: "analytics" },
   { title: "✅ Closed Today", desc: "A full log of every flip you've closed today with buy price, sell price, and profit per flip. Great for reviewing what's working and what isn't.", target: "#tour-closed-today", placement: "right", view: "analytics" },
   // ── Alerts tab ──
-  { title: "⚡ Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the ⚙️ gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
+  { title: "⚡ Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the ⚙ï¸Â gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
   { title: "📡 Live Feed", desc: "Every alert that's fired this session lands here in real time. Filter by type, click any alert to jump straight to that item's chart, and clear the feed whenever you like.", target: "#tour-live-feed", placement: "right", view: "alerts" },
   // ── AI Bubble ──
   { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold 📈 bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "left", view: "operations" },
@@ -2772,7 +2772,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Risk Exposure */}
               <div id="tour-risk-exposure" className="merchant-section">
                 <div className="merchant-section-header">
-                  <span className="merchant-section-title">⚖️ Risk Exposure</span>
+                  <span className="merchant-section-title">⚖ï¸Â Risk Exposure</span>
                   {topRiskPct > 50 && <span style={{ fontSize: "11px", color: "var(--red)", fontWeight: 600 }}>Concentrated position</span>}
                 </div>
                 {riskItems.length === 0 ? (
@@ -2800,7 +2800,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     ))}
                     {topRiskPct > 40 && (
                       <div style={{ marginTop: "4px", fontSize: "11px", color: "#f39c12", background: "rgba(243,156,18,0.08)", border: "1px solid rgba(243,156,18,0.2)", borderRadius: "6px", padding: "8px 10px" }}>
-                        ⚠️ {riskItems[0].name} represents {topRiskPct}% of your capital. Consider diversifying.
+                        ⚠ï¸ÂÂ {riskItems[0].name} represents {topRiskPct}% of your capital. Consider diversifying.
                       </div>
                     )}
                   </div>
@@ -2934,7 +2934,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   {[
                     { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps above threshold",    unit: "%",  min: 5,   max: 200, step: 5   },
                     { key: "volumeSurge",  icon: "ðŸâ€¥", label: "Volume Surge",  desc: "Volume multiplies suddenly",      unit: "x",  min: 1.5, max: 10,  step: 0.5 },
-                    { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops sharply",        unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "dumpDetected", icon: "⚠ï¸ÂÂ", label: "Dump Detected", desc: "Sell price drops sharply",        unit: "%",  min: 2,   max: 50,  step: 1   },
                     { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy & sell price collapse",  unit: "%",  min: 2,   max: 50,  step: 1   },
                   ].map(({ key, icon, label, desc, unit, min, max, step }) => (
                     <div key={key} className="m-smart-alert-row">
@@ -2973,7 +2973,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                 {smartEvents?.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
                     <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                      {[["all","All"],["spike","📈 Margin"],["surge","ðŸâ€¥ Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"],["autopilot","🤖 Autopilot"]].map(([v,l]) => (
+                      {[["all","All"],["spike","📈 Margin"],["surge","ðŸâ€¥ Volume"],["dump","⚠ï¸ÂÂ Dump"],["crash","💥 Crash"],["autopilot","🤖 Autopilot"]].map(([v,l]) => (
                         <button key={v} onClick={() => setMerchantFeedFilter(v)}
                           style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
                           {l}
@@ -3055,7 +3055,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     {[
                       { badge: "spike", icon: "📈", label: "Margin Spikes" },
                       { badge: "surge", icon: "ðŸâ€¥", label: "Volume Surges" },
-                      { badge: "dump",  icon: "⚠️", label: "Dumps Detected" },
+                      { badge: "dump",  icon: "⚠ï¸ÂÂ", label: "Dumps Detected" },
                       { badge: "crash", icon: "💥", label: "Price Crashes" },
                     ].map(({ badge, icon, label }) => {
                       const count = (smartEvents || []).filter(e => e.badge === badge).length;
@@ -3311,7 +3311,7 @@ function ThresholdPopover({ alertKey, label, unit, min, max, step, thresholds, o
     <div className="threshold-popover-wrap">
       <button className={`threshold-gear-btn${openPopover === alertKey ? " active" : ""}`}
         onClick={e => { e.stopPropagation(); setOpenPopover(openPopover === alertKey ? null : alertKey); }}
-        title="Adjust threshold">⚙️</button>
+        title="Adjust threshold">⚙ï¸Â</button>
       {openPopover === alertKey && (
         <div className="threshold-popover" onClick={e => e.stopPropagation()}>
           <div className="threshold-popover-title">Threshold — {label}</div>
@@ -4531,7 +4531,6 @@ export default function RuneTrader() {
   const [showAchievements, setShowAchievements] = useState(false);
   const [showPlayerCard, setShowPlayerCard] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showMarketDropdown, setShowMarketDropdown] = useState(false);
   const [picksMode, setPicksMode] = useState(false); // toggle inside Flips view
   const [showCustomizeModal, setShowCustomizeModal] = useState(false);
   const [customizeStep, setCustomizeStep] = useState(0);
@@ -4852,7 +4851,7 @@ export default function RuneTrader() {
       // Dump Detected: sell price dropped >threshold%
       if (smartAlertSettings.dumpDetected && canFire("dumpDetected") && p.high > 100) {
         const drop = ((p.high - item.high) / p.high) * 100;
-        if (drop >= thresholds.dumpDetected) fire("dumpDetected", "⚠️", "dump", `Sell price dropped ${Math.round(drop)}% to ${formatGP(item.high)} gp`, p.high, item.high);
+        if (drop >= thresholds.dumpDetected) fire("dumpDetected", "⚠ï¸ÂÂ", "dump", `Sell price dropped ${Math.round(drop)}% to ${formatGP(item.high)} gp`, p.high, item.high);
       }
 
       // Price Crash: both buy and sell dropped >threshold%
@@ -5797,19 +5796,6 @@ RULES:
       {merchantTransitioning && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 99998, background: '#0a0a0a', pointerEvents: 'all' }} />
       )}
-
-      {/* MERCHANT SHUTDOWN ANIMATION */}
-      <div className={`merchant-shutdown-overlay${showMerchantShutdown === 'fading' ? ' merchant-shutdown-exit' : ''}`} style={{ display: showMerchantShutdown && showMerchantShutdown !== 'done' ? 'flex' : 'none' }}>
-          <div className="merchant-shutdown-title">Trading Terminal</div>
-          <div className="merchant-shutdown-sub">Closing trading terminal</div>
-          <div className="merchant-shutdown-bars">
-            {[1,1.6,0.7,1.3,0.5,1.8,1,0.9,1.5,0.6].map((h,i) => (
-              <div key={i} className="merchant-shutdown-bar" style={{ height: `${h * 20}px`, animationDelay: `${0.8 + i * 0.05}s` }} />
-            ))}
-          </div>
-          <div className="merchant-shutdown-status">â—ÂÂ Terminal Offline</div>
-        </div>
-
       {/* TRADING TERMINAL ACTIVATION ANIMATION */}
       <div className={`merchant-anim-overlay${showMerchantAnim === 'fading' ? ' merchant-anim-exit' : ''}`} style={{ display: showMerchantAnim && showMerchantAnim !== 'done' ? 'flex' : 'none' }}>
         <div className="merchant-anim-scan" />
@@ -5854,9 +5840,9 @@ RULES:
             })}
           </div>
         )}
-        <div className="merchant-anim-status">
-          <span className="merchant-anim-ready-dot" />
-          Market Open
+        <div style={{ position: "absolute", top: "24px", right: "32px", display: "flex", alignItems: "center", gap: "8px", animation: "fadeInUp 0.5s ease 4.0s both" }}>
+          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "var(--green)", display: "inline-block", animation: "readyPulse 1s ease infinite" }} />
+          <span style={{ fontSize: "12px", letterSpacing: "3px", color: "var(--green)", textTransform: "uppercase", fontWeight: 600 }}>Market Open</span>
         </div>
       </div>
 
@@ -6189,14 +6175,14 @@ RULES:
               {customizeStep === 1 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>âšâ€️</div>
+                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>âšâ€ï¸Â</div>
                     <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>Risk tolerance?</div>
                     <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>How aggressive do you want to flip?</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {[
-                      { v: "low",    emoji: "🛡️", label: "Low Risk",    desc: "Ultra-liquid items. Vol/limit ≥ 70×. Reliable and consistent." },
-                      { v: "medium", emoji: "⚖️", label: "Medium Risk", desc: "Solid margins. 200k–10M items. Vol/limit ≥ 15×." },
+                      { v: "low",    emoji: "🛡ï¸Â", label: "Low Risk",    desc: "Ultra-liquid items. Vol/limit ≥ 70×. Reliable and consistent." },
+                      { v: "medium", emoji: "⚖ï¸Â", label: "Medium Risk", desc: "Solid margins. 200k–10M items. Vol/limit ≥ 15×." },
                       { v: "high",   emoji: "ðŸâ€¥", label: "High Risk",   desc: "High capital. 10M+ items. Bigger margins, less certainty." },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, risk: opt.v }))}
@@ -6216,7 +6202,7 @@ RULES:
               {customizeStep === 2 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>âÂ±️</div>
+                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>âÂ±ï¸Â</div>
                     <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>How often do you flip?</div>
                     <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>We'll match items to how active you are.</div>
                   </div>
@@ -6321,7 +6307,7 @@ RULES:
             <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "480px", padding: "36px", display: "flex", flexDirection: "column", gap: "24px", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }} />
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "36px", marginBottom: "12px" }}>âšâ€️</div>
+                <div style={{ fontSize: "36px", marginBottom: "12px" }}>âšâ€ï¸Â</div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>Welcome to RuneTrader</div>
                 <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>What's your main goal right now?</div>
               </div>
@@ -6985,7 +6971,7 @@ RULES:
                             : isPro ? "✓ Pro member" : "Free plan"}
                         </div>
                       </div>
-                      <button className="profile-dropdown-item" onClick={() => { handleSetActiveTab("settings"); }}>⚙️ Settings</button>
+                      <button className="profile-dropdown-item" onClick={() => { handleSetActiveTab("settings"); }}>⚙ï¸Â Settings</button>
                       <button className="profile-dropdown-item" onClick={() => handleSetActiveTab("referral")}>ðŸâ€— Refer & Earn</button>
                       <button className="profile-dropdown-item" onClick={() => setActiveTab("changelog")}>🆕 What's New</button>
                       <button className="profile-dropdown-item" onClick={() => setActiveTab("pricing")}>✨ {isPro ? "Pro Plan" : "Upgrade to Pro"}</button>
@@ -7007,48 +6993,27 @@ RULES:
             <div className="header-bottom">
               <div className="nav-tabs">
 
-                {/* GE Market dropdown */}
-                <div className="market-dropdown-wrap">
-                  <button
-                    onClick={() => { handleSetActiveTab("market"); setShowMarketDropdown(v => !v); }}
-                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 14px", borderRadius: "8px", border: `2px solid ${activeTab === "market" ? "var(--gold)" : "rgba(201,168,76,0.35)"}`, background: activeTab === "market" ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif", letterSpacing: "0.3px", transition: "all 0.15s" }}>
-                    <span>☰</span>
-                    Menu
-                    <span style={{ fontSize: "10px", opacity: 0.8, marginLeft: "2px" }}>{showMarketDropdown ? "▴" : "▾"}</span>
-                  </button>
-                  {showMarketDropdown && activeTab === "market" && (
-                    <div className="market-dropdown" onClick={() => setShowMarketDropdown(false)}>
-                      {[
-                        { v: "flips",      icon: "📈", label: "Flips",           desc: "Buy low, sell high" },
-                        { v: "alch",       icon: "ðŸâ€¥", label: "High Alch",       desc: "Profitable alch items" },
-                        { v: "coffer",     icon: "💀", label: "Death's Coffer",  desc: "Cheapest sacrifices" },
-                        { v: "tradeboard", icon: "ðŸ¤Â", label: "Trade Board",     desc: "Community trades" },
-                      ].map(({ v, icon, label, desc }) => (
-                        <button key={v} className={`market-dropdown-item${marketSubTab === v ? " active" : ""}`}
-                          onClick={() => { setMarketSubTab(v); if (v !== "flips") setPicksMode(false); }}>
-                          <span style={{ fontSize: "16px", flexShrink: 0 }}>{icon}</span>
-                          <div>
-                            <div style={{ fontWeight: 600, marginBottom: "1px" }}>{label}</div>
-                            <div style={{ fontSize: "11px", opacity: 0.6 }}>{desc}</div>
-                          </div>
-                          {marketSubTab === v && <span style={{ marginLeft: "auto", fontSize: "12px" }}>✓</span>}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Alerts only in nav — Watchlist is accessible via filter bar */}
-                {[["alerts","Alerts"]].map(([t, label]) => (
-                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => { handleSetActiveTab(t); setShowMarketDropdown(false); }}>
+                {[
+                  { v: "flips",      label: "Flips" },
+                  { v: "alch",       label: "High Alch" },
+                  { v: "coffer",     label: "Death's Coffer" },
+                  { v: "tradeboard", label: "Trade Board" },
+                ].map(({ v, label }) => (
+                  <button key={v}
+                    className={`nav-tab ${activeTab === "market" && marketSubTab === v ? "active" : ""}`}
+                    onClick={() => { handleSetActiveTab("market"); setMarketSubTab(v); if (v !== "flips") setPicksMode(false); }}>
                     {label}
-                    {t === "alerts" && (alerts.filter(a => a.triggered).length + smartEvents.length) > 0 && (
-                      <span style={{ marginLeft: "5px", background: "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
-                        {alerts.filter(a => a.triggered).length + smartEvents.length}
-                      </span>
-                    )}
                   </button>
                 ))}
+
+                <button className={`nav-tab ${activeTab === "alerts" ? "active" : ""}`} onClick={() => handleSetActiveTab("alerts")}>
+                  Alerts
+                  {(alerts.filter(a => a.triggered).length + smartEvents.length) > 0 && (
+                    <span style={{ marginLeft: "5px", background: "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
+                      {alerts.filter(a => a.triggered).length + smartEvents.length}
+                    </span>
+                  )}
+                </button>
               </div>
 
               {/* Secondary nav — right side */}
@@ -7068,8 +7033,6 @@ RULES:
           )}
         </header>
 
-        {/* Close market dropdown on outside click — transparent, doesn't block content */}
-        {showMarketDropdown && <div style={{ position: "fixed", inset: 0, zIndex: 299, background: "transparent" }} onClick={() => setShowMarketDropdown(false)} />}
 
         <div className="main">
           {merchantMode && (user || demoMode) ? (
@@ -7259,7 +7222,7 @@ RULES:
                   {[
                     { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps 50%+ vs last poll — sudden profit opportunity", unit: "%",  min: 5,   max: 200, step: 5   },
                     { key: "volumeSurge",  icon: "ðŸâ€¥", label: "Volume Surge",  desc: "Daily volume triples — item getting heavily traded",           unit: "x",  min: 1.5, max: 10,  step: 0.5 },
-                    { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops 10%+ — someone offloading stock",             unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "dumpDetected", icon: "⚠ï¸ÂÂ", label: "Dump Detected", desc: "Sell price drops 10%+ — someone offloading stock",             unit: "%",  min: 2,   max: 50,  step: 1   },
                     { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy & sell drop 15%+ — avoid or buy the dip",             unit: "%",  min: 2,   max: 50,  step: 1   },
                   ].map(({ key, icon, label, desc, unit, min, max, step }) => (
                     <div key={key} className="smart-alert-toggle-row">
@@ -7312,7 +7275,7 @@ RULES:
                 )} {/* end merchantMode autopilot alerts */}
 
                 {/* ── PRICE ALERT FORM ── */}
-                <div className="alert-info">ℹ️ Price alerts check every 5 minutes. Triggered alerts won&apos;t fire again — delete and re-add to reset.</div>
+                <div className="alert-info">ℹï¸ÂÂ Price alerts check every 5 minutes. Triggered alerts won&apos;t fire again — delete and re-add to reset.</div>
                 <div className="alert-form">
                   <div className="alert-form-title">ðŸâ€â€ Set a Price Alert</div>
                   <div className="alert-form-row">
@@ -7385,7 +7348,7 @@ RULES:
                   {smartEvents.length > 0 && (
                     <div className="smart-feed-controls" style={{ marginBottom: "10px", gap: "10px" }}>
                       <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                        {[["all","All"],["spike","📈 Margin"],["surge","ðŸâ€¥ Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"]].map(([v,l]) => (
+                        {[["all","All"],["spike","📈 Margin"],["surge","ðŸâ€¥ Volume"],["dump","⚠ï¸ÂÂ Dump"],["crash","💥 Crash"]].map(([v,l]) => (
                           <button key={v} onClick={() => setSmartFeedFilter(v)}
                             style={{ padding: "4px 11px", borderRadius: "12px", border: "1px solid var(--border)", background: smartFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: smartFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
                             {l}
@@ -7480,7 +7443,7 @@ RULES:
             {/* €€€€ FLIPS TAB €€€€ */}
             {activeTab === "market" && (
               <>
-                {error && <div className="error-banner">⚠️ {error}</div>}
+                {error && <div className="error-banner">⚠ï¸Â {error}</div>}
 
                 {/* Picks mode hint — shown when picks is on */}
                 {marketSubTab === "flips" && picksMode && (
