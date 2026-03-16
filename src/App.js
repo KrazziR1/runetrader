@@ -1372,8 +1372,9 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
       else endpoint = "6h"; // 6M, 1Y — was "24h", now 6h for 4× more data points
 
       const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/timeseries?timestep=${endpoint}&id=${item.id}`, { headers: { "User-Agent": "RuneTrader/1.0" } });
+      if (!res.ok) { setChartLoading(false); return; }
       const data = await res.json();
-      if (!data.data || data.data.length === 0) { setChartLoading(false); return; }
+      if (!data?.data || data.data.length === 0) { setChartLoading(false); return; }
       const now = Date.now() / 1000;
       const filtered = data.data.filter(d => now - d.timestamp <= rangeObj.seconds);
       setChartData(filtered.length > 0 ? filtered : data.data.slice(-200));
@@ -1854,18 +1855,21 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
           ) : (
             <div className="pnl-table">
               <div className="pnl-header"><span>Item</span><span>Flips</span><span>Win %</span><span>Total P&amp;L</span></div>
-              {periodItemStats.slice(0, 10).map((item, i) => (
+              {periodItemStats.slice(0, 10).map((item, i) => {
+                const winRate = item.flips > 0 ? item.wins / item.flips : 0;
+                return (
                 <div key={i} className="pnl-row">
                   <span style={{ color: "var(--text)", fontWeight: 500 }}>{item.name}</span>
                   <span style={{ color: "var(--text-dim)" }}>{item.flips}</span>
-                  <span style={{ color: item.wins / item.flips >= 0.6 ? "var(--green)" : item.wins / item.flips >= 0.4 ? "var(--gold)" : "var(--red)" }}>
-                    {Math.round((item.wins / item.flips) * 100)}%
+                  <span style={{ color: winRate >= 0.6 ? "var(--green)" : winRate >= 0.4 ? "var(--gold)" : "var(--red)" }}>
+                    {Math.round(winRate * 100)}%
                   </span>
                   <span style={{ fontWeight: 600, color: item.totalProfit >= 0 ? "var(--green)" : "var(--red)" }}>
                     {item.totalProfit >= 0 ? "+" : ""}{formatGP(item.totalProfit)}
                   </span>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -1882,7 +1886,7 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
                 <div key={`b${i}`} className="bw-row">
                   <span style={{ color: "var(--text)" }}>{item.name}</span>
                   <span style={{ color: "var(--text-dim)" }}>{item.flips}</span>
-                  <span style={{ color: "var(--green)" }}>{Math.round((item.wins / item.flips) * 100)}%</span>
+                  <span style={{ color: "var(--green)" }}>{item.flips > 0 ? Math.round((item.wins / item.flips) * 100) : 0}%</span>
                   <span style={{ fontWeight: 600, color: "var(--green)" }}>+{formatGP(item.totalProfit)}</span>
                 </div>
               ))}
@@ -1893,7 +1897,7 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
                     <div key={`w${i}`} className="bw-row">
                       <span style={{ color: "var(--text)" }}>{item.name}</span>
                       <span style={{ color: "var(--text-dim)" }}>{item.flips}</span>
-                      <span style={{ color: "var(--red)" }}>{Math.round((item.wins / item.flips) * 100)}%</span>
+                      <span style={{ color: "var(--red)" }}>{item.flips > 0 ? Math.round((item.wins / item.flips) * 100) : 0}%</span>
                       <span style={{ fontWeight: 600, color: "var(--red)" }}>{formatGP(item.totalProfit)}</span>
                     </div>
                   ))}
@@ -2390,7 +2394,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
   const realisedToday = todayFlips.reduce((s, f) => s + (f.totalProfit || 0), 0) + autoTodayFlips.reduce((s, f) => s + (f.profit || 0), 0);
   const unrealisedTotal = allOpenPositions.reduce((s, pos) => {
     const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
-    if (!liveItem) return s;
+    if (!liveItem || !liveItem.high || !liveItem.hasPrice) return s;
     const tax = Math.min(Math.floor(liveItem.high * 0.02), 5_000_000);
     return s + (liveItem.high - pos.buyPrice - tax) * pos.qty;
   }, 0);
@@ -2472,7 +2476,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
 
   function getHealthPct(pos) {
     const liveItem = items.find(i => i.name.toLowerCase() === pos.name.toLowerCase());
-    if (!liveItem) return 50;
+    if (!liveItem || !liveItem.high || !liveItem.hasPrice) return 50;
     const currentMargin = liveItem.high - pos.buyPrice - Math.min(Math.floor(liveItem.high * 0.02), 5_000_000);
     const originalMargin = liveItem.margin;
     if (originalMargin <= 0) return 0;
@@ -2482,7 +2486,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
   function getPosStatus(pos) {
     const override = posStatuses[pos.id];
     if (override) return override;
-    const holdMs = Date.now() - new Date(pos.openedAt).getTime();
+    const holdMs = pos.openedAt ? Date.now() - new Date(pos.openedAt).getTime() : 0;
     const healthPct = getHealthPct(pos);
     if (healthPct < 20) return "danger";
     if (holdMs < 20 * 60 * 1000) return "buying";
@@ -4718,6 +4722,8 @@ export default function RuneTrader() {
   const [activeTab, setActiveTab] = useState("market");
   function handleSetActiveTab(tab) {
     setActiveTab(tab);
+    // Reset inner market view when leaving market tab so returning always lands on Items
+    if (tab !== "market") setMarketInnerView("items");
     if (tab === "market" && user && !localStorage.getItem("rt_market_wizard_seen")) {
       setTimeout(() => setShowMarketWizard(true), 400);
     }
@@ -5026,8 +5032,8 @@ export default function RuneTrader() {
   const [marginCompression, setMarginCompression] = useState({}); // itemId → { pct, direction, oldMargin, newMargin }
   const [mwatchOrder, setMwatchOrder] = useState("crashed-first"); // "crashed-first" | "compressed-first" | "recover-first"
   const [mwatchSearch, setMwatchSearch] = useState("");
-  const [mwatchSortCol, setMwatchSortCol] = useState("pct"); // "pct" | "newMargin" | "oldMargin" | "name"
-  const [mwatchSortDir, setMwatchSortDir] = useState("asc"); // asc = most crashed first
+  const [mwatchSortCol, setMwatchSortCol] = useState("pct");
+  const [mwatchSortDir, setMwatchSortDir] = useState("asc"); // asc = most negative (crashed) first within group
 
   function saveSmartAlertSettings(key, val) {
     const updated = { ...smartAlertSettings, [key]: val };
@@ -5325,6 +5331,7 @@ export default function RuneTrader() {
   // /latest updates every ~60s on wiki's end — poll every 30s to catch it fast
   const volumeCacheTimeRef = useRef(0);
   const leftPanelRef = useRef(null); // for scroll preservation
+  const fetchingRef = useRef(false); // prevent concurrent fetches
   const [priceVersion, setPriceVersion] = useState(0); // lightweight counter — increments on background update instead of replacing arrays
   useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 30 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
 
@@ -5337,6 +5344,8 @@ export default function RuneTrader() {
   }, [pendingItemSlug, allItems]); // eslint-disable-line
 
   async function fetchPrices(isManualRefresh = false) {
+    if (fetchingRef.current && !isManualRefresh) return; // skip background poll if already running
+    fetchingRef.current = true;
     try {
       if (isManualRefresh) setRefreshing(true);
       else setLoading(true);
@@ -5344,12 +5353,16 @@ export default function RuneTrader() {
 
       // Always fetch latest prices — via our server cache (hits Wiki at most once/min)
       const latestRes = await fetch("/api/prices?type=latest");
+      if (!latestRes.ok) throw new Error(`Prices API error: ${latestRes.status}`);
       const latestData = await latestRes.json();
+      if (!latestData?.data) throw new Error("Invalid price data format");
 
       // Fetch mapping once per session (cached 24h server-side)
       if (!mappingCacheRef.current) {
         const mappingRes = await fetch("/api/prices?type=mapping");
+        if (!mappingRes.ok) throw new Error(`Mapping API error: ${mappingRes.status}`);
         const mappingData = await mappingRes.json();
+        if (!Array.isArray(mappingData)) throw new Error("Invalid mapping data format");
         const mappingMap = {};
         const nameMap = {};
         mappingData.forEach(item => { mappingMap[item.id] = item; nameMap[item.id] = item.name; });
@@ -5361,12 +5374,14 @@ export default function RuneTrader() {
       const now = Date.now();
       if (!volumeCacheRef.current || now - volumeCacheTimeRef.current > 10 * 60 * 1000) {
         const volumeRes = await fetch("/api/prices?type=volumes");
+        if (!volumeRes.ok) throw new Error(`Volumes API error: ${volumeRes.status}`);
         const volumeData = await volumeRes.json();
         volumeCacheRef.current = volumeData.data || {};
         volumeCacheTimeRef.current = now;
       }
 
       const mappingMap = mappingCacheRef.current;
+      if (!mappingMap) throw new Error("Mapping cache empty after fetch");
       const volumeMap = volumeCacheRef.current;
       const TAX_EXEMPT_IDS = [13190, 13191, 13192];
 
@@ -5453,7 +5468,7 @@ export default function RuneTrader() {
         if (Math.abs(pct) >= THRESHOLD) {
           newCompression[item.id] = {
             pct,
-            direction: pct > 0 ? "recover" : pct < -60 ? "crash" : "warn",
+            direction: pct >= 30 ? "recover" : pct <= -60 ? "crash" : "warn",
             oldMargin: oldest,
             newMargin: newest,
             name: item.name,
@@ -5475,8 +5490,8 @@ export default function RuneTrader() {
           });
         }, 1000);
       }
-    } catch { setError("Failed to load GE data. Check your connection."); }
-    finally { setLoading(false); setRefreshing(false); }
+    } catch (e) { setError("Failed to load GE data. Check your connection."); console.error("[fetchPrices]", e?.message); }
+    finally { setLoading(false); setRefreshing(false); fetchingRef.current = false; }
   }
 
   // ── Sign out ──
@@ -5961,6 +5976,17 @@ RULES:
       setMessages(prev => [...prev, { role: "assistant", content: `Connection error: ${e.message}`, time: new Date() }]);
     } finally { setAiLoading(false); }
   }
+
+  // ── Stable callbacks for FlipRow memo — defined here so they don't change reference on every render ──
+  const handleQuickAlert = useCallback((item) => {
+    setQuickAlert({ item });
+    setQuickAlertPrice(item.hasPrice ? String(item.high) : "");
+    setQuickAlertType("above");
+  }, []); // eslint-disable-line
+  const handleGoToMarginWatch = useCallback(() => {
+    setMarketSubTab("flips");
+    setMarketInnerView("marginwatch");
+  }, []); // eslint-disable-line
 
   // ── Preserve scroll position on background price updates ──
   const savedScrollRef = useRef(0);
@@ -8647,8 +8673,8 @@ RULES:
                           hasAlert={alerts.some(a => a.item.toLowerCase() === item.name.toLowerCase())}
                           onSelect={setSelectedItem}
                           onToggleWatchlist={toggleWatchlist}
-                          onQuickAlert={item => { setQuickAlert({ item }); setQuickAlertPrice(item.hasPrice ? String(item.high) : ""); setQuickAlertType("above"); }}
-                          onGoToMarginWatch={() => { setMarketSubTab("flips"); setMarketInnerView("marginwatch"); }}
+                          onQuickAlert={handleQuickAlert}
+                          onGoToMarginWatch={handleGoToMarginWatch}
                           formatGP={formatGP}
                           timeAgo={timeAgo}
                           itemIconUrl={itemIconUrl}
