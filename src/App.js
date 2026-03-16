@@ -1393,6 +1393,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
     const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return; // canvas not yet rendered
     canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
     const W = rect.width, H = rect.height, pad = { top: 20, right: 20, bottom: 40, left: 82 };
@@ -1544,6 +1545,7 @@ function ProfitChart({ flipsLog, autoFlipsLog = [] }) {
     const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return; // canvas not yet rendered
     canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
     const W = rect.width, H = rect.height, pad = { top: 10, right: 10, bottom: 30, left: 60 };
@@ -4255,7 +4257,7 @@ export default function RuneTrader() {
 
   function showToast(msg, type = "success", duration = 3000) {
     const id = Date.now();
-    setToasts(prev => [...prev, { id, msg, type }]);
+    setToasts(prev => [...prev, { id, msg, type }].slice(-5));
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
   }
 
@@ -4376,12 +4378,14 @@ export default function RuneTrader() {
           if (!seen) { setTimeout(() => setShowWhatsNew(true), 1200); }
           localStorage.setItem(DEPLOY_KEY, "1");
           // ── Login streak ──
-          const today = new Date().toISOString().slice(0, 10);
+          const todayLocal = new Date();
+          const today = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth()+1).padStart(2,'0')}-${String(todayLocal.getDate()).padStart(2,'0')}`;
           const lastLogin = localStorage.getItem("rt_last_login");
           const storedStreak = parseInt(localStorage.getItem("rt_login_streak") || "0");
           let newStreak = 1;
           if (lastLogin) {
-            const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+            const yd = new Date(todayLocal - 86400000);
+            const yesterday = `${yd.getFullYear()}-${String(yd.getMonth()+1).padStart(2,'0')}-${String(yd.getDate()).padStart(2,'0')}`;
             if (lastLogin === today) { newStreak = storedStreak; }
             else if (lastLogin === yesterday) { newStreak = storedStreak + 1; }
             else { newStreak = 1; }
@@ -4723,7 +4727,7 @@ export default function RuneTrader() {
   const [liveWikiPrices, setLiveWikiPrices] = useState({}); // item_id → {high,low} — populated by LiveGESlots poll
   useEffect(() => {
     if (!user) return;
-    supabase.from("positions").select("*").then(({ data }) => setMerchantPositions(data || []));
+    supabase.from("positions").select("*").eq("user_id", user.id).then(({ data }) => setMerchantPositions(data || []));
     supabase.from("ge_offers").select("*").eq("user_id", user.id).order("slot")
       .then(({ data }) => setGeOffers(data || []));
     const ch = supabase.channel("merchant-ge-offers-" + user.id)
@@ -4940,6 +4944,7 @@ export default function RuneTrader() {
     const canvas = pnlCanvasRef.current;
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return; // canvas not yet rendered
     canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
     const ctx = canvas.getContext("2d");
     ctx.scale(dpr, dpr);
@@ -5142,13 +5147,13 @@ export default function RuneTrader() {
       }
 
       // Dump Detected: sell price dropped >threshold%
-      if (smartAlertSettings.dumpDetected && canFire("dumpDetected") && p.high > 100) {
+      if (smartAlertSettings.dumpDetected && canFire("dumpDetected") && p.high > 100 && item.high) {
         const drop = ((p.high - item.high) / p.high) * 100;
         if (drop >= thresholds.dumpDetected) fire("dumpDetected", "⚠️", "dump", `Sell price dropped ${Math.round(drop)}% to ${formatGP(item.high)} gp`, p.high, item.high);
       }
 
       // Price Crash: both buy and sell dropped >threshold%
-      if (smartAlertSettings.priceCrash && canFire("priceCrash") && p.high > 100 && p.low > 100) {
+      if (smartAlertSettings.priceCrash && canFire("priceCrash") && p.high > 100 && p.low > 100 && item.high && item.low) {
         const highDrop = ((p.high - item.high) / p.high) * 100;
         const lowDrop = ((p.low - item.low) / p.low) * 100;
         if (highDrop >= thresholds.priceCrash && lowDrop >= thresholds.priceCrash) fire("priceCrash", "💥", "crash", `Price crashed! Buy ${formatGP(item.low)} (↓${Math.round(lowDrop)}%), Sell ${formatGP(item.high)} (↓${Math.round(highDrop)}%)`, p.high, item.high);
@@ -5253,7 +5258,7 @@ export default function RuneTrader() {
       loadMerchantSettings();
       supabase.from("ge_flips_live").select("*").eq("user_id", user.id)
         .then(({ data }) => setAutoFlipsLog(data || []));
-      supabase.from("positions").select("*")
+      supabase.from("positions").select("*").eq("user_id", user.id)
         .then(({ data }) => setMerchantPositions(data || []));
     }
   }
@@ -5342,20 +5347,19 @@ export default function RuneTrader() {
     try {
       let localFlips = [];
       try { localFlips = JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch {}
-      const { data: dbData, error } = await supabase.from("flips").select("*").order("date", { ascending: false });
+      const { data: dbData, error } = await supabase.from("flips").select("*").eq("user_id", user.id).order("date", { ascending: false });
       if (error) { setFlipsLoading(false); return; }
       if (localFlips.length > 0) {
         const existingKeys = new Set((dbData || []).map(r => `${r.item}|${r.buy_price}|${r.sell_price}|${(r.date || "").slice(0, 16)}`));
         const toInsert = localFlips.filter(f => !existingKeys.has(`${f.item}|${f.buyPrice}|${f.sellPrice}|${(f.date || "").slice(0, 16)}`))
           .map(f => ({ user_id: user.id, item: f.item, buy_price: f.buyPrice, sell_price: f.sellPrice || null, qty: f.qty, tax: f.tax, profit_each: f.profitEach, total_profit: f.totalProfit, roi: f.roi, date: f.date || new Date().toISOString(), status: f.status || "closed" }));
         if (toInsert.length > 0) {
-          // Batch inserts in chunks of 100 to avoid Supabase limits
           for (let i = 0; i < toInsert.length; i += 100) {
             await supabase.from("flips").insert(toInsert.slice(i, i + 100));
           }
         }
         localStorage.removeItem("runetrader_flips");
-        const { data: merged } = await supabase.from("flips").select("*").order("date", { ascending: false });
+        const { data: merged } = await supabase.from("flips").select("*").eq("user_id", user.id).order("date", { ascending: false });
         setFlipsLog((merged || []).map(mapFlipRow));
       } else {
         setFlipsLog((dbData || []).map(mapFlipRow));
