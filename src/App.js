@@ -3384,7 +3384,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
             )}
 
             {/* Table */}
-            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
+            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
             <div className="flips-table">
               <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>
                 {[
@@ -3410,7 +3410,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   </button>
                 ))}
               </div>
-              {loading ? (
+              {loading && !filtered.length ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>
                     {Array.from({ length: 10 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}
@@ -5348,7 +5348,7 @@ export default function RuneTrader() {
     fetchingRef.current = true;
     try {
       if (isManualRefresh) setRefreshing(true);
-      else setLoading(true);
+      else if (!itemsRef.current.length) setLoading(true); // only show skeleton on first load
       setError(null);
 
       // Always fetch latest prices — via our server cache (hits Wiki at most once/min)
@@ -8631,7 +8631,7 @@ RULES:
                 )}
 
                 <div>
-                  <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
+                  <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
                   <div className="flips-table">
                     <div className="table-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>
                       {[
@@ -8657,7 +8657,7 @@ RULES:
                         </button>
                       ))}
                     </div>
-                    {loading ? (
+                    {loading && !filtered.length ? (
                       Array.from({ length: 8 }).map((_, i) => (
                         <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>{Array.from({ length: 10 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
                       ))
