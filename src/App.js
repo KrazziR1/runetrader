@@ -1025,6 +1025,12 @@ const STYLES = `
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────
 
+// Safe localStorage wrapper — QuotaExceededError is a real browser exception
+function safeSetItem(key, value) {
+  try { localStorage.setItem(key, value); }
+  catch (e) { console.warn("[localStorage quota]", key, e?.message); }
+}
+
 function formatGP(n) {
   if (!n && n !== 0) return "—";
   return Math.round(n).toLocaleString();
@@ -1409,8 +1415,10 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
     const minP = Math.min(...cleanPrices) * 0.995, maxP = Math.max(...cleanPrices) * 1.005;
     const minT = cleanData[0]?.timestamp ?? chartData[0].timestamp;
     const maxT = cleanData[cleanData.length - 1]?.timestamp ?? chartData[chartData.length - 1].timestamp;
-    const xPos = t => pad.left + ((t - minT) / (maxT - minT)) * (W - pad.left - pad.right);
-    const yPos = p => pad.top + (1 - (p - minP) / (maxP - minP)) * (H - pad.top - pad.bottom);
+    const tRange = maxT - minT || 1; // prevent division by zero with single timestamp
+    const pRange = maxP - minP || 1; // prevent division by zero with flat price
+    const xPos = t => pad.left + ((t - minT) / tRange) * (W - pad.left - pad.right);
+    const yPos = p => pad.top + (1 - (p - minP) / pRange) * (H - pad.top - pad.bottom);
     function fmtYLabel(n) {
       if (Math.abs(n) >= 1_000_000_000) return (n / 1_000_000_000).toFixed(n % 1_000_000_000 === 0 ? 0 : 2) + "B";
       if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1) + "M";
@@ -1970,10 +1978,16 @@ const DEMO_SUPABASE_STUB = {
         not: () => ({ order: () => Promise.resolve({ data: [] }) }),
         order: () => Promise.resolve({ data: [] }),
         single: () => Promise.resolve({ data: null }),
+        in: () => Promise.resolve({ data: [] }),
+        limit: () => ({ order: () => Promise.resolve({ data: [] }) }),
       }),
       order: () => Promise.resolve({ data: [] }),
       single: () => Promise.resolve({ data: null }),
     }),
+    insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }),
+    upsert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }),
+    update: () => ({ eq: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }) }),
+    delete: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
   }),
   channel: () => ({ on: () => ({ subscribe: () => ({}) }) }),
   removeChannel: () => {},
@@ -2280,13 +2294,13 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
   function saveAutopilotRules(itemName, rules) {
     const updated = { ...autopilotRules, [itemName]: rules };
     setAutopilotRules(updated);
-    localStorage.setItem("runetrader_autopilot", JSON.stringify(updated));
+    safeSetItem("runetrader_autopilot", JSON.stringify(updated));
   }
   function clearAutopilotRules(itemName) {
     const updated = { ...autopilotRules };
     delete updated[itemName];
     setAutopilotRules(updated);
-    localStorage.setItem("runetrader_autopilot", JSON.stringify(updated));
+    safeSetItem("runetrader_autopilot", JSON.stringify(updated));
   }
 
   // Check autopilot rules on each items update
@@ -2316,7 +2330,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
           type: "autopilot", icon: "🤖", badge: "autopilot",
           message, time: new Date(),
         };
-        setSmartEvents(prev => [event, ...prev]);
+        setSmartEvents(prev => [event, ...prev].slice(0, 100));
         // Sound alert
         if (smartAlertSettings?.autopilotSound !== false) {
           try {
@@ -4250,19 +4264,33 @@ export default function RuneTrader() {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get("ref");
     if (ref) {
-      localStorage.setItem("rt_ref_code", ref);
+      // Sanitize — ref codes are alphanumeric only, max 16 chars
+      const safeRef = ref.replace(/[^a-zA-Z0-9]/g, "").slice(0, 16);
+      if (safeRef) localStorage.setItem("rt_ref_code", safeRef);
       const url = new URL(window.location.href);
       url.searchParams.delete("ref");
       window.history.replaceState({}, "", url.toString());
     }
-    // Handle Stripe redirect back
+    // Handle Stripe redirect back — verify with Supabase before granting Pro
     const upgradeStatus = params.get("upgrade");
     if (upgradeStatus === "success") {
-      setIsPro(true);
       const upgradeUrl = new URL(window.location.href);
       upgradeUrl.searchParams.delete("upgrade");
       window.history.replaceState({}, "", upgradeUrl.toString());
-      setTimeout(() => showToast("Welcome to Pro! 📈 Trading Terminal is now unlocked.", "success", 5000), 500);
+      // Don't trust the URL param alone — re-fetch profile from Supabase to confirm
+      setTimeout(async () => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.id) {
+            const { data } = await supabase.from("user_profiles")
+              .select("is_pro").eq("user_id", session.user.id).single();
+            if (data?.is_pro) {
+              setIsPro(true);
+              showToast("Welcome to Pro! 📈 Trading Terminal is now unlocked.", "success", 5000);
+            }
+          }
+        } catch (e) { console.error("[upgrade verify]", e?.message); }
+      }, 1500);
     }
     // Detect /item/:slug — e.g. runetrader.gg/item/abyssal-whip
     const match = window.location.pathname.match(/^\/item\/(.+)$/);
@@ -4304,13 +4332,26 @@ export default function RuneTrader() {
           (async () => {
             const newCode = session.user.id.slice(0, 8).toUpperCase();
             const trialEndsAt = new Date(Date.now() + 3 * 86400000).toISOString();
-            const { data } = await supabase.from("user_profiles")
-              .upsert({ user_id: session.user.id, ref_code: newCode, trial_ends_at: trialEndsAt }, { onConflict: "user_id" })
-              .select("ref_code, trial_ends_at").single();
-            if (data?.ref_code) setUserRefCode(data.ref_code);
-            if (data?.trial_ends_at) {
-              const daysLeft = Math.ceil((new Date(data.trial_ends_at) - Date.now()) / 86400000);
-              if (daysLeft > 0) { setIsOnTrial(true); setTrialDaysLeft(daysLeft); setIsPro(true); }
+            // Check if profile already exists — don't overwrite existing ref_code
+            const { data: existing } = await supabase.from("user_profiles")
+              .select("ref_code, trial_ends_at").eq("user_id", session.user.id).single();
+            if (existing?.ref_code) {
+              // Already has a code — just load it
+              setUserRefCode(existing.ref_code);
+              if (existing.trial_ends_at) {
+                const daysLeft = Math.ceil((new Date(existing.trial_ends_at) - Date.now()) / 86400000);
+                if (daysLeft > 0) { setIsOnTrial(true); setTrialDaysLeft(daysLeft); setIsPro(true); }
+              }
+            } else {
+              // New user — create profile with ref code and trial
+              const { data } = await supabase.from("user_profiles")
+                .upsert({ user_id: session.user.id, ref_code: newCode, trial_ends_at: trialEndsAt }, { onConflict: "user_id" })
+                .select("ref_code, trial_ends_at").single();
+              if (data?.ref_code) setUserRefCode(data.ref_code);
+              if (data?.trial_ends_at) {
+                const daysLeft = Math.ceil((new Date(data.trial_ends_at) - Date.now()) / 86400000);
+                if (daysLeft > 0) { setIsOnTrial(true); setTrialDaysLeft(daysLeft); setIsPro(true); }
+              }
             }
           })();
           setTimeout(() => {
@@ -4439,24 +4480,29 @@ export default function RuneTrader() {
 
   async function loadMerchantSettings() {
     if (!user) return;
-    const { data } = await supabase.from("merchant_settings").select("*").eq("user_id", user.id).single();
-    if (data) {
-      setMerchantCapital(data.total_capital || 0);
-      if (data.mode_enabled) { setMerchantMode(true); }
-    }
+    try {
+      const { data } = await supabase.from("merchant_settings").select("*").eq("user_id", user.id).single();
+      if (data) {
+        setMerchantCapital(data.total_capital || 0);
+        if (data.mode_enabled) { setMerchantMode(true); }
+      }
+    } catch (e) { console.error("[loadMerchantSettings]", e?.message); }
   }
 
   async function loadXP() {
     if (!user) return;
-    const { data } = await supabase.from("trader_xp").select("*").eq("user_id", user.id).single();
-    if (data) {
-      setTotalXP(data.total_xp || 0);
-      setUnlockedAchievements(data.achievements || []);
-    }
+    try {
+      const { data } = await supabase.from("trader_xp").select("*").eq("user_id", user.id).single();
+      if (data) {
+        setTotalXP(data.total_xp || 0);
+        setUnlockedAchievements(data.achievements || []);
+      }
+    } catch (e) { console.error("[loadXP]", e?.message); }
   }
 
   async function loadQuests() {
     if (!user) return;
+    try {
     const today = todayStr();
     const { data } = await supabase
       .from("daily_quests")
@@ -4483,17 +4529,20 @@ export default function RuneTrader() {
     }
     setCinematicQuests(quests);
     setQuestsLoaded(true);
+    } catch (e) { console.error("[loadQuests]", e?.message); setQuestsLoaded(true); }
   }
 
   async function saveQuests(updatedQuests, updatedCoins) {
     if (!user) return;
-    await supabase.from("daily_quests").upsert({
-      user_id: user.id,
-      quest_date: todayStr(),
-      quests: updatedQuests,
-      gold_coins: updatedCoins,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "user_id,quest_date" });
+    try {
+      await supabase.from("daily_quests").upsert({
+        user_id: user.id,
+        quest_date: todayStr(),
+        quests: updatedQuests,
+        gold_coins: updatedCoins,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id,quest_date" });
+    } catch (e) { console.error("[saveQuests]", e?.message); }
   }
 
   const REROLL_COST = 15;
@@ -4560,49 +4609,45 @@ export default function RuneTrader() {
       loginStreak: context.loginStreak || 0,
     };
     const newly = checkNewAchievements(ctx, unlockedAchievements);
-    if (newly.length > 0) {
-      const newIds = newly.map(a => a.id);
-      const combined = [...unlockedAchievements, ...newIds];
-      setUnlockedAchievements(combined);
-      setNewAchievements(prev => [...prev, ...newly]);
-      setTimeout(() => setNewAchievements([]), 5000);
-      // Save achievements
-      await supabase.from("trader_xp").upsert({
-        user_id: user.id,
-        total_xp: newTotalXP,
-        level: newLevel,
-        achievements: combined,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "user_id" });
-    } else {
-      // Save XP without achievement change
-      await supabase.from("trader_xp").upsert({
-        user_id: user.id,
-        total_xp: newTotalXP,
-        level: newLevel,
-        achievements: unlockedAchievements,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "user_id" });
-    }
+    try {
+      if (newly.length > 0) {
+        const newIds = newly.map(a => a.id);
+        const combined = [...unlockedAchievements, ...newIds];
+        setUnlockedAchievements(combined);
+        setNewAchievements(prev => [...prev, ...newly]);
+        setTimeout(() => setNewAchievements([]), 5000);
+        await supabase.from("trader_xp").upsert({
+          user_id: user.id, total_xp: newTotalXP, level: newLevel,
+          achievements: combined, updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+      } else {
+        await supabase.from("trader_xp").upsert({
+          user_id: user.id, total_xp: newTotalXP, level: newLevel,
+          achievements: unlockedAchievements, updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+      }
+    } catch (e) { console.error("[awardXP save]", e?.message); }
   }
 
   async function saveMerchantCapital(val) {
     const gp = parseInt(val.replace(/[^0-9]/g, ""));
     if (isNaN(gp) || gp <= 0) return;
     setMerchantLoading(true);
-    await supabase.from("merchant_settings").upsert({ user_id: user.id, total_capital: gp, mode_enabled: true, updated_at: new Date().toISOString() });
-    setMerchantCapital(gp);
-    setShowCapitalSetup(false);
-    setMerchantLoading(false);
-    activateMerchantWithAnim(() => {
-      setMerchantMode(true);
-      showToast("Trading Terminal activated!", "success");
-    });
-    const tourKey = `runetrader_merchant_tour_seen_${user.id}`;
-    if (!localStorage.getItem(tourKey)) {
-      localStorage.setItem(tourKey, "1");
-      setTimeout(() => startMerchantTour(), 400);
-    }
+    try {
+      await supabase.from("merchant_settings").upsert({ user_id: user.id, total_capital: gp, mode_enabled: true, updated_at: new Date().toISOString() });
+      setMerchantCapital(gp);
+      setShowCapitalSetup(false);
+      activateMerchantWithAnim(() => {
+        setMerchantMode(true);
+        showToast("Trading Terminal activated!", "success");
+      });
+      const tourKey = `runetrader_merchant_tour_seen_${user.id}`;
+      if (!localStorage.getItem(tourKey)) {
+        localStorage.setItem(tourKey, "1");
+        setTimeout(() => startMerchantTour(), 400);
+      }
+    } catch (e) { console.error("[saveMerchantCapital]", e?.message); showToast("Failed to save capital. Try again.", "error"); }
+    finally { setMerchantLoading(false); }
   }
 
   function startMerchantTour() {
@@ -4701,15 +4746,15 @@ export default function RuneTrader() {
 
   async function addPositionFromMerchant({ item, buyPrice, qty }) {
     if (!user) return;
-    // Write only to flips table as an open flip — this shows in Tracker and Merchant Mode
-    // (previously also wrote to positions table causing duplicate entries)
-    const { data: flipData, error } = await supabase.from("flips").insert({
-      user_id: user.id, item, buy_price: buyPrice, qty, status: "open",
-      date: new Date().toISOString(),
-    }).select().single();
-    if (error) { showToast("Failed to add position.", "error"); return; }
-    if (flipData) setFlipsLog(prev => [mapFlipRow(flipData), ...prev]);
-    showToast(`Position opened: ${item}`, "success");
+    try {
+      const { data: flipData, error } = await supabase.from("flips").insert({
+        user_id: user.id, item, buy_price: buyPrice, qty, status: "open",
+        date: new Date().toISOString(),
+      }).select().single();
+      if (error) { showToast("Failed to add position.", "error"); return; }
+      if (flipData) setFlipsLog(prev => [mapFlipRow(flipData), ...prev]);
+      showToast(`Position opened: ${item}`, "success");
+    } catch (e) { console.error("[addPositionFromMerchant]", e?.message); showToast("Failed to add position.", "error"); }
   }
 
 
@@ -4885,7 +4930,7 @@ export default function RuneTrader() {
     setPnlHistory(prev => {
       const today = prev.filter(p => new Date(p.time).toDateString() === new Date().toDateString());
       const updated = [...today.slice(-48), snap];
-      localStorage.setItem("runetrader_pnl_history", JSON.stringify(updated));
+      safeSetItem("runetrader_pnl_history", JSON.stringify(updated));
       return updated;
     });
   }, [flipsLog, autoFlipsLog, merchantMode]); // eslint-disable-line
@@ -4901,8 +4946,9 @@ export default function RuneTrader() {
     const W = rect.width, H = rect.height, pad = { top: 6, right: 6, bottom: 6, left: 6 };
     const vals = pnlHistory.map(p => p.value);
     const minV = Math.min(0, ...vals), maxV = Math.max(...vals) * 1.1 || 1;
+    const range = maxV - minV || 1; // prevent division by zero when all values equal
     const xPos = i => pad.left + (i / (pnlHistory.length - 1)) * (W - pad.left - pad.right);
-    const yPos = v => pad.top + (1 - (v - minV) / (maxV - minV)) * (H - pad.top - pad.bottom);
+    const yPos = v => pad.top + (1 - (v - minV) / range) * (H - pad.top - pad.bottom);
     const grad = ctx.createLinearGradient(0, 0, 0, H);
     grad.addColorStop(0, "rgba(46,204,113,0.3)"); grad.addColorStop(1, "rgba(46,204,113,0)");
     ctx.beginPath(); ctx.moveTo(xPos(0), yPos(vals[0]));
@@ -4941,16 +4987,17 @@ export default function RuneTrader() {
       const wl = localStorage.getItem("runetrader_watchlist");
       if (wl) return JSON.parse(wl);
       const old = localStorage.getItem("runetrader_favs");
-      if (old) { localStorage.setItem("runetrader_watchlist", old); return JSON.parse(old); }
+      if (old) { safeSetItem("runetrader_watchlist", old); return JSON.parse(old); }
       return [];
     } catch { return []; }
   });
   const favourites = watchlist; // alias — MerchantMode and filtered still use `favourites`
 
   function toggleWatchlist(itemId) {
+    if (!itemId) return;
     setWatchlist(prev => {
       const next = prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId];
-      localStorage.setItem("runetrader_watchlist", JSON.stringify(next));
+      safeSetItem("runetrader_watchlist", JSON.stringify(next));
       return next;
     });
   }
@@ -4963,7 +5010,7 @@ export default function RuneTrader() {
   function setWatchlistAlert(itemId, type, price) {
     setWatchlistAlerts(prev => {
       const updated = { ...prev, [itemId]: { ...(prev[itemId] || {}), [type]: price } };
-      localStorage.setItem("runetrader_watchlist_alerts", JSON.stringify(updated));
+      safeSetItem("runetrader_watchlist_alerts", JSON.stringify(updated));
       return updated;
     });
   }
@@ -4974,7 +5021,7 @@ export default function RuneTrader() {
       delete entry[type];
       const updated = { ...prev, [itemId]: entry };
       if (!entry.above && !entry.below) delete updated[itemId];
-      localStorage.setItem("runetrader_watchlist_alerts", JSON.stringify(updated));
+      safeSetItem("runetrader_watchlist_alerts", JSON.stringify(updated));
       return updated;
     });
   }
@@ -5003,7 +5050,7 @@ export default function RuneTrader() {
     if (isNaN(parsed) || parsed <= 0) return;
     const updated = { ...thresholds, [key]: parsed };
     setThresholds(updated);
-    localStorage.setItem("runetrader_thresholds", JSON.stringify(updated));
+    safeSetItem("runetrader_thresholds", JSON.stringify(updated));
   }
 
   // Close popover on outside click
@@ -5038,7 +5085,7 @@ export default function RuneTrader() {
   function saveSmartAlertSettings(key, val) {
     const updated = { ...smartAlertSettings, [key]: val };
     setSmartAlertSettings(updated);
-    localStorage.setItem("runetrader_smart_alerts", JSON.stringify(updated));
+    safeSetItem("runetrader_smart_alerts", JSON.stringify(updated));
   }
 
   function runSmartAlerts(newItems) {
@@ -5234,11 +5281,12 @@ export default function RuneTrader() {
           applicationServerKey: urlBase64ToUint8Array(process.env.REACT_APP_VAPID_PUBLIC_KEY),
         });
       }
-      await fetch("/api/push-subscribe", {
+      const pushRes = await fetch("/api/push-subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subscription: sub.toJSON(), user_id: user.id }),
       });
+      if (!pushRes.ok) throw new Error(`Push subscribe failed: ${pushRes.status}`);
       setNotifPermission("granted");
       showToast("Notifications enabled! You'll be alerted even when the app is closed.", "success", 5000);
     } catch (err) {
@@ -5291,22 +5339,29 @@ export default function RuneTrader() {
 
   async function loadAndMergeFlips() {
     setFlipsLoading(true);
-    let localFlips = [];
-    try { localFlips = JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch {}
-    const { data: dbData, error } = await supabase.from("flips").select("*").order("date", { ascending: false });
-    if (error) { setFlipsLoading(false); return; }
-    if (localFlips.length > 0) {
-      const existingKeys = new Set((dbData || []).map(r => `${r.item}|${r.buy_price}|${r.sell_price}|${(r.date || "").slice(0, 16)}`));
-      const toInsert = localFlips.filter(f => !existingKeys.has(`${f.item}|${f.buyPrice}|${f.sellPrice}|${(f.date || "").slice(0, 16)}`))
-        .map(f => ({ user_id: user.id, item: f.item, buy_price: f.buyPrice, sell_price: f.sellPrice || null, qty: f.qty, tax: f.tax, profit_each: f.profitEach, total_profit: f.totalProfit, roi: f.roi, date: f.date || new Date().toISOString(), status: f.status || "closed" }));
-      if (toInsert.length > 0) await supabase.from("flips").insert(toInsert);
-      localStorage.removeItem("runetrader_flips");
-      const { data: merged } = await supabase.from("flips").select("*").order("date", { ascending: false });
-      setFlipsLog((merged || []).map(mapFlipRow));
-    } else {
-      setFlipsLog((dbData || []).map(mapFlipRow));
-    }
-    setFlipsLoading(false);
+    try {
+      let localFlips = [];
+      try { localFlips = JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch {}
+      const { data: dbData, error } = await supabase.from("flips").select("*").order("date", { ascending: false });
+      if (error) { setFlipsLoading(false); return; }
+      if (localFlips.length > 0) {
+        const existingKeys = new Set((dbData || []).map(r => `${r.item}|${r.buy_price}|${r.sell_price}|${(r.date || "").slice(0, 16)}`));
+        const toInsert = localFlips.filter(f => !existingKeys.has(`${f.item}|${f.buyPrice}|${f.sellPrice}|${(f.date || "").slice(0, 16)}`))
+          .map(f => ({ user_id: user.id, item: f.item, buy_price: f.buyPrice, sell_price: f.sellPrice || null, qty: f.qty, tax: f.tax, profit_each: f.profitEach, total_profit: f.totalProfit, roi: f.roi, date: f.date || new Date().toISOString(), status: f.status || "closed" }));
+        if (toInsert.length > 0) {
+          // Batch inserts in chunks of 100 to avoid Supabase limits
+          for (let i = 0; i < toInsert.length; i += 100) {
+            await supabase.from("flips").insert(toInsert.slice(i, i + 100));
+          }
+        }
+        localStorage.removeItem("runetrader_flips");
+        const { data: merged } = await supabase.from("flips").select("*").order("date", { ascending: false });
+        setFlipsLog((merged || []).map(mapFlipRow));
+      } else {
+        setFlipsLog((dbData || []).map(mapFlipRow));
+      }
+    } catch (e) { console.error("[loadAndMergeFlips]", e?.message); }
+    finally { setFlipsLoading(false); }
   }
 
   function mapFlipRow(r) {
@@ -5445,18 +5500,18 @@ export default function RuneTrader() {
       // ── Margin compression tracking ──
       const now24 = Date.now();
       const WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
-      const MIN_VOLUME = 500; // ignore very thin markets
-      const THRESHOLD = 30; // % change to flag
+      const MAX_SNAPSHOTS = 120; // cap at 120 entries per item (~1hr at 30s) — beyond that oldest/newest is enough
+      const MIN_VOLUME = 500;
+      const THRESHOLD = 30;
       const hist = marginHistoryRef.current;
       const newCompression = {};
       flips.forEach(item => {
         if (!item.hasPrice || !item.margin || Math.abs(item.margin) < 50) return;
         if ((item.volume || 0) < MIN_VOLUME) return;
-        // Initialise history array for this item
         if (!hist[item.id]) hist[item.id] = [];
-        // Prune entries older than 24hr
+        // Prune entries older than 24hr AND cap length to prevent memory explosion
         hist[item.id] = hist[item.id].filter(e => now24 - e.time < WINDOW_MS);
-        // Add current snapshot
+        if (hist[item.id].length >= MAX_SNAPSHOTS) hist[item.id].shift(); // drop oldest
         hist[item.id].push({ margin: item.margin, time: now24 });
         // Need at least 2 snapshots to compute a delta
         const entries = hist[item.id];
@@ -5496,12 +5551,34 @@ export default function RuneTrader() {
 
   // ── Sign out ──
   async function handleSignOut() {
-    await supabase.auth.signOut();
+    try { await supabase.auth.signOut(); } catch (e) { console.error("[signOut]", e?.message); }
+    // Clear all user-specific state — prevents data leaking to next user on shared device
     setUser(null);
     setFlipsLog([]);
     setAlerts([]);
+    setAutoFlipsLog([]);
+    setMerchantPositions([]);
+    setGeOffers([]);
+    setMerchantCapital(0);
+    setMerchantMode(false);
+    setMerchantAIOpen(false);
+    setPnlHistory([]);
+    setTotalXP(0);
+    setDailyQuests([]);
+    setGoldCoins(0);
+    setQuestsLoaded(false);
+    setIsPro(false);
+    setIsOnTrial(false);
+    setTrialDaysLeft(0);
+    setLoginStreak(0);
+    setSmartEvents([]);
+    setWatchlist([]);
+    setWatchlistAlerts({});
+    setUserRefCode(null);
+    setSessionSummary(null);
     localStorage.removeItem("runetrader_alerts");
     setActiveTab("market");
+    setMarketInnerView("items");
   }
 
   // ── Check alerts against live prices ──
@@ -5587,16 +5664,18 @@ export default function RuneTrader() {
       };
       const updated = [entry, ...flipsLog];
       setFlipsLog(updated);
-      localStorage.setItem("runetrader_flips", JSON.stringify(updated));
+      safeSetItem("runetrader_flips", JSON.stringify(updated));
       showToast(isOpen ? `${itemName} logged as open flip! Sign in to sync.` : "Flip logged! Sign in to sync across devices.", "info");
     }
   }
 
   // ── Close an open flip ──
   function generateFlipCard(itemName, totalProfit, roi) {
+    try {
     const canvas = document.createElement("canvas");
     canvas.width = 600; canvas.height = 200;
     const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
     // Background
     ctx.fillStyle = "#07090c";
     ctx.fillRect(0, 0, 600, 200);
@@ -5632,12 +5711,14 @@ export default function RuneTrader() {
     ctx.font = "12px 'Arial'";
     ctx.fillText("The OSRS flipping terminal", 350, 185);
     return canvas.toDataURL("image/png");
+    } catch (e) { console.error("[generateFlipCard]", e?.message); return null; }
   }
 
   async function handleCloseFlipSold(flip, sellPriceStr) {
     const sell = parseInt(sellPriceStr.replace(/,/g, ""));
     if (isNaN(sell)) return;
     setCloseFlipLoading(true);
+    try {
     const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
     const profitEach = sell - flip.buyPrice - tax;
     const totalProfit = profitEach * (flip.qty || 1);
@@ -5727,22 +5808,25 @@ export default function RuneTrader() {
     } else {
       const updated = flipsLog.map(f => f.id === flip.id ? { ...f, sellPrice: sell, tax, profitEach, totalProfit, roi, status: "closed" } : f);
       setFlipsLog(updated);
-      localStorage.setItem("runetrader_flips", JSON.stringify(updated));
+      safeSetItem("runetrader_flips", JSON.stringify(updated));
       showToast(`Sold! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
     }
     setClosingFlip(null);
-    setCloseFlipLoading(false);
+    } catch (e) { console.error("[handleCloseFlipSold]", e?.message); showToast("Failed to close flip.", "error"); }
+    finally { setCloseFlipLoading(false); }
   }
 
   async function handleCloseFlipCancelled(flip) {
-    if (user) {
-      await supabase.from("flips").delete().eq("id", flip.id);
-    } else {
-      localStorage.setItem("runetrader_flips", JSON.stringify(flipsLog.filter(f => f.id !== flip.id)));
-    }
-    setFlipsLog(prev => prev.filter(f => f.id !== flip.id));
-    setClosingFlip(null);
-    showToast(`${flip.item} removed from open flips.`, "info");
+    try {
+      if (user) {
+        await supabase.from("flips").delete().eq("id", flip.id);
+      } else {
+        safeSetItem("runetrader_flips", JSON.stringify(flipsLog.filter(f => f.id !== flip.id)));
+      }
+      setFlipsLog(prev => prev.filter(f => f.id !== flip.id));
+      setClosingFlip(null);
+      showToast(`${flip.item} removed from open flips.`, "info");
+    } catch (e) { console.error("[handleCloseFlipCancelled]", e?.message); showToast("Failed to cancel flip.", "error"); }
   }
 
   // ── Merchant Mode close handlers (no tab switching needed) ──
@@ -5756,8 +5840,8 @@ export default function RuneTrader() {
 
   async function merchantClosePortfolioPos(pos, sellPrice, cancelled = false) {
     if (!user) return;
+    try {
     if (cancelled) {
-      // Just delete the portfolio position
       await supabase.from("positions").delete().eq("id", pos.id);
       setMerchantPositions(prev => prev.filter(p => p.id !== pos.id));
       showToast(`${pos.name} removed.`, "info");
@@ -5769,23 +5853,22 @@ export default function RuneTrader() {
     const profitEach = sell - pos.buyPrice - tax;
     const totalProfit = profitEach * (pos.qty || 1);
     const roi = parseFloat(((profitEach / pos.buyPrice) * 100).toFixed(1));
-    // Write closed flip to history
     const { data: flipData } = await supabase.from("flips").insert({
       user_id: user.id, item: pos.name, buy_price: pos.buyPrice, sell_price: sell,
       qty: pos.qty || 1, tax, profit_each: profitEach, total_profit: totalProfit, roi, status: "closed"
     }).select().single();
     if (flipData) setFlipsLog(prev => [mapFlipRow(flipData), ...prev]);
-    // Remove portfolio position
     await supabase.from("positions").delete().eq("id", pos.id);
     setMerchantPositions(prev => prev.filter(p => p.id !== pos.id));
     showToast(`Closed! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
+    } catch (e) { console.error("[merchantClosePortfolioPos]", e?.message); showToast("Failed to close position.", "error"); }
   }
 
   // ── "Flip This" from item modal ──
   // eslint-disable-next-line no-unused-vars
   async function deleteFlip(id) { // eslint-disable-line no-unused-vars
     if (user) { await supabase.from("flips").delete().eq("id", id); }
-    else { localStorage.setItem("runetrader_flips", JSON.stringify(flipsLog.filter(f => f.id !== id))); }
+    else { safeSetItem("runetrader_flips", JSON.stringify(flipsLog.filter(f => f.id !== id))); }
     setFlipsLog(prev => prev.filter(f => f.id !== id));
   }
 
@@ -5805,7 +5888,7 @@ export default function RuneTrader() {
     const newAlert = { id: Date.now(), item: alertForm.item, price: parseInt(alertForm.price.replace(/,/g, "")), type: alertForm.type, currentPrice, triggered: false };
     setAlerts(prev => {
       const next = [newAlert, ...prev];
-      localStorage.setItem("runetrader_alerts", JSON.stringify(next));
+      safeSetItem("runetrader_alerts", JSON.stringify(next));
       return next;
     });
     setAlertForm({ item: "", price: "", type: "above" });
@@ -5814,14 +5897,14 @@ export default function RuneTrader() {
   function deleteAlert(id) {
     setAlerts(prev => {
       const next = prev.filter(a => a.id !== id);
-      localStorage.setItem("runetrader_alerts", JSON.stringify(next));
+      safeSetItem("runetrader_alerts", JSON.stringify(next));
       return next;
     });
   }
 
   // €€€€ AI sendMessage €€€€
   async function sendMessage(text) {
-    setMessages(prev => [...prev, { role: "user", content: text, time: new Date() }]);
+    setMessages(prev => [...prev, { role: "user", content: text, time: new Date() }].slice(-50));
     setInput(""); setAiLoading(true);
 
     // Read user's Picks preferences from localStorage
@@ -5971,9 +6054,9 @@ RULES:
       const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 700, system: systemPrompt, messages: [...messages.filter(m => m.role !== "system").slice(-6).map(m => ({ role: m.role, content: m.content })), { role: "user", content: text }] }) });
       const data = await res.json();
       const reply = data.error ? `API Error: ${data.error.message || data.error.type}` : (data.content?.[0]?.text || "Sorry, no response.");
-      setMessages(prev => [...prev, { role: "assistant", content: reply, time: new Date() }]);
+      setMessages(prev => [...prev, { role: "assistant", content: reply, time: new Date() }].slice(-50));
     } catch (e) {
-      setMessages(prev => [...prev, { role: "assistant", content: `Connection error: ${e.message}`, time: new Date() }]);
+      setMessages(prev => [...prev, { role: "assistant", content: `Connection error: ${e.message}`, time: new Date() }].slice(-50));
     } finally { setAiLoading(false); }
   }
 
@@ -6031,8 +6114,13 @@ RULES:
   }
 
   // For 1gp filter, use allItems directly — these items fail isValidFlip (low < 50) but that's the point
-  const filteredSource = filter === "1gp" ? allItems : (allItems.length ? allItems : items);
-  const filtered = filteredSource.filter(item => {
+  const filteredSource = useMemo(
+    () => filter === "1gp" ? allItems : (allItems.length ? allItems : items),
+    [filter, allItems, items, priceVersion] // eslint-disable-line
+  );
+
+  const filtered = useMemo(() => {
+    return filteredSource.filter(item => {
     if (filter === "1gp") return item.low === 1 && item.hasPrice;
     if (!passesPicksFilter(item)) return false;
     // Category filter
@@ -6109,6 +6197,7 @@ RULES:
     if (sortCol === "lastTradeTime") return sortDir === "asc" ? (a.lastTradeTime || 0) - (b.lastTradeTime || 0) : (b.lastTradeTime || 0) - (a.lastTradeTime || 0);
     return sortDir === "asc" ? a[sortCol] - b[sortCol] : b[sortCol] - a[sortCol];
   });
+  }, [filteredSource, filter, search, categoryFilter, picksMode, advFilters, sortCol, sortDir, favourites, priceVersion]); // eslint-disable-line
 
   // ── Tracker stats (manual + auto-tracked flips combined) ──
   const closedFlips = flipsLog.filter(f => f.status !== "open");
@@ -6357,7 +6446,7 @@ RULES:
       })()}
 
       {/* FLIP CARD MODAL */}
-      {flipCard && (
+      {flipCard && flipCard.dataUrl && (
         <div className="flip-card-overlay" onClick={() => setFlipCard(null)}>
           <div className="flip-card-modal" onClick={e => e.stopPropagation()}>
             <div className="flip-card-title">🎉 Nice flip! Share it?</div>
@@ -6376,7 +6465,7 @@ RULES:
               <button className="flip-card-btn primary" onClick={() => {
                 const slug = flipCard.itemName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
                 const text = `I just made ${formatGP(flipCard.profit)} gp flipping ${flipCard.itemName} on RuneTrader.gg 📈\nrunetrader.gg/item/${slug}`;
-                navigator.clipboard.writeText(text).then(() => { showToast("Copied to clipboard! Paste in Discord 🔖", "success"); setFlipCard(null); });
+                navigator.clipboard.writeText(text).then(() => { showToast("Copied to clipboard! Paste in Discord 🔖", "success"); setFlipCard(null); }).catch(() => showToast("Copy failed — please copy manually.", "error"));
               }}>📋 Copy for Discord</button>
             </div>
           </div>
@@ -6492,7 +6581,7 @@ RULES:
                     if (!isNaN(price)) {
                       const liveItem = items.find(i => i.name.toLowerCase() === quickAlert.item.name.toLowerCase());
                       const newAlert = { id: Date.now(), item: quickAlert.item.name, price, type: quickAlertType, currentPrice: liveItem?.high || null, triggered: false };
-                      setAlerts(prev => { const next = [newAlert, ...prev]; localStorage.setItem("runetrader_alerts", JSON.stringify(next)); return next; });
+                      setAlerts(prev => { const next = [newAlert, ...prev]; safeSetItem("runetrader_alerts", JSON.stringify(next)); return next; });
                       showToast(`Alert set for ${quickAlert.item.name} 🔔`, "success");
                       setQuickAlert(null);
                     }
@@ -6509,7 +6598,7 @@ RULES:
                   if (isNaN(price)) return;
                   const liveItem = items.find(i => i.name.toLowerCase() === quickAlert.item.name.toLowerCase());
                   const newAlert = { id: Date.now(), item: quickAlert.item.name, price, type: quickAlertType, currentPrice: liveItem?.high || null, triggered: false };
-                  setAlerts(prev => { const next = [newAlert, ...prev]; localStorage.setItem("runetrader_alerts", JSON.stringify(next)); return next; });
+                  setAlerts(prev => { const next = [newAlert, ...prev]; safeSetItem("runetrader_alerts", JSON.stringify(next)); return next; });
                   showToast(`Alert set for ${quickAlert.item.name} 🔔`, "success");
                   setQuickAlert(null);
                 }}
@@ -6533,7 +6622,7 @@ RULES:
           onShare={() => {
             const slug = selectedItem.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
             const url = `${window.location.origin}/item/${slug}`;
-            navigator.clipboard.writeText(url).then(() => showToast("Link copied! Share it on Discord or Reddit 🔖", "success"));
+            navigator.clipboard.writeText(url).then(() => showToast("Link copied! Share it on Discord or Reddit 🔖", "success")).catch(() => showToast("Copy failed — please copy manually.", "error"));
           }}
           isWatchlisted={watchlist.includes(selectedItem?.id)}
           onToggleWatchlist={() => toggleWatchlist(selectedItem?.id)}
@@ -6794,7 +6883,7 @@ RULES:
                   </button>
                 ) : (
                   <button onClick={() => {
-                    localStorage.setItem("rt_picks_prefs_v5", JSON.stringify(customizePrefs));
+                    safeSetItem("rt_picks_prefs_v5", JSON.stringify(customizePrefs));
                     setShowCustomizeModal(false);
                     setPicksMode(true);
                     showToast("Preferences saved — Picks is now active ", "success");
