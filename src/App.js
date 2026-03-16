@@ -3296,9 +3296,9 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
             {/* Filter bar */}
             <div className="filter-bar" style={{ marginBottom: "12px" }}>
               <span className="filter-label">Filter:</span>
-              {["all", "f2p", "members", "highvol", "favourites"].map(f => (
+              {["all", "f2p", "members", "highvol", "favourites", "1gp"].map(f => (
                 <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `🔗 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
+                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : f === "1gp" ? "⚠ 1gp Sales" : `🔗 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                 </button>
               ))}
               <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
@@ -6004,7 +6004,10 @@ RULES:
     return ratio >= 50 && age <= 1800;
   }
 
-  const filtered = (allItems.length ? allItems : items).filter(item => {
+  // For 1gp filter, use allItems directly — these items fail isValidFlip (low < 50) but that's the point
+  const filteredSource = filter === "1gp" ? allItems : (allItems.length ? allItems : items);
+  const filtered = filteredSource.filter(item => {
+    if (filter === "1gp") return item.low === 1 && item.hasPrice;
     if (!passesPicksFilter(item)) return false;
     // Category filter
     if (categoryFilter !== "All") {
@@ -6036,6 +6039,7 @@ RULES:
     if (filter === "f2p") return item.category === "F2P";
     if (filter === "members") return item.category === "Members";
     if (filter === "highvol") return item.volume > 500;
+    if (filter === "1gp") return item.low === 1 && item.hasPrice;
     // Advanced filters
     if (advFilters.priceDataOnly && !item.hasPrice) return false;
     if (advFilters.positiveOnly && item.margin <= 0) return false;
@@ -8438,9 +8442,9 @@ RULES:
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div className="filter-bar">
                   <span className="filter-label">Filter:</span>
-                  {["all", "f2p", "members", "highvol", "favourites"].map(f => (
+                  {["all", "f2p", "members", "highvol", "favourites", "1gp"].map(f => (
                     <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : `🔗 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
+                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : f === "1gp" ? "⚠ 1gp Sales" : `🔗 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                     </button>
                   ))}
                   <button
