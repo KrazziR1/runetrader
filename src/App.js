@@ -1233,6 +1233,7 @@ function inlineFormat(text) {
 }
 
 function itemIconUrl(name) {
+  if (!name) return "";
   return `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}_detail.png`;
 }
 
@@ -1369,7 +1370,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
   async function fetchChartData() {
     setChartLoading(true);
     try {
-      const rangeObj = TIME_RANGES.find(r => r.label === range);
+      const rangeObj = TIME_RANGES.find(r => r.label === range) || TIME_RANGES[0];
       let endpoint;
       if (range === "24H") endpoint = "5m";
       else if (range === "3D") endpoint = "1h";
@@ -2314,7 +2315,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     liveOps.forEach(op => {
       const rules = autopilotRules[op.item_name];
       if (!rules) return;
-      const liveItem = items.find(i => i.name.toLowerCase() === op.item_name.toLowerCase());
+      const liveItem = op.item_name ? items.find(i => i.name.toLowerCase() === op.item_name.toLowerCase()) : null;
       const holdMs = op.buy_started_at ? now - new Date(op.buy_started_at).getTime() : 0;
       const holdHrs = holdMs / 3600000;
 
@@ -2376,9 +2377,9 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     openedAt: f.date ? new Date(f.date) : new Date(),
     posStatus: f.posStatus || "buying",
   }));
-  const trackerNames = new Set(trackerOpen.map(p => p.name.toLowerCase()));
+  const trackerNames = new Set(trackerOpen.filter(p => p.name).map(p => p.name.toLowerCase()));
   const portfolioOnly = manualPositions
-    .filter(p => !trackerNames.has(p.item_name.toLowerCase()))
+    .filter(p => p.item_name && !trackerNames.has(p.item_name.toLowerCase()))
     .map(p => ({
       id: p.id, name: p.item_name, gpIn: (p.buy_price || 0) * (p.qty || 1),
       qty: p.qty || 1, buyPrice: p.buy_price || 0, source: "portfolio",
@@ -2387,9 +2388,9 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     }));
   // Include auto-tracked open positions from ge_flips_live
   // Exclude items already tracked manually to avoid double-counting
-  const allManualNames = new Set([...trackerNames, ...manualPositions.map(p => p.item_name.toLowerCase())]);
+  const allManualNames = new Set([...trackerNames, ...manualPositions.filter(p => p.item_name).map(p => p.item_name.toLowerCase())]);
   const autoOpen = liveOps
-    .filter(op => !allManualNames.has(op.item_name.toLowerCase()))
+    .filter(op => op.item_name && !allManualNames.has(op.item_name.toLowerCase()))
     .map(op => ({
       id: op.id, name: op.item_name,
       gpIn: (op.buy_price || 0) * (op.quantity || 1),
@@ -2667,7 +2668,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                         <div key={i} className="ge-slot active" title={`${liveOffer.item_name} · ${liveOffer.status} · ${pct}% filled`}
                           style={{ borderColor: driftAlert ? (driftAlert.level === "red" ? "rgba(231,76,60,0.6)" : "rgba(243,156,18,0.6)") : undefined,
                                    background: driftAlert ? (driftAlert.level === "red" ? "rgba(231,76,60,0.05)" : "rgba(243,156,18,0.05)") : undefined }}
-                          onClick={() => { const it = items.find(x => x.name.toLowerCase() === liveOffer.item_name.toLowerCase()); if (it) setSelectedItem(it); }}>
+                          onClick={() => { const it = liveOffer.item_name ? items.find(x => x.name.toLowerCase() === liveOffer.item_name.toLowerCase()) : null; if (it) setSelectedItem(it); }}>
                           <div className="slot-dot" style={{ background: slotColor }} />
                           <img src={itemIconUrl(liveOffer.item_name)} alt="" style={{ width: 64, height: 64, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
                           <div className="slot-name">{liveOffer.item_name.length > 14 ? liveOffer.item_name.slice(0, 13) + "…" : liveOffer.item_name}</div>
@@ -2744,7 +2745,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       <span>Item</span><span>Status</span><span>Investment</span><span>Qty</span><span>Buy Price</span><span>Market Value</span><span>Live P&amp;L</span><span>Progress</span><span></span><span>Auto</span>
                     </div>
                     {liveOps.map(op => {
-                      const liveItem = items.find(i => i.name.toLowerCase() === op.item_name.toLowerCase());
+                      const liveItem = op.item_name ? items.find(i => i.name.toLowerCase() === op.item_name.toLowerCase()) : null;
                       const tax = liveItem ? Math.min(Math.floor(liveItem.high * 0.02), 5_000_000) : 0;
                       const pnlEach = (op.buy_price && liveItem) ? liveItem.high - op.buy_price - tax : 0;
                       const pnlTotal = pnlEach * (op.quantity || 1);
@@ -4242,6 +4243,33 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
 }
 
 
+// ── Error Boundary — catches render crashes and shows recovery UI instead of white screen ──
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  componentDidCatch(error, info) { console.error("[RuneTrader Error]", error, info?.componentStack); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0a0c0f", color: "#e8e8e8", fontFamily: "Inter, sans-serif", gap: "16px", padding: "24px", textAlign: "center" }}>
+          <div style={{ fontSize: "40px" }}>📉</div>
+          <div style={{ fontFamily: "Cinzel, serif", fontSize: "20px", color: "#c9a84c" }}>Something went wrong</div>
+          <div style={{ fontSize: "13px", color: "#7a8a9a", maxWidth: "400px", lineHeight: 1.6 }}>
+            RuneTrader hit an unexpected error. Your data is safe — refresh to recover.
+          </div>
+          <div style={{ fontSize: "11px", color: "#3a4a5a", fontFamily: "monospace", maxWidth: "500px", background: "#0f1218", padding: "10px 14px", borderRadius: "8px", border: "1px solid #2a3340", wordBreak: "break-all" }}>
+            {this.state.error?.message}
+          </div>
+          <button onClick={() => window.location.reload()} style={{ padding: "10px 24px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #8a6f2e, #c9a84c)", color: "#000", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Cinzel, serif", letterSpacing: "0.5px" }}>
+            Reload RuneTrader
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function RuneTrader() {
   const [showApp, setShowApp] = useState(() => /^\/item\//.test(window.location.pathname));
   const [user, setUser] = useState(null);
@@ -4316,18 +4344,20 @@ export default function RuneTrader() {
           const pendingRef = localStorage.getItem("rt_ref_code");
           if (pendingRef && session?.user?.id) {
             (async () => {
-              const { data: referrerProfile } = await supabase
-                .from("user_profiles").select("user_id").eq("ref_code", pendingRef).single();
-              if (referrerProfile && referrerProfile.user_id !== session.user.id) {
-                await supabase.from("referrals").insert({
-                  referrer_id: referrerProfile.user_id,
-                  referee_id: session.user.id,
-                  ref_code: pendingRef,
-                  status: "signed_up",
-                  created_at: new Date().toISOString(),
-                });
-                localStorage.removeItem("rt_ref_code");
-              }
+              try {
+                const { data: referrerProfile } = await supabase
+                  .from("user_profiles").select("user_id").eq("ref_code", pendingRef).single();
+                if (referrerProfile && referrerProfile.user_id !== session.user.id) {
+                  await supabase.from("referrals").insert({
+                    referrer_id: referrerProfile.user_id,
+                    referee_id: session.user.id,
+                    ref_code: pendingRef,
+                    status: "signed_up",
+                    created_at: new Date().toISOString(),
+                  });
+                  localStorage.removeItem("rt_ref_code");
+                }
+              } catch (e) { console.error("[referral insert]", e?.message); }
             })();
           }
           // Give new user their own ref code + start 3-day Pro trial
@@ -4552,22 +4582,21 @@ export default function RuneTrader() {
   const REROLL_COST = 15;
 
   async function rerollQuest(questId) {
+    try {
     const quest = dailyQuests.find(q => q.id === questId);
     if (!quest || quest.completed) return;
     if (goldCoins < REROLL_COST) { showToast(`Need ${REROLL_COST} coins to reroll. Complete quests to earn more! 🪙`, "error", 3000); return; }
-
-    // Generate a replacement quest of the same difficulty, different type
     const today = todayStr();
     const seed = Math.abs((user.id + today + questId + Date.now()).split("").reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0));
     const newQuests = generateDailyQuests(user.id, today + "_reroll_" + questId + "_" + seed);
     const replacement = newQuests.find(q => q.difficulty === quest.difficulty && q.id !== quest.id) || newQuests[0];
-
     const updated = dailyQuests.map(q => q.id === questId ? { ...replacement, difficulty: quest.difficulty } : q);
     const newCoins = goldCoins - REROLL_COST;
     setGoldCoins(newCoins);
     setDailyQuests(updated);
     saveQuests(updated, newCoins);
     showToast(`Quest rerolled! -${REROLL_COST} 🪙`, "info", 2500);
+    } catch (e) { console.error("[rerollQuest]", e?.message); showToast("Failed to reroll quest.", "error"); }
   }
 
   async function awardXP(profit, context = {}) {
@@ -4678,9 +4707,15 @@ export default function RuneTrader() {
 
   async function toggleMerchantMode() {
     if (!user) { setShowAuth(true); return; }
+    if (merchantTransitioning) return; // prevent double-click during exit animation
     if (!merchantMode) {
+      // Pro gate — require active Pro or trial
+      if (!isPro && !isOnTrial) {
+        setUpgradeModal({ feature: "Trading Terminal", description: "The Trading Terminal is a RuneTrader Pro feature. Upgrade to get live GE slot tracking, autopilot rules, smart alerts, and your full Merchant Mode command centre." });
+        return;
+      }
       if (merchantCapital === 0) { setShowCapitalSetup(true); return; }
-      await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() });
+      try { await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: true, updated_at: new Date().toISOString() }); } catch (e) { console.error("[toggleMerchantMode open]", e?.message); }
       setMerchantSessionStart(Date.now());
       activateMerchantWithAnim(() => { setMerchantMode(true); });
     } else {
@@ -4702,10 +4737,10 @@ export default function RuneTrader() {
       setMerchantTransitioning(true);
       setShowMerchantShutdown('active');
       setMerchantAIOpen(false);
-      await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() });
-      setTimeout(() => setShowMerchantShutdown('fading'), 5500);       // start fade-out
-      setTimeout(() => setShowMerchantShutdown('done'), 6100);         // overlay gone
-      setTimeout(() => { setMerchantMode(false); setMerchantSessionStart(null); }, 6150); // NOW swap to market
+      try { await supabase.from("merchant_settings").upsert({ user_id: user.id, mode_enabled: false, updated_at: new Date().toISOString() }); } catch (e) { console.error("[toggleMerchantMode close]", e?.message); }
+      setTimeout(() => setShowMerchantShutdown('fading'), 5500);
+      setTimeout(() => setShowMerchantShutdown('done'), 6100);
+      setTimeout(() => { setMerchantMode(false); setMerchantSessionStart(null); }, 6150);
       setTimeout(() => { setMerchantTransitioning(false); setSessionSummary(null); }, 6300);
     }
   }
@@ -4857,7 +4892,7 @@ export default function RuneTrader() {
   const [cofferShowLosses, setCofferShowLosses] = useState(false);
   const [cofferSortState, setCofferSortState] = useState({ col: "potentialSavings", dir: "desc" });
   const [cofferRowsShown, setCofferRowsShown] = useState(200);
-  function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } }
+  function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } setMarketRowsShown(200); }
   useEffect(() => { setMarketRowsShown(200); }, [filter, search]);
 
   // ── Quick-alert from market row ──
@@ -5303,6 +5338,7 @@ export default function RuneTrader() {
   }
 
   async function requestNotificationPermission() {
+    try {
     if (!("Notification" in window)) {
       showToast("Your browser doesn't support notifications.", "error"); return;
     }
@@ -5313,9 +5349,11 @@ export default function RuneTrader() {
     } else {
       showToast("Notifications blocked. You can enable them in your browser settings.", "info", 5000);
     }
+    } catch (e) { console.error("[requestNotificationPermission]", e?.message); showToast("Could not enable notifications.", "error"); }
   }
 
   function urlBase64ToUint8Array(base64String) {
+    if (!base64String) throw new Error("VAPID public key not configured");
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
     const rawData = window.atob(base64);
@@ -5566,6 +5604,12 @@ export default function RuneTrader() {
     setMerchantCapital(0);
     setMerchantMode(false);
     setMerchantAIOpen(false);
+    setMerchantTransitioning(false);
+    setShowMerchantShutdown(false);
+    setShowCapitalSetup(false);
+    setMerchantTourStep(-1);
+    setMerchantTourRect(null);
+    setMerchantView("operations");
     setPnlHistory([]);
     setTotalXP(0);
     setDailyQuests([]);
@@ -5580,6 +5624,16 @@ export default function RuneTrader() {
     setWatchlistAlerts({});
     setUserRefCode(null);
     setSessionSummary(null);
+    setClosingFlip(null);
+    setFlipCard(null);
+    setDailyGoal(0);
+    setUnlockedAchievements([]);
+    setMerchantSessionStart(null);
+    setShowStreakBanner(false);
+    setShowLoginCinematic(false);
+    smartCooldownRef.current = {};
+    prevItemsRef.current = {};
+    marginHistoryRef.current = {};
     localStorage.removeItem("runetrader_alerts");
     setActiveTab("market");
     setMarketInnerView("items");
@@ -5615,7 +5669,7 @@ export default function RuneTrader() {
   async function logFlip() { // eslint-disable-line no-unused-vars
     const buy = parseInt(logForm.buyPrice.replace(/,/g, ""));
     const qty = parseInt(logForm.qty) || 1;
-    if (!logForm.item || isNaN(buy)) return;
+    if (!logForm.item || isNaN(buy) || buy <= 0) return;
 
     const hasSell = logForm.sellPrice.trim() !== "";
     const sell = hasSell ? parseInt(logForm.sellPrice.replace(/,/g, "")) : null;
@@ -5720,13 +5774,13 @@ export default function RuneTrader() {
 
   async function handleCloseFlipSold(flip, sellPriceStr) {
     const sell = parseInt(sellPriceStr.replace(/,/g, ""));
-    if (isNaN(sell)) return;
+    if (isNaN(sell) || sell <= 0) return;
     setCloseFlipLoading(true);
     try {
     const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
     const profitEach = sell - flip.buyPrice - tax;
     const totalProfit = profitEach * (flip.qty || 1);
-    const roi = parseFloat(((profitEach / flip.buyPrice) * 100).toFixed(1));
+    const roi = flip.buyPrice > 0 ? parseFloat(((profitEach / flip.buyPrice) * 100).toFixed(1)) : 0;
 
     if (user) {
       const { data, error } = await supabase.from("flips").update({
@@ -5736,7 +5790,7 @@ export default function RuneTrader() {
         total_profit: totalProfit,
         roi,
         status: "closed",
-      }).eq("id", flip.id).select().single();
+      }).eq("id", flip.id).eq("user_id", user.id).select().single();
       if (!error && data) {
         setFlipsLog(prev => prev.map(f => f.id === flip.id ? mapFlipRow(data) : f));
         showToast(`Sold! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
@@ -5823,7 +5877,7 @@ export default function RuneTrader() {
   async function handleCloseFlipCancelled(flip) {
     try {
       if (user) {
-        await supabase.from("flips").delete().eq("id", flip.id);
+        await supabase.from("flips").delete().eq("id", flip.id).eq("user_id", user.id);
       } else {
         safeSetItem("runetrader_flips", JSON.stringify(flipsLog.filter(f => f.id !== flip.id)));
       }
@@ -5846,23 +5900,23 @@ export default function RuneTrader() {
     if (!user) return;
     try {
     if (cancelled) {
-      await supabase.from("positions").delete().eq("id", pos.id);
+      await supabase.from("positions").delete().eq("id", pos.id).eq("user_id", user.id);
       setMerchantPositions(prev => prev.filter(p => p.id !== pos.id));
       showToast(`${pos.name} removed.`, "info");
       return;
     }
     const sell = parseInt(String(sellPrice).replace(/,/g, ""));
-    if (isNaN(sell)) return;
+    if (isNaN(sell) || sell <= 0) return;
     const tax = Math.min(Math.floor(sell * 0.02), 5_000_000);
     const profitEach = sell - pos.buyPrice - tax;
     const totalProfit = profitEach * (pos.qty || 1);
-    const roi = parseFloat(((profitEach / pos.buyPrice) * 100).toFixed(1));
+    const roi = pos.buyPrice > 0 ? parseFloat(((profitEach / pos.buyPrice) * 100).toFixed(1)) : 0;
     const { data: flipData } = await supabase.from("flips").insert({
       user_id: user.id, item: pos.name, buy_price: pos.buyPrice, sell_price: sell,
       qty: pos.qty || 1, tax, profit_each: profitEach, total_profit: totalProfit, roi, status: "closed"
     }).select().single();
     if (flipData) setFlipsLog(prev => [mapFlipRow(flipData), ...prev]);
-    await supabase.from("positions").delete().eq("id", pos.id);
+    await supabase.from("positions").delete().eq("id", pos.id).eq("user_id", user.id);
     setMerchantPositions(prev => prev.filter(p => p.id !== pos.id));
     showToast(`Closed! ${totalProfit >= 0 ? "+" : ""}${formatGP(totalProfit)} gp profit`, totalProfit >= 0 ? "success" : "error");
     } catch (e) { console.error("[merchantClosePortfolioPos]", e?.message); showToast("Failed to close position.", "error"); }
@@ -5871,7 +5925,7 @@ export default function RuneTrader() {
   // ── "Flip This" from item modal ──
   // eslint-disable-next-line no-unused-vars
   async function deleteFlip(id) { // eslint-disable-line no-unused-vars
-    if (user) { await supabase.from("flips").delete().eq("id", id); }
+    if (user) { await supabase.from("flips").delete().eq("id", id).eq("user_id", user.id); }
     else { safeSetItem("runetrader_flips", JSON.stringify(flipsLog.filter(f => f.id !== id))); }
     setFlipsLog(prev => prev.filter(f => f.id !== id));
   }
@@ -6056,6 +6110,7 @@ RULES:
 - Be concise, honest, and specific. If something looks sketchy, say it.`;
     try {
       const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 700, system: systemPrompt, messages: [...messages.filter(m => m.role !== "system").slice(-6).map(m => ({ role: m.role, content: m.content })), { role: "user", content: text }] }) });
+      if (!res.ok) throw new Error(`Chat API error: ${res.status}`);
       const data = await res.json();
       const reply = data.error ? `API Error: ${data.error.message || data.error.type}` : (data.content?.[0]?.text || "Sorry, no response.");
       setMessages(prev => [...prev, { role: "assistant", content: reply, time: new Date() }].slice(-50));
@@ -6089,8 +6144,7 @@ RULES:
 
   // €€€€ Picks mode filter — same tier logic as the Picks tab €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
   const picksNowSec = Math.floor(Date.now() / 1000);
-  let picksPrefsForFilter = { risk: "low", flipSpeed: "any", cashStack: "", membership: "members" };
-  try { picksPrefsForFilter = { ...picksPrefsForFilter, ...JSON.parse(localStorage.getItem("rt_picks_prefs_v5") || "{}") }; } catch {}
+  const picksPrefsForFilter = customizePrefs;
   const picksBudgetFilter = picksPrefsForFilter.cashStack ? (() => {
     const s = picksPrefsForFilter.cashStack.trim().toLowerCase().replace(/,/g, "");
     if (s.endsWith("b")) return parseFloat(s) * 1e9;
@@ -6201,7 +6255,7 @@ RULES:
     if (sortCol === "lastTradeTime") return sortDir === "asc" ? (a.lastTradeTime || 0) - (b.lastTradeTime || 0) : (b.lastTradeTime || 0) - (a.lastTradeTime || 0);
     return sortDir === "asc" ? a[sortCol] - b[sortCol] : b[sortCol] - a[sortCol];
   });
-  }, [filteredSource, filter, search, categoryFilter, picksMode, advFilters, sortCol, sortDir, favourites, priceVersion]); // eslint-disable-line
+  }, [filteredSource, filter, search, categoryFilter, picksMode, advFilters, sortCol, sortDir, favourites, priceVersion, customizePrefs]); // eslint-disable-line
 
   // ── Tracker stats (manual + auto-tracked flips combined) ──
   const closedFlips = flipsLog.filter(f => f.status !== "open");
@@ -6216,9 +6270,10 @@ RULES:
   // eslint-disable-next-line no-unused-vars
   const bestItem = allClosedFlips.length ? allClosedFlips.reduce((best, f) => (f.totalProfit || 0) > (best.totalProfit || 0) ? f : best, allClosedFlips[0]) : null;
 
-  if (!showApp) return <LandingPage onEnterApp={(mode) => { setShowApp(true); if (mode === "demo") setDemoMode(true); }} />;
+  if (!showApp) return <ErrorBoundary><LandingPage onEnterApp={(mode) => { setShowApp(true); if (mode === "demo") setDemoMode(true); }} /></ErrorBoundary>;
 
   return (
+    <ErrorBoundary>
     <>
       <style>{STYLES}</style>
 
@@ -7546,6 +7601,7 @@ RULES:
                   onMouseOver={e => { if (!merchantMode) e.currentTarget.style.background = "rgba(201,168,76,0.14)"; }}
                   onMouseOut={e => { if (!merchantMode) e.currentTarget.style.background = "rgba(201,168,76,0.07)"; }}>
                   {merchantMode && <div className="merchant-dot" style={{ background: "var(--green)" }} />}
+                  {!merchantMode && !isPro && !isOnTrial && <span style={{ fontSize: "11px", opacity: 0.7 }}>🔒</span>}
                   📈 {merchantMode ? "Exit Terminal" : "Trading Terminal"}
                 </button>
               )}
@@ -8969,5 +9025,6 @@ RULES:
         )}
       </div>
     </>
+    </ErrorBoundary>
   );
 }
