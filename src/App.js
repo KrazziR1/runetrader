@@ -4402,10 +4402,10 @@ export default function RuneTrader() {
           }, 800);
         } else if (session?.user?.id) {
           // Load ref code, pro status, trial, and sync pause state for returning users
-          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused").eq("user_id", session.user.id).single()
+          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at").eq("user_id", session.user.id).single()
             .then(({ data }) => {
               if (data?.ref_code) setUserRefCode(data.ref_code);
-              if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(new Date()); }
+              if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(data.sync_paused_at ? new Date(data.sync_paused_at) : new Date()); }
               if (data?.is_pro) { setIsPro(true); return; }
               // Check active trial
               if (data?.trial_ends_at) {
@@ -7785,7 +7785,9 @@ RULES:
               setSyncPaused(false);
               setSyncPausedAt(null);
               if (user) {
-                await supabase.from("user_profiles").update({ sync_paused: false }).eq("user_id", user.id);
+                try {
+                  await supabase.from("user_profiles").update({ sync_paused: false, sync_paused_at: null }).eq("user_id", user.id);
+                } catch (e) { console.error("[resume sync]", e?.message); }
               }
             }}>Resume tracking</button>
           </div>

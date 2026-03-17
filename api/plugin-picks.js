@@ -136,9 +136,10 @@ export default async function handler(req, res) {
   const picks = [];
 
   for (const [idStr, prices] of Object.entries(wikiCache)) {
-    const id   = parseInt(idStr);
-    const meta = mappingCache?.[id];
-    if (!meta) continue;
+    try {
+      const id   = parseInt(idStr);
+      const meta = mappingCache?.[id];
+      if (!meta) continue;
 
     const high = prices.high || 0;
     const low  = prices.low  || 0;
@@ -215,6 +216,7 @@ export default async function handler(req, res) {
       score,
       dataAgeMinutes,
     });
+    } catch (e) { /* skip malformed item */ }
   }
 
   // Sort by score descending, return top N
