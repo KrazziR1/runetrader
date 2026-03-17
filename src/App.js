@@ -5626,7 +5626,6 @@ export default function RuneTrader() {
     setSessionSummary(null);
     setClosingFlip(null);
     setFlipCard(null);
-    setDailyGoal(0);
     setUnlockedAchievements([]);
     setMerchantSessionStart(null);
     setShowStreakBanner(false);
