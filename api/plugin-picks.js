@@ -79,10 +79,10 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Invalid API key" });
   }
 
-  // Look up user + their picks prefs
+  // Look up user + their picks prefs from Supabase
   const { data: profile, error: profileError } = await supabase
     .from("user_profiles")
-    .select("user_id")
+    .select("user_id, picks_prefs")
     .eq("api_key", apiKey)
     .single();
 
@@ -90,12 +90,23 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "API key not found" });
   }
 
-  // Parse query params (risk, membership, cashStack, flipSpeed, limit)
-  const risk       = req.query.risk       || "low";
-  const membership = req.query.membership || "members";
-  const flipSpeed  = req.query.flipSpeed  || "any";
-  const cashStack  = parseInt(req.query.cashStack || "0") || Infinity;
+  // Use saved prefs from Supabase, fall back to query params, then defaults
+  const saved = profile.picks_prefs || {};
+  const risk       = saved.risk       || req.query.risk       || "low";
+  const membership = saved.membership || req.query.membership || "members";
+  const flipSpeed  = saved.flipSpeed  || req.query.flipSpeed  || "any";
+  const cashRaw    = saved.cashStack  || req.query.cashStack  || "";
   const limit      = Math.min(parseInt(req.query.limit || "3"), 10);
+
+  // Parse cash stack (handles "10m", "500k", plain numbers)
+  let cashStack = Infinity;
+  if (cashRaw) {
+    const s = String(cashRaw).trim().toLowerCase().replace(/,/g, "");
+    if      (s.endsWith("b")) cashStack = parseFloat(s) * 1_000_000_000;
+    else if (s.endsWith("m")) cashStack = parseFloat(s) * 1_000_000;
+    else if (s.endsWith("k")) cashStack = parseFloat(s) * 1_000;
+    else                      cashStack = parseFloat(s) || Infinity;
+  }
 
   // Fetch wiki prices (cached 30s)
   const now = Date.now();

@@ -6954,8 +6954,16 @@ RULES:
                     Next →
                   </button>
                 ) : (
-                  <button onClick={() => {
+                  <button onClick={async () => {
                     safeSetItem("rt_picks_prefs_v5", JSON.stringify(customizePrefs));
+                    // Also save to Supabase so the plugin can read them
+                    if (user) {
+                      try {
+                        await supabase.from("user_profiles")
+                          .update({ picks_prefs: customizePrefs })
+                          .eq("user_id", user.id);
+                      } catch (e) { console.error("[save picks prefs]", e?.message); }
+                    }
                     setShowCustomizeModal(false);
                     setPicksMode(true);
                     showToast("Preferences saved — Picks is now active ", "success");
