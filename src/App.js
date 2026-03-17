@@ -87,6 +87,15 @@ const STYLES = `
   .logo-dot { color: var(--text-dim); font-size: 13px; margin-left: 2px; }
   .header-right { display: flex; align-items: center; gap: 8px; }
   .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--green); }
+  .paused-pill { display: flex; align-items: center; gap: 6px; background: rgba(243,156,18,0.12); border: 1px solid rgba(243,156,18,0.35); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: #f39c12; }
+  .paused-pill-dot { width: 5px; height: 5px; border-radius: 50%; background: #f39c12; }
+  .sync-paused-banner { display: flex; align-items: center; justify-content: space-between; padding: 8px 20px; background: rgba(243,156,18,0.08); border-bottom: 1px solid rgba(243,156,18,0.25); gap: 12px; flex-wrap: wrap; }
+  .sync-paused-banner-left { display: flex; align-items: center; gap: 10px; }
+  .sync-paused-banner-icon { width: 20px; height: 20px; border-radius: 50%; background: rgba(243,156,18,0.25); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sync-paused-banner-text { font-size: 12px; color: #f39c12; font-weight: 600; }
+  .sync-paused-banner-sub { font-size: 11px; color: rgba(243,156,18,0.7); margin-top: 1px; }
+  .sync-paused-resume-btn { padding: 5px 14px; border-radius: 6px; border: 1px solid rgba(243,156,18,0.4); background: transparent; color: #f39c12; font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .sync-paused-resume-btn:hover { background: rgba(243,156,18,0.12); }
   .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
   .nav-tabs { display: flex; gap: 2px; }
@@ -4392,10 +4401,11 @@ export default function RuneTrader() {
             setTourStep(0);
           }, 800);
         } else if (session?.user?.id) {
-          // Load ref code, pro status, and trial for returning users
-          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at").eq("user_id", session.user.id).single()
+          // Load ref code, pro status, trial, and sync pause state for returning users
+          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused").eq("user_id", session.user.id).single()
             .then(({ data }) => {
               if (data?.ref_code) setUserRefCode(data.ref_code);
+              if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(new Date()); }
               if (data?.is_pro) { setIsPro(true); return; }
               // Check active trial
               if (data?.trial_ends_at) {
@@ -4484,6 +4494,8 @@ export default function RuneTrader() {
   const [upgradeModal, setUpgradeModal] = useState(null);
   const [isPro, setIsPro] = useState(false);
   const [userRefCode, setUserRefCode] = useState(null); // eslint-disable-line no-unused-vars
+  const [syncPaused, setSyncPaused] = useState(false);
+  const [syncPausedAt, setSyncPausedAt] = useState(null);
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
   // eslint-disable-next-line no-unused-vars
   const [showMerchantShutdown, setShowMerchantShutdown] = useState(false);
@@ -5630,6 +5642,8 @@ export default function RuneTrader() {
     setMerchantSessionStart(null);
     setShowStreakBanner(false);
     setShowLoginCinematic(false);
+    setSyncPaused(false);
+    setSyncPausedAt(null);
     smartCooldownRef.current = {};
     prevItemsRef.current = {};
     marginHistoryRef.current = {};
@@ -7590,8 +7604,11 @@ RULES:
             </div>
 
             <div className="header-right">
-              {/* Live badge */}
-              {lastUpdate && <div className="live-badge"><div className="live-dot" />Live · {formatTime(lastUpdate)}</div>}
+              {/* Live / paused badge */}
+              {syncPaused
+                ? <div className="paused-pill"><div className="paused-pill-dot" />Sync paused</div>
+                : lastUpdate && <div className="live-badge"><div className="live-dot" />Live · {formatTime(lastUpdate)}</div>
+              }
 
               {/* Trading Terminal button */}
               {user && (
@@ -7738,6 +7755,33 @@ RULES:
           )}
         </header>
 
+        {/* Sync paused banner */}
+        {syncPaused && user && (
+          <div className="sync-paused-banner">
+            <div className="sync-paused-banner-left">
+              <div className="sync-paused-banner-icon">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <rect x="1.5" y="1" width="2.5" height="8" rx="0.8" fill="#f39c12"/>
+                  <rect x="6" y="1" width="2.5" height="8" rx="0.8" fill="#f39c12"/>
+                </svg>
+              </div>
+              <div>
+                <div className="sync-paused-banner-text">GE sync is paused</div>
+                <div className="sync-paused-banner-sub">
+                  Your GE activity is not being tracked
+                  {syncPausedAt ? ` · paused ${formatTime(syncPausedAt)}` : ""}
+                </div>
+              </div>
+            </div>
+            <button className="sync-paused-resume-btn" onClick={async () => {
+              setSyncPaused(false);
+              setSyncPausedAt(null);
+              if (user) {
+                await supabase.from("user_profiles").update({ sync_paused: false }).eq("user_id", user.id);
+              }
+            }}>Resume tracking</button>
+          </div>
+        )}
 
         <div className="main">
           {(merchantMode || merchantTransitioning) && (user || demoMode) ? (
