@@ -135,7 +135,7 @@ export default async function handler(req, res) {
   const nowSec = now / 1000;
   const picks = [];
 
-  for (const [idStr, prices] of Object.entries(wikiCache)) {
+  for (const [idStr, prices] of Object.entries(wikiCache || {})) {
     try {
       const id   = parseInt(idStr);
       const meta = mappingCache?.[id];

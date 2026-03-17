@@ -12,8 +12,24 @@ import { generateDailyQuests, updateQuestProgress, calcQuestRewards, todayStr } 
 import { initAudio, playLoginChime, playCoinClink, playBigProfit, playEpicProfit, playLevelUp, playQuestComplete, playNudge, toggleMute, getSoundMuted } from "./SoundEngine";
 
 // ── Changelog — add new entries at the top, bump DEPLOY_KEY on each deploy ──
-const DEPLOY_KEY = "runetrader_seen_deploy_v3"; // change this string on each deploy to trigger the modal
+const DEPLOY_KEY = "runetrader_seen_deploy_v4"; // change this string on each deploy to trigger the modal
 const CHANGELOG = [
+  {
+    version: "v1.2",
+    date: "March 2026",
+    items: [
+      { type: "new",      text: "Sync pause — pause GE tracking from the RuneLite plugin (Shift+P) when buying items for personal use. Website shows amber banner with resume button." },
+      { type: "new",      text: "Buy limit countdown overlays — plugin now shows a live countdown on each GE slot for when your 4-hour buy limit resets." },
+      { type: "new",      text: "Drift alert overlays — plugin highlights slots where your offer has drifted from market price, with exact relist price shown directly on the slot." },
+      { type: "new",      text: "Flip recommendation panel — plugin side panel showing your personalised top picks in-game, updated every 60 seconds from your website preferences." },
+      { type: "new",      text: "Click-to-fill (opt-in) — clicking a suggested price in the plugin panel types it into the GE field. Off by default, enable in plugin config." },
+      { type: "improved", text: "Actual fill price tracking — profit calculations now use the real average fill price (getSpent / qty) not just the offer price." },
+      { type: "improved", text: "Picks preferences now sync to your account — set them once on the website and the plugin uses them automatically." },
+      { type: "fixed",    text: "Login streak no longer breaks at midnight for users in UTC-5 and other western timezones." },
+      { type: "fixed",    text: "Picks filter now updates instantly when you change preferences — no longer required an unrelated action to trigger a re-render." },
+      { type: "fixed",    text: "Trading Terminal no longer accessible to free users without a subscription." },
+    ],
+  },
   {
     version: "v1.1",
     date: "March 2026",
@@ -756,7 +772,7 @@ const STYLES = `
   }
   .demo-tour-tooltip.center {
     top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: 480px;
+    width: min(480px, calc(100vw - 32px));
   }
   .demo-tour-label { font-size: 18px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dim); font-family: Cinzel, serif; }
   .demo-tour-title { font-family: Cinzel, serif; font-size: 19px; font-weight: 700; color: var(--gold); line-height: 1.3; }
@@ -1984,23 +2000,32 @@ const DEMO_PNL_HISTORY = (() => {
 
 // No-op supabase stub for demo mode — prevents network calls inside MerchantMode
 const DEMO_SUPABASE_STUB = {
-  from: () => ({
-    select: () => ({
-      eq: () => ({
-        not: () => ({ order: () => Promise.resolve({ data: [] }) }),
-        order: () => Promise.resolve({ data: [] }),
-        single: () => Promise.resolve({ data: null }),
-        in: () => Promise.resolve({ data: [] }),
-        limit: () => ({ order: () => Promise.resolve({ data: [] }) }),
-      }),
-      order: () => Promise.resolve({ data: [] }),
-      single: () => Promise.resolve({ data: null }),
-    }),
-    insert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }),
-    upsert: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }),
-    update: () => ({ eq: () => ({ select: () => ({ single: () => Promise.resolve({ data: null, error: null }) }) }) }),
-    delete: () => ({ eq: () => Promise.resolve({ data: null, error: null }) }),
-  }),
+  from: () => {
+    const noData = Promise.resolve({ data: [], error: null });
+    const noSingle = Promise.resolve({ data: null, error: null });
+    const chain = {
+      select: () => chain,
+      eq: () => chain,
+      neq: () => chain,
+      not: () => chain,
+      in: () => chain,
+      gte: () => chain,
+      lte: () => chain,
+      gt: () => chain,
+      lt: () => chain,
+      filter: () => chain,
+      order: () => chain,
+      limit: () => chain,
+      range: () => chain,
+      single: () => noSingle,
+      then: (fn) => noData.then(fn),
+      insert: () => ({ select: () => ({ single: () => noSingle }) }),
+      upsert: () => ({ select: () => ({ single: () => noSingle }) }),
+      update: () => ({ eq: () => ({ select: () => ({ single: () => noSingle }) }) }),
+      delete: () => ({ eq: () => noData }),
+    };
+    return chain;
+  },
   channel: () => ({ on: () => ({ subscribe: () => ({}) }) }),
   removeChannel: () => {},
 };
