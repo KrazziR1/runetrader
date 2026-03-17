@@ -1,5 +1,5 @@
-// ── SoundEngine.js ────────────────────────────────────────────────────────────
-// All sounds synthesized via Web Audio API — zero external files.
+﻿// â”€â”€ SoundEngine.js â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// All sounds synthesized via Web Audio API â€” zero external files.
 // Call initAudio() once on first user interaction, then use play*() anywhere.
 
 let ctx = null;
@@ -22,7 +22,7 @@ export function toggleMute() {
 
 export function getSoundMuted() { return isMuted(); }
 
-// ── Utility: play a sequence of notes ────────────────────────────────────────
+// â”€â”€ Utility: play a sequence of notes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function playTone(freq, startTime, duration, type = "sine", gainVal = 0.18, fadeOut = true) {
   const c = getCtx();
   const osc = c.createOscillator();
@@ -37,7 +37,7 @@ function playTone(freq, startTime, duration, type = "sine", gainVal = 0.18, fade
   osc.stop(startTime + duration + 0.01);
 }
 
-// ── Coin clink — small profit ─────────────────────────────────────────────────
+// â”€â”€ Coin clink â€” small profit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function playCoinClink() {
   if (isMuted()) return;
   const c = getCtx();
@@ -46,7 +46,7 @@ export function playCoinClink() {
   playTone(1318, now + 0.04, 0.08, "triangle", 0.10);
 }
 
-// ── Big profit — 1M+ ─────────────────────────────────────────────────────────
+// â”€â”€ Big profit â€” 1M+ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function playBigProfit() {
   if (isMuted()) return;
   const c = getCtx();
@@ -57,7 +57,7 @@ export function playBigProfit() {
   });
 }
 
-// ── Epic profit — 10M+ ───────────────────────────────────────────────────────
+// â”€â”€ Epic profit â€” 10M+ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function playEpicProfit() {
   if (isMuted()) return;
   const c = getCtx();
@@ -70,7 +70,7 @@ export function playEpicProfit() {
   playTone(98, now, 0.4, "sawtooth", 0.08, true);
 }
 
-// ── Level up ─────────────────────────────────────────────────────────────────
+// â”€â”€ Level up â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function playLevelUp() {
   if (isMuted()) return;
   const c = getCtx();
@@ -82,7 +82,7 @@ export function playLevelUp() {
   });
 }
 
-// ── Quest complete ────────────────────────────────────────────────────────────
+// â”€â”€ Quest complete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function playQuestComplete() {
   if (isMuted()) return;
   const c = getCtx();
@@ -93,7 +93,7 @@ export function playQuestComplete() {
   playTone(1319, now + 0.24, 0.35, "triangle", 0.13);
 }
 
-// ── Quest nudge (soft ping) ───────────────────────────────────────────────────
+// â”€â”€ Quest nudge (soft ping) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function playNudge() {
   if (isMuted()) return;
   const c = getCtx();
@@ -102,7 +102,7 @@ export function playNudge() {
   playTone(1100, now + 0.07, 0.1, "sine", 0.06);
 }
 
-// ── Login chime (cinematic open) ──────────────────────────────────────────────
+// â”€â”€ Login chime (cinematic open) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function playLoginChime() {
   if (isMuted()) return;
   const c = getCtx();
@@ -113,7 +113,7 @@ export function playLoginChime() {
   });
 }
 
-// ── Init (call on first click/interaction to unlock AudioContext) ─────────────
+// â”€â”€ Init (call on first click/interaction to unlock AudioContext) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function initAudio() {
   try { getCtx(); } catch {}
 }

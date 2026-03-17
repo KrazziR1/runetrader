@@ -1,9 +1,9 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import Sparkline from "./Sparkline";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function formatGP(n) {
-  if (n == null || isNaN(n)) return "—";
+  if (n == null || isNaN(n)) return "â€”";
   if (Math.abs(n) >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + "B";
   if (Math.abs(n) >= 1_000_000)     return (n / 1_000_000).toFixed(1) + "M";
   if (Math.abs(n) >= 1_000)         return (n / 1_000).toFixed(1) + "k";
@@ -11,14 +11,14 @@ function formatGP(n) {
 }
 
 function formatVol(v) {
-  if (!v) return "—";
+  if (!v) return "â€”";
   if (v >= 1_000_000) return (v / 1_000_000).toFixed(1) + "M";
   if (v >= 1_000)     return (v / 1_000).toFixed(1) + "k";
   return v.toLocaleString();
 }
 
 function timeAgo(ts) {
-  if (!ts) return "—";
+  if (!ts) return "â€”";
   const sec = Math.floor(Date.now() / 1000 - ts);
   if (sec < 60)    return `${sec}s ago`;
   if (sec < 3600)  return `${Math.floor(sec / 60)}m ago`;
@@ -59,8 +59,8 @@ function calcGpPerFill(item) {
   return Math.round((item.margin || 0) * Math.max(expFill, 1));
 }
 
-// ── Item Personality Tags ─────────────────────────────────────────────────────
-// Pure vibes — no interaction, just makes the table feel alive.
+// â”€â”€ Item Personality Tags â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Pure vibes â€” no interaction, just makes the table feel alive.
 // Deterministic based on item data so tags don't flicker on re-render.
 function getPersonalityTag(item) {
   const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : 9999;
@@ -68,20 +68,20 @@ function getPersonalityTag(item) {
   const lim    = item.buyLimit || 1;
   const ratio  = vol / lim;
 
-  if (ageSec < 120 && ratio >= 60)                        return { icon: "🔥", label: "Moving fast today" };
-  if (item.margin >= 500_000)                             return { icon: "💎", label: "High margin" };
-  if (ratio >= 100)                                       return { icon: "🌊", label: "Insane liquidity" };
-  if (ageSec < 180)                                       return { icon: "⚡", label: "Just traded" };
-  if (item.roi >= 8 && item.roi <= 20)                    return { icon: "📈", label: "Margin expanding" };
-  if (vol >= 1_000_000)                                   return { icon: "👀", label: "Heavily watched" };
-  if (item.margin >= 100_000 && ratio >= 15)              return { icon: "✨", label: "Solid pick" };
-  if (item.buyLimit >= 5000 && ratio >= 30)               return { icon: "🚀", label: "High capacity" };
+  if (ageSec < 120 && ratio >= 60)                        return { icon: "ðŸ”¥", label: "Moving fast today" };
+  if (item.margin >= 500_000)                             return { icon: "ðŸ’Ž", label: "High margin" };
+  if (ratio >= 100)                                       return { icon: "ðŸŒŠ", label: "Insane liquidity" };
+  if (ageSec < 180)                                       return { icon: "âš¡", label: "Just traded" };
+  if (item.roi >= 8 && item.roi <= 20)                    return { icon: "ðŸ“ˆ", label: "Margin expanding" };
+  if (vol >= 1_000_000)                                   return { icon: "ðŸ‘€", label: "Heavily watched" };
+  if (item.margin >= 100_000 && ratio >= 15)              return { icon: "âœ¨", label: "Solid pick" };
+  if (item.buyLimit >= 5000 && ratio >= 30)               return { icon: "ðŸš€", label: "High capacity" };
   return null;
 }
-// LOW:    vol/limit ≥ 70×  |  margin > 0       |  freshness ≤ 15min
-// MEDIUM: vol/limit ≥ 15×  |  buy 200k–10M     |  margin ≥ 30k   |  freshness ≤ 45min
-// HIGH:   vol/limit ≥ 8×   |  buy ≥ 10M        |  margin ≥ 90k   |  freshness ≤ 1hr
-// ROI is never used — vol/limit ratio + absolute margin is the signal.
+// LOW:    vol/limit â‰¥ 70Ã—  |  margin > 0       |  freshness â‰¤ 15min
+// MEDIUM: vol/limit â‰¥ 15Ã—  |  buy 200kâ€“10M     |  margin â‰¥ 30k   |  freshness â‰¤ 45min
+// HIGH:   vol/limit â‰¥ 8Ã—   |  buy â‰¥ 10M        |  margin â‰¥ 90k   |  freshness â‰¤ 1hr
+// ROI is never used â€” vol/limit ratio + absolute margin is the signal.
 
 function qualifiesLow(item) {
   if (!item.hasPrice || item.margin <= 0) return false;
@@ -117,10 +117,10 @@ function qualifiesHigh(item) {
   return true;
 }
 
-// ── Flip Speed filter — overlaid on top of risk tier ──────────────────────────
-// fast:   vol/limit ≥ 50× (high trade volume and liquidity)
-// medium: vol/limit ≥ 15× (standard fill time)
-// slow:   no extra vol/limit restriction, but margin ≥ 50k (worth the wait)
+// â”€â”€ Flip Speed filter â€” overlaid on top of risk tier â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// fast:   vol/limit â‰¥ 50Ã— (high trade volume and liquidity)
+// medium: vol/limit â‰¥ 15Ã— (standard fill time)
+// slow:   no extra vol/limit restriction, but margin â‰¥ 50k (worth the wait)
 function passesFlipSpeed(item, speed) {
   const vol = item.volume   || 0;
   const lim = item.buyLimit || 1;
@@ -131,7 +131,7 @@ function passesFlipSpeed(item, speed) {
   return true; // "any"
 }
 
-// ── Risk Tag ──────────────────────────────────────────────────────────────────
+// â”€â”€ Risk Tag â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function RiskTag({ item }) {
   if (qualifiesLow(item))
     return <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(46,204,113,0.12)", color: "var(--green)", borderRadius: "4px", padding: "1px 6px", whiteSpace: "nowrap" }}>Low Risk</span>;
@@ -140,7 +140,7 @@ function RiskTag({ item }) {
   return <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(231,76,60,0.12)", color: "var(--red)", borderRadius: "4px", padding: "1px 6px", whiteSpace: "nowrap" }}>High Risk</span>;
 }
 
-// ── Sort Button ───────────────────────────────────────────────────────────────
+// â”€â”€ Sort Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SortBtn({ col, label, sortCol, sortDir, onSort, tip }) {
   const active = sortCol === col;
   return (
@@ -150,7 +150,7 @@ function SortBtn({ col, label, sortCol, sortDir, onSort, tip }) {
       style={{ fontSize: "13px", display: "flex", alignItems: "center", gap: "4px" }}
     >
       {label}
-      {active && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
+      {active && <span className="sort-arrow">{sortDir === "desc" ? "â–¼" : "â–²"}</span>}
       {tip && (
         <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
           <span className="stat-help">?</span>
@@ -161,7 +161,7 @@ function SortBtn({ col, label, sortCol, sortDir, onSort, tip }) {
   );
 }
 
-// ── Defaults ──────────────────────────────────────────────────────────────────
+// â”€â”€ Defaults â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const DEFAULT_PREFS = {
   cashStack:   "",
   risk:        "low",
@@ -173,14 +173,14 @@ const DEFAULT_ADV = { minMargin: "", maxMargin: "", minRoi: "", maxRoi: "", minV
 const STORAGE_KEY = "rt_picks_prefs_v5";
 const ONBOARDED_KEY = "rt_picks_onboarded_v5";
 
-// Sort preference → column key mapping
+// Sort preference â†’ column key mapping
 const SORT_PREF_MAP = {
   margin:    "margin",
   gpPerFill: "gpPerFill",
   volume:    "volume",
 };
 
-// ── Goal-based pref adjustments ───────────────────────────────────────────────
+// â”€â”€ Goal-based pref adjustments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // If the user answered the first-login goal question and hasn't been onboarded
 // yet on Picks, nudge the defaults to match their stated intent.
 function getGoalAdjustedDefaults() {
@@ -192,25 +192,25 @@ function getGoalAdjustedDefaults() {
   return DEFAULT_PREFS;
 }
 
-// ── Login Gate ────────────────────────────────────────────────────────────────
+// â”€â”€ Login Gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function LoginGate({ onSignIn }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px", padding: "80px 24px", textAlign: "center" }}>
-      <div style={{ fontSize: "52px" }}>⭐</div>
+      <div style={{ fontSize: "52px" }}>â­</div>
       <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 700, color: "var(--gold)" }}>Personalised Flip Picks</div>
       <div style={{ fontSize: "14px", color: "var(--text-dim)", lineHeight: 1.7, maxWidth: "400px" }}>
         Sign in to get flip recommendations filtered to your cash stack, risk tolerance, and how you like to trade.
       </div>
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "12px", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "10px", width: "100%", maxWidth: "360px" }}>
         {[
-          "Low / Medium / High risk — real qualification rules",
-          "Cash stack filter — only see what you can afford",
-          "Flip speed — fast scalps to slow high-margin holds",
-          "Sortable columns — margin, ROI, volume and more",
+          "Low / Medium / High risk â€” real qualification rules",
+          "Cash stack filter â€” only see what you can afford",
+          "Flip speed â€” fast scalps to slow high-margin holds",
+          "Sortable columns â€” margin, ROI, volume and more",
           "\"You've flipped this\" badges from your history",
         ].map((f, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "13px", color: "var(--text)" }}>
-            <span style={{ color: "var(--gold)", fontSize: "11px", flexShrink: 0 }}>◆</span>{f}
+            <span style={{ color: "var(--gold)", fontSize: "11px", flexShrink: 0 }}>â—†</span>{f}
           </div>
         ))}
       </div>
@@ -220,17 +220,17 @@ function LoginGate({ onSignIn }) {
         onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(201,168,76,0.4)"; }}
         onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
       >
-        Sign In Free →
+        Sign In Free â†’
       </button>
     </div>
   );
 }
 
-// ── Onboarding Wizard ─────────────────────────────────────────────────────────
+// â”€â”€ Onboarding Wizard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const ONBOARDING_STEPS = [
   {
     key: "cashStack",
-    icon: "💰",
+    icon: "ðŸ’°",
     title: "What's your cash stack?",
     subtitle: "We'll only show items you can actually afford to flip.",
     type: "text",
@@ -240,7 +240,7 @@ const ONBOARDING_STEPS = [
   },
   {
     key: "risk",
-    icon: "⚖️",
+    icon: "âš–ï¸",
     title: "What's your risk tolerance?",
     subtitle: "This controls how liquid and reliable the picks need to be.",
     type: "choice",
@@ -251,8 +251,8 @@ const ONBOARDING_STEPS = [
         color: "var(--green)",
         border: "rgba(46,204,113,0.35)",
         bg: "rgba(46,204,113,0.07)",
-        desc: "Ultra-high volume items. Vol/limit ≥ 70×. Extremely high trade volume.",
-        emoji: "🛡️",
+        desc: "Ultra-high volume items. Vol/limit â‰¥ 70Ã—. Extremely high trade volume.",
+        emoji: "ðŸ›¡ï¸",
       },
       {
         value: "medium",
@@ -260,8 +260,8 @@ const ONBOARDING_STEPS = [
         color: "var(--gold)",
         border: "rgba(201,168,76,0.35)",
         bg: "rgba(201,168,76,0.07)",
-        desc: "200k–10M items. Vol/limit ≥ 15×. Solid margins, reliable fills.",
-        emoji: "⚔️",
+        desc: "200kâ€“10M items. Vol/limit â‰¥ 15Ã—. Solid margins, reliable fills.",
+        emoji: "âš”ï¸",
       },
       {
         value: "high",
@@ -269,14 +269,14 @@ const ONBOARDING_STEPS = [
         color: "var(--red)",
         border: "rgba(231,76,60,0.35)",
         bg: "rgba(231,76,60,0.07)",
-        desc: "≥10M buy-in, ≥90k margin. High reward, fills not guaranteed.",
-        emoji: "🐉",
+        desc: "â‰¥10M buy-in, â‰¥90k margin. High reward, fills not guaranteed.",
+        emoji: "ðŸ‰",
       },
     ],
   },
   {
     key: "flipSpeed",
-    icon: "⚡",
+    icon: "âš¡",
     title: "How often do you check your GE?",
     subtitle: "We'll match picks to how actively you trade.",
     type: "choice",
@@ -288,7 +288,7 @@ const ONBOARDING_STEPS = [
         border: "rgba(46,204,113,0.35)",
         bg: "rgba(46,204,113,0.07)",
         desc: "You check your offers frequently. Prioritises items with very high fill rates.",
-        emoji: "🔥",
+        emoji: "ðŸ”¥",
       },
       {
         value: "medium",
@@ -296,8 +296,8 @@ const ONBOARDING_STEPS = [
         color: "var(--gold)",
         border: "rgba(201,168,76,0.35)",
         bg: "rgba(201,168,76,0.07)",
-        desc: "Standard flipping pace. Vol/limit ≥ 15× for reliable 4hr fills.",
-        emoji: "⏱️",
+        desc: "Standard flipping pace. Vol/limit â‰¥ 15Ã— for reliable 4hr fills.",
+        emoji: "â±ï¸",
       },
       {
         value: "slow",
@@ -305,8 +305,8 @@ const ONBOARDING_STEPS = [
         color: "#a855f7",
         border: "rgba(168,85,247,0.35)",
         bg: "rgba(168,85,247,0.07)",
-        desc: "Set and forget. Higher margins worth the wait — ≥ 50k margin.",
-        emoji: "🌙",
+        desc: "Set and forget. Higher margins worth the wait â€” â‰¥ 50k margin.",
+        emoji: "ðŸŒ™",
       },
       {
         value: "any",
@@ -314,14 +314,14 @@ const ONBOARDING_STEPS = [
         color: "var(--text-dim)",
         border: "rgba(255,255,255,0.12)",
         bg: "rgba(255,255,255,0.03)",
-        desc: "No speed filter — show all qualifying picks.",
-        emoji: "🌐",
+        desc: "No speed filter â€” show all qualifying picks.",
+        emoji: "ðŸŒ",
       },
     ],
   },
   {
     key: "membership",
-    icon: "🗺️",
+    icon: "ðŸ—ºï¸",
     title: "F2P or Members?",
     subtitle: "Filter items based on your account type.",
     type: "choice",
@@ -332,8 +332,8 @@ const ONBOARDING_STEPS = [
         color: "var(--gold)",
         border: "rgba(201,168,76,0.35)",
         bg: "rgba(201,168,76,0.07)",
-        desc: "Full access — all 4,000+ items available to flip.",
-        emoji: "⭐",
+        desc: "Full access â€” all 4,000+ items available to flip.",
+        emoji: "â­",
       },
       {
         value: "f2p",
@@ -342,13 +342,13 @@ const ONBOARDING_STEPS = [
         border: "rgba(46,204,113,0.35)",
         bg: "rgba(46,204,113,0.07)",
         desc: "Free-to-play only. Smaller pool but still profitable.",
-        emoji: "🆓",
+        emoji: "ðŸ†“",
       },
     ],
   },
   {
     key: "defaultSort",
-    icon: "📊",
+    icon: "ðŸ“Š",
     title: "How do you prefer to sort picks?",
     subtitle: "We'll default to this every time you open the tab.",
     type: "choice",
@@ -360,7 +360,7 @@ const ONBOARDING_STEPS = [
         border: "rgba(46,204,113,0.35)",
         bg: "rgba(46,204,113,0.07)",
         desc: "Sort by raw GP profit per flip. Best for maximising per-trade earnings.",
-        emoji: "💰",
+        emoji: "ðŸ’°",
       },
       {
         value: "gpPerFill",
@@ -369,7 +369,7 @@ const ONBOARDING_STEPS = [
         border: "rgba(201,168,76,0.35)",
         bg: "rgba(201,168,76,0.07)",
         desc: "Sort by realistic GP per 4hr window. Accounts for buy limit and market volume.",
-        emoji: "⚡",
+        emoji: "âš¡",
       },
       {
         value: "volume",
@@ -377,8 +377,8 @@ const ONBOARDING_STEPS = [
         color: "#3498db",
         border: "rgba(52,152,219,0.35)",
         bg: "rgba(52,152,219,0.07)",
-        desc: "Sort by daily trade volume. Fastest fills — in and out quickly.",
-        emoji: "🌊",
+        desc: "Sort by daily trade volume. Fastest fills â€” in and out quickly.",
+        emoji: "ðŸŒŠ",
       },
     ],
   },
@@ -614,7 +614,7 @@ function OnboardingWizard({ onComplete }) {
                       <div style={{ fontSize: "12px", color: "var(--text-dim)", lineHeight: 1.5 }}>{opt.desc}</div>
                     </div>
                     {draft[current.key] === opt.value && (
-                      <span style={{ fontSize: "16px", color: opt.color, flexShrink: 0 }}>✓</span>
+                      <span style={{ fontSize: "16px", color: opt.color, flexShrink: 0 }}>âœ“</span>
                     )}
                   </button>
                 ))}
@@ -624,7 +624,7 @@ function OnboardingWizard({ onComplete }) {
             {/* Text step confirm button */}
             {current.type === "text" && (
               <button className="onboard-next-btn" onClick={() => advance()}>
-                {isLast ? "See My Picks →" : "Next →"}
+                {isLast ? "See My Picks â†’" : "Next â†’"}
               </button>
             )}
 
@@ -633,7 +633,7 @@ function OnboardingWizard({ onComplete }) {
           {/* Back / Skip */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             {step > 0 ? (
-              <button className="onboard-skip" onClick={goBack}>← Back</button>
+              <button className="onboard-skip" onClick={goBack}>â† Back</button>
             ) : (
               <span />
             )}
@@ -644,7 +644,7 @@ function OnboardingWizard({ onComplete }) {
                 setTimeout(() => onComplete(draft), 300);
               }}
             >
-              {isLast ? "" : "Skip setup →"}
+              {isLast ? "" : "Skip setup â†’"}
             </button>
           </div>
 
@@ -654,17 +654,17 @@ function OnboardingWizard({ onComplete }) {
   );
 }
 
-// ── Preferences Bar (compact, always visible after onboarding) ────────────────
+// â”€â”€ Preferences Bar (compact, always visible after onboarding) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function PrefsBar({ prefs, setPref, onResetOnboarding }) {
   const riskMeta = {
-    low:    "Vol/day ≥ 70× buy limit · fills in seconds.",
-    medium: "Buy 200k–10M · Margin ≥ 30k · Vol/limit ≥ 15×.",
-    high:   "Buy ≥ 10M · Margin ≥ 90k · Vol/limit ≥ 8×. High capital.",
+    low:    "Vol/day â‰¥ 70Ã— buy limit Â· fills in seconds.",
+    medium: "Buy 200kâ€“10M Â· Margin â‰¥ 30k Â· Vol/limit â‰¥ 15Ã—.",
+    high:   "Buy â‰¥ 10M Â· Margin â‰¥ 90k Â· Vol/limit â‰¥ 8Ã—. High capital.",
   };
   const speedMeta = {
-    fast:   "Vol/limit ≥ 50×.",
-    medium: "Vol/limit ≥ 15× — standard 4hr fills.",
-    slow:   "Margin ≥ 50k — patient, high-margin holds.",
+    fast:   "Vol/limit â‰¥ 50Ã—.",
+    medium: "Vol/limit â‰¥ 15Ã— â€” standard 4hr fills.",
+    slow:   "Margin â‰¥ 50k â€” patient, high-margin holds.",
     any:    "No speed filter applied.",
   };
   const sortMeta = {
@@ -745,7 +745,7 @@ function PrefsBar({ prefs, setPref, onResetOnboarding }) {
         <span style={{ fontSize: "10px", color: "var(--text-dim)", maxWidth: "240px", lineHeight: 1.5 }}>{sortMeta[prefs.defaultSort] || ""}</span>
       </div>
 
-      {/* Re-run wizard button — pushed right */}
+      {/* Re-run wizard button â€” pushed right */}
       <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", justifyContent: "flex-start", paddingTop: "18px" }}>
         <button
           onClick={onResetOnboarding}
@@ -754,7 +754,7 @@ function PrefsBar({ prefs, setPref, onResetOnboarding }) {
           onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
           title="Re-run the setup wizard"
         >
-          ✦ Redo Setup
+          âœ¦ Redo Setup
         </button>
       </div>
 
@@ -762,7 +762,7 @@ function PrefsBar({ prefs, setPref, onResetOnboarding }) {
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOpenChart }) {
 
   // Load prefs from localStorage
@@ -883,7 +883,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
     return result.slice(0, 50);
   }, [items, qualifies, prefs.membership, prefs.flipSpeed, budget, search, adv, sortCol, sortDir]);
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  // â”€â”€ Render â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (!user) return <LoginGate onSignIn={onSignIn} />;
 
   const COLS = "minmax(160px,2fr) 1fr 1fr 1fr 1fr 1fr 1fr 1fr 80px 70px";
@@ -891,7 +891,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-      {/* Onboarding Wizard — renders as fullscreen overlay */}
+      {/* Onboarding Wizard â€” renders as fullscreen overlay */}
       {showWizard && (
         <OnboardingWizard onComplete={handleOnboardComplete} />
       )}
@@ -899,7 +899,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
       {/* Preferences Bar */}
       <PrefsBar prefs={prefs} setPref={setPref} onResetOnboarding={resetOnboarding} />
 
-      {/* ── Search + Advanced Filters Row ── */}
+      {/* â”€â”€ Search + Advanced Filters Row â”€â”€ */}
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1 }}>
@@ -914,7 +914,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
               className={`adv-filters-btn${showAdv || advCount > 0 ? " active" : ""}`}
               onClick={() => setShowAdv(v => !v)}
             >
-              ⚙ Filters {advCount > 0 && <span className="adv-filter-badge">{advCount}</span>}
+              âš™ Filters {advCount > 0 && <span className="adv-filter-badge">{advCount}</span>}
             </button>
             <span style={{ fontSize: "12px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>
               {picks.length} pick{picks.length !== 1 ? "s" : ""}
@@ -924,14 +924,14 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
         </div>
       </div>
 
-      {/* ── Advanced Filters Panel ── */}
+      {/* â”€â”€ Advanced Filters Panel â”€â”€ */}
       {showAdv && (
         <div className="adv-filter-panel">
           <div className="adv-filter-group">
             <div className="adv-filter-label">Margin (gp)</div>
             <div className="adv-filter-row">
               <input className="adv-filter-input" placeholder="Min" type="number" value={adv.minMargin} onChange={e => setAdv(a => ({ ...a, minMargin: e.target.value }))} />
-              <span className="adv-filter-sep">–</span>
+              <span className="adv-filter-sep">â€“</span>
               <input className="adv-filter-input" placeholder="Max" type="number" value={adv.maxMargin} onChange={e => setAdv(a => ({ ...a, maxMargin: e.target.value }))} />
             </div>
           </div>
@@ -939,7 +939,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
             <div className="adv-filter-label">ROI %</div>
             <div className="adv-filter-row">
               <input className="adv-filter-input" placeholder="Min" type="number" value={adv.minRoi} onChange={e => setAdv(a => ({ ...a, minRoi: e.target.value }))} />
-              <span className="adv-filter-sep">–</span>
+              <span className="adv-filter-sep">â€“</span>
               <input className="adv-filter-input" placeholder="Max" type="number" value={adv.maxRoi} onChange={e => setAdv(a => ({ ...a, maxRoi: e.target.value }))} />
             </div>
           </div>
@@ -947,28 +947,28 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
             <div className="adv-filter-label">Vol / Day</div>
             <div className="adv-filter-row">
               <input className="adv-filter-input" placeholder="Min" type="number" value={adv.minVolume} onChange={e => setAdv(a => ({ ...a, minVolume: e.target.value }))} />
-              <span className="adv-filter-sep">–</span>
+              <span className="adv-filter-sep">â€“</span>
               <input className="adv-filter-input" placeholder="Max" type="number" value={adv.maxVolume} onChange={e => setAdv(a => ({ ...a, maxVolume: e.target.value }))} />
             </div>
           </div>
           <div className="adv-filter-group" style={{ justifyContent: "flex-end", flexDirection: "row", alignItems: "flex-end" }}>
             {advCount > 0 && (
-              <button className="adv-filters-btn" onClick={resetAdv}>✕ Clear filters</button>
+              <button className="adv-filters-btn" onClick={resetAdv}>âœ• Clear filters</button>
             )}
           </div>
         </div>
       )}
 
-      {/* ── Table ── */}
+      {/* â”€â”€ Table â”€â”€ */}
       <div className="flips-table">
 
-        {/* Header — all sortable */}
+        {/* Header â€” all sortable */}
         <div className="table-header" style={{ gridTemplateColumns: COLS }}>
           <SortBtn col="name"      label="Item"       sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip={null} />
           <SortBtn col="low"       label="Buy"        sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip="Lowest current buy offer on the GE" />
           <SortBtn col="high"      label="Sell"       sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip="Highest current sell offer on the GE" />
           <SortBtn col="margin"    label="Margin"     sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip="Sell price minus buy price minus GE tax" />
-          <SortBtn col="roi"       label="ROI"        sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip="Margin ÷ buy price" />
+          <SortBtn col="roi"       label="ROI"        sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip="Margin Ã· buy price" />
           <SortBtn col="volume"    label="Vol / Day"  sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip="Total items traded per day" />
           <SortBtn col="buyLimit"  label="Limit"      sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip="Max you can buy every 4 hours" />
           <SortBtn col="gpPerFill" label="GP / Fill"  sortCol={sortCol} sortDir={sortDir} onSort={handleSort} tip="Realistic GP profit per 4hr window, scaled by market volume" />
@@ -977,7 +977,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
             24hr Trend
             <span className="stat-tooltip-wrap">
               <span className="stat-help">?</span>
-              <span className="stat-tooltip">24-hour margin trend sparkline — green rising, red falling</span>
+              <span className="stat-tooltip">24-hour margin trend sparkline â€” green rising, red falling</span>
             </span>
           </div>
         </div>
@@ -985,14 +985,14 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
         {/* Rows */}
         {picks.length === 0 ? (
           <div className="empty-state">
-            <div className="icon">📭</div>
+            <div className="icon">ðŸ“­</div>
             <p>No picks match your current settings</p>
             <small>
               {prefs.cashStack && parseCash(prefs.cashStack) < 200_000
-                ? "Cash stack below 200k — most items won't qualify"
+                ? "Cash stack below 200k â€” most items won't qualify"
                 : prefs.flipSpeed === "fast"
-                ? "Fast + High risk is a tough combo — try Medium risk or a looser speed filter"
-                : "Prices update constantly — check back shortly or adjust your preferences above"}
+                ? "Fast + High risk is a tough combo â€” try Medium risk or a looser speed filter"
+                : "Prices update constantly â€” check back shortly or adjust your preferences above"}
             </small>
           </div>
         ) : (
@@ -1015,7 +1015,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
                     <div style={{ display: "flex", gap: "4px", flexWrap: "wrap", alignItems: "center" }}>
                       <RiskTag item={item} />
                       {hasFlipped && (
-                        <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(201,168,76,0.12)", color: "var(--gold)", borderRadius: "4px", padding: "1px 5px" }}>✓ Flipped</span>
+                        <span style={{ fontSize: "10px", fontWeight: 700, background: "rgba(201,168,76,0.12)", color: "var(--gold)", borderRadius: "4px", padding: "1px 5px" }}>âœ“ Flipped</span>
                       )}
                       {(() => { const tag = getPersonalityTag(item); return tag ? (
                         <span style={{ fontSize: "10px", color: "var(--text-dim)", opacity: 0.8 }}>{tag.icon} {tag.label}</span>
@@ -1024,8 +1024,8 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
                   </div>
                 </div>
 
-                <span className="price">{item.low != null ? item.low.toLocaleString() : "—"}</span>
-                <span className="price">{item.high != null ? item.high.toLocaleString() : "—"}</span>
+                <span className="price">{item.low != null ? item.low.toLocaleString() : "â€”"}</span>
+                <span className="price">{item.high != null ? item.high.toLocaleString() : "â€”"}</span>
                 <span className={`margin${item.margin < 0 ? " neg" : ""}`}>{formatGP(item.margin)}</span>
                 <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>
                   {item.roi}%
@@ -1033,7 +1033,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
                 <span style={{ fontSize: "13px", color: volColor }}>{formatVol(item.volume)}</span>
                 <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
                 <span style={{ fontSize: "12px", fontWeight: 600, color: gpfColor }}>{formatGP(gpf)}</span>
-                <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
+                <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "â€”"}</span>
                 <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center" }}>
                   <Sparkline itemId={item.id} width={68} height={28} />
                 </div>
@@ -1046,7 +1046,7 @@ export default function RecommendedFlips({ user, items, flipsLog, onSignIn, onOp
 
       {picks.length > 0 && (
         <div style={{ fontSize: "11px", color: "var(--text-dim)", padding: "0 4px", opacity: 0.6 }}>
-          Up to 50 picks · Click column headers to sort · Click any row to open the item chart
+          Up to 50 picks Â· Click column headers to sort Â· Click any row to open the item chart
         </div>
       )}
 

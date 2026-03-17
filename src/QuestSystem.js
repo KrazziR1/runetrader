@@ -1,21 +1,21 @@
-// ── QuestSystem.js ────────────────────────────────────────────────────────────
+﻿// â”€â”€ QuestSystem.js â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Daily quest generation, progress tracking, and reward calculation.
-// Pure logic — no React, no side effects.
+// Pure logic â€” no React, no side effects.
 
-// ── Quest reward tables ───────────────────────────────────────────────────────
+// â”€â”€ Quest reward tables â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const QUEST_REWARDS = {
   easy:   { xp: 500,   coins: 10 },
   medium: { xp: 1500,  coins: 25 },
   hard:   { xp: 3500,  coins: 60 },
 };
 
-// ── Quest templates ───────────────────────────────────────────────────────────
+// â”€â”€ Quest templates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Each template has a generator that takes a seed + user context and
 // produces a concrete quest with a target and completion check.
 
 const QUEST_TEMPLATES = [
 
-  // ── PROFIT QUEST ─────────────────────────────────────────────────────────
+  // â”€â”€ PROFIT QUEST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     type: "profit_single",
     difficulty: "easy",
@@ -31,7 +31,7 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "💰",
+        emoji: "ðŸ’°",
       };
     },
     check: (quest, { lastFlipProfit }) =>
@@ -53,7 +53,7 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "📈",
+        emoji: "ðŸ“ˆ",
       };
     },
     check: (quest, { lastFlipProfit }) =>
@@ -75,14 +75,14 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "💎",
+        emoji: "ðŸ’Ž",
       };
     },
     check: (quest, { lastFlipProfit }) =>
       (lastFlipProfit || 0) >= quest.target,
   },
 
-  // ── FLIP COUNT QUEST ──────────────────────────────────────────────────────
+  // â”€â”€ FLIP COUNT QUEST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     type: "flip_count",
     difficulty: "easy",
@@ -98,7 +98,7 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "⚡",
+        emoji: "âš¡",
       };
     },
     check: (quest, { todayFlipCount }) =>
@@ -122,7 +122,7 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "🔄",
+        emoji: "ðŸ”„",
       };
     },
     check: (quest, { todayFlipCount }) =>
@@ -131,7 +131,7 @@ const QUEST_TEMPLATES = [
       Math.min(todayFlipCount || 0, quest.target),
   },
 
-  // ── SPEED QUEST ───────────────────────────────────────────────────────────
+  // â”€â”€ SPEED QUEST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     type: "speed_flip",
     difficulty: "medium",
@@ -144,7 +144,7 @@ const QUEST_TEMPLATES = [
       target: 30,       // minutes
       progress: 0,
       completed: false,
-      emoji: "⏱️",
+      emoji: "â±ï¸",
       startedAt: Date.now(),
     }),
     check: (quest, { lastFlipProfit }) => {
@@ -154,7 +154,7 @@ const QUEST_TEMPLATES = [
     },
   },
 
-  // ── NEW ITEM QUEST ────────────────────────────────────────────────────────
+  // â”€â”€ NEW ITEM QUEST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     type: "new_item",
     difficulty: "medium",
@@ -167,7 +167,7 @@ const QUEST_TEMPLATES = [
       target: 1,
       progress: 0,
       completed: false,
-      emoji: "🗺️",
+      emoji: "ðŸ—ºï¸",
     }),
     check: (quest, { lastFlipItem, flipsLog }) => {
       if (!lastFlipItem) return false;
@@ -182,7 +182,7 @@ const QUEST_TEMPLATES = [
     },
   },
 
-  // ── TOTAL GP QUEST ────────────────────────────────────────────────────────
+  // â”€â”€ TOTAL GP QUEST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   {
     type: "total_gp",
     difficulty: "hard",
@@ -198,7 +198,7 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "🏆",
+        emoji: "ðŸ†",
       };
     },
     check: (quest, { todayTotalProfit }) =>
@@ -208,7 +208,7 @@ const QUEST_TEMPLATES = [
   },
 ];
 
-// ── Format GP helper (no React dependency) ───────────────────────────────────
+// â”€â”€ Format GP helper (no React dependency) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function fmtGP(n) {
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + "B";
   if (n >= 1_000_000)     return (n / 1_000_000).toFixed(1) + "M";
@@ -216,7 +216,7 @@ function fmtGP(n) {
   return n.toLocaleString();
 }
 
-// ── Seeded random (deterministic per user+date) ───────────────────────────────
+// â”€â”€ Seeded random (deterministic per user+date) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function seededRand(seed) {
   let s = seed;
   return function() {
@@ -225,9 +225,9 @@ function seededRand(seed) {
   };
 }
 
-// ── Generate today's 3 quests for a user ─────────────────────────────────────
-// Deterministic — same user gets same quests all day.
-// One easy, one medium, one hard — guaranteed variety.
+// â”€â”€ Generate today's 3 quests for a user â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Deterministic â€” same user gets same quests all day.
+// One easy, one medium, one hard â€” guaranteed variety.
 export function generateDailyQuests(userId, date = new Date().toISOString().slice(0, 10)) {
   // Build seed from userId + date
   const seedStr = userId + date;
@@ -256,7 +256,7 @@ export function generateDailyQuests(userId, date = new Date().toISOString().slic
   ];
 }
 
-// ── Update quest progress after a flip ───────────────────────────────────────
+// â”€â”€ Update quest progress after a flip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Returns updated quests array and list of newly completed quest ids.
 export function updateQuestProgress(quests, context) {
   if (!quests || quests.length === 0) return { quests, newlyCompleted: [] };
@@ -283,12 +283,12 @@ export function updateQuestProgress(quests, context) {
   return { quests: updated, newlyCompleted };
 }
 
-// ── Calculate total rewards for completed quests ──────────────────────────────
+// â”€â”€ Calculate total rewards for completed quests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function calcQuestRewards(quest) {
   return QUEST_REWARDS[quest.difficulty] || QUEST_REWARDS.easy;
 }
 
-// ── Get today's date string ───────────────────────────────────────────────────
+// â”€â”€ Get today's date string â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
