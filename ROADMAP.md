@@ -17,6 +17,7 @@
 - **Trade Board is live** — player-to-player listings for rare/above-max-cash items. Wiki item validation, 7-day auto-expiry, Discord/RSN contact.
 - **3-day Pro trial** — new signups automatically get full Pro access for 3 days via `trial_ends_at` in `user_profiles`.
 - **Rune Trader Discord Bot is live** — Python/discord.py bot hosted on Railway, connected to Supabase. GitHub: https://github.com/KrazziR1/rune-trader-bot
+- **Discord server is live** — full server structure set up with welcome, rules, FAQ, roadmap, connect, announcements, general, flipping, bot, pro, support, and staff sections.
 
 ---
 
@@ -67,12 +68,6 @@
 - `GET /api/check-alerts` — alert checking cron
 - `POST /api/discord-verify` — links Discord account to Rune Trader profile via one-time code
 
-### Website — Sync Pause UI
-- Amber "Sync paused" pill replaces "Live" badge in header when paused
-- Amber banner below header showing time since paused + "Resume tracking" button
-- Resume button clears `sync_paused` and `sync_paused_at` in Supabase
-- `sync_paused_at` read from DB on login so "paused X ago" shows correct elapsed time
-
 ### Website — Discord Integration (shipped March 30, 2026)
 - Discord section added to Settings page
 - User runs `!verify` in Discord → bot DMs a one-time code (format `RT-XXXXXX`)
@@ -81,56 +76,9 @@
 - Code stored in `discord_verify_codes` table, expires after 10 minutes, deleted on use
 - Settings page shows "✅ Discord account linked" state after successful link
 
-### Picks Preferences Sync
-- Picks prefs saved to `user_profiles.picks_prefs` when user saves on website
-- `/api/plugin/picks` reads saved prefs — plugin recommendations automatically match website settings
-- Fallback to defaults (low risk, members, any speed) if prefs not yet set
-
-### Engagement & Gamification
-- XP / Levelling system — OSRS exact XP curve, levels 1–99, titles, level-up modal
-- Daily quest system — 3 quests/day, deterministic per user+date, gold coins currency
-- Quest reroll — spend 15 gold coins, same difficulty guaranteed
-- Player Card panel — avatar, username, title, streak, XP bar, stats, quests, achievements
-- Achievements — 10 types unlocked via flipping activity
-- Profit celebrations — 📈 100k+ · 🔥 1M+ · 💎 10M+ · 🐉 100M+
-- Login cinematic — daily full-screen entry sequence
-- Sound engine — Web Audio API, zero external files. Mute toggle persists.
-- Quest nudge banner — fires at 50% progress
-
-### Navigation & UI
-- Two-tier header, demo mode with 9-step tour
-- "✨ Help me decide" button — 4-step Customize modal, activates Picks mode
-- Landing page redesign
-- Sparklines — 24hr margin trend canvas charts
-- Watchlist with per-item price alerts
-- Error Boundary — branded recovery screen instead of white screen on crashes
-- Pro gate on Trading Terminal — free users see upgrade modal + 🔒 lock icon
-- Demo Supabase stub — complete fluent chain supporting all query methods including `.filter()`, `.gte()`, `.lte()`
-- Mobile-responsive demo tooltip (was hardcoded 480px, now `min(480px, calc(100vw - 32px))`)
-
-### Security & Stability (audited March 2026)
-- Cross-user data leak fixed — positions + flips filtered by user_id
-- `/?upgrade=success` Pro bypass fixed
-- Sign-out clears all 30+ user-specific state values including refs and achievements
-- Login streak uses local timezone
-- Sell/buy price validation rejects zero and negative values
-- ROI division-by-zero guard
-- picksPrefsForFilter uses React state not stale localStorage reads
-- All canvas renders have zero-dimension guard
-- marginHistoryRef capped at 120 snapshots (~576MB memory leak prevented)
-- AI chat, smart events, toasts all capped
-- 43 async functions wrapped in try/catch
-
-### Monetisation
-- Stripe — $9.99/mo Pro tier, checkout, webhook, 3-day trial
-- Referral system — 50% off first month, Pro for life at 3 referrals
-
-### SEO
-- `api/og.js` — dynamic OG meta tags for `/item/:slug`
-
 ### Discord Bot (shipped March 30, 2026)
 - Built from scratch in Python/discord.py, hosted on Railway, auto-deploys from GitHub
-- Cog-based architecture: `price.py`, `flips.py`, `stats.py`, `admin.py`, `verify.py`
+- Cog-based architecture: `price.py`, `flips.py`, `stats.py`, `admin.py`, `verify.py`, `panels.py`
 - Connected to Supabase (`rune_trader` database) — shares data with the website
 - Commands live:
   - `!price <item>` — live GE buy/sell price, margin, tax, ROI, buy limit from OSRS Wiki API
@@ -143,6 +91,17 @@
   - `!ping` — bot latency check
   - `!verify` — generates one-time code, DMs it to user for website account linking
   - `!linked` — checks if Discord account is linked to Rune Trader
+  - `!welcomepanel` — posts the full welcome panel to #welcome
+  - `!verifypanel` — posts the connect Discord panel
+  - `!rulespanel` — posts the server rules panel
+  - `!faqpanel` — posts the FAQ panel
+  - `!roadmappanel` — posts the roadmap panel
+
+### Discord Server (set up March 30, 2026)
+- Full server structure with categories and channels
+- Welcome panel, rules panel, FAQ panel, roadmap panel all live
+- Custom Rune Trader welcome banner image
+- Channel structure: Information · Get Started · Community · Flipping · Bot · Pro · Support · Staff
 
 ### Supabase Schema
 - `user_profiles`: `is_pro`, `stripe_customer_id`, `stripe_subscription_id`, `pro_expires_at`, `referral_count`, `lifetime_pro`, `trial_ends_at`, `ref_code`, `api_key`, `sync_paused`, `sync_paused_at`, `picks_prefs`, `discord_id`
@@ -162,7 +121,8 @@
 - [ ] `!fliplb` — rewrite to aggregate from `ge_flips_live` in Supabase
 - [ ] Price alert system — `!alert <item> <price>` notifies user in Discord when price is hit
 - [ ] Flip of the Day — bot auto-posts best flip opportunity daily to a designated channel
-- [ ] Update embed styling to match dark gold Rune Trader theme across all commands
+- [ ] Update all embed styling to match dark gold Rune Trader theme across all commands
+- [ ] Roadmap panel visual redesign — header images for each section (SVGs ready, need imgur hosting)
 
 ### New Website Tabs
 - [ ] **Leaderboard tab** — anonymous nicknames only, real usernames never shown. Podium top 3, ranked table, "you" row highlighted. Categories: Total GP, Flips closed, Win rate, GP/hr, Best single flip. Time periods: This week / This month / All time. Nickname setup modal with "Clear & hide me" opt-out. Mockup already designed.
@@ -226,13 +186,14 @@
 
 ### Community Features
 - [ ] "Most watched items" — crowdsourced from Watchlist
-- [ ] Clan system — group leaderboards, shared watchlists
+- [ ] Group leaderboards — shared watchlists, flip competitions
 
 ---
 
 ## 🤝 Community & Growth
 
 ### Discord
+- [x] Rune Trader Discord server live — full structure, panels, and bot connected
 - [x] Rune Trader Discord Bot live — Railway hosted, GitHub: https://github.com/KrazziR1/rune-trader-bot
 - [ ] Bot posts "Flip of the Day" automatically
 - [ ] Price alert notifications via Discord DM
@@ -252,7 +213,6 @@
 - Mobile app — React Native, push notifications for alerts
 - Portfolio Snapshot — shareable read-only page
 - Best Time to Flip — needs 50+ users with trade history
-- Skill trees — unlock passive bonuses at XP milestones
 
 ---
 
@@ -273,4 +233,6 @@ Paste this file at the start of any new Claude conversation to restore full cont
 > Stripe Referral Coupon: `sAvO4kCM`  
 > Plugin Hub PR: https://github.com/runelite/plugin-hub/pull/11114  
 > Vercel env vars: `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `REACT_APP_ANTHROPIC_KEY`, `REACT_APP_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`, `CRON_SECRET`  
-> Railway env vars: `DISCORD_TOKEN`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `PREFIX`
+> Railway env vars: `DISCORD_TOKEN`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `PREFIX`  
+> Welcome banner imgur: https://i.imgur.com/ksDy6lV.png  
+> Section header SVGs: saved locally as header-shipped.svg, header-coming-soon.svg, header-vision.svg
