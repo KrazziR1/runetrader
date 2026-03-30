@@ -1,6 +1,6 @@
 # RuneTrader.gg — Product Roadmap
 
-> Last updated: March 17, 2026  
+> Last updated: March 30, 2026  
 > Stack: React CRA · Vercel · Supabase  
 > Plugin Hub PR: https://github.com/runelite/plugin-hub/pull/11114
 
@@ -16,6 +16,7 @@
 - **Referral system is live** — 50% off first month for both sides, Pro for life at 3 converted referrals.
 - **Trade Board is live** — player-to-player listings for rare/above-max-cash items. Wiki item validation, 7-day auto-expiry, Discord/RSN contact.
 - **3-day Pro trial** — new signups automatically get full Pro access for 3 days via `trial_ends_at` in `user_profiles`.
+- **Rune Trader Discord Bot is live** — Python/discord.py bot hosted on Railway, connected to Supabase. GitHub: https://github.com/KrazziR1/rune-trader-bot
 
 ---
 
@@ -64,12 +65,21 @@
 - `GET /api/og` — dynamic OG meta tags
 - `GET /api/api-keys` + `POST /api/generate-api-key` — API key management
 - `GET /api/check-alerts` — alert checking cron
+- `POST /api/discord-verify` — links Discord account to Rune Trader profile via one-time code
 
 ### Website — Sync Pause UI
 - Amber "Sync paused" pill replaces "Live" badge in header when paused
 - Amber banner below header showing time since paused + "Resume tracking" button
 - Resume button clears `sync_paused` and `sync_paused_at` in Supabase
 - `sync_paused_at` read from DB on login so "paused X ago" shows correct elapsed time
+
+### Website — Discord Integration (shipped March 30, 2026)
+- Discord section added to Settings page
+- User runs `!verify` in Discord → bot DMs a one-time code (format `RT-XXXXXX`)
+- User enters code on runetrader.gg → Settings → Discord → Link Account
+- Website calls `/api/discord-verify` → validates code, links `discord_id` to `user_profiles`
+- Code stored in `discord_verify_codes` table, expires after 10 minutes, deleted on use
+- Settings page shows "✅ Discord account linked" state after successful link
 
 ### Picks Preferences Sync
 - Picks prefs saved to `user_profiles.picks_prefs` when user saves on website
@@ -118,19 +128,43 @@
 ### SEO
 - `api/og.js` — dynamic OG meta tags for `/item/:slug`
 
+### Discord Bot (shipped March 30, 2026)
+- Built from scratch in Python/discord.py, hosted on Railway, auto-deploys from GitHub
+- Cog-based architecture: `price.py`, `flips.py`, `stats.py`, `admin.py`, `verify.py`
+- Connected to Supabase (`rune_trader` database) — shares data with the website
+- Commands live:
+  - `!price <item>` — live GE buy/sell price, margin, tax, ROI, buy limit from OSRS Wiki API
+  - `!tax <price> [qty]` — GE tax calculator
+  - `!stats <username>` — OSRS hiscores lookup
+  - `!kc <username>` — boss kill count lookup
+  - `!myflips [@member]` — flip history from `ge_flips_live`
+  - `!fliplb` — flip profit leaderboard
+  - `!announce <message>` — admin announcement embed
+  - `!ping` — bot latency check
+  - `!verify` — generates one-time code, DMs it to user for website account linking
+  - `!linked` — checks if Discord account is linked to Rune Trader
+
 ### Supabase Schema
-- `user_profiles`: `is_pro`, `stripe_customer_id`, `stripe_subscription_id`, `pro_expires_at`, `referral_count`, `lifetime_pro`, `trial_ends_at`, `ref_code`, `api_key`, `sync_paused`, `sync_paused_at`, `picks_prefs`
+- `user_profiles`: `is_pro`, `stripe_customer_id`, `stripe_subscription_id`, `pro_expires_at`, `referral_count`, `lifetime_pro`, `trial_ends_at`, `ref_code`, `api_key`, `sync_paused`, `sync_paused_at`, `picks_prefs`, `discord_id`
 - `trade_listings`: `id`, `user_id`, `item_name`, `item_image`, `type`, `price`, `quantity`, `notes`, `discord`, `rsn`, `category`, `created_at`, `expires_at`, `active`
 - `trader_xp`: `user_id`, `total_xp`, `level`, `achievements`, `updated_at`
 - `daily_quests`: `user_id`, `quest_date`, `quests`, `gold_coins`, `updated_at`
 - `ge_offers`: live GE slot state per user
 - `ge_flips_live`: completed flip history from plugin
+- `discord_verify_codes`: `discord_id`, `code`, `created_at` — temporary one-time verify codes, deleted on use
 
 ---
 
 ## 🟢 Build Now (No Dependencies)
 
-### New Tabs
+### Discord Bot — Next Features
+- [ ] `!myflips` — rewrite to read from `ge_flips_live` in Supabase (requires Discord account linked)
+- [ ] `!fliplb` — rewrite to aggregate from `ge_flips_live` in Supabase
+- [ ] Price alert system — `!alert <item> <price>` notifies user in Discord when price is hit
+- [ ] Flip of the Day — bot auto-posts best flip opportunity daily to a designated channel
+- [ ] Update embed styling to match dark gold Rune Trader theme across all commands
+
+### New Website Tabs
 - [ ] **Leaderboard tab** — anonymous nicknames only, real usernames never shown. Podium top 3, ranked table, "you" row highlighted. Categories: Total GP, Flips closed, Win rate, GP/hr, Best single flip. Time periods: This week / This month / All time. Nickname setup modal with "Clear & hide me" opt-out. Mockup already designed.
 - [ ] **GE Limit Tracker tab** — log when you started buying an item, countdown to 4-hour reset per item. Replaces phone alarms and pen/paper. Persists across sessions.
 - [ ] **Tax Calculator tab** — buy/sell price, quantity, buy limit inputs. Shows profit after tax, ROI, GP/hr estimate, flips needed to hit a GP goal.
@@ -199,9 +233,9 @@
 ## 🤝 Community & Growth
 
 ### Discord
-- [ ] Create RuneTrader Discord server ⏳ waiting
-- [ ] Custom bot with real-time market alerts
+- [x] Rune Trader Discord Bot live — Railway hosted, GitHub: https://github.com/KrazziR1/rune-trader-bot
 - [ ] Bot posts "Flip of the Day" automatically
+- [ ] Price alert notifications via Discord DM
 
 ### Plugin Hub (Critical Path)
 - [x] PR #11028 — closed, superseded by #11114
@@ -231,10 +265,12 @@ Paste this file at the start of any new Claude conversation to restore full cont
 - The architecture decisions already made
 
 > Repo: https://github.com/KrazziR1/runetrader  
+> Bot Repo: https://github.com/KrazziR1/rune-trader-bot  
 > Plugin: https://github.com/KrazziR1/runetrader-plugin  
 > Live: https://www.runetrader.gg  
 > User ID: `338ff3a1-1ffa-4b39-9d5a-58d4475536fa`  
 > Stripe Price ID: `price_1TAk4ECNKvvsYZxGopi1ANmE`  
 > Stripe Referral Coupon: `sAvO4kCM`  
 > Plugin Hub PR: https://github.com/runelite/plugin-hub/pull/11114  
-> Vercel env vars: `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `REACT_APP_ANTHROPIC_KEY`, `REACT_APP_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`, `CRON_SECRET`
+> Vercel env vars: `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `REACT_APP_ANTHROPIC_KEY`, `REACT_APP_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`, `CRON_SECRET`  
+> Railway env vars: `DISCORD_TOKEN`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `PREFIX`
