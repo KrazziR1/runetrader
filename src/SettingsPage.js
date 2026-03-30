@@ -4,12 +4,18 @@ export default function SettingsPage({ user, supabase, showToast }) {
   const [keys, setKeys]           = useState([]);
   const [loading, setLoading]     = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [revoking, setRevoking]   = useState(null); // id being revoked
+  const [revoking, setRevoking]   = useState(null);
   const [newLabel, setNewLabel]   = useState("");
-  const [newKey, setNewKey]       = useState(null); // shown once after generation
+  const [newKey, setNewKey]       = useState(null);
+
+  // Discord link state
+  const [discordCode, setDiscordCode]       = useState("");
+  const [discordLinked, setDiscordLinked]   = useState(false);
+  const [discordLoading, setDiscordLoading] = useState(false);
+  const [discordChecking, setDiscordChecking] = useState(true);
 
   // ── Load existing keys ──────────────────────────────────────
-  useEffect(() => { fetchKeys(); }, []); // eslint-disable-line
+  useEffect(() => { fetchKeys(); checkDiscordLinked(); }, []); // eslint-disable-line
 
   async function fetchKeys() {
     setLoading(true);
@@ -24,6 +30,47 @@ export default function SettingsPage({ user, supabase, showToast }) {
       showToast("Failed to load API keys.", "error");
     }
     setLoading(false);
+  }
+
+  // ── Check if Discord is already linked ─────────────────────
+  async function checkDiscordLinked() {
+    setDiscordChecking(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const { data } = await supabase
+        .from("user_profiles")
+        .select("discord_id")
+        .eq("user_id", session.user.id)
+        .single();
+      if (data?.discord_id) setDiscordLinked(true);
+    } catch (e) {
+      // silent fail
+    }
+    setDiscordChecking(false);
+  }
+
+  // ── Link Discord account via verify code ───────────────────
+  async function linkDiscord() {
+    if (!discordCode.trim()) return;
+    setDiscordLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/discord-verify", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ code: discordCode.trim() }),
+      });
+      const json = await res.json();
+      if (json.ok) {
+        setDiscordLinked(true);
+        showToast("Discord account linked successfully!", "success");
+      } else {
+        showToast(json.error || "Invalid or expired code.", "error");
+      }
+    } catch (e) {
+      showToast("Failed to link Discord.", "error");
+    }
+    setDiscordLoading(false);
   }
 
   // ── Generate new key ────────────────────────────────────────
@@ -113,6 +160,49 @@ export default function SettingsPage({ user, supabase, showToast }) {
         </div>
       </div>
 
+      {/* ── Section: Connect Discord ── */}
+      <div>
+        <div className="section-title">🔗 Discord</div>
+        <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+          {discordChecking ? (
+            <div className="skeleton" style={{ width: "60%", height: "16px" }} />
+          ) : discordLinked ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <span style={{ fontSize: "24px" }}>✅</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}>Discord account linked</div>
+                <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "2px" }}>Your Discord is connected to Rune Trader. Flip data and commands are now synced.</div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: "1.7" }}>
+                Link your Discord account to access your flip history and stats directly from the Rune Trader bot.
+                Run <code style={{ background: "var(--bg4)", padding: "2px 6px", borderRadius: "4px", color: "var(--gold)", fontFamily: "monospace" }}>!verify</code> in Discord to get your one-time code, then enter it below.
+              </p>
+              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                <input
+                  className="filter-input"
+                  style={{ flex: 1 }}
+                  placeholder="Enter code e.g. RT-NKAY3F"
+                  value={discordCode}
+                  onChange={e => setDiscordCode(e.target.value.toUpperCase())}
+                  onKeyDown={e => { if (e.key === "Enter") linkDiscord(); }}
+                  maxLength={9}
+                />
+                <button
+                  onClick={linkDiscord}
+                  disabled={discordLoading || discordCode.length < 9}
+                  style={{ padding: "9px 20px", borderRadius: "8px", border: "none", cursor: "pointer", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "13px", fontWeight: "600", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap", opacity: (discordLoading || discordCode.length < 9) ? 0.4 : 1 }}
+                >
+                  {discordLoading ? "Linking..." : "Link Account"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
       {/* ── Section: Generate Key ── */}
       <div>
         <div className="section-title">🗝️ API Keys</div>
@@ -121,7 +211,6 @@ export default function SettingsPage({ user, supabase, showToast }) {
             Generate an API key and paste it into the RuneLite plugin settings. Max 5 active keys.
           </p>
 
-          {/* New key reveal banner */}
           {newKey && (
             <div style={{ background: "rgba(46,204,113,0.08)", border: "1px solid rgba(46,204,113,0.35)", borderRadius: "10px", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
               <div style={{ fontSize: "12px", color: "var(--green)", fontWeight: 600 }}>✅ New key generated — copy it now. It will not be shown again.</div>
@@ -139,7 +228,6 @@ export default function SettingsPage({ user, supabase, showToast }) {
             </div>
           )}
 
-          {/* Generate form */}
           <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
             <input
               className="filter-input"
@@ -169,8 +257,6 @@ export default function SettingsPage({ user, supabase, showToast }) {
         <div>
           <div className="section-title">🔑 Active Keys</div>
           <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", overflow: "hidden" }}>
-
-            {/* Table header */}
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 80px", padding: "10px 16px", background: "var(--bg4)", fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", borderBottom: "1px solid var(--border)" }}>
               <span>Label</span>
               <span>Created</span>
