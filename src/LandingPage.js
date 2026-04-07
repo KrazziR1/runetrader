@@ -1,27 +1,28 @@
 import { useState, useEffect } from "react";
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap');
 
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
     --gold: #c9a84c;
-    --gold-light: #e8d48a;
-    --gold-dim: #7a5f2a;
-    --gold-glow: rgba(201,168,76,0.15);
-    --bg: #06080b;
-    --bg2: #0a0d12;
-    --bg3: #0f1318;
-    --text: #e8e4dc;
-    --text-dim: #7a7060;
-    --green: #4caf7d;
-    --red: #c94c4c;
-    --border: rgba(201,168,76,0.15);
+    --gold-light: #e8c96a;
+    --gold-dim: #8a6f2e;
+    --gold-glow: rgba(201,168,76,0.12);
+    --bg: #070a0d;
+    --bg2: #0c1018;
+    --bg3: #111620;
+    --text: #e8e8e8;
+    --text-dim: #8fa0b0;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --border: rgba(201,168,76,0.12);
+    --border-solid: #1c2a3a;
   }
 
   html { scroll-behavior: smooth; }
-  body { background: var(--bg); color: var(--text); font-family: 'Crimson Pro', Georgia, serif; overflow-x: hidden; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow-x: hidden; }
 
   /* GRAIN OVERLAY */
   body::before {
@@ -34,24 +35,25 @@ const STYLES = `
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 20px 48px;
-    background: linear-gradient(to bottom, rgba(6,8,11,0.95), transparent);
-    backdrop-filter: blur(8px);
+    padding: 18px 48px;
+    background: rgba(7,10,13,0.92);
+    border-bottom: 1px solid var(--border-solid);
+    backdrop-filter: blur(12px);
   }
   .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
   .nav-logo-icon { width: 36px; height: 36px; border-radius: 8px; }
-  .nav-logo-text { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); letter-spacing: 2px; }
-  .nav-logo-tld { color: var(--text-dim); font-size: 14px; }
-  .nav-links { display: flex; align-items: center; gap: 32px; }
-  .nav-link { color: var(--text-dim); font-size: 15px; text-decoration: none; transition: color 0.2s; letter-spacing: 0.5px; }
+  .nav-logo-text { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 800; background: linear-gradient(135deg,#b8922e,#e8c96a,#c9a84c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing: 2px; }
+  .nav-logo-tld { color: var(--text-dim); font-size: 14px; -webkit-text-fill-color: var(--text-dim); }
+  .nav-links { display: flex; align-items: center; gap: 28px; }
+  .nav-link { color: var(--text-dim); font-size: 14px; text-decoration: none; transition: color 0.2s; letter-spacing: 0.3px; font-family: 'Inter', sans-serif; font-weight: 500; }
   .nav-link:hover { color: var(--gold); }
   .nav-cta {
-    padding: 10px 24px; border-radius: 4px; font-size: 14px; letter-spacing: 1px;
-    font-family: 'Cinzel', serif; font-weight: 600; cursor: pointer; text-decoration: none;
-    background: transparent; border: 1px solid var(--gold); color: var(--gold);
-    transition: all 0.3s; text-transform: uppercase;
+    padding: 9px 22px; border-radius: 7px; font-size: 13px; letter-spacing: 0.5px;
+    font-family: 'Cinzel', serif; font-weight: 700; cursor: pointer; text-decoration: none;
+    background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.3); color: var(--gold);
+    transition: all 0.2s;
   }
-  .nav-cta:hover { background: var(--gold); color: var(--bg); }
+  .nav-cta:hover { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.5); }
 
   /* HERO */
   .hero {
@@ -94,71 +96,70 @@ const STYLES = `
   .hero-title .dim { color: var(--text-dim); font-weight: 400; font-size: 0.6em; display: block; letter-spacing: 4px; margin-top: 8px; font-family: 'Cinzel', serif; }
 
   .hero-sub {
-    font-size: clamp(16px, 2vw, 20px); color: var(--text-dim); max-width: 600px; margin: 32px auto 0;
-    line-height: 1.7; font-weight: 300; font-style: italic;
+    font-size: clamp(15px, 2vw, 18px); color: var(--text-dim); max-width: 580px; margin: 28px auto 0;
+    line-height: 1.75; font-weight: 400; font-family: 'Inter', sans-serif;
     animation: fadeInUp 0.8s ease 0.2s both;
   }
 
   .hero-actions {
-    display: flex; gap: 16px; justify-content: center; margin-top: 48px; flex-wrap: wrap;
+    display: flex; gap: 16px; justify-content: center; margin-top: 44px; flex-wrap: wrap;
     animation: fadeInUp 0.8s ease 0.3s both;
   }
   .btn-primary {
-    padding: 16px 40px; border-radius: 4px; font-family: 'Cinzel', serif;
-    font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    padding: 15px 36px; border-radius: 8px; font-family: 'Cinzel', serif;
+    font-size: 15px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
     background: linear-gradient(135deg, var(--gold-dim), var(--gold));
     color: var(--bg); border: none; cursor: pointer; text-decoration: none;
-    transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px;
-    box-shadow: 0 0 40px rgba(201,168,76,0.2);
+    transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
   }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(201,168,76,0.35); }
+  .btn-primary:hover { transform: translateY(-2px); opacity: 0.9; }
   .btn-secondary {
-    padding: 16px 40px; border-radius: 4px; font-family: 'Cinzel', serif;
-    font-size: 16px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
-    background: transparent; color: var(--text-dim); border: 1px solid var(--border);
-    cursor: pointer; text-decoration: none; transition: all 0.3s;
+    padding: 15px 36px; border-radius: 8px; font-family: 'Cinzel', serif;
+    font-size: 15px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    background: transparent; color: var(--text-dim); border: 1px solid var(--border-solid);
+    cursor: pointer; text-decoration: none; transition: all 0.25s;
   }
-  .btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-secondary:hover { border-color: rgba(201,168,76,0.4); color: var(--gold); }
 
   .hero-stats {
-    display: flex; gap: 48px; justify-content: center; margin-top: 72px;
-    padding-top: 48px; border-top: 1px solid var(--border);
+    display: flex; gap: 48px; justify-content: center; margin-top: 64px;
+    padding-top: 40px; border-top: 1px solid var(--border-solid);
     animation: fadeInUp 0.8s ease 0.4s both;
   }
   .hero-stat { text-align: center; }
-  .hero-stat-value { font-family: 'Cinzel', serif; font-size: 32px; font-weight: 700; color: var(--gold); }
-  .hero-stat-label { font-size: 15px; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+  .hero-stat-value { font-family: 'Cinzel', serif; font-size: 28px; font-weight: 700; color: var(--gold); }
+  .hero-stat-label { font-size: 12px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; font-weight: 500; }
 
   /* FEATURES */
   .section { padding: 120px 48px; position: relative; }
   .section-label {
-    font-size: 16px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
-    margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 12px; font-weight: 700;
   }
   .section-label::before { content: ''; width: 32px; height: 1px; background: var(--gold); }
   .section-title { font-family: 'Cinzel', serif; font-size: clamp(28px, 4vw, 48px); font-weight: 700; color: var(--text); line-height: 1.2; }
-  .section-sub { font-size: 18px; color: var(--text-dim); margin-top: 16px; max-width: 560px; line-height: 1.7; font-style: italic; }
+  .section-sub { font-size: 16px; color: var(--text-dim); margin-top: 16px; max-width: 560px; line-height: 1.7; }
 
   .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 64px; }
   .feature-card {
-    background: var(--bg2); padding: 40px 32px;
-    border: 1px solid var(--border); position: relative; overflow: hidden;
-    transition: all 0.3s;
+    background: var(--bg2); padding: 36px 28px;
+    border: 1px solid var(--border-solid); position: relative; overflow: hidden;
+    transition: all 0.25s;
   }
   .feature-card::before {
     content: ''; position: absolute; inset: 0;
     background: linear-gradient(135deg, var(--gold-glow), transparent);
-    opacity: 0; transition: opacity 0.3s;
+    opacity: 0; transition: opacity 0.25s;
   }
   .feature-card:hover::before { opacity: 1; }
-  .feature-card:hover { border-color: rgba(201,168,76,0.4); transform: translateY(-2px); }
-  .feature-icon { font-size: 32px; margin-bottom: 20px; display: block; }
-  .feature-title { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
-  .feature-desc { font-size: 17px; color: var(--text-dim); line-height: 1.7; font-style: italic; }
+  .feature-card:hover { border-color: rgba(201,168,76,0.3); transform: translateY(-2px); }
+  .feature-icon { font-size: 28px; margin-bottom: 16px; display: block; }
+  .feature-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+  .feature-desc { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
   .feature-tag {
-    display: inline-block; margin-top: 16px; padding: 4px 10px; border-radius: 3px;
-    font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
-    background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid var(--border);
+    display: inline-block; margin-top: 14px; padding: 3px 10px; border-radius: 4px;
+    font-size: 11px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600;
+    background: rgba(201,168,76,0.08); color: var(--gold); border: 1px solid rgba(201,168,76,0.2);
   }
 
   /* COMPARISON */
@@ -166,75 +167,74 @@ const STYLES = `
   .comparison-table { max-width: 800px; margin: 64px auto 0; }
   .comparison-header { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; margin-bottom: 2px; }
   .comparison-col-header {
-    padding: 16px 24px; text-align: center; font-family: 'Cinzel', serif;
-    font-size: 14px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 14px 24px; text-align: center; font-family: 'Cinzel', serif;
+    font-size: 13px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700;
   }
-  .comparison-col-header.us { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: var(--bg); font-weight: 700; }
-  .comparison-col-header.them { background: var(--bg3); color: var(--text-dim); }
-  .comparison-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; border-bottom: 1px solid var(--border); }
+  .comparison-col-header.us { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: var(--bg); }
+  .comparison-col-header.them { background: var(--bg3); color: var(--text-dim); border: 1px solid var(--border-solid); }
+  .comparison-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; border-bottom: 1px solid var(--border-solid); }
   .comparison-row:last-child { border-bottom: none; }
-  .comparison-cell { padding: 16px 24px; font-size: 15px; }
-  .comparison-cell.feature-name { color: var(--text); font-style: italic; }
-  .comparison-cell.check { text-align: center; font-size: 18px; }
-  .comparison-cell.us-check { background: rgba(201,168,76,0.05); }
+  .comparison-cell { padding: 14px 24px; font-size: 14px; }
+  .comparison-cell.feature-name { color: var(--text); }
+  .comparison-cell.check { text-align: center; font-size: 16px; }
+  .comparison-cell.us-check { background: rgba(201,168,76,0.04); }
   .comparison-cell.them-check { background: var(--bg3); }
 
   /* PRICING */
   .pricing { padding: 120px 48px; }
   .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1000px; margin: 64px auto 0; }
   .pricing-card {
-    background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 40px 32px; text-align: center; position: relative; transition: all 0.3s;
+    background: var(--bg2); border: 1px solid var(--border-solid); border-radius: 12px;
+    padding: 40px 32px; text-align: center; position: relative; transition: all 0.25s;
   }
   .pricing-card.featured {
-    border-color: var(--gold); background: linear-gradient(135deg, rgba(201,168,76,0.08), var(--bg2));
-    transform: scale(1.05);
+    border-color: rgba(201,168,76,0.4); background: linear-gradient(160deg, rgba(201,168,76,0.06), var(--bg2));
   }
   .pricing-badge {
     position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-    background: var(--gold); color: var(--bg); font-family: 'Cinzel', serif;
-    font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-    padding: 4px 16px; border-radius: 20px;
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: var(--bg); font-family: 'Cinzel', serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    padding: 4px 14px; border-radius: 20px;
   }
-  .pricing-name { font-family: 'Cinzel', serif; font-size: 18px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); }
-  .pricing-price { font-family: 'Cinzel', serif; font-size: 58px; font-weight: 700; color: var(--gold); margin: 16px 0 4px; }
-  .pricing-period { font-size: 14px; color: var(--text-dim); }
-  .pricing-features { list-style: none; margin: 32px 0; text-align: left; display: flex; flex-direction: column; gap: 12px; }
-  .pricing-features li { font-size: 15px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; font-style: italic; }
+  .pricing-name { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); }
+  .pricing-price { font-family: 'Cinzel', serif; font-size: 52px; font-weight: 700; color: var(--gold); margin: 12px 0 4px; }
+  .pricing-period { font-size: 13px; color: var(--text-dim); }
+  .pricing-features { list-style: none; margin: 24px 0; text-align: left; display: flex; flex-direction: column; gap: 10px; }
+  .pricing-features li { font-size: 14px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
   .pricing-features li::before { content: '◆'; color: var(--gold); font-size: 8px; flex-shrink: 0; }
   .pricing-features li.active { color: var(--text); }
   .pricing-btn {
-    width: 100%; padding: 14px; border-radius: 4px; font-family: 'Cinzel', serif;
-    font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-    cursor: pointer; transition: all 0.3s; border: 1px solid var(--border);
+    width: 100%; padding: 13px; border-radius: 8px; font-family: 'Cinzel', serif;
+    font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-solid);
     background: transparent; color: var(--text-dim);
   }
-  .pricing-btn:hover { border-color: var(--gold); color: var(--gold); }
-  .pricing-btn.featured-btn { background: var(--gold); color: var(--bg); border-color: var(--gold); }
-  .pricing-btn.featured-btn:hover { background: var(--gold-light); }
+  .pricing-btn:hover { border-color: rgba(201,168,76,0.3); color: var(--gold); }
+  .pricing-btn.featured-btn { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: var(--bg); border: none; }
+  .pricing-btn.featured-btn:hover { opacity: 0.88; }
 
   /* CTA */
   .cta-section {
     padding: 120px 48px; text-align: center; position: relative; overflow: hidden;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-solid);
   }
   .cta-bg {
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(201,168,76,0.06) 0%, transparent 70%);
+    background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(201,168,76,0.05) 0%, transparent 70%);
   }
-  .cta-title { font-family: 'Cinzel', serif; font-size: clamp(40px, 6vw, 72px); font-weight: 900; color: var(--text); position: relative; z-index: 1; }
-  .cta-sub { font-size: 20px; color: var(--text-dim); margin: 24px auto; max-width: 500px; font-style: italic; line-height: 1.7; position: relative; z-index: 1; }
-  .cta-actions { display: flex; gap: 16px; justify-content: center; margin-top: 48px; position: relative; z-index: 1; }
+  .cta-title { font-family: 'Cinzel', serif; font-size: clamp(36px, 6vw, 64px); font-weight: 900; color: var(--text); position: relative; z-index: 1; }
+  .cta-sub { font-size: 17px; color: var(--text-dim); margin: 20px auto; max-width: 500px; line-height: 1.75; position: relative; z-index: 1; }
+  .cta-actions { display: flex; gap: 16px; justify-content: center; margin-top: 40px; position: relative; z-index: 1; }
 
   /* FOOTER */
   footer {
-    padding: 40px 48px; border-top: 1px solid var(--border);
+    padding: 32px 48px; border-top: 1px solid var(--border-solid);
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 13px; color: var(--text-dim);
+    font-size: 13px; color: var(--text-dim); background: var(--bg2);
   }
-  .footer-logo { font-family: 'Cinzel', serif; color: var(--gold); font-size: 18px; letter-spacing: 2px; }
+  .footer-logo { font-family: 'Cinzel', serif; color: var(--gold); font-size: 16px; letter-spacing: 2px; font-weight: 700; }
   .footer-links { display: flex; gap: 24px; }
-  .footer-link { color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
+  .footer-link { color: var(--text-dim); text-decoration: none; transition: color 0.2s; font-size: 13px; }
   .footer-link:hover { color: var(--gold); }
 
   /* ANIMATIONS */
@@ -498,26 +498,40 @@ export default function LandingPage({ onEnterApp }) {
         </div>
       </section>
 
-      {/* FREE CTA — replacing speculative pricing tiers */}
+      {/* PRICING */}
       <section className="pricing" id="pricing">
-        <div style={{ textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
+        <div style={{ textAlign: "center", maxWidth: "640px", margin: "0 auto" }}>
           <div className="section-label" style={{ justifyContent: "center" }}>Pricing</div>
-          <h2 className="section-title">Free to use.<br />Pro features coming soon.</h2>
-          <p className="section-sub" style={{ margin: "16px auto 48px" }}>Everything you see today — live GE tracking, AI advisor, Merchant Mode, Smart Alerts — is free while we're in early access. Pro and Platinum tiers are in the works. Early users get priority access.</p>
-          <div className="pricing-card featured" style={{ maxWidth: "400px", margin: "0 auto" }}>
-            <div className="pricing-badge">Early Access</div>
-            <div className="pricing-name">Free</div>
-            <div className="pricing-price">$0</div>
-            <div className="pricing-period">while in early access</div>
-            <ul className="pricing-features" style={{ marginTop: "24px" }}>
-              <li className="active">Full market access — 4,525 items</li>
-              <li className="active">Live GE slot tracking via RuneLite</li>
-              <li className="active">AI advisor — unlimited questions</li>
-              <li className="active">Merchant Mode trading terminal</li>
-              <li className="active">Smart alerts — dumps, spikes, crashes</li>
-              <li className="active">Profit tracker &amp; flip history</li>
-            </ul>
-            <button className="pricing-btn featured-btn" onClick={() => onEnterApp && onEnterApp()}>Create Free Account</button>
+          <h2 className="section-title">Free to start.<br /><span style={{ color: "var(--gold)" }}>Pro</span> when you're ready.</h2>
+          <p className="section-sub" style={{ margin: "16px auto 48px" }}>The free tier gives you full market access, AI advisor, and flip tracking. Upgrade to Pro for the Trading Terminal, live GE slot tracking, and advanced features.</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", maxWidth: "600px", margin: "0 auto" }}>
+            <div className="pricing-card" style={{ textAlign: "left", padding: "28px" }}>
+              <div className="pricing-name">Free</div>
+              <div className="pricing-price" style={{ fontSize: "40px" }}>$0</div>
+              <div className="pricing-period">Forever free</div>
+              <ul className="pricing-features" style={{ marginTop: "20px" }}>
+                <li className="active">Live market data — 4,525 items</li>
+                <li className="active">AI Advisor (limited context)</li>
+                <li className="active">Watchlist & price alerts</li>
+                <li className="active">Flip tracker & profit history</li>
+                <li className="active">Smart alerts</li>
+              </ul>
+              <button className="pricing-btn" onClick={() => onEnterApp && onEnterApp()} style={{ marginTop: "8px" }}>Get started free</button>
+            </div>
+            <div className="pricing-card featured" style={{ textAlign: "left", padding: "28px" }}>
+              <div className="pricing-badge">Most Popular</div>
+              <div className="pricing-name" style={{ color: "var(--gold)" }}>Pro</div>
+              <div className="pricing-price">$9.99</div>
+              <div className="pricing-period">per month</div>
+              <ul className="pricing-features" style={{ marginTop: "20px" }}>
+                <li className="active">Everything in Free</li>
+                <li className="active">Trading Terminal</li>
+                <li className="active">Live GE slot tracking</li>
+                <li className="active">AI Advisor with full context</li>
+                <li className="active">Autopilot rules & GP goals</li>
+              </ul>
+              <button className="pricing-btn featured-btn" onClick={() => onEnterApp && onEnterApp()} style={{ marginTop: "8px" }}>Upgrade to Pro →</button>
+            </div>
           </div>
         </div>
       </section>

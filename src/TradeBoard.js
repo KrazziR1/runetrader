@@ -198,7 +198,7 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
             </button>
           )}
           <button onClick={loadListings}
-            style={{ padding: "7px 12px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+            style={{ padding: "7px 12px", borderRadius: "8px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
             ↻
           </button>
           {user ? (
@@ -241,7 +241,7 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-dim)", background: "var(--bg3)", borderRadius: "12px", border: "1px solid var(--border)" }}>
+        <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-dim)", background: "var(--bg3)", borderRadius: "12px", border: "1px solid #1c2a3a" }}>
           <div style={{ fontSize: "32px", marginBottom: "12px" }}>📋</div>
           <div style={{ fontSize: "15px", marginBottom: "6px" }}>No listings yet</div>
           <div style={{ fontSize: "13px" }}>{user ? "Be the first to post a listing." : "Sign in to post a listing."}</div>
@@ -249,7 +249,7 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {filtered.map(l => (
-            <div key={l.id} style={{ display: "grid", gridTemplateColumns: "56px 1fr auto", gap: "14px", alignItems: "center", background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "12px", padding: "14px 16px", transition: "border-color 0.15s" }}
+            <div key={l.id} style={{ display: "grid", gridTemplateColumns: "56px 1fr auto", gap: "14px", alignItems: "center", background: "#111620", border: "1px solid #1c2a3a", borderRadius: "12px", padding: "14px 16px", transition: "border-color 0.15s" }}
               onMouseOver={e => e.currentTarget.style.borderColor = "var(--border-hover, rgba(255,255,255,0.15))"}
               onMouseOut={e => e.currentTarget.style.borderColor = "var(--border)"}>
 
@@ -258,17 +258,17 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "4px" }}>
                   <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>{l.item_name}</span>
-                  <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: l.type === "WTS" ? "rgba(231,76,60,0.12)" : "rgba(46,204,113,0.12)", color: l.type === "WTS" ? "var(--red)" : "var(--green)", border: `1px solid ${l.type === "WTS" ? "rgba(231,76,60,0.3)" : "rgba(46,204,113,0.3)"}` }}>
+                  <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "12px", fontWeight: 700, background: l.type === "WTS" ? "rgba(231,76,60,0.12)" : "rgba(46,204,113,0.12)", color: l.type === "WTS" ? "var(--red)" : "var(--green)", border: `1px solid ${l.type === "WTS" ? "rgba(231,76,60,0.3)" : "rgba(46,204,113,0.3)"}` }}>
                     {l.type}
                   </span>
-                  {l.quantity > 1 && <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>×{l.quantity.toLocaleString()}</span>}
+                  {l.quantity > 1 && <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>×{l.quantity.toLocaleString()}</span>}
                 </div>
-                <div style={{ display: "flex", gap: "16px", fontSize: "12px", color: "var(--text-dim)", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: "16px", fontSize: "13px", color: "var(--text-dim)", flexWrap: "wrap" }}>
                   {l.discord && <span>Discord: <span style={{ color: "var(--text)" }}>{l.discord}</span></span>}
                   {l.rsn && <span>RSN: <span style={{ color: "var(--text)" }}>{l.rsn}</span></span>}
                   {l.notes && <span style={{ color: "var(--text-dim)", fontStyle: "italic" }}>{l.notes}</span>}
                 </div>
-                <div style={{ display: "flex", gap: "12px", marginTop: "4px", fontSize: "11px", color: "var(--text-dim)" }}>
+                <div style={{ display: "flex", gap: "12px", marginTop: "4px", fontSize: "13px", color: "var(--text-dim)" }}>
                   <span>{timeAgo(l.created_at)}</span>
                   <span style={{ color: "var(--gold-dim)" }}>{timeLeft(l.expires_at)}</span>
                 </div>
@@ -279,16 +279,16 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
                   {l.quantity > 1 ? formatGP(l.price * l.quantity) : formatGP(l.price)}
                 </div>
                 {l.quantity > 1 && (
-                  <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "2px" }}>
+                  <div style={{ fontSize: "13px", color: "var(--text-dim)", marginTop: "2px" }}>
                     {formatGP(l.price)} each · {l.quantity.toLocaleString()} qty
                   </div>
                 )}
                 {(l.quantity > 1 ? l.price * l.quantity : l.price) > MAX_CASH && (
-                  <div style={{ fontSize: "11px", color: "var(--gold-dim)", marginTop: "2px" }}>Above max cash</div>
+                  <div style={{ fontSize: "12px", color: "var(--gold-dim)", marginTop: "2px" }}>Above max cash</div>
                 )}
                 {user?.id === l.user_id && (
                   <button onClick={() => closeListing(l.id)}
-                    style={{ marginTop: "6px", padding: "3px 10px", borderRadius: "4px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+                    style={{ marginTop: "6px", padding: "3px 10px", borderRadius: "4px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
                     onMouseOver={e => { e.target.style.color = "var(--red)"; e.target.style.borderColor = "var(--red)"; }}
                     onMouseOut={e => { e.target.style.color = "var(--text-dim)"; e.target.style.borderColor = "var(--border)"; }}>
                     Remove
@@ -304,19 +304,19 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
       {showPostForm && user && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}
           onClick={e => { if (e.target === e.currentTarget) setShowPostForm(false); }}>
-          <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "480px", display: "flex", flexDirection: "column", gap: "16px", maxHeight: "90vh", overflowY: "auto" }}
+          <div style={{ background: "#111620", border: "1px solid #1c2a3a", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "480px", display: "flex", flexDirection: "column", gap: "16px", maxHeight: "90vh", overflowY: "auto" }}
             onClick={e => e.stopPropagation()}>
 
             <div style={{ fontFamily: "Cinzel, serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)" }}>Post a Listing</div>
 
             {/* Item search */}
             <div style={{ position: "relative" }}>
-              <label style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Item Name *</label>
+              <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Item Name *</label>
               <input value={itemSearch} onChange={e => handleItemSearch(e.target.value)} placeholder="e.g. Twisted bow"
                 onBlur={() => setTimeout(() => setItemSuggestions([]), 200)}
-                style={{ width: "100%", background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
               {itemSuggestions.length > 0 && (
-                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "8px", zIndex: 10, maxHeight: "200px", overflowY: "auto", marginTop: "4px" }}>
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#111620", border: "1px solid #1c2a3a", borderRadius: "8px", zIndex: 10, maxHeight: "200px", overflowY: "auto", marginTop: "4px" }}>
                   {itemSuggestions.map(s => (
                     <div key={s} onClick={() => selectItem(s)}
                       style={{ padding: "8px 12px", fontSize: "13px", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
@@ -333,7 +333,7 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
             {/* Type + Category */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               <div>
-                <label style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Type *</label>
+                <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Type *</label>
                 <div style={{ display: "flex", gap: "8px" }}>
                   {["WTS", "WTB"].map(t => (
                     <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))}
@@ -344,9 +344,9 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Category</label>
+                <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Category</label>
                 <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                  style={{ width: "100%", background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "9px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "Inter, sans-serif", outline: "none" }}>
+                  style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "9px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "Inter, sans-serif", outline: "none" }}>
                   {CATEGORIES.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
@@ -359,9 +359,9 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
                 { key: "quantity", label: "Quantity", placeholder: "1" },
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>
-                  <label style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>{label}</label>
+                  <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>{label}</label>
                   <input value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} placeholder={placeholder}
-                    style={{ width: "100%", background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
+                    style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
                 </div>
               ))}
             </div>
@@ -381,7 +381,7 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
                   ) : (
                     <div>{formatGP(perItem)}</div>
                   )}
-                  {total > MAX_CASH && <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>Above max cash — player-to-player trade required</div>}
+                  {total > MAX_CASH && <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>Above max cash — player-to-player trade required</div>}
                 </div>
               );
             })()}
@@ -393,27 +393,27 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
                 { key: "rsn", label: "RSN", placeholder: "In-game name" },
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>
-                  <label style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>{label}</label>
+                  <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>{label}</label>
                   <input value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} placeholder={placeholder}
-                    style={{ width: "100%", background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
+                    style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
                 </div>
               ))}
             </div>
 
             {/* Notes */}
             <div>
-              <label style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Notes (optional)</label>
+              <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Notes (optional)</label>
               <input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="e.g. Will split payment, bundle only, swap offers welcome..."
-                style={{ width: "100%", background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
             </div>
 
-            <div style={{ fontSize: "12px", color: "var(--text-dim)", fontStyle: "italic" }}>
+            <div style={{ fontSize: "13px", color: "var(--text-dim)", fontStyle: "italic" }}>
               Listing expires automatically after 7 days. All trades occur in-game. The sale of account names, services, or anything violating RuneScape rules is prohibited.
             </div>
 
             <div style={{ display: "flex", gap: "10px" }}>
               <button onClick={() => setShowPostForm(false)}
-                style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "14px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "14px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
                 Cancel
               </button>
               <button onClick={submitListing} disabled={posting}
