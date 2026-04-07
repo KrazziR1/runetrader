@@ -1,21 +1,18 @@
-// â”€â”€ QuestSystem.js â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- QuestSystem.js --------------------------------------------------------
 // Daily quest generation, progress tracking, and reward calculation.
-// Pure logic â€” no React, no side effects.
+// Pure logic - no React, no side effects.
 
-// â”€â”€ Quest reward tables â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Quest reward tables ---------------------------------------------------
 const QUEST_REWARDS = {
   easy:   { xp: 500,   coins: 10 },
   medium: { xp: 1500,  coins: 25 },
   hard:   { xp: 3500,  coins: 60 },
 };
 
-// â”€â”€ Quest templates â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Each template has a generator that takes a seed + user context and
-// produces a concrete quest with a target and completion check.
-
+// -- Quest templates -------------------------------------------------------
 const QUEST_TEMPLATES = [
 
-  // â”€â”€ PROFIT QUEST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- PROFIT QUEST ---------------------------------------------------------
   {
     type: "profit_single",
     difficulty: "easy",
@@ -31,7 +28,7 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "ðŸ’°",
+        emoji: "\uD83D\uDCB0",
       };
     },
     check: (quest, { lastFlipProfit }) =>
@@ -53,7 +50,7 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "ðŸ“ˆ",
+        emoji: "\uD83D\uDCC8",
       };
     },
     check: (quest, { lastFlipProfit }) =>
@@ -75,14 +72,14 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "ðŸ’Ž",
+        emoji: "\uD83D\uDC8E",
       };
     },
     check: (quest, { lastFlipProfit }) =>
       (lastFlipProfit || 0) >= quest.target,
   },
 
-  // â”€â”€ FLIP COUNT QUEST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- FLIP COUNT QUEST -----------------------------------------------------
   {
     type: "flip_count",
     difficulty: "easy",
@@ -98,7 +95,7 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "âš¡",
+        emoji: "\u26A1",
       };
     },
     check: (quest, { todayFlipCount }) =>
@@ -122,7 +119,7 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "ðŸ”„",
+        emoji: "\uD83D\uDD04",
       };
     },
     check: (quest, { todayFlipCount }) =>
@@ -131,7 +128,7 @@ const QUEST_TEMPLATES = [
       Math.min(todayFlipCount || 0, quest.target),
   },
 
-  // â”€â”€ SPEED QUEST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- SPEED QUEST ----------------------------------------------------------
   {
     type: "speed_flip",
     difficulty: "medium",
@@ -141,10 +138,10 @@ const QUEST_TEMPLATES = [
       difficulty: "medium",
       title: "Early Bird",
       desc: "Complete a profitable flip within 30 minutes of logging in",
-      target: 30,       // minutes
+      target: 30,
       progress: 0,
       completed: false,
-      emoji: "â±ï¸",
+      emoji: "\u23F1\uFE0F",
       startedAt: Date.now(),
     }),
     check: (quest, { lastFlipProfit }) => {
@@ -154,7 +151,7 @@ const QUEST_TEMPLATES = [
     },
   },
 
-  // â”€â”€ NEW ITEM QUEST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- NEW ITEM QUEST -------------------------------------------------------
   {
     type: "new_item",
     difficulty: "medium",
@@ -167,11 +164,10 @@ const QUEST_TEMPLATES = [
       target: 1,
       progress: 0,
       completed: false,
-      emoji: "ðŸ—ºï¸",
+      emoji: "\uD83D\uDDFA\uFE0F",
     }),
     check: (quest, { lastFlipItem, flipsLog }) => {
       if (!lastFlipItem) return false;
-      // Count how many times this item appears in historical flips (excluding today's)
       const today = new Date().toISOString().slice(0, 10);
       const historical = (flipsLog || []).filter(f =>
         f.status !== "open" &&
@@ -182,7 +178,7 @@ const QUEST_TEMPLATES = [
     },
   },
 
-  // â”€â”€ TOTAL GP QUEST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -- TOTAL GP QUEST -------------------------------------------------------
   {
     type: "total_gp",
     difficulty: "hard",
@@ -198,7 +194,7 @@ const QUEST_TEMPLATES = [
         target,
         progress: 0,
         completed: false,
-        emoji: "ðŸ†",
+        emoji: "\uD83C\uDFC6",
       };
     },
     check: (quest, { todayTotalProfit }) =>
@@ -208,7 +204,7 @@ const QUEST_TEMPLATES = [
   },
 ];
 
-// â”€â”€ Format GP helper (no React dependency) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Format GP helper -------------------------------------------------------
 function fmtGP(n) {
   if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + "B";
   if (n >= 1_000_000)     return (n / 1_000_000).toFixed(1) + "M";
@@ -216,7 +212,7 @@ function fmtGP(n) {
   return n.toLocaleString();
 }
 
-// â”€â”€ Seeded random (deterministic per user+date) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Seeded random ----------------------------------------------------------
 function seededRand(seed) {
   let s = seed;
   return function() {
@@ -225,11 +221,8 @@ function seededRand(seed) {
   };
 }
 
-// â”€â”€ Generate today's 3 quests for a user â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Deterministic â€” same user gets same quests all day.
-// One easy, one medium, one hard â€” guaranteed variety.
+// -- Generate today's 3 quests for a user ----------------------------------
 export function generateDailyQuests(userId, date = new Date().toISOString().slice(0, 10)) {
-  // Build seed from userId + date
   const seedStr = userId + date;
   let hash = 0;
   for (let i = 0; i < seedStr.length; i++) {
@@ -256,8 +249,7 @@ export function generateDailyQuests(userId, date = new Date().toISOString().slic
   ];
 }
 
-// â”€â”€ Update quest progress after a flip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Returns updated quests array and list of newly completed quest ids.
+// -- Update quest progress after a flip ------------------------------------
 export function updateQuestProgress(quests, context) {
   if (!quests || quests.length === 0) return { quests, newlyCompleted: [] };
 
@@ -283,12 +275,12 @@ export function updateQuestProgress(quests, context) {
   return { quests: updated, newlyCompleted };
 }
 
-// â”€â”€ Calculate total rewards for completed quests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Calculate total rewards for completed quests --------------------------
 export function calcQuestRewards(quest) {
   return QUEST_REWARDS[quest.difficulty] || QUEST_REWARDS.easy;
 }
 
-// â”€â”€ Get today's date string â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Get today's date string -----------------------------------------------
 export function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }

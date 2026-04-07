@@ -1,26 +1,21 @@
-// â”€â”€ XPSystem.js â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// OSRS-authentic XP curve, levels 1â€“99, titles, achievements, celebrations.
-// All logic is pure â€” no React, no side effects. Import into App.js.
+// -- XPSystem.js ----------------------------------------------------------
+// OSRS-authentic XP curve, levels 1-99, titles, achievements, celebrations.
+// All logic is pure - no React, no side effects. Import into App.js.
 
-// â”€â”€ OSRS XP Table (exact formula) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Level N requires sum of floor(x/4 + 300 * 2^(x/7)) for x = 1 to N-1
+// -- OSRS XP Table (exact formula) ----------------------------------------
 function buildXPTable() {
-  const table = [0, 0]; // index 0 unused, level 1 = 0 XP
+  const table = [0, 0];
   let points = 0;
   for (let lvl = 1; lvl < 99; lvl++) {
     points += Math.floor(lvl / 4 + 300 * Math.pow(2, lvl / 7));
     table.push(Math.floor(points));
   }
-  return table; // table[N] = XP required to reach level N
+  return table;
 }
 
 export const XP_TABLE = buildXPTable();
-// XP_TABLE[1]  = 0
-// XP_TABLE[10] = 1,154
-// XP_TABLE[50] = 101,333
-// XP_TABLE[99] = 13,034,431
 
-// â”€â”€ Get level from total XP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Get level from total XP -----------------------------------------------
 export function xpToLevel(totalXP) {
   for (let lvl = 98; lvl >= 1; lvl--) {
     if (totalXP >= XP_TABLE[lvl]) return lvl;
@@ -28,7 +23,7 @@ export function xpToLevel(totalXP) {
   return 1;
 }
 
-// â”€â”€ XP progress within current level (0â€“1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- XP progress within current level (0-1) --------------------------------
 export function xpProgress(totalXP) {
   const lvl = xpToLevel(totalXP);
   if (lvl >= 99) return 1;
@@ -37,76 +32,73 @@ export function xpProgress(totalXP) {
   return Math.min(current / needed, 1);
 }
 
-// â”€â”€ XP to next level â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- XP to next level -------------------------------------------------------
 export function xpToNextLevel(totalXP) {
   const lvl = xpToLevel(totalXP);
   if (lvl >= 99) return 0;
   return XP_TABLE[lvl + 1] - totalXP;
 }
 
-// â”€â”€ Calculate XP earned from a flip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Base: profit / 500 (1M profit = 2,000 XP)
-// First flip of the day: 1.5Ã— multiplier
-// Minimum: 0 (never penalise a loss)
+// -- Calculate XP earned from a flip ----------------------------------------
 export function calcFlipXP(profit, isFirstFlipOfDay = false) {
   if (!profit || profit <= 0) return 0;
   const base = Math.floor(profit / 500);
   return isFirstFlipOfDay ? Math.floor(base * 1.5) : base;
 }
 
-// â”€â”€ Level titles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Level titles -----------------------------------------------------------
 export function getLevelTitle(level) {
-  if (level >= 99) return { title: "Max Cape",          emoji: "ðŸŽ“", color: "#c9a84c" };
-  if (level >= 91) return { title: "Tycoon",            emoji: "ðŸ‘‘", color: "#c9a84c" };
-  if (level >= 81) return { title: "Gold Baron",        emoji: "ðŸ’Ž", color: "#e8c96a" };
-  if (level >= 71) return { title: "Wealth Architect",  emoji: "ðŸ›ï¸", color: "#e8c96a" };
-  if (level >= 61) return { title: "Market Manipulator",emoji: "ðŸ“Š", color: "#2ecc71" };
-  if (level >= 51) return { title: "GE Master",         emoji: "âš”ï¸", color: "#2ecc71" };
-  if (level >= 41) return { title: "Arbitrageur",       emoji: "âš¡", color: "#3498db" };
-  if (level >= 31) return { title: "Commodity Broker",  emoji: "ðŸ“ˆ", color: "#3498db" };
-  if (level >= 21) return { title: "GE Trader",         emoji: "ðŸª™", color: "#7a8a9a" };
-  if (level >= 11) return { title: "Market Watcher",    emoji: "ðŸ‘€", color: "#7a8a9a" };
-  if (level >= 5)  return { title: "Merchant Apprentice",emoji: "ðŸ“¦", color: "#7a8a9a" };
-  return                  { title: "Peasant",            emoji: "ðŸŒ¾", color: "#4a5a6a" };
+  if (level >= 99) return { title: "Max Cape",           emoji: "\uD83C\uDF93", color: "#c9a84c" };
+  if (level >= 91) return { title: "Tycoon",             emoji: "\uD83D\uDC51", color: "#c9a84c" };
+  if (level >= 81) return { title: "Gold Baron",         emoji: "\uD83D\uDC8E", color: "#e8c96a" };
+  if (level >= 71) return { title: "Wealth Architect",   emoji: "\uD83C\uDFDB\uFE0F", color: "#e8c96a" };
+  if (level >= 61) return { title: "Market Manipulator", emoji: "\uD83D\uDCCA", color: "#2ecc71" };
+  if (level >= 51) return { title: "GE Master",          emoji: "\u2694\uFE0F", color: "#2ecc71" };
+  if (level >= 41) return { title: "Arbitrageur",        emoji: "\u26A1", color: "#3498db" };
+  if (level >= 31) return { title: "Commodity Broker",   emoji: "\uD83D\uDCC8", color: "#3498db" };
+  if (level >= 21) return { title: "GE Trader",          emoji: "\uD83E\uDE99", color: "#7a8a9a" };
+  if (level >= 11) return { title: "Market Watcher",     emoji: "\uD83D\uDC40", color: "#7a8a9a" };
+  if (level >= 5)  return { title: "Merchant Apprentice",emoji: "\uD83D\uDCE6", color: "#7a8a9a" };
+  return                  { title: "Peasant",             emoji: "\uD83C\uDF3E", color: "#4a5a6a" };
 }
 
-// â”€â”€ Profit celebration tier â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Profit celebration tier ------------------------------------------------
 export function getCelebrationTier(profit) {
-  if (profit >= 100_000_000) return { tier: "legendary", label: "LEGENDARY FLIP", color: "#c9a84c", emoji: "ðŸ‰", particles: 120 };
-  if (profit >= 10_000_000)  return { tier: "epic",      label: "EPIC FLIP",      color: "#9b59b6", emoji: "ðŸ’Ž", particles: 80 };
-  if (profit >= 1_000_000)   return { tier: "great",     label: "GREAT FLIP",     color: "#2ecc71", emoji: "ðŸ”¥", particles: 50 };
-  if (profit >= 100_000)     return { tier: "nice",      label: "NICE FLIP",      color: "#3498db", emoji: "ðŸ“ˆ", particles: 25 };
+  if (profit >= 100_000_000) return { tier: "legendary", label: "LEGENDARY FLIP", color: "#c9a84c", emoji: "\uD83D\uDC09", particles: 120 };
+  if (profit >= 10_000_000)  return { tier: "epic",      label: "EPIC FLIP",      color: "#9b59b6", emoji: "\uD83D\uDC8E", particles: 80 };
+  if (profit >= 1_000_000)   return { tier: "great",     label: "GREAT FLIP",     color: "#2ecc71", emoji: "\uD83D\uDD25", particles: 50 };
+  if (profit >= 100_000)     return { tier: "nice",      label: "NICE FLIP",      color: "#3498db", emoji: "\uD83D\uDCC8", particles: 25 };
   return null;
 }
 
-// â”€â”€ Achievement definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Achievement definitions ------------------------------------------------
 export const ACHIEVEMENTS = [
   {
     id: "first_blood",
     name: "First Blood",
     desc: "Complete your first profitable flip",
-    emoji: "ðŸª™",
+    emoji: "\uD83E\uDE99",
     check: ({ flipsLog }) => flipsLog.some(f => f.status !== "open" && (f.totalProfit || 0) > 0),
   },
   {
     id: "first_million",
     name: "First Million",
     desc: "Make 1,000,000 gp profit on a single flip",
-    emoji: "ðŸ’°",
+    emoji: "\uD83D\uDCB0",
     check: ({ lastFlipProfit }) => (lastFlipProfit || 0) >= 1_000_000,
   },
   {
     id: "whale",
     name: "Whale",
     desc: "Make 10,000,000 gp profit on a single flip",
-    emoji: "ðŸ‹",
+    emoji: "\uD83D\uDC0B",
     check: ({ lastFlipProfit }) => (lastFlipProfit || 0) >= 10_000_000,
   },
   {
     id: "on_a_roll",
     name: "On a Roll",
     desc: "Complete 5 profitable flips in a row",
-    emoji: "ðŸ”¥",
+    emoji: "\uD83D\uDD25",
     check: ({ flipsLog }) => {
       const closed = flipsLog.filter(f => f.status !== "open").slice(0, 5);
       return closed.length >= 5 && closed.every(f => (f.totalProfit || 0) > 0);
@@ -116,35 +108,35 @@ export const ACHIEVEMENTS = [
     id: "level_10",
     name: "Getting Started",
     desc: "Reach level 10",
-    emoji: "ðŸ“ˆ",
+    emoji: "\uD83D\uDCC8",
     check: ({ level }) => level >= 10,
   },
   {
     id: "level_50",
     name: "Veteran Trader",
     desc: "Reach level 50",
-    emoji: "âš”ï¸",
+    emoji: "\u2694\uFE0F",
     check: ({ level }) => level >= 50,
   },
   {
     id: "max_cape",
     name: "Max Cape",
-    desc: "Reach level 99 â€” the pinnacle of GE mastery",
-    emoji: "ðŸŽ“",
+    desc: "Reach level 99 - the pinnacle of GE mastery",
+    emoji: "\uD83C\uDF93",
     check: ({ level }) => level >= 99,
   },
   {
     id: "dedicated",
     name: "Dedicated",
     desc: "Log in 7 days in a row",
-    emoji: "ðŸ“…",
+    emoji: "\uD83D\uDCC5",
     check: ({ loginStreak }) => (loginStreak || 0) >= 7,
   },
   {
     id: "diversified",
     name: "Diversified",
     desc: "Flip 10 different items",
-    emoji: "ðŸ—‚ï¸",
+    emoji: "\uD83D\uDDC2\uFE0F",
     check: ({ flipsLog }) => {
       const items = new Set(flipsLog.filter(f => f.status !== "open").map(f => f.item));
       return items.size >= 10;
@@ -154,12 +146,12 @@ export const ACHIEVEMENTS = [
     id: "centurion",
     name: "Centurion",
     desc: "Complete 100 flips",
-    emoji: "ðŸ†",
+    emoji: "\uD83C\uDFC6",
     check: ({ flipsLog }) => flipsLog.filter(f => f.status !== "open").length >= 100,
   },
 ];
 
-// â”€â”€ Check which new achievements were just unlocked â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Check which new achievements were just unlocked ------------------------
 export function checkNewAchievements(context, alreadyUnlocked = []) {
   return ACHIEVEMENTS.filter(a => {
     if (alreadyUnlocked.includes(a.id)) return false;
