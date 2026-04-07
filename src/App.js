@@ -5019,8 +5019,8 @@ export default function RuneTrader() {
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [pendingItemSlug, setPendingItemSlug] = useState(null); // from /item/:slug URL
-  const [sortCol, setSortCol] = useState("volume");
-  const [sortDir, setSortDir] = useState("desc");
+  const [sortCol, setSortCol] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_default_sort") || "{}").col || "volume"; } catch { return "volume"; } });
+  const [sortDir, setSortDir] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_default_sort") || "{}").dir || "desc"; } catch { return "desc"; } });
   const [marketRowsShown, setMarketRowsShown] = useState(200);
   const [marketSubTab, setMarketSubTab] = useState("flips");
   const [marketInnerView, setMarketInnerView] = useState("items"); // "items" | "marginwatch" | "alerts"
@@ -5785,8 +5785,13 @@ export default function RuneTrader() {
   }
 
   // ── Check alerts against live prices ──
+  const lastAlertCheckRef = React.useRef(0);
   useEffect(() => {
     if (!items.length || !alerts.length) return;
+    const freqMs = (parseInt(localStorage.getItem("runetrader_alert_freq") || "5", 10)) * 60 * 1000;
+    const now = Date.now();
+    if (now - lastAlertCheckRef.current < freqMs) return;
+    lastAlertCheckRef.current = now;
     setAlerts(prev => prev.map(alert => {
       const liveItem = items.find(i => i.name.toLowerCase() === alert.item.toLowerCase());
       if (!liveItem) return alert;
@@ -8049,7 +8054,25 @@ RULES:
 
 
             {activeTab === "settings" && (
-              <SettingsPage user={user} supabase={supabase} showToast={showToast} />
+              <SettingsPage
+                user={user}
+                supabase={supabase}
+                showToast={showToast}
+                soundMuted={soundMuted}
+                onToggleSound={() => { const m = toggleMute(); setSoundMuted(m); }}
+                showStreakBanner={showStreakBanner}
+                onToggleStreakBanner={val => setShowStreakBanner(val)}
+                notifPermission={notifPermission}
+                notifLoading={notifLoading}
+                onRequestNotif={requestNotificationPermission}
+                smartAlertSettings={smartAlertSettings}
+                onSaveSmartAlert={saveSmartAlertSettings}
+                sortCol={sortCol}
+                sortDir={sortDir}
+                onSetDefaultSort={(col, dir) => { setSortCol(col); setSortDir(dir); safeSetItem("runetrader_default_sort", JSON.stringify({ col, dir })); }}
+                flipsLog={flipsLog}
+                autoFlipsLog={autoFlipsLog}
+              />
             )}
 
             {activeTab === "changelog" && (
