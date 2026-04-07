@@ -87,7 +87,7 @@ const STYLES = `
   :root {
     --gold: #c9a84c; --gold-light: #e8c96a; --gold-dim: #8a6f2e;
     --bg: #080b0e; --bg2: #0d1117; --bg3: #131920; --bg4: #1a2230;
-    --border: #1f2d3d; --border-bright: #2e3f52; --text: #eaeaea; --text-dim: #6a7d90;
+    --border: #1f2d3d; --border-bright: #2e3f52; --text: #eaeaea; --text-dim: #99aabb;
     --green: #2ecc71; --green-dim: #1a7a44; --red: #e74c3c; --red-dim: #7a1f1a; --blue: #3498db;
     --glow-gold: rgba(201,168,76,0.18); --glow-green: rgba(46,204,113,0.12);
   }
@@ -116,7 +116,7 @@ const STYLES = `
   .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; box-shadow: 0 0 6px var(--green); }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
   .nav-tabs { display: flex; gap: 2px; }
-  .nav-tab { padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.15s; white-space: nowrap; letter-spacing: 0.2px; }
+  .nav-tab { padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: #8899aa; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.2px; }
   .nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
   .nav-tab.active { background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.2); box-shadow: inset 0 1px 0 rgba(201,168,76,0.1); }
   .terminal-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; letter-spacing: 0.3px; white-space: nowrap; }
@@ -150,7 +150,7 @@ const STYLES = `
   /* STAT CARDS */
   .stat-card { background: linear-gradient(135deg, var(--bg3) 0%, rgba(26,34,48,0.7) 100%); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px; transition: border-color 0.2s; }
   .stat-card:hover { border-color: var(--border-bright); }
-  .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+  .stat-label { font-size: 11px; color: #8899aa; text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
   .stat-value { font-size: 22px; font-weight: 600; color: var(--gold); font-family: 'Cinzel', serif; }
   .stat-sub { font-size: 11px; color: var(--text-dim); }
 
@@ -206,8 +206,8 @@ const STYLES = `
   .section-title { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border-bright), transparent); }
   .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; overflow: visible; box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
-  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px; padding: 10px 16px; background: linear-gradient(180deg, var(--bg4) 0%, rgba(26,34,48,0.8) 100%); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0; }
-  .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-family: "Inter", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; }
+  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px; padding: 10px 16px; background: linear-gradient(180deg, var(--bg4) 0%, rgba(26,34,48,0.8) 100%); font-size: 11px; color: #8899aa; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0; }
+  .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-family: "Inter", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; font-weight: 600; }
   .sort-btn:hover { color: var(--gold); }
   .sort-btn.active { color: var(--gold); }
   .sort-arrow { font-size: 9px; opacity: 0.7; }
@@ -217,11 +217,11 @@ const STYLES = `
   .item-icon { width: 26px; height: 26px; object-fit: contain; flex-shrink: 0; image-rendering: pixelated; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5)); }
   .item-icon-placeholder { width: 26px; height: 26px; flex-shrink: 0; }
   .item-name { font-weight: 500; font-size: 13.5px; color: var(--text); }
-  .item-category { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
-  .price { font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums; }
+  .item-category { font-size: 11px; color: #8899aa; margin-top: 1px; }
+  .price { font-size: 13px; color: #ccd8e0; font-variant-numeric: tabular-nums; }
   .margin { font-size: 13px; font-weight: 600; color: var(--green); font-variant-numeric: tabular-nums; }
   .margin.neg { color: var(--red); }
-  .roi { font-size: 12px; color: var(--text-dim); }
+  .roi { font-size: 12px; color: #99aabb; }
   .score-badge { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 22px; border-radius: 5px; font-size: 11px; font-weight: 700; }
   .score-high { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.2); }
   .score-med { background: rgba(201,168,76,0.12); color: var(--gold); border: 1px solid rgba(201,168,76,0.2); }
@@ -7791,10 +7791,10 @@ RULES:
               {/* Secondary nav — right side */}
               <div className="nav-tabs">
                 {user && [["watchlist","Watchlist"],["settings","Settings"],["referral","Refer & Earn"]].map(([t, label]) => (
-                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)} style={{ fontSize: "11px" }}>
+                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)} style={{ fontSize: "12px", color: activeTab === t ? undefined : "#aabbcc" }}>
                     {label}
                     {t === "watchlist" && watchlist.length > 0 && (
-                      <span style={{ marginLeft: "4px", background: "var(--bg4)", color: "var(--text-dim)", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700, border: "1px solid var(--border)" }}>
+                      <span style={{ marginLeft: "4px", background: "var(--bg4)", color: "#aabbcc", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700, border: "1px solid var(--border-bright)" }}>
                         {watchlist.length}
                       </span>
                     )}
