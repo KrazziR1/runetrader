@@ -68,11 +68,11 @@ const STYLES = `
 `;
 
 const FREE_FEATURES = [
-  "Live market data — 4,525 items",
+  "Live market data \u2014 4,525 items",
   "Price history charts",
   "Watchlist with price alerts",
-  "Smart alerts — dumps, spikes, crashes",
-  "Tracker — flip history & profit",
+  "Smart alerts \u2014 dumps, spikes, crashes",
+  "Tracker \u2014 flip history & profit",
   "Shareable item URLs",
   "AI Advisor (limited context)",
 ];
@@ -141,7 +141,7 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
           <div className="plan-features">
             {FREE_FEATURES.map((f, i) => (
               <div key={i} className="plan-feature">
-                <span className="plan-feature-check" style={{ color:"#2ecc71" }}>✓</span>
+                <span className="plan-feature-check" style={{ color:"#2ecc71" }}>\u2713</span>
                 <span className="plan-feature-text">{f}</span>
               </div>
             ))}
@@ -156,7 +156,7 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
         {/* PRO */}
         <div className="plan-card pro">
           <div>
-            <div className="plan-badge popular">✦ Most Popular</div>
+            <div className="plan-badge popular">\u2726 Most Popular</div>
             <div style={{ marginTop:"16px" }}>
               <div className="plan-price pro">$9.99</div>
               <div className="plan-period">per month · cancel any time</div>
@@ -166,7 +166,7 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
           <div className="plan-features">
             {PRO_FEATURES.map((f, i) => (
               <div key={i} className="plan-feature">
-                <span className="plan-feature-check" style={{ color: f.dim ? "#8fa0b0" : "#c9a84c" }}>◆</span>
+                <span className="plan-feature-check" style={{ color: f.dim ? "#8fa0b0" : "#c9a84c" }}>\u25C6</span>
                 <span className={`plan-feature-text${f.dim ? " dim" : ""}`}>{f.text}</span>
               </div>
             ))}
@@ -178,7 +178,7 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
               onClick={handleUpgrade}
               disabled={loading || isPro}
             >
-              {isPro ? "✓ You're on Pro" : loading ? "Redirecting to Stripe..." : !user ? "Sign up to upgrade →" : "Upgrade to Pro →"}
+              {isPro ? "\u2713 You're on Pro" : loading ? "Redirecting to Stripe..." : !user ? "Sign up to upgrade \u2192" : "Upgrade to Pro \u2192"}
             </button>
             {!isPro && <div className="plan-cta-sub">Secured by Stripe · Cancel any time</div>}
           </div>
@@ -188,33 +188,33 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
       {/* Referral banner */}
       <div className="ref-banner">
         <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"6px" }}>
-          <span style={{ fontSize:"22px" }}>👑</span>
-          <div className="ref-banner-title">Refer a friend — both get 50% off. Refer 3 → Pro for life.</div>
+          <span style={{ fontSize:"22px" }}>\uD83D\uDC51</span>
+          <div className="ref-banner-title">Refer a friend \u2014 both get 50% off. Refer 3 \u2192 Pro for life.</div>
         </div>
         <div className="ref-banner-sub">
           Share your referral link. When a friend signs up and upgrades to Pro, <strong style={{ color:"#e8e8e8" }}>you both get 50% off your first month</strong>. Refer <strong style={{ color:"#c9a84c" }}>3 paying friends</strong> and get RuneTrader Pro free forever.
         </div>
         <div className="ref-banner-grid">
           <div className="ref-banner-card">
-            <div className="ref-banner-card-emoji">🎁</div>
+            <div className="ref-banner-card-emoji">\uD83C\uDF81</div>
             <div>
               <div className="ref-banner-card-title">You get</div>
-              <div className="ref-banner-card-desc">50% off your first month when your friend upgrades. Refer 3 paying friends → <span style={{ color:"#c9a84c", fontWeight:600 }}>Pro free for life</span>.</div>
+              <div className="ref-banner-card-desc">50% off your first month when your friend upgrades. Refer 3 paying friends \u2192 <span style={{ color:"#c9a84c", fontWeight:600 }}>Pro free for life</span>.</div>
             </div>
           </div>
           <div className="ref-banner-card">
-            <div className="ref-banner-card-emoji">👋</div>
+            <div className="ref-banner-card-emoji">\uD83D\uDC4B</div>
             <div>
               <div className="ref-banner-card-title">Your friend gets</div>
-              <div className="ref-banner-card-desc">50% off their first month of Pro — automatically applied when they checkout via your link.</div>
+              <div className="ref-banner-card-desc">50% off their first month of Pro \u2014 automatically applied when they checkout via your link.</div>
             </div>
           </div>
         </div>
         <div style={{ display:"flex", alignItems:"center", flexWrap:"wrap", gap:"8px" }}>
           {user ? (
-            <button className="ref-cta-btn" onClick={onGoToReferral}>Get my referral link →</button>
+            <button className="ref-cta-btn" onClick={onGoToReferral}>Get my referral link \u2192</button>
           ) : (
-            <button className="ref-cta-btn" onClick={onSignIn}>Sign up to get your referral link →</button>
+            <button className="ref-cta-btn" onClick={onSignIn}>Sign up to get your referral link \u2192</button>
           )}
           <span className="ref-cta-note">50% off is a one-time reward per account</span>
         </div>
@@ -224,10 +224,10 @@ export default function PricingPage({ user, onSignIn, isPro, onGoToReferral }) {
       <div className="faq">
         <div className="faq-heading">Common questions</div>
         {[
-          ["What is the Trading Terminal?", "The Trading Terminal (formerly Merchant Mode) is RuneTrader's flagship Pro feature — a dedicated screen that manages all your GE slots, tracks live P&L, suggests what to flip next based on your idle GP, and lets you set per-position autopilot rules."],
-          ["Do I need the RuneLite plugin?", "Yes for live slot tracking — the plugin syncs your GE offers to RuneTrader in real time. Without it, the market data, AI advisor and watchlist still work fully. The plugin is free and takes about 2 minutes to install."],
+          ["What is the Trading Terminal?", "The Trading Terminal (formerly Merchant Mode) is RuneTrader's flagship Pro feature \u2014 a dedicated screen that manages all your GE slots, tracks live P&L, suggests what to flip next based on your idle GP, and lets you set per-position autopilot rules."],
+          ["Do I need the RuneLite plugin?", "Yes for live slot tracking \u2014 the plugin syncs your GE offers to RuneTrader in real time. Without it, the market data, AI advisor and watchlist still work fully. The plugin is free and takes about 2 minutes to install."],
           ["Can I cancel any time?", "Yes. Cancel your Pro subscription any time from your Stripe billing portal. You keep Pro access until the end of your billing period."],
-          ["Is there a free trial?", "New signups get a 3-day Pro trial automatically — no credit card needed. After that, the free tier remains generous with full market access and AI advisor."],
+          ["Is there a free trial?", "New signups get a 3-day Pro trial automatically \u2014 no credit card needed. After that, the free tier remains generous with full market access and AI advisor."],
           ["What happens to my data if I cancel?", "All your flip history, watchlist, and alerts stay in your account. You just lose access to Pro-gated features."],
         ].map(([q, a], i) => (
           <div key={i} className="faq-item">

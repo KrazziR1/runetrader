@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 
 function formatGP(n) {
-  if (n == null || isNaN(n)) return "—";
+  if (n == null || isNaN(n)) return "\u2014";
   if (Math.abs(n) >= 1_000_000_000) return (n / 1_000_000_000).toFixed(2) + "B";
   if (Math.abs(n) >= 1_000_000)     return (n / 1_000_000).toFixed(1) + "M";
   if (Math.abs(n) >= 1_000)         return (n / 1_000).toFixed(1) + "k";
@@ -26,7 +26,7 @@ function calcGpPerFill(item) {
   return Math.round(item.margin * Math.max(expFill, 1));
 }
 
-// ── Full score breakdown for a single item ────────────────────────────────────
+// \u2500\u2500 Full score breakdown for a single item \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function getScoreBreakdown(item) {
   const margin    = item.margin   || 0;
   const roi       = item.roi      || 0;
@@ -42,7 +42,7 @@ function getScoreBreakdown(item) {
   return { marginPts, roiPts, volPts, gpFillPts, total };
 }
 
-// ── Mini score bar ─────────────────────────────────────────────────────────────
+// \u2500\u2500 Mini score bar \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function ScoreBar({ value, max, color }) {
   const pct = Math.min((value / max) * 100, 100);
   return (
@@ -55,15 +55,15 @@ function ScoreBar({ value, max, color }) {
   );
 }
 
-// ── Expanded breakdown row ─────────────────────────────────────────────────────
+// \u2500\u2500 Expanded breakdown row \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function BreakdownPanel({ item, bd }) {
   return (
     <div style={{ gridColumn: "1 / -1", background: "var(--bg4)", borderTop: "1px solid var(--border)", padding: "16px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "16px" }}>
       {[
-        { label: "Margin Score", pts: bd.marginPts, max: 25, color: "var(--green)",  tip: `+${formatGP(item.margin)} margin → ${bd.marginPts}/25 pts` },
-        { label: "ROI Score",    pts: bd.roiPts,    max: 25, color: "var(--gold)",   tip: `${item.roi}% ROI → ${bd.roiPts}/25 pts` },
-        { label: "Volume Score", pts: bd.volPts,    max: 25, color: "var(--blue)",   tip: `${item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume} vol/day → ${bd.volPts}/25 pts` },
-        { label: "GP/Fill Score",pts: bd.gpFillPts, max: 25, color: "#a855f7",       tip: `${formatGP(calcGpPerFill(item))} GP/fill → ${bd.gpFillPts}/25 pts` },
+        { label: "Margin Score", pts: bd.marginPts, max: 25, color: "var(--green)",  tip: `+${formatGP(item.margin)} margin \u2192 ${bd.marginPts}/25 pts` },
+        { label: "ROI Score",    pts: bd.roiPts,    max: 25, color: "var(--gold)",   tip: `${item.roi}% ROI \u2192 ${bd.roiPts}/25 pts` },
+        { label: "Volume Score", pts: bd.volPts,    max: 25, color: "var(--blue)",   tip: `${item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume} vol/day \u2192 ${bd.volPts}/25 pts` },
+        { label: "GP/Fill Score",pts: bd.gpFillPts, max: 25, color: "#a855f7",       tip: `${formatGP(calcGpPerFill(item))} GP/fill \u2192 ${bd.gpFillPts}/25 pts` },
       ].map(({ label, pts, max, color, tip }) => (
         <div key={label} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -77,12 +77,12 @@ function BreakdownPanel({ item, bd }) {
   );
 }
 
-// ── Score explanation card ─────────────────────────────────────────────────────
+// \u2500\u2500 Score explanation card \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function ScoringExplainer() {
   return (
     <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
       <div style={{ fontFamily: "'Cinzel', serif", fontSize: "16px", fontWeight: 700, color: "var(--gold)", marginBottom: "12px" }}>
-        🏆 How Scores Are Calculated
+        \uD83C\uDFC6 How Scores Are Calculated
       </div>
       <p style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.7, marginBottom: "16px" }}>
         Every item is scored out of <strong style={{ color: "var(--text)" }}>100 points</strong> across four equal components.
@@ -90,10 +90,10 @@ function ScoringExplainer() {
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
         {[
-          { icon: "💰", label: "Margin",    pts: 25, color: "var(--green)", desc: "Raw GP profit per item after GE tax. Items with +100k margin score full points." },
-          { icon: "📊", label: "ROI",       pts: 25, color: "var(--gold)",  desc: "Return on investment. High ROI means you're getting more bang per GP invested." },
-          { icon: "🔥", label: "Volume",    pts: 25, color: "var(--blue)",  desc: "Daily trade volume. High volume = faster fills = more flips per day." },
-          { icon: "⚡", label: "GP / Fill", pts: 25, color: "#a855f7",      desc: "Realistic GP per 4hr window, accounting for your buy limit and market volume." },
+          { icon: "\uD83D\uDCB0", label: "Margin",    pts: 25, color: "var(--green)", desc: "Raw GP profit per item after GE tax. Items with +100k margin score full points." },
+          { icon: "\uD83D\uDCCA", label: "ROI",       pts: 25, color: "var(--gold)",  desc: "Return on investment. High ROI means you're getting more bang per GP invested." },
+          { icon: "\uD83D\uDD25", label: "Volume",    pts: 25, color: "var(--blue)",  desc: "Daily trade volume. High volume = faster fills = more flips per day." },
+          { icon: "\u26A1", label: "GP / Fill", pts: 25, color: "#a855f7",      desc: "Realistic GP per 4hr window, accounting for your buy limit and market volume." },
         ].map(({ icon, label, pts, color, desc }) => (
           <div key={label} style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "14px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
@@ -106,14 +106,14 @@ function ScoringExplainer() {
         ))}
       </div>
       <div style={{ marginTop: "14px", padding: "12px 16px", background: "rgba(201,168,76,0.06)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", fontSize: "12px", color: "var(--text-dim)", lineHeight: 1.6 }}>
-        💡 <strong style={{ color: "var(--gold)" }}>Coming soon:</strong> The score will also factor in your personal preferences from the ⭐ Picks tab —
-        risk appetite, trade speed, and cash stack — so items are ranked specifically to how you trade.
+        \uD83D\uDCA1 <strong style={{ color: "var(--gold)" }}>Coming soon:</strong> The score will also factor in your personal preferences from the \u2B50 Picks tab \u2014
+        risk appetite, trade speed, and cash stack \u2014 so items are ranked specifically to how you trade.
       </div>
     </div>
   );
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────────
+// \u2500\u2500 Main Component \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 export default function ScoreTab({ user, items, onSignIn, onOpenChart }) {
   const [search, setSearch]     = useState("");
   const [expanded, setExpanded] = useState(null);
@@ -181,7 +181,7 @@ export default function ScoreTab({ user, items, onSignIn, onOpenChart }) {
                   <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                   <div>
                     <div className="item-name">{item.name}</div>
-                    <div style={{ fontSize: "10px", color: "var(--text-dim)" }}>{isOpen ? "▲ hide" : "▼ breakdown"}</div>
+                    <div style={{ fontSize: "10px", color: "var(--text-dim)" }}>{isOpen ? "\u25B2 hide" : "\u25BC breakdown"}</div>
                   </div>
                 </div>
 
@@ -201,7 +201,7 @@ export default function ScoreTab({ user, items, onSignIn, onOpenChart }) {
                   {item.volume >= 1000 ? (item.volume / 1000).toFixed(1) + "k" : item.volume.toLocaleString()}
                 </span>
 
-                {/* Score bars — margin */}
+                {/* Score bars \u2014 margin */}
                 <ScoreBar value={marginPts} max={25} color="var(--green)" />
 
                 {/* ROI bar */}
@@ -227,7 +227,7 @@ export default function ScoreTab({ user, items, onSignIn, onOpenChart }) {
                       onClick={() => { onOpenChart && onOpenChart(item); }}
                       style={{ padding: "7px 18px", borderRadius: "6px", border: "1px solid var(--gold-dim)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif" }}
                     >
-                      View Chart →
+                      View Chart \u2192
                     </button>
                   </div>
                 </div>

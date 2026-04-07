@@ -201,7 +201,7 @@ const STYLES = `
   .pricing-period { font-size: 13px; color: var(--text-dim); }
   .pricing-features { list-style: none; margin: 24px 0; text-align: left; display: flex; flex-direction: column; gap: 10px; }
   .pricing-features li { font-size: 14px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
-  .pricing-features li::before { content: '◆'; color: var(--gold); font-size: 8px; flex-shrink: 0; }
+  .pricing-features li::before { content: '\u25C6'; color: var(--gold); font-size: 8px; flex-shrink: 0; }
   .pricing-features li.active { color: var(--text); }
   .pricing-btn {
     width: 100%; padding: 13px; border-radius: 8px; font-family: 'Cinzel', serif;
@@ -287,24 +287,24 @@ const TICKER_ITEMS = [
 ];
 
 const FEATURES = [
-  { icon: "📈", title: "Merchant Mode", desc: "A self-contained trading terminal with live operations, analytics, alerts and flip recommendations — all in one screen. Never leave the UI while actively trading.", tag: "Flagship feature" },
-  { icon: "📡", title: "Live GE Slot Tracking", desc: "Connect the RuneLite plugin and your active GE offers sync in real time. See live P&L, slot drift alerts, and position status without tabbing out of the game.", tag: "RuneLite plugin" },
-  { icon: "🤖", title: "AI Flip Advisor", desc: "Ask in plain English — 'I have 5M gp, what should I flip?' — and get intelligent recommendations backed by your live GE data and current positions.", tag: "Powered by Claude" },
-  { icon: "📊", title: "Live Margin Engine", desc: "4,525 items tracked in real time from the OSRS Wiki API. GE tax automatically factored into every margin, ROI and GP/hr calculation.", tag: "Real-time data" },
-  { icon: "🔔", title: "Smart Alerts", desc: "Margin spikes, volume surges, dump detection and price crashes — get notified the moment an opportunity appears or a position turns against you.", tag: "Live" },
-  { icon: "📈", title: "Profit Tracker", desc: "Log every flip and track your GP/hr over time. See your best items, flip streaks, and capital efficiency — all in the Tracker tab.", tag: "Live" },
+  { icon: "\uD83D\uDCC8", title: "Merchant Mode", desc: "A self-contained trading terminal with live operations, analytics, alerts and flip recommendations \u2014 all in one screen. Never leave the UI while actively trading.", tag: "Flagship feature" },
+  { icon: "\uD83D\uDCE1", title: "Live GE Slot Tracking", desc: "Connect the RuneLite plugin and your active GE offers sync in real time. See live P&L, slot drift alerts, and position status without tabbing out of the game.", tag: "RuneLite plugin" },
+  { icon: "\uD83E\uDD16", title: "AI Flip Advisor", desc: "Ask in plain English \u2014 'I have 5M gp, what should I flip?' \u2014 and get intelligent recommendations backed by your live GE data and current positions.", tag: "Powered by Claude" },
+  { icon: "\uD83D\uDCCA", title: "Live Margin Engine", desc: "4,525 items tracked in real time from the OSRS Wiki API. GE tax automatically factored into every margin, ROI and GP/hr calculation.", tag: "Real-time data" },
+  { icon: "\uD83D\uDD14", title: "Smart Alerts", desc: "Margin spikes, volume surges, dump detection and price crashes \u2014 get notified the moment an opportunity appears or a position turns against you.", tag: "Live" },
+  { icon: "\uD83D\uDCC8", title: "Profit Tracker", desc: "Log every flip and track your GP/hr over time. See your best items, flip streaks, and capital efficiency \u2014 all in the Tracker tab.", tag: "Live" },
 ];
 
 const COMPARISON_ROWS = [
-  { feature: "Live GE price data — real-time", us: "✅", them: "Varies" },
-  { feature: "RuneLite plugin — live slot sync", us: "✅", them: "Some" },
-  { feature: "AI advisor with live position context", us: "✅", them: "❌" },
-  { feature: "Ask questions in plain English", us: "✅", them: "❌" },
-  { feature: "Merchant Mode trading terminal", us: "✅", them: "❌" },
-  { feature: "Filter flips by your cash stack", us: "✅", them: "Rarely" },
-  { feature: "Smart alerts — dumps, spikes, crashes", us: "✅", them: "Rarely" },
-  { feature: "Transparent flip scoring & reasoning", us: "✅", them: "❌" },
-  { feature: "Free tier with real value", us: "✅", them: "Limited" },
+  { feature: "Live GE price data \u2014 real-time", us: "\u2705", them: "Varies" },
+  { feature: "RuneLite plugin \u2014 live slot sync", us: "\u2705", them: "Some" },
+  { feature: "AI advisor with live position context", us: "\u2705", them: "\u274C" },
+  { feature: "Ask questions in plain English", us: "\u2705", them: "\u274C" },
+  { feature: "Merchant Mode trading terminal", us: "\u2705", them: "\u274C" },
+  { feature: "Filter flips by your cash stack", us: "\u2705", them: "Rarely" },
+  { feature: "Smart alerts \u2014 dumps, spikes, crashes", us: "\u2705", them: "Rarely" },
+  { feature: "Transparent flip scoring & reasoning", us: "\u2705", them: "\u274C" },
+  { feature: "Free tier with real value", us: "\u2705", them: "Limited" },
 ];
 
 export default function LandingPage({ onEnterApp }) {
@@ -366,7 +366,7 @@ export default function LandingPage({ onEnterApp }) {
           <a href="#pricing" className="nav-link">Pricing</a>
         </div>
         <a href="/#" className="nav-cta" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp(); }}>
-          Enter the Market →
+          Enter the Market \u2192
         </a>
       </nav>
 
@@ -399,14 +399,14 @@ export default function LandingPage({ onEnterApp }) {
             Profit More.
           </h1>
           <p className="hero-sub">
-            Real-time Grand Exchange data, smart alerts, and a built-in AI advisor — everything you need to flip smarter and grow your stack.
+            Real-time Grand Exchange data, smart alerts, and a built-in AI advisor \u2014 everything you need to flip smarter and grow your stack.
           </p>
           <div className="hero-actions">
             <a href="/#" className="btn-primary" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp(); }}>
-              Create Free Account →
+              Create Free Account \u2192
             </a>
             <a href="/#" className="btn-secondary" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp("demo"); }}>
-              Explore Demo ↗
+              Explore Demo \u2197
             </a>
           </div>
           <div className="hero-stats">
@@ -423,7 +423,7 @@ export default function LandingPage({ onEnterApp }) {
               <div className="hero-stat-label">To Start</div>
             </div>
             <div className="hero-stat">
-              <div className="hero-stat-value">📈</div>
+              <div className="hero-stat-value">\uD83D\uDCC8</div>
               <div className="hero-stat-label">Merchant Mode</div>
             </div>
           </div>
@@ -434,7 +434,7 @@ export default function LandingPage({ onEnterApp }) {
       <section className="section" id="features">
         <div className="section-label">What We Offer</div>
         <h2 className="section-title">Everything you need<br />to dominate the GE</h2>
-        <p className="section-sub">Built by an OSRS player, for OSRS players. No fluff — every feature below is live and free to use today.</p>
+        <p className="section-sub">Built by an OSRS player, for OSRS players. No fluff \u2014 every feature below is live and free to use today.</p>
         <div className="features-grid">
           {FEATURES.map((f, i) => (
             <div key={i} className="feature-card">
@@ -455,9 +455,9 @@ export default function LandingPage({ onEnterApp }) {
           <p className="section-sub" style={{ margin: "16px auto 64px" }}>RuneTrader connects to your game via the RuneLite client. It takes about 2 minutes to set up.</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "2px" }}>
             {[
-              { num: "01", title: "Install RuneLite", desc: "Download RuneLite if you don't have it, then search 'RuneTrader' in the Plugin Hub and click install.", icon: "🔌" },
-              { num: "02", title: "Create a free account", desc: "Sign up at RuneTrader.gg — no credit card, no commitment. Your account links to the plugin automatically.", icon: "🧑‍💻" },
-              { num: "03", title: "Open the GE and flip", desc: "Your GE slots sync in real time. Open Merchant Mode, check the AI advisor, and start stacking gold.", icon: "📈" },
+              { num: "01", title: "Install RuneLite", desc: "Download RuneLite if you don't have it, then search 'RuneTrader' in the Plugin Hub and click install.", icon: "\uD83D\uDD0C" },
+              { num: "02", title: "Create a free account", desc: "Sign up at RuneTrader.gg \u2014 no credit card, no commitment. Your account links to the plugin automatically.", icon: "\uD83E\uDDD1\u200D\uD83D\uDCBB" },
+              { num: "03", title: "Open the GE and flip", desc: "Your GE slots sync in real time. Open Merchant Mode, check the AI advisor, and start stacking gold.", icon: "\uD83D\uDCC8" },
             ].map((step, i) => (
               <div key={i} className="feature-card" style={{ textAlign: "left" }}>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", letterSpacing: "3px", color: "var(--gold-dim)", marginBottom: "16px" }}>{step.num}</div>
@@ -469,7 +469,7 @@ export default function LandingPage({ onEnterApp }) {
           </div>
           <div style={{ marginTop: "48px" }}>
             <a href="https://github.com/runelite/plugin-hub" target="_blank" rel="noreferrer" className="btn-secondary" style={{ fontSize: "13px", padding: "12px 28px", display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-              View RuneLite Plugin Hub →
+              View RuneLite Plugin Hub \u2192
             </a>
           </div>
         </div>
@@ -510,7 +510,7 @@ export default function LandingPage({ onEnterApp }) {
               <div className="pricing-price" style={{ fontSize: "40px" }}>$0</div>
               <div className="pricing-period">Forever free</div>
               <ul className="pricing-features" style={{ marginTop: "20px" }}>
-                <li className="active">Live market data — 4,525 items</li>
+                <li className="active">Live market data \u2014 4,525 items</li>
                 <li className="active">AI Advisor (limited context)</li>
                 <li className="active">Watchlist & price alerts</li>
                 <li className="active">Flip tracker & profit history</li>
@@ -530,7 +530,7 @@ export default function LandingPage({ onEnterApp }) {
                 <li className="active">AI Advisor with full context</li>
                 <li className="active">Autopilot rules & GP goals</li>
               </ul>
-              <button className="pricing-btn featured-btn" onClick={() => onEnterApp && onEnterApp()} style={{ marginTop: "8px" }}>Upgrade to Pro →</button>
+              <button className="pricing-btn featured-btn" onClick={() => onEnterApp && onEnterApp()} style={{ marginTop: "8px" }}>Upgrade to Pro \u2192</button>
             </div>
           </div>
         </div>
@@ -540,10 +540,10 @@ export default function LandingPage({ onEnterApp }) {
       <section className="cta-section">
         <div className="cta-bg" />
         <h2 className="cta-title">Ready to flip smarter?</h2>
-        <p className="cta-sub">Built by an OSRS player, for OSRS players. Free to use — install the RuneLite plugin and you're ready to flip.</p>
+        <p className="cta-sub">Built by an OSRS player, for OSRS players. Free to use \u2014 install the RuneLite plugin and you're ready to flip.</p>
         <div className="cta-actions">
           <a href="/#" className="btn-primary" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp(); }}>
-              Create Free Account →
+              Create Free Account \u2192
             </a>
         </div>
       </section>
@@ -565,7 +565,7 @@ export default function LandingPage({ onEnterApp }) {
             className="footer-link"
             style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "var(--gold)", opacity: 0.8 }}
           >
-            ☕ Support Development
+            \u2615 Support Development
           </a>
         </div>
       </footer>

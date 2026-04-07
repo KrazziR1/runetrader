@@ -114,11 +114,11 @@ export default function AuthModal({ onClose, onAuth }) {
       } else if (data?.user?.identities?.length === 0) {
         setError("An account with this email already exists. Try logging in instead.");
       } else if (data?.session) {
-        // Email confirmation is OFF — user is logged in immediately
+        // Email confirmation is OFF \u2014 user is logged in immediately
         onAuth(data.user);
         onClose();
       } else {
-        // Email confirmation is ON — show confirmation message
+        // Email confirmation is ON \u2014 show confirmation message
         setShowSuccess(true);
       }
     } else {
@@ -138,23 +138,23 @@ export default function AuthModal({ onClose, onAuth }) {
     setLoading(false);
   }
 
-  // ── Success screen (email confirmation required) ──
+  // \u2500\u2500 Success screen (email confirmation required) \u2500\u2500
   if (showSuccess) {
     return (
       <>
         <style>{AUTH_STYLES}</style>
         <div className="auth-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
           <div className="auth-modal">
-            <button className="auth-close" onClick={onClose}>✕</button>
+            <button className="auth-close" onClick={onClose}>\u2715</button>
             <div className="auth-success-screen">
-              <div className="auth-success-icon">📬</div>
+              <div className="auth-success-icon">\uD83D\uDCEC</div>
               <div className="auth-success-title">Check Your Email</div>
               <div className="auth-success-msg">
                 We sent a confirmation link to <strong style={{ color: "#e8e8e8" }}>{email}</strong>.<br /><br />
                 Click the link in your email to activate your account, then come back and log in.
               </div>
               <button className="auth-success-btn" onClick={() => switchTab("login")}>
-                → Back to Log In
+                \u2192 Back to Log In
               </button>
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function AuthModal({ onClose, onAuth }) {
       <style>{AUTH_STYLES}</style>
       <div className="auth-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
         <div className="auth-modal">
-          <button className="auth-close" onClick={onClose}>✕</button>
+          <button className="auth-close" onClick={onClose}>\u2715</button>
 
           <div className="auth-logo">
             <svg width="40" height="40" viewBox="0 0 48 48" fill="none">
@@ -180,7 +180,7 @@ export default function AuthModal({ onClose, onAuth }) {
               <path d="M37 13 L37 35" stroke="#e8c96a" strokeWidth="3" strokeLinecap="round"/>
             </svg>
             <div className="auth-title">RuneTrader.gg</div>
-            <div className="auth-sub">{tab === "login" ? "Welcome back, adventurer" : "Join the alpha — it's free"}</div>
+            <div className="auth-sub">{tab === "login" ? "Welcome back, adventurer" : "Join the alpha \u2014 it's free"}</div>
           </div>
 
           <div className="auth-tabs">
@@ -190,7 +190,7 @@ export default function AuthModal({ onClose, onAuth }) {
 
           {error && (
             <div className="auth-error">
-              <span>⚠️</span>
+              <span>\u26A0\uFE0F</span>
               <span>{error}</span>
             </div>
           )}
@@ -212,7 +212,7 @@ export default function AuthModal({ onClose, onAuth }) {
             </div>
             <div className="auth-field">
               <label className="auth-label">Password</label>
-              <input className="auth-input" type="password" placeholder="••••••••" value={password}
+              <input className="auth-input" type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" value={password}
                 onChange={e => setPassword(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleSubmit()} />
               {tab === "signup" && password.length > 0 && (
@@ -231,11 +231,11 @@ export default function AuthModal({ onClose, onAuth }) {
           </div>
 
           <button className="auth-btn" disabled={loading} onClick={handleSubmit}>
-            {loading ? "Please wait..." : tab === "login" ? "Log In →" : "Create Free Account →"}
+            {loading ? "Please wait..." : tab === "login" ? "Log In \u2192" : "Create Free Account \u2192"}
           </button>
 
           <div className="auth-divider">
-            <span>{tab === "signup" ? "Free forever · No credit card needed" : "New here? Sign up above — it's free"}</span>
+            <span>{tab === "signup" ? "Free forever · No credit card needed" : "New here? Sign up above \u2014 it's free"}</span>
           </div>
         </div>
       </div>

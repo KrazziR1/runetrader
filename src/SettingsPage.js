@@ -94,7 +94,7 @@ function Section({ icon, iconBg, title, sub, children, defaultOpen = true }) {
           <div className="settings-section-title">{title}</div>
           <div className="settings-section-sub">{sub}</div>
         </div>
-        <span className={`settings-section-chevron${open ? " open" : ""}`}>▼</span>
+        <span className={`settings-section-chevron${open ? " open" : ""}`}>\u25BC</span>
       </div>
       {open && <div className="settings-rows">{children}</div>}
     </div>
@@ -122,7 +122,7 @@ export default function SettingsPage({
   sortCol, sortDir, onSetDefaultSort,
   flipsLog = [], autoFlipsLog = [],
 }) {
-  // ── API keys ──
+  // \u2500\u2500 API keys \u2500\u2500
   const [keys, setKeys] = useState([]);
   const [keysLoading, setKeysLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -130,26 +130,26 @@ export default function SettingsPage({
   const [newLabel, setNewLabel] = useState("");
   const [newKey, setNewKey] = useState(null);
 
-  // ── Discord ──
+  // \u2500\u2500 Discord \u2500\u2500
   const [discordCode, setDiscordCode] = useState("");
   const [discordLinked, setDiscordLinked] = useState(false);
   const [discordLoading, setDiscordLoading] = useState(false);
   const [discordChecking, setDiscordChecking] = useState(true);
 
-  // ── Alert frequency (stored locally, checked client-side) ──
+  // \u2500\u2500 Alert frequency (stored locally, checked client-side) \u2500\u2500
   const [alertFreq, setAlertFreq] = useState(() => {
     try { return localStorage.getItem("runetrader_alert_freq") || "5"; } catch { return "5"; }
   });
 
-  // ── What's New toggle ──
+  // \u2500\u2500 What's New toggle \u2500\u2500
   const [whatsNewEnabled, setWhatsNewEnabled] = useState(() => {
     try { return localStorage.getItem("runetrader_disable_whats_new") !== "1"; } catch { return true; }
   });
 
-  // ── Confirm modal ──
+  // \u2500\u2500 Confirm modal \u2500\u2500
   const [confirm, setConfirm] = useState(null); // { title, desc, action }
 
-  // ── Sync pause timeout ──
+  // \u2500\u2500 Sync pause timeout \u2500\u2500
   const [pauseTimeout, setPauseTimeout] = useState(() => {
     try { return localStorage.getItem("runetrader_pause_timeout") || "60"; } catch { return "60"; }
   });
@@ -207,7 +207,7 @@ export default function SettingsPage({
       const json = await res.json();
       if (json.ok) {
         setNewKey(json.api_key); setNewLabel(""); fetchKeys();
-        showToast("API key generated! Copy it now — it won't be shown again.", "info", 8000);
+        showToast("API key generated! Copy it now \u2014 it won't be shown again.", "info", 8000);
       } else showToast(json.error || "Failed to generate key.", "error");
     } catch { showToast("Failed to generate key.", "error"); }
     setGenerating(false);
@@ -271,23 +271,23 @@ export default function SettingsPage({
   }
 
   function fmtDate(iso) {
-    if (!iso) return "—";
+    if (!iso) return "\u2014";
     return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   }
 
   const SORT_OPTIONS = [
-    { col: "volume", dir: "desc", label: "Vol/Day (high → low)" },
-    { col: "margin", dir: "desc", label: "Margin (high → low)" },
-    { col: "gpPerFill", dir: "desc", label: "GP/Fill (high → low)" },
-    { col: "roi", dir: "desc", label: "ROI % (high → low)" },
-    { col: "name", dir: "asc", label: "Name (A → Z)" },
+    { col: "volume", dir: "desc", label: "Vol/Day (high \u2192 low)" },
+    { col: "margin", dir: "desc", label: "Margin (high \u2192 low)" },
+    { col: "gpPerFill", dir: "desc", label: "GP/Fill (high \u2192 low)" },
+    { col: "roi", dir: "desc", label: "ROI % (high \u2192 low)" },
+    { col: "name", dir: "asc", label: "Name (A \u2192 Z)" },
     { col: "lastTradeTime", dir: "desc", label: "Last Traded (recent first)" },
   ];
 
 
   if (!user) return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"16px", padding:"80px 20px", textAlign:"center", color:"#6a7d90" }}>
-      <div style={{ fontSize:"40px", opacity:0.4 }}>⚙️</div>
+      <div style={{ fontSize:"40px", opacity:0.4 }}>\u2699\uFE0F</div>
       <p style={{ fontSize:"15px" }}>Sign in to access settings</p>
     </div>
   );
@@ -297,8 +297,8 @@ export default function SettingsPage({
       <style>{STYLES}</style>
       <div className="settings-page">
 
-        {/* ── GENERAL ── */}
-        <Section icon="⚙️" iconBg="rgba(52,152,219,0.15)" title="General" sub="Display and behaviour preferences">
+        {/* \u2500\u2500 GENERAL \u2500\u2500 */}
+        <Section icon="\u2699\uFE0F" iconBg="rgba(52,152,219,0.15)" title="General" sub="Display and behaviour preferences">
           <Row label="Sound effects" desc="Coin clinks, level-up chimes, and profit fanfares">
             <Toggle on={!soundMuted} onChange={() => onToggleSound()} />
           </Row>
@@ -333,11 +333,11 @@ export default function SettingsPage({
           </Row>
         </Section>
 
-        {/* ── ALERTS & NOTIFICATIONS ── */}
-        <Section icon="🔔" iconBg="rgba(201,168,76,0.12)" title="Alerts & Notifications" sub="How and when you get notified">
+        {/* \u2500\u2500 ALERTS & NOTIFICATIONS \u2500\u2500 */}
+        <Section icon="\uD83D\uDD14" iconBg="rgba(201,168,76,0.12)" title="Alerts & Notifications" sub="How and when you get notified">
           <Row label="Push notifications" desc="Get alerted on your phone or desktop even when the app is closed">
             {notifPermission === "granted" ? (
-              <span className="status-pill green">✓ Enabled</span>
+              <span className="status-pill green">\u2713 Enabled</span>
             ) : notifPermission === "denied" ? (
               <span className="status-pill dim">Blocked by browser</span>
             ) : (
@@ -359,10 +359,10 @@ export default function SettingsPage({
             </select>
           </Row>
           {[
-            { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps significantly above recent levels" },
-            { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Daily volume multiplies suddenly" },
-            { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops sharply — someone selling in bulk" },
-            { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy and sell prices collapse" },
+            { key: "marginSpike",  icon: "\uD83D\uDCC8", label: "Margin Spike",  desc: "Margin jumps significantly above recent levels" },
+            { key: "volumeSurge",  icon: "\uD83D\uDD25", label: "Volume Surge",  desc: "Daily volume multiplies suddenly" },
+            { key: "dumpDetected", icon: "\u26A0\uFE0F", label: "Dump Detected", desc: "Sell price drops sharply \u2014 someone selling in bulk" },
+            { key: "priceCrash",   icon: "\uD83D\uDCA5", label: "Price Crash",   desc: "Both buy and sell prices collapse" },
           ].map(({ key, icon, label, desc }) => (
             <Row key={key} label={`${icon} ${label}`} desc={desc}>
               <Toggle on={smartAlertSettings?.[key] ?? true} onChange={val => onSaveSmartAlert(key, val)} />
@@ -370,27 +370,27 @@ export default function SettingsPage({
           ))}
         </Section>
 
-        {/* ── RUNELITE PLUGIN ── */}
-        <Section icon="🔌" iconBg="rgba(52,152,219,0.12)" title="RuneLite Plugin" sub="Plugin connection and API key management">
+        {/* \u2500\u2500 RUNELITE PLUGIN \u2500\u2500 */}
+        <Section icon="\uD83D\uDD0C" iconBg="rgba(52,152,219,0.12)" title="RuneLite Plugin" sub="Plugin connection and API key management">
           <Row label="Plugin Hub" desc="Install the RuneTrader plugin from the RuneLite Plugin Hub, then paste your API key below">
             <a href="https://runelite.net/plugin-hub" target="_blank" rel="noreferrer" className="settings-btn" style={{ textDecoration: "none", display: "inline-block" }}>
-              Open Plugin Hub ↗
+              Open Plugin Hub \u2197
             </a>
           </Row>
-          <Row label="Sync pause timeout" desc="Matches the General setting — how long before sync auto-resumes">
+          <Row label="Sync pause timeout" desc="Matches the General setting \u2014 how long before sync auto-resumes">
             <span style={{ fontSize: "13px", color: "#c9a84c", fontWeight: 600 }}>{pauseTimeout} min</span>
           </Row>
           <div style={{ padding: "0 22px 4px" }}>
             {/* New key reveal */}
             {newKey && (
               <div className="new-key-banner">
-                <div className="new-key-banner-title">✅ New key generated — copy it now. It won't be shown again.</div>
+                <div className="new-key-banner-title">\u2705 New key generated \u2014 copy it now. It won't be shown again.</div>
                 <div className="new-key-banner-row">
                   <code className="settings-code" style={{ flex: 1 }}>{newKey}</code>
                   <button className="settings-btn" onClick={() => { navigator.clipboard.writeText(newKey); showToast("Copied!", "success"); }}>Copy</button>
                 </div>
                 <button onClick={() => setNewKey(null)} style={{ background: "none", border: "none", color: "#6a7d90", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, alignSelf: "flex-start" }}>
-                  I've copied it — dismiss
+                  I've copied it \u2014 dismiss
                 </button>
               </div>
             )}
@@ -426,7 +426,7 @@ export default function SettingsPage({
                 <div key={key.id} className="key-table-row">
                   <div>
                     <div style={{ fontSize: "14px", fontWeight: 500, color: "#e8e8e8" }}>{key.label || "Unlabelled"}</div>
-                    <div style={{ fontSize: "12px", color: "#3d5060", fontFamily: "monospace", marginTop: "2px" }}>rt_••••••••</div>
+                    <div style={{ fontSize: "12px", color: "#3d5060", fontFamily: "monospace", marginTop: "2px" }}>rt_\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022</div>
                   </div>
                   <span style={{ fontSize: "13px", color: "#8fa0b0" }}>{fmtDate(key.created_at)}</span>
                   <span style={{ fontSize: "13px", color: key.last_used ? "#8fa0b0" : "#2a3a4a" }}>{key.last_used ? fmtDate(key.last_used) : "Never"}</span>
@@ -441,13 +441,13 @@ export default function SettingsPage({
           )}
         </Section>
 
-        {/* ── CONNECTIONS ── */}
-        <Section icon="🔗" iconBg="rgba(114,137,218,0.15)" title="Connections" sub="Linked accounts and integrations">
-          <Row label="Discord account" desc={discordLinked ? "Your Discord is linked — bot commands and flip sync are active" : "Run !verify in Discord to get your code, then enter it below"}>
+        {/* \u2500\u2500 CONNECTIONS \u2500\u2500 */}
+        <Section icon="\uD83D\uDD17" iconBg="rgba(114,137,218,0.15)" title="Connections" sub="Linked accounts and integrations">
+          <Row label="Discord account" desc={discordLinked ? "Your Discord is linked \u2014 bot commands and flip sync are active" : "Run !verify in Discord to get your code, then enter it below"}>
             {discordChecking ? (
               <span className="settings-skeleton" style={{ width: "80px", display: "inline-block" }} />
             ) : discordLinked ? (
-              <span className="status-pill green">✓ Linked</span>
+              <span className="status-pill green">\u2713 Linked</span>
             ) : (
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                 <input
@@ -466,8 +466,8 @@ export default function SettingsPage({
           </Row>
         </Section>
 
-        {/* ── ACCOUNT ── */}
-        {/* ── SUPPORT CARD ── */}
+        {/* \u2500\u2500 ACCOUNT \u2500\u2500 */}
+        {/* \u2500\u2500 SUPPORT CARD \u2500\u2500 */}
         <div style={{
           background: "linear-gradient(135deg, #0f1a26 0%, #111e2b 100%)",
           border: "1px solid #1c2a3a",
@@ -484,7 +484,7 @@ export default function SettingsPage({
               width: "42px", height: "42px", borderRadius: "10px",
               background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.2)",
               display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0,
-            }}>☕</div>
+            }}>\u2615</div>
             <div>
               <div style={{ fontSize: "14px", fontWeight: 600, color: "#e8e8e8", marginBottom: "4px" }}>Support RuneTrader</div>
               <div style={{ fontSize: "13px", color: "#8fa0b0", lineHeight: "1.5" }}>
@@ -507,20 +507,20 @@ export default function SettingsPage({
             onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
             onMouseLeave={e => e.currentTarget.style.opacity = "1"}
           >
-            ☕ Buy Me a Coffee
+            \u2615 Buy Me a Coffee
           </a>
         </div>
 
-        <Section icon="🗑️" iconBg="rgba(231,76,60,0.1)" title="Account" sub="Data export and danger zone" defaultOpen={false}>
+        <Section icon="\uD83D\uDDD1\uFE0F" iconBg="rgba(231,76,60,0.1)" title="Account" sub="Data export and danger zone" defaultOpen={false}>
           <Row label="Export flip history" desc={`Download all ${flipsLog.filter(f => f.status !== "open").length + autoFlipsLog.length} closed flips as a CSV file`}>
             <button className="settings-btn" onClick={exportData}>
-              ↓ Export CSV
+              \u2193 Export CSV
             </button>
           </Row>
           <Row label="Clear flip history" desc="Permanently delete all logged flips from your account and this device. This cannot be undone.">
             <button className="settings-btn danger" onClick={() => setConfirm({
               title: "Clear Flip History",
-              desc: "This will permanently delete all your closed flip history from the database and this device. Only flip data is removed — your watchlist, price alerts, and settings are not affected. This cannot be undone.",
+              desc: "This will permanently delete all your closed flip history from the database and this device. Only flip data is removed \u2014 your watchlist, price alerts, and settings are not affected. This cannot be undone.",
               action: clearFlipHistory,
             })}>
               Clear History
@@ -539,7 +539,7 @@ export default function SettingsPage({
 
       </div>
 
-      {/* ── CONFIRM MODAL ── */}
+      {/* \u2500\u2500 CONFIRM MODAL \u2500\u2500 */}
       {confirm && (
         <div className="confirm-overlay" onClick={() => setConfirm(null)}>
           <div className="confirm-modal" onClick={e => e.stopPropagation()}>

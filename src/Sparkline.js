@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Sparkline — inline 24hr margin trend drawn on canvas.
+ * Sparkline \u2014 inline 24hr margin trend drawn on canvas.
  * Props:
- *   itemId  {number}  — OSRS wiki item ID
- *   width   {number}  — canvas width (default 80)
- *   height  {number}  — canvas height (default 32)
- *   color   {string}  — stroke color override (auto from trend if omitted)
+ *   itemId  {number}  \u2014 OSRS wiki item ID
+ *   width   {number}  \u2014 canvas width (default 80)
+ *   height  {number}  \u2014 canvas height (default 32)
+ *   color   {string}  \u2014 stroke color override (auto from trend if omitted)
  */
 export default function Sparkline({ itemId, width = 80, height = 32, color }) {
   const canvasRef = useRef(null);
@@ -93,7 +93,7 @@ export default function Sparkline({ itemId, width = 80, height = 32, color }) {
         cacheRef.current[itemId] = slice;
         draw(slice);
       } catch {
-        // fail silently — sparkline is non-critical
+        // fail silently \u2014 sparkline is non-critical
       }
     }
 
