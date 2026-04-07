@@ -92,7 +92,7 @@ const STYLES = `
     --green: #2ecc71; --green-dim: #1a7a44; --red: #e74c3c; --red-dim: #7a1f1a; --blue: #3498db;
     --glow-gold: rgba(201,168,76,0.15);
   }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 15px; }
+  body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: 15px; }
   .app { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 
   /* HEADER */
