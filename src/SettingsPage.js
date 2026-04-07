@@ -21,12 +21,10 @@ const STYLES = `
   .settings-row-control { flex-shrink:0; }
 
   /* Toggle switch */
-  .toggle-wrap { position:relative; width:68px; height:36px; flex-shrink:0; }
-  .toggle-wrap input { opacity:0; width:0; height:0; position:absolute; }
-  .toggle-track { position:absolute; inset:0; border-radius:36px; background:#243040; border:2px solid #3a4f65; cursor:pointer; transition:all 0.22s; }
-  .toggle-track.on { background:rgba(201,168,76,0.22); border-color:rgba(201,168,76,0.65); }
-  .toggle-thumb { position:absolute; top:5px; left:5px; width:22px; height:22px; border-radius:50%; background:#8fa0b0; transition:all 0.22s; pointer-events:none; }
-  .toggle-track.on .toggle-thumb { left:37px; background:#c9a84c; }
+  .tog { display:inline-flex; align-items:center; width:64px; height:34px; border-radius:34px; background:#243040; border:2px solid #344a62; cursor:pointer; transition:background 0.22s, border-color 0.22s; flex-shrink:0; position:relative; box-sizing:border-box; }
+  .tog.on { background:#1e2e1a; border-color:#c9a84c; }
+  .tog-thumb { position:absolute; left:4px; width:22px; height:22px; border-radius:50%; background:#6a8099; transition:left 0.22s, background 0.22s; }
+  .tog.on .tog-thumb { left:34px; background:#c9a84c; }
 
   /* Select */
   .settings-select { background:#0c1018; border:1px solid #28394d; border-radius:6px; color:#e8e8e8; font-size:13px; padding:8px 12px; font-family:'Inter',sans-serif; cursor:pointer; outline:none; min-width:180px; }
@@ -80,12 +78,9 @@ const STYLES = `
 
 function Toggle({ on, onChange }) {
   return (
-    <label className="toggle-wrap" onClick={e => e.stopPropagation()}>
-      <input type="checkbox" checked={on} onChange={e => onChange(e.target.checked)} />
-      <div className={`toggle-track${on ? " on" : ""}`}>
-        <div className="toggle-thumb" />
-      </div>
-    </label>
+    <div className={`tog${on ? " on" : ""}`} onClick={e => { e.stopPropagation(); onChange(!on); }}>
+      <div className="tog-thumb" />
+    </div>
   );
 }
 
