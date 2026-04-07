@@ -1,4 +1,4 @@
-// src/SettingsPage.js
+﻿// src/SettingsPage.js
 import { useState, useEffect } from "react";
 
 const STYLES = `

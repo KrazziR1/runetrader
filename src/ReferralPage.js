@@ -1,4 +1,4 @@
-// src/ReferralPage.js
+﻿// src/ReferralPage.js
 import { useState, useEffect } from "react";
 
 const STYLES = `

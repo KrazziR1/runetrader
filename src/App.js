@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import Sparkline from "./Sparkline";
