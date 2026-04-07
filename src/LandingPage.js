@@ -559,7 +559,7 @@ export default function LandingPage({ onEnterApp }) {
           <a href="/#" className="footer-link">Reddit</a>
           <a href="/#" className="footer-link">Privacy</a>
           <a
-            href="https://buymeacoffee.com/YOUR_USERNAME"
+            href="https://buymeacoffee.com/runetrader"
             target="_blank"
             rel="noopener noreferrer"
             className="footer-link"

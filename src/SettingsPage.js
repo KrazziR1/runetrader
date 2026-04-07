@@ -493,7 +493,7 @@ export default function SettingsPage({
             </div>
           </div>
           <a
-            href="https://buymeacoffee.com/YOUR_USERNAME"
+            href="https://buymeacoffee.com/runetrader"
             target="_blank"
             rel="noopener noreferrer"
             style={{
