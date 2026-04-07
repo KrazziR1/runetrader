@@ -99,7 +99,7 @@ const STYLES = `
   .header-top { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 56px; gap: 8px; }
   .header-bottom { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 40px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); }
   .logo { display: flex; align-items: center; gap: 10px; }
-  .logo-icon { width: 28px; height: 28px; filter: drop-shadow(0 0 6px rgba(201,168,76,0.4)); }
+  .logo-icon { width: 28px; height: 28px; }
   .logo-text { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, #c9a84c, #e8c96a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 1px; }
   .logo-dot { color: var(--text-dim); font-size: 13px; margin-left: 2px; }
   .header-right { display: flex; align-items: center; gap: 8px; }
@@ -7902,7 +7902,7 @@ RULES:
             {activeTab === "watchlist" && (
               <WatchlistPage
                 user={user}
-                items={items}
+                items={allItems.length > 0 ? allItems : items}
                 watchlist={watchlist}
                 watchlistAlerts={watchlistAlerts}
                 toggleWatchlist={toggleWatchlist}
@@ -8726,10 +8726,10 @@ RULES:
                   </button>
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
                   <button
-                    className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
+                    className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 || categoryFilter !== "All" ? " active" : ""}`}
                     onClick={() => setShowAdvFilters(v => !v)}
                   >
-                    ⚙ Filters {advFilterCount > 0 && <span className="adv-filter-badge">{advFilterCount}</span>}
+                    ⚙ Filters {(advFilterCount > 0 || categoryFilter !== "All") && <span className="adv-filter-badge">{advFilterCount + (categoryFilter !== "All" ? 1 : 0)}</span>}
                   </button>
                   <button
                     className="refresh-btn"
@@ -8784,31 +8784,21 @@ RULES:
                   </button>
                 </div>
 
-                {/* ── CATEGORY FILTER PILLS ── */}
-                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
-                  <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Category:</span>
-                  {["All","Runes","Food","Armour","Weapons","Potions","Seeds","Ammo","Misc"].map(cat => (
-                    <button key={cat}
-                      onClick={() => setCategoryFilter(cat)}
-                      style={{
-                        padding: "3px 11px", borderRadius: "12px", border: `1px solid ${categoryFilter === cat ? "var(--gold-dim)" : "var(--border)"}`,
-                        background: categoryFilter === cat ? "rgba(201,168,76,0.12)" : "transparent",
-                        color: categoryFilter === cat ? "var(--gold)" : "var(--text-dim)",
-                        fontSize: "11px", fontWeight: 500, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap"
-                      }}>
-                      {cat}
-                    </button>
-                  ))}
-                  {categoryFilter !== "All" && (
-                    <span style={{ fontSize: "11px", color: "var(--text-dim)", marginLeft: "4px" }}>
-                      — {filtered.length.toLocaleString()} items
-                    </span>
-                  )}
-                </div>
-
                 {showAdvFilters && (
                   <div className="adv-filter-panel">
-                    <div className="adv-filter-group">
+                    <div className="adv-filter-group" style={{ gridColumn: "1 / -1" }}>
+                      <div className="adv-filter-label">Category</div>
+                      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "2px" }}>
+                        {["All","Runes","Food","Armour","Weapons","Potions","Seeds","Ammo","Misc"].map(cat => (
+                          <button key={cat} onClick={() => setCategoryFilter(cat)} style={{
+                            padding: "3px 10px", borderRadius: "12px", border: `1px solid ${categoryFilter === cat ? "rgba(201,168,76,0.5)" : "var(--border)"}`,
+                            background: categoryFilter === cat ? "rgba(201,168,76,0.12)" : "transparent",
+                            color: categoryFilter === cat ? "var(--gold)" : "#99aabb",
+                            fontSize: "11px", fontWeight: categoryFilter === cat ? 600 : 400, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s"
+                          }}>{cat}</button>
+                        ))}
+                      </div>
+                    </div>
                       <div className="adv-filter-label">Margin (gp)</div>
                       <div className="adv-filter-row">
                         <input className="adv-filter-input" placeholder="Min" value={advFilters.minMargin} onChange={e => setAdv("minMargin", e.target.value)} type="number" />
@@ -8869,7 +8859,7 @@ RULES:
                     </div>
                     <div className="adv-filter-footer">
                       <span>{filtered.length.toLocaleString()} items match</span>
-                      {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>✕ Clear all filters</button>}
+                      {(advFilterCount > 0 || categoryFilter !== "All") && <button className="adv-filters-btn" onClick={() => { resetAdvFilters(); setCategoryFilter("All"); }}>✕ Clear all filters</button>}
                     </div>
                   </div>
                 )}
