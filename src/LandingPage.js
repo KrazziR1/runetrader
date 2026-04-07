@@ -558,6 +558,15 @@ export default function LandingPage({ onEnterApp }) {
           <a href="/#" className="footer-link">Discord</a>
           <a href="/#" className="footer-link">Reddit</a>
           <a href="/#" className="footer-link">Privacy</a>
+          <a
+            href="https://buymeacoffee.com/YOUR_USERNAME"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="footer-link"
+            style={{ display: "inline-flex", alignItems: "center", gap: "5px", color: "var(--gold)", opacity: 0.8 }}
+          >
+            ☕ Support Development
+          </a>
         </div>
       </footer>
     </div>

@@ -467,6 +467,50 @@ export default function SettingsPage({
         </Section>
 
         {/* ── ACCOUNT ── */}
+        {/* ── SUPPORT CARD ── */}
+        <div style={{
+          background: "linear-gradient(135deg, #0f1a26 0%, #111e2b 100%)",
+          border: "1px solid #1c2a3a",
+          borderRadius: "12px",
+          padding: "22px 24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "20px",
+          flexWrap: "wrap",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: "200px" }}>
+            <div style={{
+              width: "42px", height: "42px", borderRadius: "10px",
+              background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.2)",
+              display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0,
+            }}>☕</div>
+            <div>
+              <div style={{ fontSize: "14px", fontWeight: 600, color: "#e8e8e8", marginBottom: "4px" }}>Support RuneTrader</div>
+              <div style={{ fontSize: "13px", color: "#8fa0b0", lineHeight: "1.5" }}>
+                RuneTrader is free and always will be. If it's saved you GP, a coffee goes a long way toward keeping the lights on and new features coming.
+              </div>
+            </div>
+          </div>
+          <a
+            href="https://buymeacoffee.com/YOUR_USERNAME"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "8px",
+              padding: "10px 18px", borderRadius: "8px", flexShrink: 0,
+              background: "linear-gradient(135deg, #8a6f2e, #c9a84c)",
+              color: "#0a0e14", fontSize: "13px", fontWeight: 700,
+              textDecoration: "none", letterSpacing: "0.3px",
+              transition: "opacity 0.2s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
+            onMouseLeave={e => e.currentTarget.style.opacity = "1"}
+          >
+            ☕ Buy Me a Coffee
+          </a>
+        </div>
+
         <Section icon="🗑️" iconBg="rgba(231,76,60,0.1)" title="Account" sub="Data export and danger zone" defaultOpen={false}>
           <Row label="Export flip history" desc={`Download all ${flipsLog.filter(f => f.status !== "open").length + autoFlipsLog.length} closed flips as a CSV file`}>
             <button className="settings-btn" onClick={exportData}>
