@@ -6605,7 +6605,7 @@ RULES:
               const diffColor = q.difficulty === "easy" ? "var(--green)" : q.difficulty === "medium" ? "var(--gold)" : "var(--red)";
               return (
                 <div key={q.id} className="merchant-anim-quest" style={{ animation: `statCardIn 0.4s ease ${2.8 + i * 0.15}s both` }}>
-                  <span style={{ fontSize: "16px" }}>{q.completed ? "✅" : q.emoji}</span>
+                  <span style={{ fontSize: "16px" }}>{q.completed ? "\u2705" : fixEmoji(q.emoji)}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: "12px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</span>
                     <span style={{ fontSize: "11px", color: "var(--text-dim)", marginLeft: "8px" }}>{q.desc}</span>
@@ -6954,7 +6954,7 @@ RULES:
                     const rewards = calcQuestRewards(q);
                     return (
                       <div key={q.id} className="cinematic-quest-card" style={{ animationDelay: `${i * 0.15}s`, borderColor: q.completed ? "rgba(46,204,113,0.2)" : "rgba(255,255,255,0.07)" }}>
-                        <span style={{ fontSize: "22px" }}>{q.completed ? "✅" : q.emoji}</span>
+                        <span style={{ fontSize: "22px" }}>{q.completed ? "\u2705" : fixEmoji(q.emoji)}</span>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: "13px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</div>
                           <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "1px" }}>{q.desc}</div>
@@ -7140,7 +7140,7 @@ RULES:
         {/* €€€€ QUEST NUDGE BANNER €€€€ */}
         {questNudge && (
           <div className="quest-nudge">
-            <span style={{ fontSize: "18px" }}>{questNudge.quest.emoji}</span>
+            <span style={{ fontSize: "18px" }}>{fixEmoji(questNudge.quest.emoji)}</span>
             <span style={{ color: "var(--text-dim)" }}>
               Halfway there on <strong style={{ color: "var(--gold)" }}>{questNudge.quest.title}</strong>
               {questNudge.quest.target > 1 && ` — ${questNudge.quest.progress}/${questNudge.quest.target}`}
@@ -7456,7 +7456,7 @@ RULES:
           {/* Quest completion toasts */}
           {newlyCompletedQuests.map((q, i) => (
             <div key={q.id} className="achievement-toast" style={{ animationDelay: `${i * 0.2}s`, borderColor: "var(--green-dim)" }}>
-              <span style={{ fontSize: "28px" }}>{q.emoji}</span>
+              <span style={{ fontSize: "28px" }}>{fixEmoji(q.emoji)}</span>
               <div>
                 <div style={{ fontSize: "10px", color: "var(--green)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "2px" }}>Quest Complete!</div>
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}>{q.title}</div>
@@ -7550,7 +7550,7 @@ RULES:
                       const canAffordReroll = goldCoins >= REROLL_COST;
                       return (
                         <div key={q.id} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "10px 12px", background: "var(--bg3)", borderRadius: "8px", border: q.completed ? "1px solid rgba(46,204,113,0.2)" : "1px solid var(--border)" }}>
-                          <span style={{ fontSize: "18px", flexShrink: 0, marginTop: "1px" }}>{q.completed ? "✅" : q.emoji}</span>
+                          <span style={{ fontSize: "18px", flexShrink: 0, marginTop: "1px" }}>{q.completed ? "\u2705" : fixEmoji(q.emoji)}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px", marginBottom: "2px" }}>
                               <div style={{ fontSize: "12px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</div>
@@ -7639,7 +7639,7 @@ RULES:
               return (
                 <div key={q.id} className={`quest-card${q.completed ? " completed" : ""}`}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                    <span style={{ fontSize: "22px", flexShrink: 0, marginTop: "1px" }}>{q.completed ? "✅" : q.emoji}</span>
+                    <span style={{ fontSize: "22px", flexShrink: 0, marginTop: "1px" }}>{q.completed ? "\u2705" : fixEmoji(q.emoji)}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
                         <span style={{ fontSize: "13px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</span>
