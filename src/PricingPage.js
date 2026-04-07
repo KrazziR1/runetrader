@@ -1,4 +1,4 @@
-﻿// PricingPage.js
+// PricingPage.js
 import { useState } from "react";
 
 const STYLES = `

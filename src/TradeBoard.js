@@ -1,4 +1,4 @@
-﻿// src/TradeBoard.js
+// src/TradeBoard.js
 import { useState, useEffect, useCallback } from "react";
 
 const WIKI_MAP = "https://prices.runescape.wiki/api/v1/osrs/mapping";
