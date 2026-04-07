@@ -8,16 +8,16 @@ const STYLES = `
   .settings-section-header { display:flex; align-items:center; gap:12px; padding:16px 22px; border-bottom:1px solid #1c2a3a; cursor:pointer; user-select:none; }
   .settings-section-header:hover { background:rgba(255,255,255,0.02); }
   .settings-section-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
-  .settings-section-title { font-family:'Cinzel',serif; font-size:14px; font-weight:700; color:#e8e8e8; letter-spacing:0.5px; }
-  .settings-section-sub { font-size:12px; color:#6a7d90; margin-top:2px; }
-  .settings-section-chevron { margin-left:auto; font-size:11px; color:#3d5060; transition:transform 0.2s; }
+  .settings-section-title { font-family:'Cinzel',serif; font-size:15px; font-weight:700; color:#e8e8e8; letter-spacing:0.5px; }
+  .settings-section-sub { font-size:13px; color:#8fa0b0; margin-top:3px; }
+  .settings-section-chevron { margin-left:auto; font-size:12px; color:#3d5060; transition:transform 0.2s; }
   .settings-section-chevron.open { transform:rotate(180deg); }
   .settings-rows { display:flex; flex-direction:column; }
   .settings-row { display:flex; align-items:center; padding:16px 22px; border-bottom:1px solid #0f1820; gap:20px; }
   .settings-row:last-child { border-bottom:none; }
   .settings-row-info { flex:1; min-width:0; }
   .settings-row-label { font-size:14px; font-weight:500; color:#e8e8e8; }
-  .settings-row-desc { font-size:12px; color:#6a7d90; margin-top:3px; line-height:1.5; }
+  .settings-row-desc { font-size:13px; color:#8fa0b0; margin-top:4px; line-height:1.6; }
   .settings-row-control { flex-shrink:0; }
 
   /* Toggle switch */
@@ -46,31 +46,31 @@ const STYLES = `
   .settings-btn:disabled { opacity:0.4; cursor:not-allowed; }
 
   /* Code box */
-  .settings-code { background:#0c1018; border:1px solid #1c2a3a; border-radius:6px; padding:10px 14px; font-size:12px; color:#c9a84c; font-family:monospace; word-break:break-all; line-height:1.5; }
+  .settings-code { background:#0c1018; border:1px solid #1c2a3a; border-radius:6px; padding:10px 14px; font-size:13px; color:#c9a84c; font-family:monospace; word-break:break-all; line-height:1.5; }
 
   /* New key banner */
   .new-key-banner { background:rgba(46,204,113,0.06); border:1px solid rgba(46,204,113,0.2); border-radius:8px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; margin:4px 22px 8px; }
-  .new-key-banner-title { font-size:13px; color:#2ecc71; font-weight:600; }
+  .new-key-banner-title { font-size:14px; color:#2ecc71; font-weight:600; }
   .new-key-banner-row { display:flex; gap:8px; align-items:center; }
 
   /* Confirm modal */
   .confirm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:600; display:flex; align-items:center; justify-content:center; padding:24px; }
   .confirm-modal { background:#0c1018; border:1px solid #1c2a3a; border-radius:12px; padding:28px; max-width:400px; width:100%; display:flex; flex-direction:column; gap:16px; }
-  .confirm-title { font-family:'Cinzel',serif; font-size:16px; font-weight:700; color:#e8e8e8; }
-  .confirm-desc { font-size:13px; color:#99aabb; line-height:1.6; }
+  .confirm-title { font-family:'Cinzel',serif; font-size:17px; font-weight:700; color:#e8e8e8; }
+  .confirm-desc { font-size:14px; color:#8fa0b0; line-height:1.7; }
   .confirm-actions { display:flex; gap:10px; justify-content:flex-end; }
 
   /* Skeleton */
   .settings-skeleton { background:linear-gradient(90deg,#0c1018 25%,#111620 50%,#0c1018 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:5px; height:14px; }
 
   /* Status pill */
-  .status-pill { display:inline-flex; align-items:center; gap:5px; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:600; }
+  .status-pill { display:inline-flex; align-items:center; gap:5px; padding:5px 14px; border-radius:20px; font-size:13px; font-weight:600; }
   .status-pill.green { background:rgba(46,204,113,0.1); color:#2ecc71; border:1px solid rgba(46,204,113,0.2); }
   .status-pill.amber { background:rgba(201,168,76,0.1); color:#c9a84c; border:1px solid rgba(201,168,76,0.2); }
-  .status-pill.dim { background:rgba(255,255,255,0.04); color:#6a7d90; border:1px solid #1c2a3a; }
+  .status-pill.dim { background:rgba(255,255,255,0.04); color:#8fa0b0; border:1px solid #1c2a3a; }
 
   /* Key table */
-  .key-table-head { display:grid; grid-template-columns:2fr 1fr 1fr 70px; padding:9px 22px; font-size:11px; color:#6a7d90; text-transform:uppercase; letter-spacing:1px; font-weight:600; border-bottom:1px solid #0f1820; background:#0c1018; }
+  .key-table-head { display:grid; grid-template-columns:2fr 1fr 1fr 70px; padding:9px 22px; font-size:12px; color:#8fa0b0; text-transform:uppercase; letter-spacing:1px; font-weight:600; border-bottom:1px solid #0f1820; background:#0c1018; }
   .key-table-row { display:grid; grid-template-columns:2fr 1fr 1fr 70px; padding:14px 22px; border-bottom:1px solid #0f1820; align-items:center; transition:background 0.1s; }
   .key-table-row:last-child { border-bottom:none; }
   .key-table-row:hover { background:rgba(255,255,255,0.02); }
@@ -428,8 +428,8 @@ export default function SettingsPage({
                     <div style={{ fontSize: "14px", fontWeight: 500, color: "#e8e8e8" }}>{key.label || "Unlabelled"}</div>
                     <div style={{ fontSize: "12px", color: "#3d5060", fontFamily: "monospace", marginTop: "2px" }}>rt_••••••••</div>
                   </div>
-                  <span style={{ fontSize: "13px", color: "#6a7d90" }}>{fmtDate(key.created_at)}</span>
-                  <span style={{ fontSize: "13px", color: key.last_used ? "#6a7d90" : "#2a3a4a" }}>{key.last_used ? fmtDate(key.last_used) : "Never"}</span>
+                  <span style={{ fontSize: "13px", color: "#8fa0b0" }}>{fmtDate(key.created_at)}</span>
+                  <span style={{ fontSize: "13px", color: key.last_used ? "#8fa0b0" : "#2a3a4a" }}>{key.last_used ? fmtDate(key.last_used) : "Never"}</span>
                   <button className="settings-btn danger" style={{ padding: "4px 10px", fontSize: "11px" }}
                     onClick={() => setConfirm({ title: "Revoke API Key", desc: `Revoke "${key.label || "Unlabelled"}"? The RuneLite plugin using this key will stop syncing immediately.`, action: () => revokeKey(key.id) })}
                     disabled={revoking === key.id}>
