@@ -11,22 +11,22 @@ import { xpToLevel, xpProgress, xpToNextLevel, calcFlipXP, getLevelTitle, getCel
 import { generateDailyQuests, updateQuestProgress, calcQuestRewards, todayStr } from "./QuestSystem";
 import { initAudio, playLoginChime, playCoinClink, playBigProfit, playEpicProfit, playLevelUp, playQuestComplete, playNudge, toggleMute, getSoundMuted } from "./SoundEngine";
 
-// \u2500\u2500 Changelog \u2014 add new entries at the top, bump DEPLOY_KEY on each deploy \u2500\u2500
+// ── Changelog — add new entries at the top, bump DEPLOY_KEY on each deploy ──
 const DEPLOY_KEY = "runetrader_seen_deploy_v4"; // change this string on each deploy to trigger the modal
 const CHANGELOG = [
   {
     version: "v1.2",
     date: "March 2026",
     items: [
-      { type: "new",      text: "Sync pause \u2014 pause GE tracking from the RuneLite plugin (Shift+P) when buying items for personal use. Website shows amber banner with resume button." },
-      { type: "new",      text: "Buy limit countdown overlays \u2014 plugin now shows a live countdown on each GE slot for when your 4-hour buy limit resets." },
-      { type: "new",      text: "Drift alert overlays \u2014 plugin highlights slots where your offer has drifted from market price, with exact relist price shown directly on the slot." },
-      { type: "new",      text: "Flip recommendation panel \u2014 plugin side panel showing your personalised top picks in-game, updated every 60 seconds from your website preferences." },
-      { type: "new",      text: "Click-to-fill (opt-in) \u2014 clicking a suggested price in the plugin panel types it into the GE field. Off by default, enable in plugin config." },
-      { type: "improved", text: "Actual fill price tracking \u2014 profit calculations now use the real average fill price (getSpent / qty) not just the offer price." },
-      { type: "improved", text: "Picks preferences now sync to your account \u2014 set them once on the website and the plugin uses them automatically." },
+      { type: "new",      text: "Sync pause — pause GE tracking from the RuneLite plugin (Shift+P) when buying items for personal use. Website shows amber banner with resume button." },
+      { type: "new",      text: "Buy limit countdown overlays — plugin now shows a live countdown on each GE slot for when your 4-hour buy limit resets." },
+      { type: "new",      text: "Drift alert overlays — plugin highlights slots where your offer has drifted from market price, with exact relist price shown directly on the slot." },
+      { type: "new",      text: "Flip recommendation panel — plugin side panel showing your personalised top picks in-game, updated every 60 seconds from your website preferences." },
+      { type: "new",      text: "Click-to-fill (opt-in) — clicking a suggested price in the plugin panel types it into the GE field. Off by default, enable in plugin config." },
+      { type: "improved", text: "Actual fill price tracking — profit calculations now use the real average fill price (getSpent / qty) not just the offer price." },
+      { type: "improved", text: "Picks preferences now sync to your account — set them once on the website and the plugin uses them automatically." },
       { type: "fixed",    text: "Login streak no longer breaks at midnight for users in UTC-5 and other western timezones." },
-      { type: "fixed",    text: "Picks filter now updates instantly when you change preferences \u2014 no longer required an unrelated action to trigger a re-render." },
+      { type: "fixed",    text: "Picks filter now updates instantly when you change preferences — no longer required an unrelated action to trigger a re-render." },
       { type: "fixed",    text: "Trading Terminal no longer accessible to free users without a subscription." },
     ],
   },
@@ -34,20 +34,20 @@ const CHANGELOG = [
     version: "v1.1",
     date: "March 2026",
     items: [
-      { type: "new",      text: "Margin Compression Detector \u2014 tracks 24hr margin movement per item, flags crashes, compression and recoveries with inline pills on every row" },
-      { type: "new",      text: "Market tab \u2014 Flips renamed to Market with Margin Watch and Alerts consolidated as inner tabs" },
-      { type: "new",      text: "Session Summary \u2014 exiting the Trading Terminal now shows GP made, flips closed, GP/hr and best flip instead of a blank screen" },
-      { type: "new",      text: "Drift badges on GE slot cards \u2014 buying/selling slots show price drift % and exact relist price when your offer falls behind the market" },
-      { type: "new",      text: "Beat-the-market relist pricing \u2014 relist suggestions now price +2 to +10 gp ahead of market (scaled by item price tier) to beat the queue instead of matching it" },
-      { type: "new",      text: "Margin signals in Trading Terminal \u2014 active positions show inline compression/recovery signals below each row" },
-      { type: "new",      text: "Slot attention link \u2014 GE Slots header shows pulsing dot and count when slots need relisting" },
-      { type: "improved", text: "Personalised Picks filters completely reworked \u2014 relaxed age thresholds, vol/limit ratios, and clean price banding (Low \u22645M, Medium \u226450M, High unrestricted)" },
-      { type: "improved", text: "Filters and Export buttons now free for all users \u2014 no Trading Terminal required" },
-      { type: "improved", text: "Market table no longer flickers or loses scroll position during background price updates \u2014 rows update in-place" },
-      { type: "improved", text: "Sparklines no longer remount on price updates \u2014 memoised FlipRow component across all tables" },
-      { type: "improved", text: "WatchlistPage and PortfolioPage memoised \u2014 skip re-render on background price polls" },
-      { type: "improved", text: "Trading Terminal stays mounted during exit \u2014 no flash of market screen behind session summary" },
-      { type: "fixed",    text: "Scale emoji mojibake (â\u0161â\u20AC\u20AC) fixed in risk tolerance step" },
+      { type: "new",      text: "Margin Compression Detector — tracks 24hr margin movement per item, flags crashes, compression and recoveries with inline pills on every row" },
+      { type: "new",      text: "Market tab — Flips renamed to Market with Margin Watch and Alerts consolidated as inner tabs" },
+      { type: "new",      text: "Session Summary — exiting the Trading Terminal now shows GP made, flips closed, GP/hr and best flip instead of a blank screen" },
+      { type: "new",      text: "Drift badges on GE slot cards — buying/selling slots show price drift % and exact relist price when your offer falls behind the market" },
+      { type: "new",      text: "Beat-the-market relist pricing — relist suggestions now price +2 to +10 gp ahead of market (scaled by item price tier) to beat the queue instead of matching it" },
+      { type: "new",      text: "Margin signals in Trading Terminal — active positions show inline compression/recovery signals below each row" },
+      { type: "new",      text: "Slot attention link — GE Slots header shows pulsing dot and count when slots need relisting" },
+      { type: "improved", text: "Personalised Picks filters completely reworked — relaxed age thresholds, vol/limit ratios, and clean price banding (Low ≤5M, Medium ≤50M, High unrestricted)" },
+      { type: "improved", text: "Filters and Export buttons now free for all users — no Trading Terminal required" },
+      { type: "improved", text: "Market table no longer flickers or loses scroll position during background price updates — rows update in-place" },
+      { type: "improved", text: "Sparklines no longer remount on price updates — memoised FlipRow component across all tables" },
+      { type: "improved", text: "WatchlistPage and PortfolioPage memoised — skip re-render on background price polls" },
+      { type: "improved", text: "Trading Terminal stays mounted during exit — no flash of market screen behind session summary" },
+      { type: "fixed",    text: "Scale emoji mojibake (âšâ€€) fixed in risk tolerance step" },
       { type: "fixed",    text: "Build errors: React import, stale sourceItems reference" },
     ],
   },
@@ -55,27 +55,27 @@ const CHANGELOG = [
     version: "v1.0",
     date: "March 2026",
     items: [
-      { type: "new", text: "High Alch Tracker \u2014 find profitable alch items with live nature rune pricing" },
-      { type: "new", text: "Death's Coffer tool \u2014 find cheapest items to sacrifice, with potential savings calculator" },
-      { type: "new", text: "Portfolio page rebuilt \u2014 period stats, win rate donut, per-item P&L, best/worst items" },
-      { type: "new", text: "Shareable item URLs \u2014 share runetrader.gg/item/abyssal-whip to open any item chart" },
-      { type: "new", text: "Category filter pills \u2014 filter by Runes, Food, Armour, Weapons, Potions, Seeds, Ammo, Misc" },
-      { type: "new", text: "Quick alert bell \u2014 set price alerts directly from any flip row without opening the item" },
-      { type: "new", text: "Trade Board tab \u2014 community price listings" },
+      { type: "new", text: "High Alch Tracker — find profitable alch items with live nature rune pricing" },
+      { type: "new", text: "Death's Coffer tool — find cheapest items to sacrifice, with potential savings calculator" },
+      { type: "new", text: "Portfolio page rebuilt — period stats, win rate donut, per-item P&L, best/worst items" },
+      { type: "new", text: "Shareable item URLs — share runetrader.gg/item/abyssal-whip to open any item chart" },
+      { type: "new", text: "Category filter pills — filter by Runes, Food, Armour, Weapons, Potions, Seeds, Ammo, Misc" },
+      { type: "new", text: "Quick alert bell — set price alerts directly from any flip row without opening the item" },
+      { type: "new", text: "Trade Board tab — community price listings" },
       { type: "improved", text: "Alert feed items now clickable to open price chart" },
-      { type: "improved", text: "Nature rune price editable in High Alch tab \u2014 use your own cost basis" },
+      { type: "improved", text: "Nature rune price editable in High Alch tab — use your own cost basis" },
     ],
   },
   {
     version: "v0.9",
     date: "February 2026",
     items: [
-      { type: "new", text: "Merchant Mode \u2014 full trading terminal with Operations and Analytics tabs" },
+      { type: "new", text: "Merchant Mode — full trading terminal with Operations and Analytics tabs" },
       { type: "new", text: "Live GE slot tracking via RuneLite plugin" },
-      { type: "new", text: "Smart Alerts \u2014 margin spike, volume surge, dump detection, price crash" },
+      { type: "new", text: "Smart Alerts — margin spike, volume surge, dump detection, price crash" },
       { type: "new", text: "AI Advisor with live GE slot context and personalised flip recommendations" },
-      { type: "new", text: "Daily quests and XP system \u2014 earn XP for flips, level up, unlock titles" },
-      { type: "new", text: "Autopilot rules \u2014 set margin floors and hold time limits per position" },
+      { type: "new", text: "Daily quests and XP system — earn XP for flips, level up, unlock titles" },
+      { type: "new", text: "Autopilot rules — set margin floors and hold time limits per position" },
       { type: "improved", text: "Market page rebuilt with 4,525 items and advanced filters" },
     ],
   },
@@ -1061,7 +1061,7 @@ const STYLES = `
   }
 `;
 
-// \u2500\u2500\u2500 HELPERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── HELPERS ────────────────────────────────────────────────────────────────
 
 // Fixes double-encoded UTF-8 emoji (mojibake) that can come from XPSystem.js
 // when the file was saved/read with wrong encoding. Converts latin-1 byte
@@ -1078,14 +1078,14 @@ function fixEmoji(str) {
   return str;
 }
 
-// Safe localStorage wrapper \u2014 QuotaExceededError is a real browser exception
+// Safe localStorage wrapper — QuotaExceededError is a real browser exception
 function safeSetItem(key, value) {
   try { localStorage.setItem(key, value); }
   catch (e) { console.warn("[localStorage quota]", key, e?.message); }
 }
 
 function formatGP(n) {
-  if (!n && n !== 0) return "\u2014";
+  if (!n && n !== 0) return "—";
   return Math.round(n).toLocaleString();
 }
 
@@ -1098,7 +1098,7 @@ function formatTime(d) {
 }
 
 function timeAgo(unixSec) {
-  if (!unixSec) return "\u2014";
+  if (!unixSec) return "—";
   const diff = Math.floor(Date.now() / 1000 - unixSec);
   if (diff < 0) return "just now";
   if (diff < 60) return diff + "s ago";
@@ -1107,27 +1107,27 @@ function timeAgo(unixSec) {
   return Math.floor(diff / 86400) + "d ago";
 }
 
-// \u2500\u2500 SCORING SYSTEM \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ── SCORING SYSTEM ──────────────────────────────────────────────────────────
 // Core question: "How good is this flip for THIS player right now?"
 // Built around one real metric: expected GP per 4hr buy window.
 // Then shaped by risk/speed preferences and data confidence.
 
 function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
-  // Hard disqualifiers \u2014 not a flip at all
+  // Hard disqualifiers — not a flip at all
   if (margin <= 0)  return 0;
   if (volume < 200) return 0;
 
-  // \u2500\u2500 Core metric: realistic GP per 4hr buy window \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ── Core metric: realistic GP per 4hr buy window ─────────────────────────
   // Competition model: scales with volume. Deep markets absorb all flippers.
   // At extreme volume (500k+/day), the market is so liquid that even 2000 flippers
-  // each buying their full limit won't exhaust it \u2014 everyone fills.
+  // each buying their full limit won't exhaust it — everyone fills.
   // At low volume, you're fighting over scraps.
   const limit = buyLimit > 0 ? buyLimit : 500;
   const marketPer4hr = volume / 6;
 
   let expectedFill;
   if (volume >= 500_000) {
-    // Extreme volume: fills reliably \u2014 competition absorbed by market depth
+    // Extreme volume: fills reliably — competition absorbed by market depth
     expectedFill = Math.min(limit, marketPer4hr);
   } else if (volume >= 100_000) {
     // High volume: light competition, ~60% fill rate
@@ -1145,7 +1145,7 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
 
   const gpPer4hr = margin * Math.max(expectedFill, 1);
   if (gpPer4hr < 50_000) return 0;
-  // Score 0\u201370 from GP/4hr (the primary signal)
+  // Score 0–70 from GP/4hr (the primary signal)
   let baseScore;
   if      (gpPer4hr >= 10_000_000) baseScore = 70;
   else if (gpPer4hr >= 5_000_000)  baseScore = 62;
@@ -1157,8 +1157,8 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
   else if (gpPer4hr >= 5_000)      baseScore = 8;
   else                             baseScore = 2;
 
-  // \u2500\u2500 ROI modifier: ±15pts \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  // Rewards realistic GE ROI (2\u201310%). Penalizes extremes heavily.
+  // ── ROI modifier: ±15pts ────────────────────────────────────────────────
+  // Rewards realistic GE ROI (2–10%). Penalizes extremes heavily.
   // <0.5% = margin probably noise/tax artifact
   // >50% = thin market, likely won't fill at that price or is stale
   let roiMod = 0;
@@ -1170,7 +1170,7 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
   else if (roi <= 100)  roiMod = -8;
   else                  roiMod = -15; // very high ROI = almost never fills at this spread
 
-  // \u2500\u2500 Data freshness: multiplicative confidence factor \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ── Data freshness: multiplicative confidence factor ─────────────────────
   // Stale data = margin shown is probably wrong. Hard kill above 2hr.
   let freshness = 0.5; // default if unknown
   if (lastTradeTime) {
@@ -1185,7 +1185,7 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
 
   const base = Math.max(0, Math.min(85, Math.round((baseScore + roiMod) * freshness)));
 
-  // \u2500\u2500 Preference shaping \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ── Preference shaping ───────────────────────────────────────────────────
   // This is the layer that makes the LIST actually change.
   // Preferences apply ADDITIVE bonus/penalty points (not multipliers)
   // so that the relative ordering shifts visibly without everything clamping to 100.
@@ -1194,7 +1194,7 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
 
   let prefDelta = 0;
 
-  // SPEED preference \u2014 about fill time, driven by volume
+  // SPEED preference — about fill time, driven by volume
   if (speed === "Fast") {
     // Fast = need to fill within 30min = needs massive daily volume
     if      (volume >= 1_000_000) prefDelta += 15;
@@ -1216,7 +1216,7 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
     if (margin < 1_000)    prefDelta -= 10;
   }
 
-  // RISK preference \u2014 about margin stability and market depth
+  // RISK preference — about margin stability and market depth
   if (risk === "Low") {
     // Low risk = stable, liquid, predictable. Punish thin/volatile markets hard.
     if      (volume >= 500_000)  prefDelta += 12;
@@ -1251,7 +1251,7 @@ function renderMarkdown(text) {
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
-    // blank line \u2192 spacer
+    // blank line → spacer
     if (line.trim() === "") { elements.push(<div key={i} style={{ height: "6px" }} />); i++; continue; }
     // bullet line
     if (/^[-*]\s/.test(line.trim())) {
@@ -1294,7 +1294,7 @@ function isValidFlip(item) {
   return item.high > item.low && item.low >= 50 && item.margin > 0;
 }
 
-// \u2500\u2500\u2500 CONSTANTS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── CONSTANTS ──────────────────────────────────────────────────────────────
 
 const TIME_RANGES = [
   { label: "24H", seconds: 86400 }, { label: "3D", seconds: 259200 },
@@ -1305,35 +1305,35 @@ const TIME_RANGES = [
 const TOUR_STEPS = [
   { id: "flips-table", title: "Live Market", desc: "Every tradeable OSRS item sorted by volume. Click any item to see its price history and margin. Use column headers to sort by margin, ROI, GP/Fill, and more.", target: ".flips-table", placement: "top" },
   { id: "filter-bar", title: "Filter & Search", desc: "Filter by F2P, Members, or High Volume. Star items to save them as favourites. Use the search box to find any item instantly.", target: ".filter-bar", placement: "bottom" },
-  { id: "ai-advisor", title: "AI Flip Advisor", desc: "Ask the AI anything \u2014 best flips for your budget, what's trending, or whether a specific item is worth flipping. It has live GE data.", target: ".merchant-ai-bubble", placement: "left" },
+  { id: "ai-advisor", title: "AI Flip Advisor", desc: "Ask the AI anything — best flips for your budget, what's trending, or whether a specific item is worth flipping. It has live GE data.", target: ".merchant-ai-bubble", placement: "left" },
   { id: "tracker-tab", title: "Track Your Flips", desc: "Log every flip to track total profit, best items, and average returns. Your history syncs across all your devices automatically.", target: ".nav-tabs", placement: "bottom" },
-  { id: "done", title: "You're Ready to Flip! \uD83D\uDCC8", desc: "That's everything. Start by setting your cash stack, then check the top flips list. Good luck on the Grand Exchange!", target: null, placement: "center" },
+  { id: "done", title: "You're Ready to Flip! 📈", desc: "That's everything. Start by setting your cash stack, then check the top flips list. Good luck on the Grand Exchange!", target: null, placement: "center" },
 ];
 
 const MERCHANT_TOUR_STEPS = [
-  // \u2500\u2500 Operations tab \u2500\u2500
-  { title: "Welcome to Trading Terminal \uD83D\uDCC8", desc: "Your war room for managing multiple GE positions at once. Four tabs cover everything: Operations, Analytics, Alerts, and Market. Let's walk through each one.", target: null, placement: "center", view: "operations" },
+  // ── Operations tab ──
+  { title: "Welcome to Trading Terminal 📈", desc: "Your war room for managing multiple GE positions at once. Four tabs cover everything: Operations, Analytics, Alerts, and Market. Let's walk through each one.", target: null, placement: "center", view: "operations" },
   { title: "Capital Overview", desc: "Tracks your full GP stack at a glance. Deployed = GP locked in open positions. Idle = unused GP ready to put to work. Realised = profit closed today. Click 'Update' any time to adjust your stack.", target: ".capital-bar", placement: "bottom", view: "operations" },
-  { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips. Dot colours show each position's status: \uD83D\uDFE1 Buying · \uD83D\uDFE2 Holding · \uD83D\uDD35 Selling · \uD83D\uDD34 Danger. Click any slot to view that item's price chart.", target: ".slots-grid", placement: "bottom", view: "operations" },
-  { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Use the status dropdown to mark each flip: Buying \u2192 Holding \u2192 Selling. Hit \u2699 on any row to set Autopilot rules \u2014 margin floor, hold time limit, or price drop alert \u2014 personalised per position. Rules are stored on this device.", target: "#active-operations-section", placement: "top", view: "operations" },
+  { title: "GE Slots", desc: "Your 8 GE slots, auto-filled from Tracker open flips. Dot colours show each position's status: 🟡 Buying · 🟢 Holding · 🔵 Selling · 🔴 Danger. Click any slot to view that item's price chart.", target: ".slots-grid", placement: "bottom", view: "operations" },
+  { title: "Active Operations", desc: "Every open position with live P&L, hold time, and a margin health bar. Use the status dropdown to mark each flip: Buying → Holding → Selling. Hit ⚙ on any row to set Autopilot rules — margin floor, hold time limit, or price drop alert — personalised per position. Rules are stored on this device.", target: "#active-operations-section", placement: "top", view: "operations" },
   { title: "Capital Efficiency", desc: "The ring gauge shows what % of your stack is actively working. Aim for 70%+ for best returns. Below 50% means too much idle GP sitting unused.", target: ".gauge-ring", placement: "left", view: "operations" },
-  { title: "\uD83C\uDFAF Daily GP Goal", desc: "Set a daily GP target and track your progress in real time. The bar fills as you close flips, and gives you an ETA based on your current GP/hr rate.", target: "#tour-daily-goal", placement: "left", view: "operations" },
-  { title: "\u26A1 Rotation Picks", desc: "Items suggested to fill your idle GP right now \u2014 filtered to fit your budget and ranked by score. Click any card to open the price chart and decide if it's worth a flip.", target: ".rotation-picks-section", placement: "left", view: "operations" },
-  { title: "\uD83D\uDCCB Flip Queue", desc: "A wishlist of items you want to flip next. Add anything here, and the live margin updates automatically. When a slot opens up, your queue tells you exactly what to buy.", target: "#tour-flip-queue", placement: "top", view: "operations" },
-  // \u2500\u2500 Analytics tab \u2500\u2500
-  { title: "\uD83D\uDCCA Session Intel", desc: "A full breakdown of your current session: duration, GP/hr rate, flips closed, return on capital, and more. All updated live as you trade.", target: "#tour-session-intel", placement: "right", view: "analytics" },
-  { title: "\u26A0\uFE0F Risk Exposure", desc: "See how concentrated your capital is across items. Any position above 40% of your stack triggers a warning \u2014 over-concentration is one of the biggest risks in GE flipping.", target: "#tour-risk-exposure", placement: "right", view: "analytics" },
-  { title: "\u2705 Closed Today", desc: "A full log of every flip you've closed today with buy price, sell price, and profit per flip. Great for reviewing what's working and what isn't.", target: "#tour-closed-today", placement: "right", view: "analytics" },
-  // \u2500\u2500 Alerts tab \u2500\u2500
-  { title: "\u26A1 Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the \u2699\uFE0F gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
-  { title: "\uD83D\uDCE1 Live Feed", desc: "Every alert that's fired this session lands here in real time. Filter by type, click any alert to jump straight to that item's chart, and clear the feed whenever you like.", target: "#tour-live-feed", placement: "right", view: "alerts" },
-  // \u2500\u2500 AI Bubble \u2500\u2500
-  { title: "\uD83E\uDD16 AI Advisor", desc: "Your AI trading assistant is always one click away \u2014 look for the gold \uD83D\uDCC8 bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "left", view: "operations" },
-  // \u2500\u2500 Done \u2500\u2500
-  { title: "You're fully set up \uD83D\uDCC8", desc: "Start a buy offer in the GE in-game \u2014 the RuneTrader plugin picks it up automatically and opens a position here. Close or sell in-game and it updates in real time. Good luck on the GE.", target: null, placement: "center", view: "operations" },
+  { title: "🎯 Daily GP Goal", desc: "Set a daily GP target and track your progress in real time. The bar fills as you close flips, and gives you an ETA based on your current GP/hr rate.", target: "#tour-daily-goal", placement: "left", view: "operations" },
+  { title: "⚡ Rotation Picks", desc: "Items suggested to fill your idle GP right now — filtered to fit your budget and ranked by score. Click any card to open the price chart and decide if it's worth a flip.", target: ".rotation-picks-section", placement: "left", view: "operations" },
+  { title: "📋 Flip Queue", desc: "A wishlist of items you want to flip next. Add anything here, and the live margin updates automatically. When a slot opens up, your queue tells you exactly what to buy.", target: "#tour-flip-queue", placement: "top", view: "operations" },
+  // ── Analytics tab ──
+  { title: "📊 Session Intel", desc: "A full breakdown of your current session: duration, GP/hr rate, flips closed, return on capital, and more. All updated live as you trade.", target: "#tour-session-intel", placement: "right", view: "analytics" },
+  { title: "⚠️ Risk Exposure", desc: "See how concentrated your capital is across items. Any position above 40% of your stack triggers a warning — over-concentration is one of the biggest risks in GE flipping.", target: "#tour-risk-exposure", placement: "right", view: "analytics" },
+  { title: "✅ Closed Today", desc: "A full log of every flip you've closed today with buy price, sell price, and profit per flip. Great for reviewing what's working and what isn't.", target: "#tour-closed-today", placement: "right", view: "analytics" },
+  // ── Alerts tab ──
+  { title: "⚡ Smart Alerts", desc: "Four automatic alerts that fire when market conditions shift: Margin Spike, Volume Surge, Dump Detected, and Price Crash. Toggle each one on or off, and click the ⚙️ gear to fine-tune the trigger threshold.", target: "#tour-smart-alerts", placement: "right", view: "alerts" },
+  { title: "📡 Live Feed", desc: "Every alert that's fired this session lands here in real time. Filter by type, click any alert to jump straight to that item's chart, and clear the feed whenever you like.", target: "#tour-live-feed", placement: "right", view: "alerts" },
+  // ── AI Bubble ──
+  { title: "🤖 AI Advisor", desc: "Your AI trading assistant is always one click away — look for the gold 📈 bubble in the bottom-right corner. It has full visibility of your active slots and positions, so ask it anything: why an offer isn't filling, what to flip next, or whether to relist.", target: ".merchant-ai-bubble", placement: "left", view: "operations" },
+  // ── Done ──
+  { title: "You're fully set up 📈", desc: "Start a buy offer in the GE in-game — the RuneTrader plugin picks it up automatically and opens a position here. Close or sell in-game and it updates in real time. Good luck on the GE.", target: null, placement: "center", view: "operations" },
 ];
 
-// \u2500\u2500\u2500 FLIP ROW (memoised to prevent sparkline flicker on price updates) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── FLIP ROW (memoised to prevent sparkline flicker on price updates) ────────
 
 const FlipRow = React.memo(function FlipRow({ item, compression, isWatchlisted, hasAlert, onSelect, onToggleWatchlist, onQuickAlert, onGoToMarginWatch, formatGP, timeAgo, itemIconUrl }) {
   const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
@@ -1351,19 +1351,19 @@ const FlipRow = React.memo(function FlipRow({ item, compression, isWatchlisted, 
   return (
     <div className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }} onClick={() => onSelect(item)}>
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <button onClick={e => { e.stopPropagation(); onToggleWatchlist(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: isWatchlisted ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={isWatchlisted ? "Remove from Watchlist" : "Add to Watchlist"}>\uD83D\uDD17</button>
-        <button onClick={e => { e.stopPropagation(); onQuickAlert(item); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", opacity: hasAlert ? 1 : 0.22, transition: "opacity 0.15s", padding: "0", flexShrink: 0, lineHeight: 1 }} title="Set price alert">\uD83D\uDD14</button>
+        <button onClick={e => { e.stopPropagation(); onToggleWatchlist(item.id); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", opacity: isWatchlisted ? 1 : 0.25, transition: "opacity 0.15s", padding: "0", flexShrink: 0 }} title={isWatchlisted ? "Remove from Watchlist" : "Add to Watchlist"}>🔗</button>
+        <button onClick={e => { e.stopPropagation(); onQuickAlert(item); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "13px", opacity: hasAlert ? 1 : 0.22, transition: "opacity 0.15s", padding: "0", flexShrink: 0, lineHeight: 1 }} title="Set price alert">🔔</button>
         <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
         <div style={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: "4px", minWidth: 0 }}>
           <div className="item-name" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
           {compression && (() => {
             const cls = compression.direction === "crash" ? "crash" : compression.direction === "recover" ? "recover" : "warn";
-            const arrow = compression.pct > 0 ? "\u25B2" : "\u25BC";
+            const arrow = compression.pct > 0 ? "▲" : "▼";
             const tooltipText = compression.direction === "crash"
-              ? `Margin crashed ${Math.abs(compression.pct)}% in 24hrs \u2014 was ${formatGP(compression.oldMargin)} gp, now ${formatGP(compression.newMargin)} gp. Avoid until it stabilises.`
+              ? `Margin crashed ${Math.abs(compression.pct)}% in 24hrs — was ${formatGP(compression.oldMargin)} gp, now ${formatGP(compression.newMargin)} gp. Avoid until it stabilises.`
               : compression.direction === "recover"
-              ? `Margin recovering +${compression.pct}% in 24hrs \u2014 was ${formatGP(compression.oldMargin)} gp, now ${formatGP(compression.newMargin)} gp. Potential entry point.`
-              : `Margin compressed ${Math.abs(compression.pct)}% in 24hrs \u2014 was ${formatGP(compression.oldMargin)} gp, now ${formatGP(compression.newMargin)} gp. Trade with caution.`;
+              ? `Margin recovering +${compression.pct}% in 24hrs — was ${formatGP(compression.oldMargin)} gp, now ${formatGP(compression.newMargin)} gp. Potential entry point.`
+              : `Margin compressed ${Math.abs(compression.pct)}% in 24hrs — was ${formatGP(compression.oldMargin)} gp, now ${formatGP(compression.newMargin)} gp. Trade with caution.`;
             return (
               <span className={`compress-pill ${cls}`} onClick={e => { e.stopPropagation(); onGoToMarginWatch(); }}>
                 {arrow} {compression.pct > 0 ? "+" : ""}{compression.pct}%
@@ -1373,13 +1373,13 @@ const FlipRow = React.memo(function FlipRow({ item, compression, isWatchlisted, 
           })()}
         </div>
       </div>
-      <span className="price">{item.hasPrice ? formatGP(item.low) : "\u2014"}</span>
-      <span className="price">{item.hasPrice ? formatGP(item.high) : "\u2014"}</span>
-      <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "\u2014"}</span>
-      <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "\u2014"}</span>
+      <span className="price">{item.hasPrice ? formatGP(item.low) : "—"}</span>
+      <span className="price">{item.hasPrice ? formatGP(item.high) : "—"}</span>
+      <span className={`margin ${item.margin < 0 ? "neg" : ""}`}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
+      <span className="roi" style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice ? `${item.roi}%` : "—"}</span>
       <span className="price" style={{ color: item.volume >= 500 ? "var(--green)" : item.volume >= 100 ? "var(--text)" : "var(--text-dim)" }}>
         {item.volume >= 1000 ? (item.volume/1000).toFixed(1)+"k" : item.volume.toLocaleString()}
-        {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit \u2014 hard to fill">\u26A0</span>}
+        {item.buyLimit > 0 && item.volume < item.buyLimit && <span style={{ color: "var(--red)", fontSize: "10px", marginLeft: "3px" }} title="Volume lower than buy limit — hard to fill">⚠</span>}
       </span>
       <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
       <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
@@ -1388,9 +1388,9 @@ const FlipRow = React.memo(function FlipRow({ item, compression, isWatchlisted, 
             title={`Realistic: ${formatGP(gpPerFill)} GP/fill\nBest case (full limit): ${formatGP(gpPerFillMax)} GP`}>
             {formatGP(gpPerFill)}
           </span>
-        ) : <span style={{ color: "var(--text-dim)" }}>\u2014</span>}
+        ) : <span style={{ color: "var(--text-dim)" }}>—</span>}
       </div>
-      <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "\u2014"}</span>
+      <span style={{ fontSize: "11px", color: tradeColor }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
       <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center" }}>
         <Sparkline itemId={item.id} width={78} height={30} />
       </div>
@@ -1407,7 +1407,7 @@ const FlipRow = React.memo(function FlipRow({ item, compression, isWatchlisted, 
     prev.compression === next.compression;
 });
 
-// \u2500\u2500\u2500 ITEM CHART MODAL \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── ITEM CHART MODAL ────────────────────────────────────────────────────────
 
 function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCooldown, onShare, isWatchlisted, onToggleWatchlist }) {
   const [range, setRange] = useState("7D");
@@ -1429,7 +1429,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
       else if (range === "3D") endpoint = "1h";
       else if (range === "7D") endpoint = "6h";
       else if (range === "1M") endpoint = "6h";
-      else endpoint = "6h"; // 6M, 1Y \u2014 was "24h", now 6h for 4× more data points
+      else endpoint = "6h"; // 6M, 1Y — was "24h", now 6h for 4× more data points
 
       const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/timeseries?timestep=${endpoint}&id=${item.id}`, { headers: { "User-Agent": "RuneTrader/1.0" } });
       if (!res.ok) { setChartLoading(false); return; }
@@ -1455,7 +1455,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
     const allPrices = [...chartData.map(d => d.avgHighPrice), ...chartData.map(d => d.avgLowPrice)].filter(Boolean);
     if (!allPrices.length) return;
 
-    // Outlier filtering for price lines \u2014 remove candles >3× median price
+    // Outlier filtering for price lines — remove candles >3× median price
     const sortedPrices = [...allPrices].sort((a, b) => a - b);
     const medianPrice = sortedPrices[Math.floor(sortedPrices.length / 2)] || 1;
     const cleanData = chartData.filter(d =>
@@ -1529,10 +1529,10 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
               disabled={refreshing || refreshCooldown > 0}
               title={refreshCooldown > 0 ? `Wait ${refreshCooldown}s` : "Refresh prices"}
             >
-              <span className={refreshing ? "refresh-spin" : ""}>\u21BB</span>
-              {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `\u21BB ${refreshCooldown}s` : "Refresh"}
+              <span className={refreshing ? "refresh-spin" : ""}>↻</span>
+              {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `↻ ${refreshCooldown}s` : "Refresh"}
             </button>
-            <button className="modal-close" onClick={onClose}>\u2715</button>
+            <button className="modal-close" onClick={onClose}>✕</button>
           </div>
         </div>
         <div className="modal-stats">
@@ -1540,11 +1540,11 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
             { label: "Buy Price", value: formatGP(item.adjLow ?? item.low), color: "var(--green)", tip: "The current lowest buy offer on the GE. This is what you'll pay to buy the item." },
             { label: "Sell Price", value: formatGP(item.adjHigh ?? item.high), color: "var(--text)", tip: "The current highest sell offer on the GE. This is what buyers are paying right now." },
             { label: "Margin (after tax)", value: formatGP(item.adjMargin ?? item.margin), color: (item.adjMargin ?? item.margin) > 0 ? "var(--green)" : "var(--red)", tip: "Sell price minus buy price minus GE tax (1%, capped at 5M). This is your actual profit per item." },
-            { label: "ROI", value: item.roi + "%", color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12", tip: "Return on investment \u2014 margin ÷ buy price. \uD83D\uDFE2 1\u20133% = Healthy sweet spot. \uD83D\uDFE1 >4% = Risky (wide spread, hard to exit). \uD83D\uDFE0 <1% = Competitive (thin margin, many flippers)." },
-            { label: "Vol / Day", value: item.volume > 0 ? item.volume.toLocaleString() : "\u2014", color: "var(--text-dim)", tip: "Total items traded across all GE slots per day. Higher volume = easier fills and less competition risk." },
-            { label: "GP / Fill", value: item.buyLimit > 0 ? formatGP((item.adjMargin ?? item.margin) * item.buyLimit) : "\u2014", color: "var(--gold)", tip: "Maximum GP profit per 4-hour buy limit window (margin × buy limit). Use this to compare how much a full cycle is worth." },
-            { label: "Cycles / Day", value: item.buyLimit > 0 && item.volume > 0 ? (item.volume / item.buyLimit).toFixed(1) + "×" : "\u2014", color: item.buyLimit > 0 && item.volume / item.buyLimit >= 71 ? "var(--green)" : item.buyLimit > 0 && item.volume / item.buyLimit >= 31 ? "#f39c12" : "var(--red)", tip: "How many times the daily volume could fill your buy limit (vol ÷ limit). \uD83D\uDFE2 71×+ = Liquid. \uD83D\uDFE0 31\u201370× = Active. \uD83D\uDD34 \u226430× = Competitive (fills may be slow)." },
-            { label: "Last Trade", value: item.lastTradeTime ? formatTime(item.lastTradeTime * 1000) : "\u2014", color: "var(--text-dim)", tip: "When this item last traded on the GE. Stale data (hours ago) means low activity \u2014 prices may not reflect reality." },
+            { label: "ROI", value: item.roi + "%", color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12", tip: "Return on investment — margin ÷ buy price. 🟢 1–3% = Healthy sweet spot. 🟡 >4% = Risky (wide spread, hard to exit). 🟠 <1% = Competitive (thin margin, many flippers)." },
+            { label: "Vol / Day", value: item.volume > 0 ? item.volume.toLocaleString() : "—", color: "var(--text-dim)", tip: "Total items traded across all GE slots per day. Higher volume = easier fills and less competition risk." },
+            { label: "GP / Fill", value: item.buyLimit > 0 ? formatGP((item.adjMargin ?? item.margin) * item.buyLimit) : "—", color: "var(--gold)", tip: "Maximum GP profit per 4-hour buy limit window (margin × buy limit). Use this to compare how much a full cycle is worth." },
+            { label: "Cycles / Day", value: item.buyLimit > 0 && item.volume > 0 ? (item.volume / item.buyLimit).toFixed(1) + "×" : "—", color: item.buyLimit > 0 && item.volume / item.buyLimit >= 71 ? "var(--green)" : item.buyLimit > 0 && item.volume / item.buyLimit >= 31 ? "#f39c12" : "var(--red)", tip: "How many times the daily volume could fill your buy limit (vol ÷ limit). 🟢 71×+ = Liquid. 🟠 31–70× = Active. 🔴 ≤30× = Competitive (fills may be slow)." },
+            { label: "Last Trade", value: item.lastTradeTime ? formatTime(item.lastTradeTime * 1000) : "—", color: "var(--text-dim)", tip: "When this item last traded on the GE. Stale data (hours ago) means low activity — prices may not reflect reality." },
           ].map((s, i) => (
             <div key={i} className="modal-stat">
               <div className="modal-stat-label">
@@ -1572,14 +1572,14 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
         </div>
         <div className="modal-body">
           <button className="modal-ask-btn" onClick={() => { onToggleWatchlist && onToggleWatchlist(); }} style={{ background: isWatchlisted ? "rgba(201,168,76,0.12)" : undefined, borderColor: isWatchlisted ? "var(--gold-dim)" : undefined, color: isWatchlisted ? "var(--gold)" : undefined }}>
-            {isWatchlisted ? "\uD83D\uDD17 Remove from Watchlist" : "\uD83D\uDD17 Add to Watchlist"}
+            {isWatchlisted ? "🔗 Remove from Watchlist" : "🔗 Add to Watchlist"}
           </button>
           <button className="modal-ask-btn" onClick={() => { onAskAI(`Analyse ${item.name} for me. Is now a good time to flip it? Buy at ${formatGP(item.adjLow ?? item.low)}, sell at ${formatGP(item.adjHigh ?? item.high)}, margin ${formatGP(item.adjMargin ?? item.margin)}.`); onClose(); }}>
-            \uD83D\uDCC8 Ask AI to analyse this flip \u2192
+            📈 Ask AI to analyse this flip →
           </button>
           {onShare && (
             <button className="modal-ask-btn" style={{ opacity: 0.7 }} onClick={onShare}>
-              \uD83D\uDD16 Copy shareable link \u2192
+              🔖 Copy shareable link →
             </button>
           )}
         </div>
@@ -1588,7 +1588,7 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
   );
 }
 
-// \u2500\u2500\u2500 PROFIT CHART \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── PROFIT CHART ────────────────────────────────────────────────────────────
 
 // eslint-disable-next-line no-unused-vars
 function ProfitChart({ flipsLog, autoFlipsLog = [] }) {
@@ -1647,7 +1647,7 @@ function ProfitChart({ flipsLog, autoFlipsLog = [] }) {
   if (closedCount < 2) return null;
   return (
     <div className="profit-chart-wrap">
-      <div className="profit-chart-title">\uD83D\uDCC8 Cumulative Profit</div>
+      <div className="profit-chart-title">📈 Cumulative Profit</div>
       <div className="profit-canvas-wrap">
         <canvas ref={canvasRef} style={{ width: "100%", height: "100%" }} />
       </div>
@@ -1655,7 +1655,7 @@ function ProfitChart({ flipsLog, autoFlipsLog = [] }) {
   );
 }
 
-// \u2500\u2500\u2500 CLOSE FLIP MODAL \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── CLOSE FLIP MODAL ────────────────────────────────────────────────────────
 
 function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }) {
   const [step, setStep] = useState("choose"); // "choose" | "sold"
@@ -1687,19 +1687,19 @@ function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }
         {step === "choose" && (
           <div className="close-flip-options">
             <button className="close-flip-option-btn sold" onClick={() => setStep("sold")}>
-              <span className="opt-title">\u2705 Sold</span>
-              <span className="opt-sub">I sold this item \u2014 enter my sell price and log the profit</span>
+              <span className="opt-title">✅ Sold</span>
+              <span className="opt-sub">I sold this item — enter my sell price and log the profit</span>
             </button>
             <button className="close-flip-option-btn" onClick={() => onCancelled(flip)}>
               <span className="opt-title"> Cancelled</span>
-              <span className="opt-sub">Order didn&apos;t fill or I changed my mind \u2014 remove from open flips</span>
+              <span className="opt-sub">Order didn&apos;t fill or I changed my mind — remove from open flips</span>
             </button>
           </div>
         )}
 
         {step === "sold" && (
           <div className="close-flip-sold-form">
-            <button className="back-link" onClick={() => setStep("choose")}>\u2190 Back</button>
+            <button className="back-link" onClick={() => setStep("choose")}>← Back</button>
             <div className="close-flip-field">
               <label className="close-flip-label">Sell Price (gp)</label>
               <input
@@ -1741,7 +1741,7 @@ function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }
   );
 }
 
-// \u2500\u2500\u2500 PORTFOLIO PAGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── PORTFOLIO PAGE ───────────────────────────────────────────────────────────
 
 const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFlipsLog = [], items, onSignIn }) {
   const [portPeriod, setPortPeriod] = useState("month"); // "week" | "month" | "all"
@@ -1749,7 +1749,7 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
   if (!user) {
     return (
       <div className="portfolio-login-prompt">
-        <div className="icon">\uD83D\uDCCA</div>
+        <div className="icon">📊</div>
         <p>Portfolio tracking requires an account</p>
         <small>Sign up and connect the RuneLite plugin to start tracking your flips.</small>
         <button className="portfolio-signin-btn" onClick={onSignIn}>Sign In / Create Account</button>
@@ -1757,7 +1757,7 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
     );
   }
 
-  // \u2500\u2500 Helper: get date cutoff for period \u2500\u2500
+  // ── Helper: get date cutoff for period ──
   function getPeriodCutoff(period) {
     const now = new Date();
     if (period === "week") { const d = new Date(now); d.setDate(d.getDate() - 7); return d; }
@@ -1765,21 +1765,21 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
     return null; // all time
   }
 
-  // \u2500\u2500 All closed flips (plugin + tracker) \u2500\u2500
+  // ── All closed flips (plugin + tracker) ──
   const allClosed = [
     ...flipsLog.filter(f => f.status !== "open").map(f => ({ ...f, _date: f.date ? new Date(f.date) : null })),
     ...autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, roi: f.roi || 0, qty: f.quantity || 1, buyPrice: f.buy_price || 0, _date: f.sell_completed_at ? new Date(f.sell_completed_at) : null })),
   ];
 
-  // \u2500\u2500 Open positions (tracker open flips only \u2014 no manual entry) \u2500\u2500
+  // ── Open positions (tracker open flips only — no manual entry) ──
   const trackerOpenFlips = flipsLog.filter(f => f.status === "open");
   const totalOpenValue = trackerOpenFlips.reduce((s, f) => s + (f.buyPrice || 0) * (f.qty || 1), 0);
 
-  // Capital allocation \u2014 open tracker flips only
+  // Capital allocation — open tracker flips only
   const allOpen = trackerOpenFlips.map(f => ({ name: f.item, value: (f.buyPrice || 0) * (f.qty || 1) }));
   const maxAlloc = Math.max(...allOpen.map(p => p.value), 1);
 
-  // \u2500\u2500 Period-filtered stats (for tables) \u2500\u2500
+  // ── Period-filtered stats (for tables) ──
   const cutoff = getPeriodCutoff(portPeriod);
   const periodClosed = cutoff ? allClosed.filter(f => f._date && f._date >= cutoff) : allClosed;
   const periodProfit = periodClosed.reduce((s, f) => s + (f.totalProfit || 0), 0);
@@ -1806,7 +1806,7 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
   return (
     <div className="portfolio-wrap">
 
-      {/* \u2500\u2500 PERIOD SELECTOR \u2500\u2500 */}
+      {/* ── PERIOD SELECTOR ── */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         {[["week","This Week"],["month","This Month"],["all","All Time"]].map(([v,l]) => (
           <button key={v}
@@ -1819,23 +1819,23 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
         </span>
       </div>
 
-      {/* \u2500\u2500 PERIOD STAT CARDS \u2500\u2500 */}
+      {/* ── PERIOD STAT CARDS ── */}
       <div className="port-stats">
         <div className="port-stat">
           <span className="port-stat-label">Profit</span>
-          <span className="port-stat-value" style={{ color: periodProfit >= 0 ? "var(--green)" : "var(--red)" }}>{periodFlips > 0 ? formatGP(periodProfit) : "\u2014"}</span>
+          <span className="port-stat-value" style={{ color: periodProfit >= 0 ? "var(--green)" : "var(--red)" }}>{periodFlips > 0 ? formatGP(periodProfit) : "—"}</span>
           <span className="port-stat-sub">{periodLabel}</span>
         </div>
         <div className="port-stat">
           <span className="port-stat-label">Win Rate</span>
           <span className="port-stat-value" style={{ color: periodWinRate === null ? "var(--text-dim)" : periodWinRate >= 60 ? "var(--green)" : periodWinRate >= 40 ? "var(--gold)" : "var(--red)" }}>
-            {periodWinRate === null ? "\u2014" : `${periodWinRate}%`}
+            {periodWinRate === null ? "—" : `${periodWinRate}%`}
           </span>
           <span className="port-stat-sub">{periodWins}W / {periodFlips - periodWins}L</span>
         </div>
         <div className="port-stat">
           <span className="port-stat-label">Avg / Flip</span>
-          <span className="port-stat-value" style={{ color: periodAvgProfit >= 0 ? "var(--gold)" : "var(--red)" }}>{periodFlips > 0 ? formatGP(periodAvgProfit) : "\u2014"}</span>
+          <span className="port-stat-value" style={{ color: periodAvgProfit >= 0 ? "var(--gold)" : "var(--red)" }}>{periodFlips > 0 ? formatGP(periodAvgProfit) : "—"}</span>
           <span className="port-stat-sub">after 2% GE tax</span>
         </div>
         <div className="port-stat">
@@ -1850,12 +1850,12 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
         </div>
       </div>
 
-      {/* \u2500\u2500 TWO COL: CAPITAL ALLOCATION + WIN RATE \u2500\u2500 */}
+      {/* ── TWO COL: CAPITAL ALLOCATION + WIN RATE ── */}
       <div className="port-two-col">
         <div className="port-card">
-          <div className="port-card-title">\uD83D\uDCB0 Capital Allocation</div>
+          <div className="port-card-title">💰 Capital Allocation</div>
           {allOpen.length === 0 ? (
-            <div className="alloc-empty">No open GE slots \u2014 connect the RuneLite plugin to see live positions</div>
+            <div className="alloc-empty">No open GE slots — connect the RuneLite plugin to see live positions</div>
           ) : (
             <div className="alloc-bar-wrap">
               {allOpen.sort((a, b) => b.value - a.value).map((pos, i) => (
@@ -1872,7 +1872,7 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
         </div>
 
         <div className="port-card">
-          <div className="port-card-title">\uD83C\uDFC6 Win Rate \u2014 {periodLabel}</div>
+          <div className="port-card-title">🏆 Win Rate — {periodLabel}</div>
           {periodFlips === 0 ? (
             <div className="alloc-empty">No closed flips in this period</div>
           ) : (
@@ -1910,10 +1910,10 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
         </div>
       </div>
 
-      {/* \u2500\u2500 TWO COL: PER-ITEM P&L + BEST/WORST \u2500\u2500 */}
+      {/* ── TWO COL: PER-ITEM P&L + BEST/WORST ── */}
       <div className="port-two-col">
         <div className="port-card">
-          <div className="port-card-title">\uD83D\uDCCA Per-Item P&amp;L \u2014 {periodLabel}</div>
+          <div className="port-card-title">📊 Per-Item P&amp;L — {periodLabel}</div>
           {periodItemStats.length === 0 ? (
             <div className="alloc-empty">No flips in this period</div>
           ) : (
@@ -1939,13 +1939,13 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
         </div>
 
         <div className="port-card">
-          <div className="port-card-title">\u26A1 Best &amp; Worst \u2014 {periodLabel}</div>
+          <div className="port-card-title">⚡ Best &amp; Worst — {periodLabel}</div>
           {periodItemStats.length === 0 ? (
             <div className="alloc-empty">No flips in this period</div>
           ) : (
             <div className="bw-table">
               <div className="bw-header"><span>Item</span><span>Flips</span><span>Win %</span><span>P&amp;L</span></div>
-              <div className="bw-section-label">\uD83C\uDFC6 Best performers</div>
+              <div className="bw-section-label">🏆 Best performers</div>
               {periodBestItems.map((item, i) => (
                 <div key={`b${i}`} className="bw-row">
                   <span style={{ color: "var(--text)" }}>{item.name}</span>
@@ -1956,7 +1956,7 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
               ))}
               {periodWorstItems.length > 0 && (
                 <>
-                  <div className="bw-section-label">\uD83D\uDCC9 Worst performers</div>
+                  <div className="bw-section-label">📉 Worst performers</div>
                   {periodWorstItems.map((item, i) => (
                     <div key={`w${i}`} className="bw-row">
                       <span style={{ color: "var(--text)" }}>{item.name}</span>
@@ -1976,7 +1976,7 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
   );
 }); // end React.memo(PortfolioPage)
 
-// \u2500\u2500\u2500 WELCOME MESSAGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── WELCOME MESSAGE ─────────────────────────────────────────────────────────
 
 function getWelcomeMsg() {
   const goal = typeof localStorage !== "undefined" ? localStorage.getItem("rt_first_goal_set") : null;
@@ -1984,24 +1984,24 @@ function getWelcomeMsg() {
 
   let content;
   if (goal === "grow_gp") {
-    content = "Hey! Ready to grow that stack? \uD83D\uDCC8\n\nI'm watching all 4,525 GE items in real time. Tell me your cash stack and I'll find the highest GP/fill flips available right now.\n\nWhat are you working with today?";
+    content = "Hey! Ready to grow that stack? 📈\n\nI'm watching all 4,525 GE items in real time. Tell me your cash stack and I'll find the highest GP/fill flips available right now.\n\nWhat are you working with today?";
   } else if (goal === "learn") {
-    content = "Hey! Great time to start flipping \uD83D\uDC4B\n\nI'll keep things simple \u2014 tell me roughly how much GP you have and I'll walk you through the safest, easiest items to start with. No jargon, just clear picks.\n\nWhat's your cash stack?";
+    content = "Hey! Great time to start flipping 👋\n\nI'll keep things simple — tell me roughly how much GP you have and I'll walk you through the safest, easiest items to start with. No jargon, just clear picks.\n\nWhat's your cash stack?";
   } else if (goal === "track") {
-    content = "Hey! I can see your flip history and live GE data \uD83D\uDCCA\n\nAsk me anything \u2014 how your items are performing, whether a margin is still good, or what to flip next with your idle GP.\n\nWhat do you want to know?";
+    content = "Hey! I can see your flip history and live GE data 📊\n\nAsk me anything — how your items are performing, whether a margin is still good, or what to flip next with your idle GP.\n\nWhat do you want to know?";
   } else if (streak >= 7) {
-    content = `Hey, ${streak}-day streak \u2014 respect \uD83D\uDD25\n\nI have live GE data and can see your active positions. What are we flipping today?`;
+    content = `Hey, ${streak}-day streak — respect 🔥\n\nI have live GE data and can see your active positions. What are we flipping today?`;
   } else if (streak >= 3) {
-    content = `Welcome back! ${streak} days running \uD83D\uDCC8\n\nI have live GE data on all 4,525 items. Tell me your budget and I'll find what's worth flipping right now.\n\nWhat are you working with today?`;
+    content = `Welcome back! ${streak} days running 📈\n\nI have live GE data on all 4,525 items. Tell me your budget and I'll find what's worth flipping right now.\n\nWhat are you working with today?`;
   } else {
-    content = "Hey! I'm your RuneTrader AI assistant \uD83D\uDC4B\n\nI have access to live Grand Exchange data and can help you find the best flips for your budget, explain market trends, and answer any OSRS trading questions.\n\nWhat are you working with today?";
+    content = "Hey! I'm your RuneTrader AI assistant 👋\n\nI have access to live Grand Exchange data and can help you find the best flips for your budget, explain market trends, and answer any OSRS trading questions.\n\nWhat are you working with today?";
   }
 
   return { role: "assistant", content, time: new Date() };
 }
 
 
-// \u2500\u2500\u2500 DEMO DATA \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── DEMO DATA ───────────────────────────────────────────────────────────────
 
 // Fake live ops (ge_flips_live rows)
 const DEMO_LIVE_OPS = [
@@ -2026,7 +2026,7 @@ const DEMO_PNL_HISTORY = (() => {
   return vals.map((v, i) => ({ time: Date.now() - (vals.length - 1 - i) * 900000, value: v }));
 })();
 
-// No-op supabase stub for demo mode \u2014 prevents network calls inside MerchantMode
+// No-op supabase stub for demo mode — prevents network calls inside MerchantMode
 const DEMO_SUPABASE_STUB = {
   from: () => {
     const noData = Promise.resolve({ data: [], error: null });
@@ -2060,12 +2060,12 @@ const DEMO_SUPABASE_STUB = {
 
 const DEMO_CAPITAL = 50_000_000;
 
-// \u2500\u2500 Demo Tour Steps \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ── Demo Tour Steps ──────────────────────────────────────────────────────────
 const DEMO_TOUR_STEPS = [
   {
     id: "welcome",
-    title: "Welcome to RuneTrader \uD83D\uDCC8",
-    desc: "RuneTrader is your Grand Exchange command centre. In the next 60 seconds we'll show you everything \u2014 live market data, smart alerts, and Merchant Mode. Let's go.",
+    title: "Welcome to RuneTrader 📈",
+    desc: "RuneTrader is your Grand Exchange command centre. In the next 60 seconds we'll show you everything — live market data, smart alerts, and Merchant Mode. Let's go.",
     target: null,
     placement: "center",
     tab: null,
@@ -2083,7 +2083,7 @@ const DEMO_TOUR_STEPS = [
   {
     id: "sparklines",
     title: "24-Hour Trend Sparklines",
-    desc: "Every item has a live 24hr margin trend chart. Green means the spread is widening \u2014 more profit per flip. Red means it's compressing. Spot momentum at a glance without opening the chart modal.",
+    desc: "Every item has a live 24hr margin trend chart. Green means the spread is widening — more profit per flip. Red means it's compressing. Spot momentum at a glance without opening the chart modal.",
     target: ".flips-table",
     placement: "center",
     tab: "market",
@@ -2091,8 +2091,8 @@ const DEMO_TOUR_STEPS = [
   },
   {
     id: "watchlist",
-    title: "Watchlist \u2014 Your Favourites",
-    desc: "Bookmark items you flip regularly with the \uD83D\uDD17 icon. Set price alerts so you get notified when the margin hits your target. Your watchlist syncs across devices when you sign in.",
+    title: "Watchlist — Your Favourites",
+    desc: "Bookmark items you flip regularly with the 🔗 icon. Set price alerts so you get notified when the margin hits your target. Your watchlist syncs across devices when you sign in.",
     target: ".watchlist-table",
     placement: "top",
     tab: "watchlist",
@@ -2101,7 +2101,7 @@ const DEMO_TOUR_STEPS = [
   {
     id: "tracker",
     title: "Track Every Flip",
-    desc: "Log your buy and sell prices to track total profit, win rate, and your best-performing items. Connect the RuneLite plugin and your GE slots sync automatically \u2014 no manual entry needed.",
+    desc: "Log your buy and sell prices to track total profit, win rate, and your best-performing items. Connect the RuneLite plugin and your GE slots sync automatically — no manual entry needed.",
     target: ".profit-chart-wrap",
     placement: "bottom",
     tab: "tracker",
@@ -2109,8 +2109,8 @@ const DEMO_TOUR_STEPS = [
   },
   {
     id: "merchant-intro",
-    title: "Meet Trading Terminal \uD83D\uDCC8",
-    desc: "RuneTrader's flagship feature \u2014 a self-contained trading terminal. Manage all your GE slots, track live P&L, get rotation picks, set autopilot rules, and monitor risk exposure. All in one place.",
+    title: "Meet Trading Terminal 📈",
+    desc: "RuneTrader's flagship feature — a self-contained trading terminal. Manage all your GE slots, track live P&L, get rotation picks, set autopilot rules, and monitor risk exposure. All in one place.",
     target: null,
     placement: "center",
     tab: "market",
@@ -2120,7 +2120,7 @@ const DEMO_TOUR_STEPS = [
   {
     id: "merchant-ops",
     title: "Active Operations",
-    desc: "Every open position with live P&L, hold time, and a margin health bar. The status dots show where each flip is: \uD83D\uDFE1 Buying · \uD83D\uDFE2 Holding · \uD83D\uDD35 Selling · \uD83D\uDD34 Danger. Click \u2699 to set per-slot Autopilot rules.",
+    desc: "Every open position with live P&L, hold time, and a margin health bar. The status dots show where each flip is: 🟡 Buying · 🟢 Holding · 🔵 Selling · 🔴 Danger. Click ⚙ to set per-slot Autopilot rules.",
     target: "#active-operations-section",
     placement: "top",
     tab: null,
@@ -2129,7 +2129,7 @@ const DEMO_TOUR_STEPS = [
   {
     id: "merchant-capital",
     title: "Capital & Daily Goal",
-    desc: "Track how much GP you have deployed vs idle. Set a daily GP target and watch your progress fill in real time. The ring gauge shows capital efficiency \u2014 aim for 70%+ to maximise returns.",
+    desc: "Track how much GP you have deployed vs idle. Set a daily GP target and watch your progress fill in real time. The ring gauge shows capital efficiency — aim for 70%+ to maximise returns.",
     target: ".capital-bar",
     placement: "bottom",
     tab: null,
@@ -2137,8 +2137,8 @@ const DEMO_TOUR_STEPS = [
   },
   {
     id: "ai-advisor",
-    title: "AI Advisor \u2014 Always On",
-    desc: "Ask the AI anything: best flips for your budget, why an offer isn't filling, whether to relist. It has full visibility of your active slots and live market data. Tap the \uD83D\uDCC8 bubble any time.",
+    title: "AI Advisor — Always On",
+    desc: "Ask the AI anything: best flips for your budget, why an offer isn't filling, whether to relist. It has full visibility of your active slots and live market data. Tap the 📈 bubble any time.",
     target: ".merchant-ai-bubble",
     placement: "left",
     tab: null,
@@ -2146,7 +2146,7 @@ const DEMO_TOUR_STEPS = [
   },
 ];
 
-// \u2500\u2500\u2500 WATCHLIST PAGE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── WATCHLIST PAGE ────────────────────────────────────────────
 
 const WatchlistPage = React.memo(function WatchlistPage({
   user, items, watchlist, watchlistAlerts,
@@ -2238,7 +2238,7 @@ const WatchlistPage = React.memo(function WatchlistPage({
   return (
     <div className="watchlist-wrap">
       <div className="watchlist-pro-tip">
-        <span>\uD83D\uDD17</span>
+        <span>🔗</span>
         <span>Watch items you flip regularly. Set price alerts to get notified when the market moves.
           {!user && !demoMode && (<span> <button onClick={onSignIn} style={{ background: "none", border: "none", color: "var(--gold)", cursor: "pointer", fontSize: "inherit", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}>Sign in</button> to sync your watchlist across devices.</span>)}
         </span>
@@ -2246,13 +2246,13 @@ const WatchlistPage = React.memo(function WatchlistPage({
 
       {watchedItems.length === 0 ? (
         <div className="watchlist-empty">
-          <div className="icon">\uD83D\uDD17</div>
+          <div className="icon">🔗</div>
           <p style={{ fontSize: "15px" }}>Your watchlist is empty</p>
-          <p style={{ fontSize: "13px" }}>Click the \uD83D\uDD17 icon on any item in the Market tab to add it here, or search below.</p>
+          <p style={{ fontSize: "13px" }}>Click the 🔗 icon on any item in the Market tab to add it here, or search below.</p>
         </div>
       ) : (
         <div className="watchlist-table">
-          {/* \u2500\u2500 SORTABLE HEADER \u2500\u2500 */}
+          {/* ── SORTABLE HEADER ── */}
           <div className="watchlist-header">
             {COLS.map(col => (
               <div key={col.key} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
@@ -2270,7 +2270,7 @@ const WatchlistPage = React.memo(function WatchlistPage({
                   <button className={`sort-btn${sortCol === col.key ? " active" : ""}`} onClick={() => handleSort(col.key)}
                     style={{ fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase", fontWeight: 600 }}>
                     {col.label}
-                    {sortCol === col.key && <span className="sort-arrow">{sortDir === "desc" ? "\u25BC" : "\u25B2"}</span>}
+                    {sortCol === col.key && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
                     {col.tip && (
                       <div className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
                         <span className="stat-help">?</span>
@@ -2283,7 +2283,7 @@ const WatchlistPage = React.memo(function WatchlistPage({
             ))}
           </div>
 
-          {/* \u2500\u2500 ROWS \u2500\u2500 */}
+          {/* ── ROWS ── */}
           {watchedItems.map(item => {
             const alertSet = hasAlertFor(item.id);
             const al = watchlistAlerts[item.id] || {};
@@ -2294,10 +2294,10 @@ const WatchlistPage = React.memo(function WatchlistPage({
                     <img src={`https://oldschool.runescape.wiki/images/${encodeURIComponent(item.name.replace(/ /g, "_"))}_detail.png`} alt="" style={{ width: 24, height: 24, objectFit: "contain", imageRendering: "pixelated", flexShrink: 0 }} onError={e => { e.target.style.display = "none"; }} />
                     <span style={{ fontWeight: 500, fontSize: "13px" }}>{item.name}</span>
                   </div>
-                  <span style={{ fontSize: "13px", color: "#ccd8e0" }}>{item.hasPrice ? formatGP(item.low) : "\u2014"}</span>
-                  <span style={{ fontSize: "13px", color: "#ccd8e0" }}>{item.hasPrice ? formatGP(item.high) : "\u2014"}</span>
-                  <span style={{ fontSize: "13px", fontWeight: 600, color: item.margin > 0 ? "var(--green)" : item.margin < 0 ? "var(--red)" : "var(--text-dim)" }}>{item.hasPrice ? formatGP(item.margin) : "\u2014"}</span>
-                  <span style={{ fontSize: "12px", color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice && item.roi != null ? item.roi + "%" : "\u2014"}</span>
+                  <span style={{ fontSize: "13px", color: "#ccd8e0" }}>{item.hasPrice ? formatGP(item.low) : "—"}</span>
+                  <span style={{ fontSize: "13px", color: "#ccd8e0" }}>{item.hasPrice ? formatGP(item.high) : "—"}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: item.margin > 0 ? "var(--green)" : item.margin < 0 ? "var(--red)" : "var(--text-dim)" }}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
+                  <span style={{ fontSize: "12px", color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice && item.roi != null ? item.roi + "%" : "—"}</span>
                   <div onClick={e => e.stopPropagation()}><Sparkline itemId={item.id} width={78} height={28} /></div>
                   <div onClick={e => e.stopPropagation()}>
                     <button className={`watchlist-alert-badge ${alertSet ? "set" : "unset"}`}
@@ -2305,10 +2305,10 @@ const WatchlistPage = React.memo(function WatchlistPage({
                         if (!user && !demoMode) { setUpgradeModal({ feature: "Watchlist Alerts", description: "Sign up free to set price alerts on your watchlist items." }); return; }
                         openAlertPopover(item.id, e.currentTarget);
                       }}>
-                      \uD83D\uDD14 {alertSet ? `${al.above ? "\u2191" + formatGP(al.above) : ""}${al.above && al.below ? " · " : ""}${al.below ? "\u2193" + formatGP(al.below) : ""}` : "Set alert"}
+                      🔔 {alertSet ? `${al.above ? "↑" + formatGP(al.above) : ""}${al.above && al.below ? " · " : ""}${al.below ? "↓" + formatGP(al.below) : ""}` : "Set alert"}
                     </button>
                   </div>
-                  <button className="watchlist-remove-btn" onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} title="Remove from watchlist">\u2715</button>
+                  <button className="watchlist-remove-btn" onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} title="Remove from watchlist">✕</button>
                 </div>
               </div>
             );
@@ -2332,7 +2332,7 @@ const WatchlistPage = React.memo(function WatchlistPage({
         </div>
       )}
 
-      {/* \u2500\u2500 ALERT POPOVER \u2014 fixed position to avoid clipping \u2500\u2500 */}
+      {/* ── ALERT POPOVER — fixed position to avoid clipping ── */}
       {watchlistAlertOpen && popoverPos && (
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 299 }} onClick={() => { setWatchlistAlertOpen(null); setPopoverPos(null); }} />
@@ -2360,9 +2360,9 @@ const WatchlistPage = React.memo(function WatchlistPage({
   );
 }); // end React.memo(WatchlistPage)
 
-// \u2500\u2500\u2500 MAIN APP \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── MAIN APP ────────────────────────────────────────────────────────────────
 
-// \u2500\u2500 MERCHANT MODE COMPONENT \u2500\u2500
+// ── MERCHANT MODE COMPONENT ──
 function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct, fillPct, hasRules, isAutopilotOpen, autopilotRules, setAutopilotOpen, saveAutopilotRules, clearAutopilotRules, formatGP, setSelectedItem, getHoldTime }) {
   const saved = autopilotRules[op.item_name] || { marginFloor: "", holdHours: "", priceDrop: "" };
   const [apMargin, setApMargin] = useState(saved.marginFloor);
@@ -2380,16 +2380,16 @@ function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct
           <div className="op-item-sub">Slot {op.slot + 1} · {op.buy_started_at ? getHoldTime(op.buy_started_at) : ""}</div>
         </div>
         <span style={{ fontSize: "12px", color: statusColor }}>{statusLabel}</span>
-        <span style={{ fontSize: "12px" }}>{op.buy_price && op.quantity ? formatGP(op.buy_price * op.quantity) : "\u2014"}</span>
+        <span style={{ fontSize: "12px" }}>{op.buy_price && op.quantity ? formatGP(op.buy_price * op.quantity) : "—"}</span>
         <span style={{ fontSize: "12px" }}>{(op.quantity || 0).toLocaleString()}</span>
-        <span style={{ fontSize: "12px" }}>{op.buy_price ? formatGP(op.buy_price) : "\u2014"}</span>
-        <span style={{ fontSize: "12px", color: liveItem ? "var(--text)" : "var(--text-dim)" }}>{liveItem ? formatGP(liveItem.high) : "\u2014"}</span>
+        <span style={{ fontSize: "12px" }}>{op.buy_price ? formatGP(op.buy_price) : "—"}</span>
+        <span style={{ fontSize: "12px", color: liveItem ? "var(--text)" : "var(--text-dim)" }}>{liveItem ? formatGP(liveItem.high) : "—"}</span>
         <div>
           {op.status === "SOLD" ? (
             <><div style={{ color: (op.profit || 0) >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>{(op.profit || 0) >= 0 ? "+" : ""}{formatGP(op.profit || 0)}</div><div style={{ fontSize: "10px", color: (op.roi || 0) >= 0 ? "var(--green)" : "var(--red)" }}>{op.roi}% ROI</div></>
           ) : op.buy_price ? (
             <><div style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600, fontSize: "12px" }}>{pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}</div><div style={{ fontSize: "10px", color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>{pnlPct}%</div></>
-          ) : <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>\u2014</span>}
+          ) : <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>—</span>}
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
           <div style={{ background: "var(--bg4)", borderRadius: "3px", height: "4px", overflow: "hidden" }}>
@@ -2400,29 +2400,29 @@ function AutopilotRow({ op, liveItem, statusColor, statusLabel, pnlTotal, pnlPct
         <span />
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           {hasRules && <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--gold)", flexShrink: 0 }} title="Autopilot active" />}
-          <button className={`autopilot-btn${isAutopilotOpen ? " active" : ""}`} onClick={e => { e.stopPropagation(); setAutopilotOpen(isAutopilotOpen ? null : op.item_name); }}>\u2699</button>
+          <button className={`autopilot-btn${isAutopilotOpen ? " active" : ""}`} onClick={e => { e.stopPropagation(); setAutopilotOpen(isAutopilotOpen ? null : op.item_name); }}>⚙</button>
         </div>
       </div>
       {isAutopilotOpen && (
         <div className="autopilot-panel">
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gold)", marginBottom: "4px" }}>Autopilot \u2014 {op.item_name}</div>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--gold)", marginBottom: "4px" }}>Autopilot — {op.item_name}</div>
           <div className="autopilot-panel-row">
             <span className="autopilot-label">Margin drops below</span>
             <input className="autopilot-input" type="number" placeholder="e.g. 50" value={apMargin} onChange={e => setApMargin(e.target.value)} />
-            <span className="autopilot-unit">gp \u2192 alert</span>
+            <span className="autopilot-unit">gp → alert</span>
           </div>
           <div className="autopilot-panel-row">
             <span className="autopilot-label">Held longer than</span>
             <input className="autopilot-input" type="number" placeholder="e.g. 24" value={apHold} onChange={e => setApHold(e.target.value)} />
-            <span className="autopilot-unit">hours \u2192 alert</span>
+            <span className="autopilot-unit">hours → alert</span>
           </div>
           <div className="autopilot-panel-row">
             <span className="autopilot-label">Sell price drops by</span>
             <input className="autopilot-input" type="number" placeholder="e.g. 10" value={apDrop} onChange={e => setApDrop(e.target.value)} />
-            <span className="autopilot-unit">% since buy \u2192 alert</span>
+            <span className="autopilot-unit">% since buy → alert</span>
           </div>
           <div className="autopilot-footer">
-            <span className="autopilot-hint">Saved locally \u2014 cleared if you clear browser data.</span>
+            <span className="autopilot-hint">Saved locally — cleared if you clear browser data.</span>
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               <button className="autopilot-clear" onClick={() => { clearAutopilotRules(op.item_name); setAutopilotOpen(null); }}>Clear rules</button>
               <button className="autopilot-save" onClick={() => { saveAutopilotRules(op.item_name, { marginFloor: apMargin, holdHours: apHold, priceDrop: apDrop }); setAutopilotOpen(null); }}>Save</button>
@@ -2439,7 +2439,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
   // liveOps must be declared before allOpenPositions calculation below
   const [liveOps, setLiveOps] = useState([]);
 
-  // \u2500\u2500 Position Autopilot \u2500\u2500
+  // ── Position Autopilot ──
   const [autopilotRules, setAutopilotRules] = useState(() => {
     try { return JSON.parse(localStorage.getItem("runetrader_autopilot") || "{}"); } catch { return {}; }
   });
@@ -2481,7 +2481,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
         const event = {
           id: `autopilot_${op.item_name}_${key}_${now}`,
           itemId: op.id, itemName: op.item_name,
-          type: "autopilot", icon: "\uD83E\uDD16", badge: "autopilot",
+          type: "autopilot", icon: "🤖", badge: "autopilot",
           message, time: new Date(),
         };
         setSmartEvents(prev => [event, ...prev].slice(0, 100));
@@ -2521,7 +2521,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     });
   }, [liveOps, items, smartAlertSettings]); // eslint-disable-line
 
-  // \u2500\u2500 Build open positions \u2500\u2500
+  // ── Build open positions ──
   const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
     id: f.id, name: f.item, gpIn: (f.buyPrice || 0) * (f.qty || 1),
     qty: f.qty || 1, buyPrice: f.buyPrice || 0, source: "tracker",
@@ -2551,7 +2551,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     }));
   const allOpenPositions = [...trackerOpen, ...portfolioOnly, ...autoOpen];
 
-  // \u2500\u2500 Core metrics \u2500\u2500
+  // ── Core metrics ──
   const totalDeployed = allOpenPositions.reduce((s, p) => s + p.gpIn, 0);
   const idleGP = Math.max(0, merchantCapital - totalDeployed);
   const efficiencyPct = merchantCapital > 0 ? Math.round((totalDeployed / merchantCapital) * 100) : 0;
@@ -2567,7 +2567,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     return s + (liveItem.high - pos.buyPrice - tax) * pos.qty;
   }, 0);
 
-  // \u2500\u2500 State \u2500\u2500
+  // ── State ──
   useEffect(() => { // eslint-disable-line react-hooks/exhaustive-deps
     if (!user || !sb) return;
     sb.from("ge_flips_live")
@@ -2580,7 +2580,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     const ch = sb.channel("merchant-live-ops-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          // Re-fetch on DELETE \u2014 don't rely on payload.old which requires REPLICA IDENTITY FULL
+          // Re-fetch on DELETE — don't rely on payload.old which requires REPLICA IDENTITY FULL
           sb.from("ge_flips_live").select("*").eq("user_id", user.id)
             .not("status", "in", "(SOLD,CANCELLED)")
             .order("buy_started_at", { ascending: false })
@@ -2588,7 +2588,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
         } else {
           const op = payload.new;
           if (["SOLD", "CANCELLED"].includes(op.status)) {
-            // Remove by slot \u2014 more reliable than id without REPLICA IDENTITY FULL
+            // Remove by slot — more reliable than id without REPLICA IDENTITY FULL
             setLiveOps(prev => prev.filter(o => o.slot !== op.slot));
           } else {
             setLiveOps(prev => {
@@ -2623,7 +2623,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     return () => clearInterval(iv);
   }, []);
 
-  // \u2500\u2500 Helpers \u2500\u2500
+  // ── Helpers ──
   function getHoldTime(openedAt) {
     const ms = Date.now() - new Date(openedAt).getTime();
     const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
@@ -2686,13 +2686,13 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     localStorage.setItem("rt_flip_queue", JSON.stringify(updated));
   }
 
-  // \u2500\u2500 Rotation picks \u2500\u2500
+  // ── Rotation picks ──
   const rotationPicks = items
     .filter(i => i.low <= idleGP && i.margin > 0 && i.score >= 60)
     .filter(i => !allOpenPositions.some(p => p.name.toLowerCase() === i.name.toLowerCase()))
     .slice(0, 3);
 
-  // \u2500\u2500 Risk exposure \u2500\u2500
+  // ── Risk exposure ──
   const riskItems = allOpenPositions.map(pos => {
     const pct = merchantCapital > 0 ? Math.round((pos.gpIn / merchantCapital) * 100) : 0;
     return { ...pos, pct };
@@ -2701,12 +2701,12 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
   const gpHr = getGPHr();
 
   const STATUS_COLORS = { buying: "#f39c12", selling: "var(--blue)", holding: "var(--green)", danger: "var(--red)" };
-  const STATUS_LABELS = { buying: "Buying", selling: "Selling", holding: "Holding", danger: "\u26A0 Danger" };
+  const STATUS_LABELS = { buying: "Buying", selling: "Selling", holding: "Holding", danger: "⚠ Danger" };
 
   return (
     <>
     <div className="merchant-wrap">
-      {/* \u2500\u2500 HEADER BAR \u2500\u2500 */}
+      {/* ── HEADER BAR ── */}
       <div className="merchant-header">
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -2714,7 +2714,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
             <span style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", letterSpacing: "1.5px" }}>MERCHANT MODE</span>
           </div>
           <div className="merchant-header-pills">
-            {[["operations", "\uD83D\uDCC8 Operations"], ["analytics", "\uD83D\uDCCA Analytics"], ["market", "\uD83D\uDCC8 Market"], ["alerts", "\u26A1 Alerts"]].map(([v, l]) => (
+            {[["operations", "📈 Operations"], ["analytics", "📊 Analytics"], ["market", "📈 Market"], ["alerts", "⚡ Alerts"]].map(([v, l]) => (
               <button key={v} className={`merchant-nav-pill${activeView === v ? " active" : ""}`} onClick={() => setActiveView(v)}>{l}</button>
             ))}
           </div>
@@ -2722,22 +2722,22 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {/* Session timer */}
           <div style={{ fontSize: "11px", color: "var(--text-dim)", display: "flex", gap: "10px", alignItems: "center" }}>
-            <span>\u23F3 {getSessionTime()}</span>
+            <span>⏳ {getSessionTime()}</span>
             {gpHr !== null && <span style={{ color: gpHr >= 0 ? "var(--green)" : "var(--red)", fontWeight: 600 }}>{gpHr >= 0 ? "+" : ""}{formatGP(gpHr)} gp/hr</span>}
           </div>
           <button className="refresh-btn" disabled={refreshing || refreshCooldown > 0} onClick={onRefresh} style={{ fontSize: "12px" }}>
-            <span className={refreshing ? "refresh-spin" : ""}>\u21BB</span>
+            <span className={refreshing ? "refresh-spin" : ""}>↻</span>
             {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh"}
           </button>
         </div>
       </div>
 
-      {/* \u2500\u2500 CAPITAL BAR \u2500\u2500 */}
+      {/* ── CAPITAL BAR ── */}
       <div className="capital-bar">
         {[
           { label: "Total Capital", value: formatGP(merchantCapital), color: "var(--gold)", sub: <span style={{ cursor: "pointer", textDecoration: "underline", color: "var(--text-dim)", fontSize: "11px" }} onClick={onUpdateCapital}>Update</span> },
           { label: "Deployed", value: formatGP(totalDeployed), color: "var(--blue)", sub: `${efficiencyPct}% of stack` },
-          { label: "Idle GP", value: formatGP(idleGP), color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text)", sub: idleGP > merchantCapital * 0.3 ? <span style={{ color: "#f39c12" }}>\u26A0 Sitting unused</span> : "Available" },
+          { label: "Idle GP", value: formatGP(idleGP), color: idleGP > merchantCapital * 0.4 ? "#f39c12" : "var(--text)", sub: idleGP > merchantCapital * 0.3 ? <span style={{ color: "#f39c12" }}>⚠ Sitting unused</span> : "Available" },
           { label: "Unrealised P&L", value: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)", sub: `${allOpenPositions.length} open positions` },
           { label: "Realised Today", value: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)", sub: `${todayFlips.length + autoTodayFlips.length} flips closed` },
         ].map((c, i) => (
@@ -2750,11 +2750,11 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
       </div>
 
       <div className="merchant-body">
-        {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 OPERATIONS VIEW \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+        {/* ══════════════════════ OPERATIONS VIEW ══════════════════════ */}
         {activeView === "operations" && (
           <div className="merchant-layout">
 
-            {/* \u2500\u2500 LEFT: GE Slots + Active Operations \u2500\u2500 */}
+            {/* ── LEFT: GE Slots + Active Operations ── */}
             <div className="merchant-left">
 
               {/* GE Slot Grid */}
@@ -2822,7 +2822,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                           onClick={() => { const it = liveOffer.item_name ? items.find(x => x.name.toLowerCase() === liveOffer.item_name.toLowerCase()) : null; if (it) setSelectedItem(it); }}>
                           <div className="slot-dot" style={{ background: slotColor }} />
                           <img src={itemIconUrl(liveOffer.item_name)} alt="" style={{ width: 64, height: 64, objectFit: "contain", imageRendering: "pixelated" }} onError={e => { e.target.style.display = "none"; }} />
-                          <div className="slot-name">{liveOffer.item_name.length > 14 ? liveOffer.item_name.slice(0, 13) + "\u2026" : liveOffer.item_name}</div>
+                          <div className="slot-name">{liveOffer.item_name.length > 14 ? liveOffer.item_name.slice(0, 13) + "…" : liveOffer.item_name}</div>
                           <div className="slot-status-label" style={{ color: slotColor }}>{liveOffer.status}</div>
                           {driftAlert ? (
                             <div style={{ marginTop: "4px" }}>
@@ -2830,7 +2830,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                                 background: driftAlert.level === "red" ? "rgba(231,76,60,0.15)" : "rgba(243,156,18,0.12)",
                                 color: driftAlert.level === "red" ? "#e74c3c" : "#f39c12",
                                 border: `1px solid ${driftAlert.level === "red" ? "rgba(231,76,60,0.3)" : "rgba(243,156,18,0.3)"}` }}>
-                                \u25B2 {driftAlert.pct}% off
+                                ▲ {driftAlert.pct}% off
                               </div>
                               <div style={{ fontSize: "9px", color: "var(--text-dim)", marginTop: "2px" }}>
                                 Relist: {formatGP(driftAlert.relistAt)}
@@ -2859,7 +2859,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                         <div className={`slot-dot`} style={{ background: STATUS_COLORS[status] }} />
                         <img src={itemIconUrl(pos.name)} alt="" style={{ width: 64, height: 64, objectFit: "contain", imageRendering: "pixelated" }}
                           onError={e => { e.target.style.display = "none"; }} />
-                        <div className="slot-name">{pos.name.length > 14 ? pos.name.slice(0, 13) + "\u2026" : pos.name}</div>
+                        <div className="slot-name">{pos.name.length > 14 ? pos.name.slice(0, 13) + "…" : pos.name}</div>
                         <div className="slot-status-label" style={{ color: STATUS_COLORS[status] }}>{STATUS_LABELS[status]}</div>
                         <div className="slot-pnl" style={{ color: pnlTotal >= 0 ? "var(--green)" : "var(--red)" }}>
                           {pnlTotal >= 0 ? "+" : ""}{formatGP(pnlTotal)}
@@ -2886,9 +2886,9 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
 
                 {liveOps.length === 0 ? (
                   <div className="merchant-empty">
-                    <div style={{ fontSize: "36px", opacity: 0.3 }}>\uD83D\uDCC8</div>
+                    <div style={{ fontSize: "36px", opacity: 0.3 }}>📈</div>
                     <p style={{ marginTop: "10px", color: "var(--text-dim)", fontSize: "13px" }}>No open positions</p>
-                    <small style={{ color: "var(--text-dim)", fontSize: "11px" }}>Start a buy offer in-game \u2014 it will appear here automatically.</small>
+                    <small style={{ color: "var(--text-dim)", fontSize: "11px" }}>Start a buy offer in-game — it will appear here automatically.</small>
                   </div>
                 ) : (
                   <div className="ops-table">
@@ -2903,7 +2903,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       const pnlPct = op.buy_price > 0 ? ((pnlEach / op.buy_price) * 100).toFixed(1) : "0.0";
                       const fillPct = op.quantity > 0 ? Math.round(((op.status === "BUYING" ? op.qty_filled_buy : op.qty_filled_sell) || 0) / op.quantity * 100) : 0;
                       const statusColor = { BUYING: "#f39c12", BOUGHT: "var(--green)", SELLING: "#4fc3f7", SOLD: "var(--green)" }[op.status] || "var(--text-dim)";
-                      const statusLabel = { BUYING: "\uD83D\uDFE1 Buying", BOUGHT: "\uD83D\uDFE2 Holding", SELLING: "\uD83D\uDD35 Selling", SOLD: "\u2705 Sold" }[op.status] || op.status;
+                      const statusLabel = { BUYING: "🟡 Buying", BOUGHT: "🟢 Holding", SELLING: "🔵 Selling", SOLD: "✅ Sold" }[op.status] || op.status;
                       const hasRules = autopilotRules[op.item_name] && Object.values(autopilotRules[op.item_name]).some(v => v !== "");
                       const isAutopilotOpen = autopilotOpen === op.item_name;
                       return (
@@ -2916,13 +2916,13 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                             const border = comp.direction === "crash" ? "rgba(231,76,60,0.35)" : comp.direction === "recover" ? "rgba(52,152,219,0.35)" : "rgba(243,156,18,0.3)";
                             const color = comp.direction === "crash" ? "#e74c3c" : comp.direction === "recover" ? "#3498db" : "#f39c12";
                             const msg = comp.direction === "crash"
-                              ? `Margin crashed ${Math.abs(comp.pct)}% in 24hrs \u2014 was ${formatGP(comp.oldMargin)} gp, now ${formatGP(comp.newMargin)} gp`
+                              ? `Margin crashed ${Math.abs(comp.pct)}% in 24hrs — was ${formatGP(comp.oldMargin)} gp, now ${formatGP(comp.newMargin)} gp`
                               : comp.direction === "recover"
-                              ? `Margin recovering +${comp.pct}% in 24hrs \u2014 was ${formatGP(comp.oldMargin)} gp, now ${formatGP(comp.newMargin)} gp`
-                              : `Margin compressed ${Math.abs(comp.pct)}% in 24hrs \u2014 was ${formatGP(comp.oldMargin)} gp, now ${formatGP(comp.newMargin)} gp`;
+                              ? `Margin recovering +${comp.pct}% in 24hrs — was ${formatGP(comp.oldMargin)} gp, now ${formatGP(comp.newMargin)} gp`
+                              : `Margin compressed ${Math.abs(comp.pct)}% in 24hrs — was ${formatGP(comp.oldMargin)} gp, now ${formatGP(comp.newMargin)} gp`;
                             return (
                               <div style={{ margin: "0 16px 0 16px", padding: "5px 10px", background: bg, border: `1px solid ${border}`, borderRadius: "6px", display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", color }}>
-                                <span style={{ fontWeight: 700 }}>{comp.direction === "recover" ? "\u25B2" : "\u25BC"} Margin signal:</span>
+                                <span style={{ fontWeight: 700 }}>{comp.direction === "recover" ? "▲" : "▼"} Margin signal:</span>
                                 <span>{msg}</span>
                               </div>
                             );
@@ -2946,7 +2946,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               </div>
             </div>
 
-            {/* \u2500\u2500 RIGHT SIDEBAR \u2500\u2500 */}
+            {/* ── RIGHT SIDEBAR ── */}
             <div className="merchant-right">
 
               {/* Capital Efficiency Ring */}
@@ -2982,7 +2982,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Daily GP Goal */}
               <div id="tour-daily-goal" className="m-panel-section">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <div className="m-panel-title" style={{ marginBottom: 0 }}>\uD83C\uDFAF Daily Goal</div>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>🎯 Daily Goal</div>
                   <button style={{ background: "transparent", border: "none", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
                     onClick={() => { setShowGoalInput(true); setGoalInput(dailyGoal > 0 ? String(dailyGoal) : ""); }}>
                     {dailyGoal > 0 ? "Edit" : "Set Goal"}
@@ -2994,8 +2994,8 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       onChange={e => setGoalInput(e.target.value)}
                       onKeyDown={e => { if (e.key === "Enter") saveGoal(goalInput); if (e.key === "Escape") setShowGoalInput(false); }}
                       autoFocus />
-                    <button className="add-pos-confirm" onClick={() => saveGoal(goalInput)}>\u2713</button>
-                    <button className="add-pos-cancel" onClick={() => setShowGoalInput(false)}>\u2715</button>
+                    <button className="add-pos-confirm" onClick={() => saveGoal(goalInput)}>✓</button>
+                    <button className="add-pos-cancel" onClick={() => setShowGoalInput(false)}>✕</button>
                   </div>
                 ) : dailyGoal > 0 ? (
                   <>
@@ -3017,7 +3017,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     </div>
                     {realisedToday >= dailyGoal && (
                       <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--green)", fontWeight: 600, textAlign: "center" }}>
-                        \uD83C\uDF89 Goal reached!
+                        🎉 Goal reached!
                       </div>
                     )}
                     {realisedToday < dailyGoal && gpHr !== null && gpHr > 0 && (
@@ -3060,12 +3060,12 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
 
               {/* Rotation Picks */}
               <div className="m-panel-section rotation-picks-section">
-                <div className="m-panel-title">\u26A1 Rotation Picks</div>
+                <div className="m-panel-title">⚡ Rotation Picks</div>
                 <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "10px" }}>
                   Best fits for your {formatGP(idleGP)} idle GP:
                 </div>
                 {rotationPicks.length === 0 ? (
-                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No picks \u2014 all capital deployed or no good candidates.</div>
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No picks — all capital deployed or no good candidates.</div>
                 ) : rotationPicks.map((item, i) => (
                   <div key={item.id} className={`rotation-card ${["rc-green","rc-blue","rc-amber"][i]}`} onClick={() => setSelectedItem(item)}>
                     <div className="rc-name">{item.name}</div>
@@ -3075,7 +3075,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       <div className="rc-stat">ROI <span style={{ color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.roi}%</span></div>
                       <div className="rc-stat">Limit <span style={{ color: "var(--text)" }}>{item.buyLimit > 0 ? item.buyLimit.toLocaleString() : "?"}</span></div>
                     </div>
-                    <div className="rc-action">\u2192 Click to view chart</div>
+                    <div className="rc-action">→ Click to view chart</div>
                   </div>
                 ))}
               </div>
@@ -3083,7 +3083,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Flip Queue */}
               <div id="tour-flip-queue" className="m-panel-section" style={{ flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <div className="m-panel-title" style={{ marginBottom: 0 }}>\uD83D\uDCCB Flip Queue</div>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>📋 Flip Queue</div>
                   <button style={{ background: "transparent", border: "none", color: "var(--gold)", fontSize: "18px", cursor: "pointer", lineHeight: 1 }}
                     onClick={() => setShowQueueAdd(v => !v)}>+</button>
                 </div>
@@ -3115,7 +3115,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                             </div>}
                           </div>
                           <button onClick={() => removeFromQueue(q.id)}
-                            style={{ background: "transparent", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "13px", padding: "2px 4px" }}>\u2715</button>
+                            style={{ background: "transparent", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "13px", padding: "2px 4px" }}>✕</button>
                         </div>
                       );
                     })}
@@ -3127,7 +3127,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
           </div>
         )}
 
-        {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 ANALYTICS VIEW \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+        {/* ══════════════════════ ANALYTICS VIEW ══════════════════════ */}
         {activeView === "analytics" && (
           <div className="merchant-layout">
             <div className="merchant-left">
@@ -3135,17 +3135,17 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Session Intel */}
               <div id="tour-session-intel" className="merchant-section">
                 <div className="merchant-section-header">
-                  <span className="merchant-section-title">\uD83D\uDCCA Session Intel</span>
+                  <span className="merchant-section-title">📊 Session Intel</span>
                   <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Started {getSessionTime()} ago</span>
                 </div>
                 <div className="analytics-grid">
                   {[
                     { label: "Session Duration", val: getSessionTime(), color: "var(--text)" },
-                    { label: "GP / Hour", val: gpHr !== null ? `${gpHr >= 0 ? "+" : ""}${formatGP(gpHr)}` : "\u2014", color: gpHr !== null ? (gpHr >= 0 ? "var(--green)" : "var(--red)") : "var(--text-dim)" },
+                    { label: "GP / Hour", val: gpHr !== null ? `${gpHr >= 0 ? "+" : ""}${formatGP(gpHr)}` : "—", color: gpHr !== null ? (gpHr >= 0 ? "var(--green)" : "var(--red)") : "var(--text-dim)" },
                     { label: "Flips Closed Today", val: todayFlips.length + autoTodayFlips.length, color: "var(--text)" },
                     { label: "Realised Today", val: `${realisedToday >= 0 ? "+" : ""}${formatGP(realisedToday)}`, color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
                     { label: "Unrealised P&L", val: `${unrealisedTotal >= 0 ? "+" : ""}${formatGP(unrealisedTotal)}`, color: unrealisedTotal >= 0 ? "var(--green)" : "var(--red)" },
-                    { label: "Return on Capital", val: merchantCapital > 0 ? `${((realisedToday / merchantCapital) * 100).toFixed(2)}%` : "\u2014", color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
+                    { label: "Return on Capital", val: merchantCapital > 0 ? `${((realisedToday / merchantCapital) * 100).toFixed(2)}%` : "—", color: realisedToday >= 0 ? "var(--green)" : "var(--red)" },
                     { label: "Capital Deployed", val: `${efficiencyPct}%`, color: "var(--blue)" },
                     { label: "Idle GP", val: formatGP(idleGP), color: idleGP > merchantCapital * 0.3 ? "#f39c12" : "var(--text-dim)" },
                   ].map(row => (
@@ -3160,7 +3160,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Risk Exposure */}
               <div id="tour-risk-exposure" className="merchant-section">
                 <div className="merchant-section-header">
-                  <span className="merchant-section-title">\u2696\uFE0F Risk Exposure</span>
+                  <span className="merchant-section-title">⚖️ Risk Exposure</span>
                   {topRiskPct > 50 && <span style={{ fontSize: "11px", color: "var(--red)", fontWeight: 600 }}>Concentrated position</span>}
                 </div>
                 {riskItems.length === 0 ? (
@@ -3188,7 +3188,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     ))}
                     {topRiskPct > 40 && (
                       <div style={{ marginTop: "4px", fontSize: "11px", color: "#f39c12", background: "rgba(243,156,18,0.08)", border: "1px solid rgba(243,156,18,0.2)", borderRadius: "6px", padding: "8px 10px" }}>
-                        \u26A0\uFE0F {riskItems[0].name} represents {topRiskPct}% of your capital. Consider diversifying.
+                        ⚠️ {riskItems[0].name} represents {topRiskPct}% of your capital. Consider diversifying.
                       </div>
                     )}
                   </div>
@@ -3205,7 +3205,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   ].sort((a, b) => new Date(b.date) - new Date(a.date));
                   return (<>
                     <div className="merchant-section-header">
-                      <span className="merchant-section-title">\u2705 Closed Today</span>
+                      <span className="merchant-section-title">✅ Closed Today</span>
                       <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{allTodayFlips.length} flips</span>
                     </div>
                     {allTodayFlips.length === 0 ? (
@@ -3217,7 +3217,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                             <div>
                               <div style={{ fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>{f.item}</div>
                               <div style={{ fontSize: "10px", color: "var(--text-dim)", marginTop: "1px" }}>
-                                {f.qty?.toLocaleString()}x · Buy {formatGP(f.buyPrice)} \u2192 Sell {formatGP(f.sellPrice)}
+                                {f.qty?.toLocaleString()}x · Buy {formatGP(f.buyPrice)} → Sell {formatGP(f.sellPrice)}
                               </div>
                             </div>
                             <div style={{ textAlign: "right" }}>
@@ -3264,7 +3264,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Daily Goal */}
               <div className="m-panel-section">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <div className="m-panel-title" style={{ marginBottom: 0 }}>\uD83C\uDFAF Daily Goal</div>
+                  <div className="m-panel-title" style={{ marginBottom: 0 }}>🎯 Daily Goal</div>
                   <button style={{ background: "transparent", border: "none", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
                     onClick={() => { setShowGoalInput(true); setGoalInput(dailyGoal > 0 ? String(dailyGoal) : ""); }}>
                     {dailyGoal > 0 ? "Edit" : "Set Goal"}
@@ -3276,8 +3276,8 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       onChange={e => setGoalInput(e.target.value)}
                       onKeyDown={e => { if (e.key === "Enter") saveGoal(goalInput); if (e.key === "Escape") setShowGoalInput(false); }}
                       autoFocus />
-                    <button className="add-pos-confirm" onClick={() => saveGoal(goalInput)}>\u2713</button>
-                    <button className="add-pos-cancel" onClick={() => setShowGoalInput(false)}>\u2715</button>
+                    <button className="add-pos-confirm" onClick={() => saveGoal(goalInput)}>✓</button>
+                    <button className="add-pos-cancel" onClick={() => setShowGoalInput(false)}>✕</button>
                   </div>
                 ) : dailyGoal > 0 ? (
                   <>
@@ -3290,7 +3290,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     <div style={{ background: "var(--bg4)", borderRadius: "4px", overflow: "hidden", height: "8px" }}>
                       <div style={{ height: "100%", width: `${Math.min(100, (realisedToday / dailyGoal) * 100)}%`, background: realisedToday >= dailyGoal ? "var(--green)" : "linear-gradient(90deg, var(--gold-dim), var(--gold))", transition: "width 0.6s ease", borderRadius: "4px" }} />
                     </div>
-                    {realisedToday >= dailyGoal && <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--green)", fontWeight: 600, textAlign: "center" }}>\uD83C\uDF89 Goal reached!</div>}
+                    {realisedToday >= dailyGoal && <div style={{ marginTop: "8px", fontSize: "12px", color: "var(--green)", fontWeight: 600, textAlign: "center" }}>🎉 Goal reached!</div>}
                   </>
                 ) : (
                   <div style={{ fontSize: "12px", color: "var(--text-dim)", textAlign: "center", padding: "8px 0" }}>No goal set.</div>
@@ -3300,14 +3300,14 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Update Capital */}
               <div className="m-panel-section">
                 <button className="op-action-btn" style={{ width: "100%", textAlign: "center", padding: "9px" }} onClick={onUpdateCapital}>
-                  \uD83D\uDCB0 Update Total Capital
+                  💰 Update Total Capital
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 ALERTS VIEW \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550 */}
+        {/* ══════════════════════ ALERTS VIEW ══════════════════════ */}
         {activeView === "alerts" && (
           <div className="merchant-layout">
             <div className="merchant-left">
@@ -3315,15 +3315,15 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               {/* Alert toggles */}
               <div id="tour-smart-alerts" className="merchant-section">
                 <div className="merchant-section-header">
-                  <span className="merchant-section-title">\u26A1 Smart Alerts</span>
+                  <span className="merchant-section-title">⚡ Smart Alerts</span>
                   <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Auto-fires on market shifts</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                   {[
-                    { key: "marginSpike",  icon: "\uD83D\uDCC8", label: "Margin Spike",  desc: "Margin jumps above threshold",    unit: "%",  min: 5,   max: 200, step: 5   },
-                    { key: "volumeSurge",  icon: "\uD83D\uDD25", label: "Volume Surge",  desc: "Volume multiplies suddenly",      unit: "x",  min: 1.5, max: 10,  step: 0.5 },
-                    { key: "dumpDetected", icon: "\u26A0\uFE0F", label: "Dump Detected", desc: "Sell price drops sharply",        unit: "%",  min: 2,   max: 50,  step: 1   },
-                    { key: "priceCrash",   icon: "\uD83D\uDCA5", label: "Price Crash",   desc: "Both buy & sell price collapse",  unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps above threshold",    unit: "%",  min: 5,   max: 200, step: 5   },
+                    { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Volume multiplies suddenly",      unit: "x",  min: 1.5, max: 10,  step: 0.5 },
+                    { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops sharply",        unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy & sell price collapse",  unit: "%",  min: 2,   max: 50,  step: 1   },
                   ].map(({ key, icon, label, desc, unit, min, max, step }) => (
                     <div key={key} className="m-smart-alert-row">
                       <div style={{ display: "flex", flexDirection: "column", gap: "2px", flex: 1 }}>
@@ -3346,7 +3346,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               <div id="tour-live-feed" className="merchant-section" style={{ flex: 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span className="merchant-section-title" style={{ marginBottom: 0 }}>\uD83D\uDCE1 Live Feed</span>
+                    <span className="merchant-section-title" style={{ marginBottom: 0 }}>📡 Live Feed</span>
                     {smartEvents?.length > 0 && (
                       <span style={{ background: "rgba(201,168,76,0.2)", border: "1px solid var(--gold-dim)", borderRadius: "10px", padding: "1px 7px", fontSize: "10px", color: "var(--gold)", fontWeight: 700 }}>
                         {smartEvents.length}
@@ -3361,7 +3361,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                 {smartEvents?.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
                     <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                      {[["all","All"],["spike","\uD83D\uDCC8 Margin"],["surge","\uD83D\uDD25 Volume"],["dump","\u26A0\uFE0F Dump"],["crash","\uD83D\uDCA5 Crash"],["autopilot","\uD83E\uDD16 Autopilot"]].map(([v,l]) => (
+                      {[["all","All"],["spike","📈 Margin"],["surge","🔥 Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"],["autopilot","🤖 Autopilot"]].map(([v,l]) => (
                         <button key={v} onClick={() => setMerchantFeedFilter(v)}
                           style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
                           {l}
@@ -3373,7 +3373,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       {[["recent","Recent"],["change","% Change"],["margin","Margin"]].map(([v,l]) => (
                         <button key={v} onClick={() => { if (merchantFeedSort === v) { setMerchantFeedSortDir(d => d === "desc" ? "asc" : "desc"); } else { setMerchantFeedSort(v); setMerchantFeedSortDir("desc"); } }}
                           style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "3px" }}>
-                          {l}{merchantFeedSort === v && <span style={{ fontSize: "9px" }}>{merchantFeedSortDir === "desc" ? "\u25BC" : "\u25B2"}</span>}
+                          {l}{merchantFeedSort === v && <span style={{ fontSize: "9px" }}>{merchantFeedSortDir === "desc" ? "▼" : "▲"}</span>}
                         </button>
                       ))}
                     </div>
@@ -3400,7 +3400,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     }
                     if (feed.length === 0) return (
                       <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-dim)", fontSize: "12px" }}>
-                        <div style={{ fontSize: "32px", marginBottom: "8px", opacity: 0.4 }}>\uD83D\uDCE1</div>
+                        <div style={{ fontSize: "32px", marginBottom: "8px", opacity: 0.4 }}>📡</div>
                         No alerts yet. Monitoring every 30 seconds.
                       </div>
                     );
@@ -3414,7 +3414,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                             <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                               <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)", cursor: liveItem ? "pointer" : "default" }}>{e.itemName}</span>
                               <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
-                              {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view \u2192</span>}
+                              {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view →</span>}
                             </div>
                             <div className="smart-event-msg">{e.message}</div>
                             {liveItem && (
@@ -3435,16 +3435,16 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
 
             <div className="merchant-right">
               <div className="m-panel-section">
-                <div className="m-panel-title">\uD83D\uDCCA Alert Summary</div>
+                <div className="m-panel-title">📊 Alert Summary</div>
                 {smartEvents?.length === 0 ? (
                   <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>No events fired this session.</div>
                 ) : (
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                     {[
-                      { badge: "spike", icon: "\uD83D\uDCC8", label: "Margin Spikes" },
-                      { badge: "surge", icon: "\uD83D\uDD25", label: "Volume Surges" },
-                      { badge: "dump",  icon: "\u26A0\uFE0F", label: "Dumps Detected" },
-                      { badge: "crash", icon: "\uD83D\uDCA5", label: "Price Crashes" },
+                      { badge: "spike", icon: "📈", label: "Margin Spikes" },
+                      { badge: "surge", icon: "🔥", label: "Volume Surges" },
+                      { badge: "dump",  icon: "⚠️", label: "Dumps Detected" },
+                      { badge: "crash", icon: "💥", label: "Price Crashes" },
                     ].map(({ badge, icon, label }) => {
                       const count = (smartEvents || []).filter(e => e.badge === badge).length;
                       return (
@@ -3470,7 +3470,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               <span className="filter-label">Filter:</span>
               {["all", "f2p", "members", "highvol", "favourites", "1gp"].map(f => (
                 <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : f === "1gp" ? "\u26A0 1gp Sales" : `\uD83D\uDD17 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
+                  {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : f === "1gp" ? "⚠ 1gp Sales" : `🔗 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                 </button>
               ))}
               <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
@@ -3478,7 +3478,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                 className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 ? " active" : ""}`}
                 onClick={() => setShowAdvFilters(v => !v)}
               >
-                \u2699 Filters {advFilterCount > 0 && <span className="adv-filter-badge">{advFilterCount}</span>}
+                ⚙ Filters {advFilterCount > 0 && <span className="adv-filter-badge">{advFilterCount}</span>}
               </button>
             </div>
 
@@ -3489,7 +3489,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   <div className="adv-filter-label">Margin (gp)</div>
                   <div className="adv-filter-row">
                     <input className="adv-filter-input" placeholder="Min" value={advFilters.minMargin} onChange={e => setAdv("minMargin", e.target.value)} type="number" />
-                    <span className="adv-filter-sep">\u2013</span>
+                    <span className="adv-filter-sep">–</span>
                     <input className="adv-filter-input" placeholder="Max" value={advFilters.maxMargin} onChange={e => setAdv("maxMargin", e.target.value)} type="number" />
                   </div>
                 </div>
@@ -3497,7 +3497,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   <div className="adv-filter-label">ROI (%)</div>
                   <div className="adv-filter-row">
                     <input className="adv-filter-input" placeholder="Min" value={advFilters.minRoi} onChange={e => setAdv("minRoi", e.target.value)} type="number" step="0.1" />
-                    <span className="adv-filter-sep">\u2013</span>
+                    <span className="adv-filter-sep">–</span>
                     <input className="adv-filter-input" placeholder="Max" value={advFilters.maxRoi} onChange={e => setAdv("maxRoi", e.target.value)} type="number" step="0.1" />
                   </div>
                 </div>
@@ -3505,7 +3505,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   <div className="adv-filter-label">Vol/Day</div>
                   <div className="adv-filter-row">
                     <input className="adv-filter-input" placeholder="Min" value={advFilters.minVolume} onChange={e => setAdv("minVolume", e.target.value)} type="number" />
-                    <span className="adv-filter-sep">\u2013</span>
+                    <span className="adv-filter-sep">–</span>
                     <input className="adv-filter-input" placeholder="Max" value={advFilters.maxVolume} onChange={e => setAdv("maxVolume", e.target.value)} type="number" />
                   </div>
                 </div>
@@ -3513,7 +3513,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   <div className="adv-filter-label">Buy Price (gp)</div>
                   <div className="adv-filter-row">
                     <input className="adv-filter-input" placeholder="Min" value={advFilters.minPrice} onChange={e => setAdv("minPrice", e.target.value)} type="number" />
-                    <span className="adv-filter-sep">\u2013</span>
+                    <span className="adv-filter-sep">–</span>
                     <input className="adv-filter-input" placeholder="Max" value={advFilters.maxPrice} onChange={e => setAdv("maxPrice", e.target.value)} type="number" />
                   </div>
                 </div>
@@ -3546,13 +3546,13 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                 </div>
                 <div className="adv-filter-footer">
                   <span>{filtered.length.toLocaleString()} items match</span>
-                  {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>\u2715 Clear all filters</button>}
+                  {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>✕ Clear all filters</button>}
                 </div>
               </div>
             )}
 
             {/* Table */}
-            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading\u2026" : `${filtered.length.toLocaleString()} items`}</span></div>
+            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
             <div className="flips-table">
               <div className="table-header">
                 {[
@@ -3568,7 +3568,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   ["sparkline", "24hr Trend", null],
                 ].map(([col, label, tip]) => (
                   <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
-                    {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "\u25BC" : "\u25B2"}</span>}
+                    {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
                     {tip && (
                       <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
                         <span className="stat-help">?</span>
@@ -3585,7 +3585,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                   </div>
                 ))
               ) : filtered.length === 0 ? (
-                <div className="empty-state"><div className="icon">\uD83D\uDD0D</div><p>No items match your filters</p></div>
+                <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
               ) : (
                 filtered.slice(0, marketRowsShown).map(item => (
                   <FlipRow
@@ -3661,7 +3661,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
 }
 
 
-// \u2500\u2500 ThresholdPopover \u2014 top-level component (must not be defined inside RuneTrader to avoid remount crashes)
+// ── ThresholdPopover — top-level component (must not be defined inside RuneTrader to avoid remount crashes)
 const THRESHOLD_DEFAULTS = { marginSpike: 50, volumeSurge: 3, dumpDetected: 10, priceCrash: 15 };
 
 function ThresholdPopover({ alertKey, label, unit, min, max, step, thresholds, openPopover, setOpenPopover, saveThreshold }) {
@@ -3671,12 +3671,12 @@ function ThresholdPopover({ alertKey, label, unit, min, max, step, thresholds, o
     <div className="threshold-popover-wrap">
       <button className={`threshold-gear-btn${openPopover === alertKey ? " active" : ""}`}
         onClick={e => { e.stopPropagation(); setOpenPopover(openPopover === alertKey ? null : alertKey); }}
-        title="Adjust threshold">\u2699\uFE0F</button>
+        title="Adjust threshold">⚙️</button>
       {openPopover === alertKey && (
         <div className="threshold-popover" onClick={e => e.stopPropagation()}>
-          <div className="threshold-popover-title">Threshold \u2014 {label}</div>
+          <div className="threshold-popover-title">Threshold — {label}</div>
           <div className="threshold-popover-label">
-            Trigger when: {alertKey === "volumeSurge" ? `volume is ${val}x previous` : `change is \u2265 ${val}${unit}`}
+            Trigger when: {alertKey === "volumeSurge" ? `volume is ${val}x previous` : `change is ≥ ${val}${unit}`}
           </div>
           <div className="threshold-row">
             <input type="range" className="threshold-slider" min={min} max={max} step={step} value={val}
@@ -3696,9 +3696,9 @@ function ThresholdPopover({ alertKey, label, unit, min, max, step, thresholds, o
 }
 
 
-// \u2500\u2500 LIVE GE SLOTS COMPONENT \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ── LIVE GE SLOTS COMPONENT ──────────────────────────────────
 
-// \u2500\u2500 AUTO FLIP HISTORY COMPONENT \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ── AUTO FLIP HISTORY COMPONENT ─────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 function AutoFlipHistory({ user, supabase: sb, formatGP }) {
   const [flips, setFlips] = useState([]);
@@ -3716,7 +3716,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
     const ch = sb.channel("auto-flip-history-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_flips_live", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          // Re-fetch on DELETE \u2014 don't rely on payload.old which requires REPLICA IDENTITY FULL
+          // Re-fetch on DELETE — don't rely on payload.old which requires REPLICA IDENTITY FULL
           sb.from("ge_flips_live").select("*").eq("user_id", user.id)
             .order("buy_started_at", { ascending: false }).limit(50)
             .then(({ data }) => setFlips(data || []));
@@ -3732,7 +3732,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
     return () => sb.removeChannel(ch);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const fmtDate = ts => ts ? new Date(ts).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "\u2014";
+  const fmtDate = ts => ts ? new Date(ts).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
   const statusBadge = s => {
     const map = { BUYING: ["#f39c12", "Buying"], BOUGHT: ["var(--green)", "Holding"], SELLING: ["#4fc3f7", "Selling"], SOLD: ["var(--green)", "Closed"], CANCELLED: ["var(--text-dim)", "Cancelled"] };
     const [color, label] = map[s] || ["var(--text-dim)", s];
@@ -3749,13 +3749,13 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
       {/* Open flips */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
-          \uD83D\uDCC8 Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "Inter", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{openFlips.length} active</span>
+          📈 Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "Inter", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{openFlips.length} active</span>
         </div>
         {loading ? <div style={{ color: "var(--text-dim)", fontSize: "13px" }}>Loading...</div>
         : openFlips.length === 0 ? (
           <div style={{ color: "var(--text-dim)", fontSize: "13px", textAlign: "center", padding: "20px 0" }}>
-            <div style={{ fontSize: "24px", opacity: 0.4, marginBottom: "8px" }}>\uD83D\uDCCB</div>
-            <div>No open flips \u2014 start a buy offer in-game</div>
+            <div style={{ fontSize: "24px", opacity: 0.4, marginBottom: "8px" }}>📋</div>
+            <div>No open flips — start a buy offer in-game</div>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
@@ -3769,8 +3769,8 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
                   <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {f.slot + 1}</div>
                 </div>
                 {statusBadge(f.status)}
-                <span style={{ fontSize: "12px" }}>{f.buy_price ? formatGP(f.buy_price) : "\u2014"}</span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{f.sell_price ? formatGP(f.sell_price) : "\u2014"}</span>
+                <span style={{ fontSize: "12px" }}>{f.buy_price ? formatGP(f.buy_price) : "—"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{f.sell_price ? formatGP(f.sell_price) : "—"}</span>
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.quantity || 0).toLocaleString()}</span>
                 <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{fmtDate(f.buy_started_at)}</span>
               </div>
@@ -3782,12 +3782,12 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
       {/* Closed flips */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
-          \uD83D\uDCDC Flip History
+          📜 Flip History
         </div>
         {loading ? <div style={{ color: "var(--text-dim)", fontSize: "13px" }}>Loading...</div>
         : closedFlips.length === 0 ? (
           <div style={{ color: "var(--text-dim)", fontSize: "13px", textAlign: "center", padding: "20px 0" }}>
-            <div style={{ fontSize: "24px", opacity: 0.4, marginBottom: "8px" }}>\uD83D\uDCCA</div>
+            <div style={{ fontSize: "24px", opacity: 0.4, marginBottom: "8px" }}>📊</div>
             <div>No completed flips yet</div>
             <div style={{ fontSize: "11px", marginTop: "4px", opacity: 0.6 }}>Complete a buy + sell in-game to see your P&L here</div>
           </div>
@@ -3802,10 +3802,10 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
                   <div style={{ fontSize: "13px", fontWeight: 500 }}>{f.item_name}</div>
                   <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {f.slot + 1}</div>
                 </div>
-                <span style={{ fontSize: "12px" }}>{f.buy_price ? formatGP(f.buy_price) : "\u2014"}</span>
-                <span style={{ fontSize: "12px" }}>{f.sell_price ? formatGP(f.sell_price) : "\u2014"}</span>
+                <span style={{ fontSize: "12px" }}>{f.buy_price ? formatGP(f.buy_price) : "—"}</span>
+                <span style={{ fontSize: "12px" }}>{f.sell_price ? formatGP(f.sell_price) : "—"}</span>
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.quantity || 0).toLocaleString()}</span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{f.tax ? formatGP(f.tax) : "\u2014"}</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{f.tax ? formatGP(f.tax) : "—"}</span>
                 <div>
                   {f.status === "SOLD" ? (
                     <>
@@ -3826,10 +3826,10 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
   );
 }
 
-// \u2500\u2500\u2500 DRIFT DETECTION CONSTANTS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── DRIFT DETECTION CONSTANTS ───────────────────────────────────────────────
 // How aggressively we flag drift based on item price tier.
 // Cheap items: even 2% off matters (200gp on a 10k item = real money).
-// Expensive items: 1% tolerance is too tight \u2014 market noise is bigger.
+// Expensive items: 1% tolerance is too tight — market noise is bigger.
 const getDriftThresholds = (price) => {
   if (price >= 1_000_000) return { cancel: 0.04, adjust: 0.02 }; // 4% / 2%
   if (price >= 100_000)   return { cancel: 0.05, adjust: 0.025 }; // 5% / 2.5%
@@ -3840,24 +3840,24 @@ const getDriftThresholds = (price) => {
 // A 3% drift after 2 minutes = noise. Same drift after 30 minutes = problem.
 const getUrgency = (driftPct, ageMinutes, pctFilled) => {
   if (pctFilled >= 95) return "filled";   // basically done, no alert needed
-  if (pctFilled >= 50) return "partial";  // half filled \u2014 softer alert
+  if (pctFilled >= 50) return "partial";  // half filled — softer alert
   const timeFactor = Math.log10(Math.max(ageMinutes, 1) + 1);
   return driftPct * timeFactor;
 };
 
 // What price should they relist at?
 // Strategy: beat the market by enough to jump the queue past 1gp-above bots.
-// Most competitors relist at market+1 \u2014 so we go market+2 on buys, market-2 on sells.
+// Most competitors relist at market+1 — so we go market+2 on buys, market-2 on sells.
 // For higher-value items we scale slightly so the increment is meaningful but not wasteful.
 const getRelistPrice = (offerType, wikiData) => {
   if (!wikiData) return null;
   const high = wikiData.high || 0;
   const low  = wikiData.low  || 0;
   // Beat increment: +2 baseline, scales up for expensive items
-  // <10k gp   \u2192 +2 gp  (commodities \u2014 every gp counts)
-  // 10k\u20131M    \u2192 +3 gp  (mid-tier \u2014 small edge)
-  // 1M\u201310M    \u2192 +5 gp  (high-value \u2014 need clear queue priority)
-  // >10M      \u2192 +10 gp (ultra-high \u2014 bots use bigger increments here too)
+  // <10k gp   → +2 gp  (commodities — every gp counts)
+  // 10k–1M    → +3 gp  (mid-tier — small edge)
+  // 1M–10M    → +5 gp  (high-value — need clear queue priority)
+  // >10M      → +10 gp (ultra-high — bots use bigger increments here too)
   const beatIncrement = (price) => {
     if (price >= 10_000_000) return 10;
     if (price >= 1_000_000)  return 5;
@@ -3869,24 +3869,24 @@ const getRelistPrice = (offerType, wikiData) => {
   return null;
 };
 
-// \u2500\u2500\u2500 UPGRADED LiveGESlots COMPONENT \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ─── UPGRADED LiveGESlots COMPONENT ──────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
   const [offers, setOffers]         = useState([]);
   const [autoFlips, setAutoFlips]   = useState([]);
   const [loading, setLoading]       = useState(true);
-  const [liveWiki, setLiveWiki]     = useState({});   // item_id \u2192 {high, low, timestamp}
+  const [liveWiki, setLiveWiki]     = useState({});   // item_id → {high, low, timestamp}
   const [wikiLoading, setWikiLoading] = useState(false);
   const pollRef                     = useRef(null);
 
-  // \u2500\u2500 Build name \u2192 id lookup from items prop (comes from Wiki mapping) \u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ── Build name → id lookup from items prop (comes from Wiki mapping) ───────
   const nameToId = useMemo(() => {
     const map = {};
     (items || []).forEach(i => { if (i.name && i.id) map[i.name.toLowerCase()] = i.id; });
     return map;
   }, [items]);
 
-  // \u2500\u2500 Initial data load + realtime subscriptions \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ── Initial data load + realtime subscriptions ────────────────────────────
   useEffect(() => {
     if (!user) return;
     setLoading(true);
@@ -3928,12 +3928,12 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
     };
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // \u2500\u2500 Live Wiki price polling for active slots \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-  // Runs every 30s when there are active offers. Bypasses cache \u2014 always fresh.
+  // ── Live Wiki price polling for active slots ──────────────────────────────
+  // Runs every 30s when there are active offers. Bypasses cache — always fresh.
   const fetchLiveWiki = useCallback(async (activeOffers) => {
     if (activeOffers.length === 0) return;
 
-    // Resolve item names \u2192 IDs using the mapping
+    // Resolve item names → IDs using the mapping
     const ids = activeOffers
       .map(o => nameToId[o.item_name?.toLowerCase()])
       .filter(Boolean);
@@ -3970,7 +3970,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [offers, fetchLiveWiki]);
 
-  // \u2500\u2500 Drift calculation for a single offer \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ── Drift calculation for a single offer ─────────────────────────────────
   const getDriftAlert = useCallback((offer) => {
     if (!["BUYING", "SELLING"].includes(offer.status)) return null;
     if (!offer.offer_price || offer.offer_price <= 0)  return null;
@@ -4008,7 +4008,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
         color:     "var(--red)",
         bg:        "rgba(231,76,60,0.08)",
         border:    "rgba(231,76,60,0.25)",
-        icon:      "\uD83D\uDD34",
+        icon:      "🔴",
         label:     "Cancel & Relist",
         message:   `Your ${offer.offer_type === "BUY" ? "buy" : "sell"} offer is ${(drift * 100).toFixed(1)}% off market`,
         relistAt,
@@ -4023,7 +4023,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
         color:     "var(--gold)",
         bg:        "rgba(201,168,76,0.08)",
         border:    "rgba(201,168,76,0.25)",
-        icon:      "\uD83D\uDFE1",
+        icon:      "🟡",
         label:     "Consider Adjusting",
         message:   `${offer.offer_type === "BUY" ? "Buy" : "Sell"} offer drifted ${(drift * 100).toFixed(1)}% from market`,
         relistAt,
@@ -4032,10 +4032,10 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
       };
     }
 
-    return null; // within tolerance \u2014 all good
+    return null; // within tolerance — all good
   }, [nameToId, liveWiki]);
 
-  // \u2500\u2500 Derive alerts across all active slots \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ── Derive alerts across all active slots ────────────────────────────────
   const alerts = useMemo(() => {
     return offers
       .map(o => ({ offer: o, alert: getDriftAlert(o) }))
@@ -4043,14 +4043,14 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
       .sort((a, b) => b.alert.drift - a.alert.drift); // worst first
   }, [offers, getDriftAlert]);
 
-  // \u2500\u2500 Helpers \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ── Helpers ──────────────────────────────────────────────────────────────
   const slotColor  = s => ({ BUYING: "var(--gold)", BOUGHT: "var(--green)",
     SELLING: "#4fc3f7", SOLD: "var(--green)",
     CANCELLED_BUY: "var(--red)", CANCELLED_SELL: "var(--red)" }[s] || "#555");
   const slotLabel  = s => !s || s === "EMPTY" ? "Empty"
     : s.charAt(0) + s.slice(1).toLowerCase().replace("_", " ");
   const fmtGP      = n => {
-    if (!n && n !== 0) return "\u2014";
+    if (!n && n !== 0) return "—";
     if (n >= 1e6) return (n / 1e6).toFixed(2) + "M";
     if (n >= 1e3) return (n / 1e3).toFixed(1) + "K";
     return n.toLocaleString();
@@ -4066,7 +4066,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-      {/* \u2500\u2500 ALERT STRIP \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */}
+      {/* ── ALERT STRIP ─────────────────────────────────────────────────── */}
       {alerts.length > 0 && (
         <div style={{
           background: "var(--bg3)", border: "1px solid var(--border)",
@@ -4079,7 +4079,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
             <span style={{ fontFamily: "'Cinzel', serif", fontSize: "18px",
               fontWeight: 700, color: "var(--red)", textTransform: "uppercase",
               letterSpacing: "1px" }}>
-              \u26A0 Slot Alerts
+              ⚠ Slot Alerts
             </span>
             <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
               {alerts.length} offer{alerts.length > 1 ? "s" : ""} need attention
@@ -4087,7 +4087,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
             {wikiLoading && (
               <span style={{ fontSize: "10px", color: "var(--text-dim)",
                 marginLeft: "auto" }}>
-                \uD83D\uDD04 Checking prices...
+                🔄 Checking prices...
               </span>
             )}
           </div>
@@ -4144,14 +4144,14 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
                         {fmtGP(offer.offer_price)} gp
                       </div>
                     </div>
-                    <span style={{ fontSize: "16px", color: "var(--text-dim)" }}>\u2192</span>
+                    <span style={{ fontSize: "16px", color: "var(--text-dim)" }}>→</span>
                     <div>
                       <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
                         Relist at
                       </span>
                       <div style={{ fontSize: "13px", fontWeight: 700,
                         color: alert.level === "cancel" ? "var(--red)" : "var(--gold)" }}>
-                        {alert.relistAt ? fmtGP(alert.relistAt) + " gp" : "\u2014"}
+                        {alert.relistAt ? fmtGP(alert.relistAt) + " gp" : "—"}
                       </div>
                     </div>
                     <div>
@@ -4162,7 +4162,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
                         color: "var(--red)" }}>
                         {alert.relistAt
                           ? fmtGP(Math.abs(alert.relistAt - offer.offer_price)) + " gp off"
-                          : "\u2014"}
+                          : "—"}
                       </div>
                     </div>
                   </div>
@@ -4173,7 +4173,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
         </div>
       )}
 
-      {/* \u2500\u2500 LIVE GE SLOTS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */}
+      {/* ── LIVE GE SLOTS ────────────────────────────────────────────────── */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)",
         borderRadius: "10px", padding: "20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between",
@@ -4181,7 +4181,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
           <span style={{ fontFamily: "'Cinzel', serif", fontSize: "18px",
             fontWeight: 700, color: "var(--gold)", textTransform: "uppercase",
             letterSpacing: "1px" }}>
-            \uD83D\uDD34 Live GE Slots
+            🔴 Live GE Slots
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             {!wikiLoading && Object.keys(liveWiki).length > 0 && (
@@ -4206,10 +4206,10 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
         ) : activeOffers.length === 0 ? (
           <div style={{ color: "var(--text-dim)", fontSize: "13px",
             padding: "20px 0", textAlign: "center" }}>
-            <div style={{ fontSize: "28px", marginBottom: "8px", opacity: 0.4 }}>\uD83D\uDCE6</div>
+            <div style={{ fontSize: "28px", marginBottom: "8px", opacity: 0.4 }}>📦</div>
             <div>No active GE offers</div>
             <div style={{ fontSize: "11px", marginTop: "4px", opacity: 0.6 }}>
-              Open offers in-game \u2014 they will appear here in real time
+              Open offers in-game — they will appear here in real time
             </div>
           </div>
         ) : (
@@ -4269,7 +4269,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
                       {o.item_name}
                     </span>
                     {hasAlert && (
-                      <span style={{ fontSize: "10px" }}>\u26A0</span>
+                      <span style={{ fontSize: "10px" }}>⚠</span>
                     )}
                   </div>
 
@@ -4309,12 +4309,12 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
                         {driftAmt !== null && Math.abs(driftAmt) > 0 && (
                           <div style={{ fontSize: "10px",
                             color: driftAmt > 0 ? "var(--red)" : "var(--green)" }}>
-                            {driftAmt > 0 ? "\u2191" : "\u2193"} {fmtGP(Math.abs(driftAmt))}
+                            {driftAmt > 0 ? "↑" : "↓"} {fmtGP(Math.abs(driftAmt))}
                           </div>
                         )}
                       </>
                     ) : (
-                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>\u2014</span>
+                      <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>—</span>
                     )}
                   </div>
 
@@ -4331,14 +4331,14 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
         )}
       </div>
 
-      {/* \u2500\u2500 AUTO-DETECTED FLIPS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 */}
+      {/* ── AUTO-DETECTED FLIPS ──────────────────────────────────────────── */}
       {autoFlips.length > 0 && (
         <div style={{ background: "var(--bg3)", border: "1px solid var(--border)",
           borderRadius: "10px", padding: "20px" }}>
           <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px",
             fontWeight: 700, color: "var(--gold)", textTransform: "uppercase",
             letterSpacing: "1px", marginBottom: "16px" }}>
-            \u26A1 Auto-Detected Flips
+            ⚡ Auto-Detected Flips
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
             <div style={{ display: "grid",
@@ -4371,7 +4371,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>
                   {(f.quantity || 0).toLocaleString()}
                 </span>
-                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>\u2014</span>
+                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>—</span>
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: 600,
                     color: f.profit >= 0 ? "var(--green)" : "var(--red)" }}>
@@ -4394,7 +4394,7 @@ function LiveGESlots({ user, supabase: sb, items, onLiveWiki }) {
 }
 
 
-// \u2500\u2500 Error Boundary \u2014 catches render crashes and shows recovery UI instead of white screen \u2500\u2500
+// ── Error Boundary — catches render crashes and shows recovery UI instead of white screen ──
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { hasError: false, error: null }; }
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
@@ -4403,10 +4403,10 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0a0c0f", color: "#e8e8e8", fontFamily: "Inter, sans-serif", gap: "16px", padding: "24px", textAlign: "center" }}>
-          <div style={{ fontSize: "40px" }}>\uD83D\uDCC9</div>
+          <div style={{ fontSize: "40px" }}>📉</div>
           <div style={{ fontFamily: "Cinzel, serif", fontSize: "20px", color: "#c9a84c" }}>Something went wrong</div>
           <div style={{ fontSize: "13px", color: "#7a8a9a", maxWidth: "400px", lineHeight: 1.6 }}>
-            RuneTrader hit an unexpected error. Your data is safe \u2014 refresh to recover.
+            RuneTrader hit an unexpected error. Your data is safe — refresh to recover.
           </div>
           <div style={{ fontSize: "11px", color: "#3a4a5a", fontFamily: "monospace", maxWidth: "500px", background: "#0f1218", padding: "10px 14px", borderRadius: "8px", border: "1px solid #2a3340", wordBreak: "break-all" }}>
             {this.state.error?.message}
@@ -4440,25 +4440,25 @@ export default function RuneTrader() {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duration);
   }
 
-  // \u2500\u2500 Capture referral code from URL on load \u2500\u2500
+  // ── Capture referral code from URL on load ──
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const ref = params.get("ref");
     if (ref) {
-      // Sanitize \u2014 ref codes are alphanumeric only, max 16 chars
+      // Sanitize — ref codes are alphanumeric only, max 16 chars
       const safeRef = ref.replace(/[^a-zA-Z0-9]/g, "").slice(0, 16);
       if (safeRef) localStorage.setItem("rt_ref_code", safeRef);
       const url = new URL(window.location.href);
       url.searchParams.delete("ref");
       window.history.replaceState({}, "", url.toString());
     }
-    // Handle Stripe redirect back \u2014 verify with Supabase before granting Pro
+    // Handle Stripe redirect back — verify with Supabase before granting Pro
     const upgradeStatus = params.get("upgrade");
     if (upgradeStatus === "success") {
       const upgradeUrl = new URL(window.location.href);
       upgradeUrl.searchParams.delete("upgrade");
       window.history.replaceState({}, "", upgradeUrl.toString());
-      // Don't trust the URL param alone \u2014 re-fetch profile from Supabase to confirm
+      // Don't trust the URL param alone — re-fetch profile from Supabase to confirm
       setTimeout(async () => {
         try {
           const { data: { session } } = await supabase.auth.getSession();
@@ -4467,13 +4467,13 @@ export default function RuneTrader() {
               .select("is_pro").eq("user_id", session.user.id).single();
             if (data?.is_pro) {
               setIsPro(true);
-              showToast("Welcome to Pro! \uD83D\uDCC8 Trading Terminal is now unlocked.", "success", 5000);
+              showToast("Welcome to Pro! 📈 Trading Terminal is now unlocked.", "success", 5000);
             }
           }
         } catch (e) { console.error("[upgrade verify]", e?.message); }
       }, 1500);
     }
-    // Detect /item/:slug \u2014 e.g. runetrader.gg/item/abyssal-whip
+    // Detect /item/:slug — e.g. runetrader.gg/item/abyssal-whip
     const match = window.location.pathname.match(/^\/item\/(.+)$/);
     if (match) {
       const slug = decodeURIComponent(match[1]).replace(/-/g, " ");
@@ -4515,18 +4515,18 @@ export default function RuneTrader() {
           (async () => {
             const newCode = session.user.id.slice(0, 8).toUpperCase();
             const trialEndsAt = new Date(Date.now() + 3 * 86400000).toISOString();
-            // Check if profile already exists \u2014 don't overwrite existing ref_code
+            // Check if profile already exists — don't overwrite existing ref_code
             const { data: existing } = await supabase.from("user_profiles")
               .select("ref_code, trial_ends_at").eq("user_id", session.user.id).single();
             if (existing?.ref_code) {
-              // Already has a code \u2014 just load it
+              // Already has a code — just load it
               setUserRefCode(existing.ref_code);
               if (existing.trial_ends_at) {
                 const daysLeft = Math.ceil((new Date(existing.trial_ends_at) - Date.now()) / 86400000);
                 if (daysLeft > 0) { setIsOnTrial(true); setTrialDaysLeft(daysLeft); setIsPro(true); }
               }
             } else {
-              // New user \u2014 create profile with ref code and trial
+              // New user — create profile with ref code and trial
               const { data } = await supabase.from("user_profiles")
                 .upsert({ user_id: session.user.id, ref_code: newCode, trial_ends_at: trialEndsAt }, { onConflict: "user_id" })
                 .select("ref_code, trial_ends_at").single();
@@ -4569,7 +4569,7 @@ export default function RuneTrader() {
           const seen = localStorage.getItem(DEPLOY_KEY);
           if (!seen) { setTimeout(() => setShowWhatsNew(true), 1200); }
           localStorage.setItem(DEPLOY_KEY, "1");
-          // \u2500\u2500 Login streak \u2500\u2500
+          // ── Login streak ──
           const todayLocal = new Date();
           const today = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth()+1).padStart(2,'0')}-${String(todayLocal.getDate()).padStart(2,'0')}`;
           const lastLogin = localStorage.getItem("rt_last_login");
@@ -4585,7 +4585,7 @@ export default function RuneTrader() {
           localStorage.setItem("rt_last_login", today);
           localStorage.setItem("rt_login_streak", String(newStreak));
           setLoginStreak(newStreak);
-          // Login cinematic \u2014 fire once per session on a new day
+          // Login cinematic — fire once per session on a new day
           if (lastLogin !== today) {
             setTimeout(() => {
               playLoginChime();
@@ -4596,7 +4596,7 @@ export default function RuneTrader() {
               setTimeout(() => setShowLoginCinematic(false), 5200);
             }, 600);
           }
-          // Show streak banner if streak \u2265 2 (new or continuing streak)
+          // Show streak banner if streak ≥ 2 (new or continuing streak)
           if (newStreak >= 2 && lastLogin !== today) {
             setTimeout(() => setShowStreakBanner(true), 1400);
             setTimeout(() => setShowStreakBanner(false), 7000);
@@ -4628,20 +4628,20 @@ export default function RuneTrader() {
     setTourStep(next);
   }
 
-  // \u2500\u2500 Market data \u2500\u2500
+  // ── Market data ──
   const [items, setItems] = useState([]);
   const [allItems, setAllItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshCooldown, setRefreshCooldown] = useState(0); // seconds remaining
   const cooldownRef = useRef(null);
-  const mappingCacheRef = useRef(null);   // static \u2014 only fetched once
-  const volumeCacheRef = useRef(null);    // daily \u2014 refetched every 10 min
+  const mappingCacheRef = useRef(null);   // static — only fetched once
+  const volumeCacheRef = useRef(null);    // daily — refetched every 10 min
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [allItemsMap, setAllItemsMap] = useState({});
 
-  // \u2500\u2500 Merchant Mode \u2500\u2500
+  // ── Merchant Mode ──
   const [merchantMode, setMerchantMode] = useState(false);
   const [upgradeModal, setUpgradeModal] = useState(null);
   const [isPro, setIsPro] = useState(false);
@@ -4752,7 +4752,7 @@ export default function RuneTrader() {
     try {
     const quest = dailyQuests.find(q => q.id === questId);
     if (!quest || quest.completed) return;
-    if (goldCoins < REROLL_COST) { showToast(`Need ${REROLL_COST} coins to reroll. Complete quests to earn more! \uD83E\uDE99`, "error", 3000); return; }
+    if (goldCoins < REROLL_COST) { showToast(`Need ${REROLL_COST} coins to reroll. Complete quests to earn more! 🪙`, "error", 3000); return; }
     const today = todayStr();
     const seed = Math.abs((user.id + today + questId + Date.now()).split("").reduce((h, c) => ((h << 5) - h + c.charCodeAt(0)) | 0, 0));
     const newQuests = generateDailyQuests(user.id, today + "_reroll_" + questId + "_" + seed);
@@ -4762,7 +4762,7 @@ export default function RuneTrader() {
     setGoldCoins(newCoins);
     setDailyQuests(updated);
     saveQuests(updated, newCoins);
-    showToast(`Quest rerolled! -${REROLL_COST} \uD83E\uDE99`, "info", 2500);
+    showToast(`Quest rerolled! -${REROLL_COST} 🪙`, "info", 2500);
     } catch (e) { console.error("[rerollQuest]", e?.message); showToast("Failed to reroll quest.", "error"); }
   }
 
@@ -4876,7 +4876,7 @@ export default function RuneTrader() {
     if (!user) { setShowAuth(true); return; }
     if (merchantTransitioning) return; // prevent double-click during exit animation
     if (!merchantMode) {
-      // Pro gate \u2014 require active Pro or trial
+      // Pro gate — require active Pro or trial
       if (!isPro && !isOnTrial) {
         setUpgradeModal({ feature: "Trading Terminal", description: "The Trading Terminal is a RuneTrader Pro feature. Upgrade to get live GE slot tracking, autopilot rules, smart alerts, and your full Merchant Mode command centre." });
         return;
@@ -4914,7 +4914,7 @@ export default function RuneTrader() {
 
   useEffect(() => {
     if (!user) return;
-    // Fire all loads in parallel \u2014 one network batch, one re-render
+    // Fire all loads in parallel — one network batch, one re-render
     Promise.all([
       loadMerchantSettings(),
       loadXP(),
@@ -4926,7 +4926,7 @@ export default function RuneTrader() {
   const [merchantPositions, setMerchantPositions] = useState([]);
   const [geOffers, setGeOffers] = useState([]);
   // eslint-disable-next-line no-unused-vars
-  const [liveWikiPrices, setLiveWikiPrices] = useState({}); // item_id \u2192 {high,low} \u2014 populated by LiveGESlots poll
+  const [liveWikiPrices, setLiveWikiPrices] = useState({}); // item_id → {high,low} — populated by LiveGESlots poll
   useEffect(() => {
     if (!user) return;
     supabase.from("positions").select("*").eq("user_id", user.id).then(({ data }) => setMerchantPositions(data || []));
@@ -4935,7 +4935,7 @@ export default function RuneTrader() {
     const ch = supabase.channel("merchant-ge-offers-" + user.id)
       .on("postgres_changes", { event: "*", schema: "public", table: "ge_offers", filter: `user_id=eq.${user.id}` }, payload => {
         if (payload.eventType === "DELETE") {
-          // Re-fetch on DELETE \u2014 don't rely on payload.old.slot which requires REPLICA IDENTITY FULL
+          // Re-fetch on DELETE — don't rely on payload.old.slot which requires REPLICA IDENTITY FULL
           supabase.from("ge_offers").select("*").eq("user_id", user.id).order("slot")
             .then(({ data }) => setGeOffers(data || []));
         } else {
@@ -4965,9 +4965,9 @@ export default function RuneTrader() {
 
 
 
-  // \u2500\u2500 Prefs \u2500\u2500
+  // ── Prefs ──
 
-  // \u2500\u2500 UI state \u2500\u2500
+  // ── UI state ──
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("market");
@@ -4982,7 +4982,7 @@ export default function RuneTrader() {
   const [showWhatsNew, setShowWhatsNew] = useState(false);
   const [loginStreak, setLoginStreak] = useState(0);
 
-  // \u20AC\u20AC\u20AC\u20AC Engagement features \u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC
+  // €€€€ Engagement features €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
   // Daily GP goal
   const [showDailyGoalPrompt, setShowDailyGoalPrompt] = useState(false);
   // eslint-disable-next-line no-unused-vars
@@ -5001,7 +5001,7 @@ export default function RuneTrader() {
   const [showFlipConfetti, setShowFlipConfetti] = useState(false);
   const [flipConfettiData, setFlipConfettiData] = useState(null);
 
-  // \u20AC\u20AC\u20AC\u20AC XP / Levelling system \u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC
+  // €€€€ XP / Levelling system €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
   const [totalXP, setTotalXP] = useState(0);
   const [unlockedAchievements, setUnlockedAchievements] = useState([]);
   const [showLevelUp, setShowLevelUp] = useState(null);       // { oldLevel, newLevel }
@@ -5019,26 +5019,26 @@ export default function RuneTrader() {
   const [isOnTrial, setIsOnTrial] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
 
-  // \u20AC\u20AC\u20AC\u20AC Quest system \u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC
+  // €€€€ Quest system €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
   const [dailyQuests, setDailyQuests] = useState([]);
   const [goldCoins, setGoldCoins] = useState(0);
   const [showQuestPanel, setShowQuestPanel] = useState(false);
   const [questsLoaded, setQuestsLoaded] = useState(false);
   const [newlyCompletedQuests, setNewlyCompletedQuests] = useState([]);
 
-  // \u20AC\u20AC\u20AC\u20AC Login cinematic \u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC
+  // €€€€ Login cinematic €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
   const [showLoginCinematic, setShowLoginCinematic] = useState(false);
   const [cinematicPhase, setCinematicPhase] = useState("enter"); // enter | quests | fade
   const [cinematicQuests, setCinematicQuests] = useState([]);
   const [marketPulse, setMarketPulse] = useState(null); // { name, change, direction }
 
-  // \u20AC\u20AC\u20AC\u20AC Sound \u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC
+  // €€€€ Sound €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
   const [soundMuted, setSoundMuted] = useState(() => getSoundMuted());
 
-  // \u20AC\u20AC\u20AC\u20AC Quest nudge \u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC
+  // €€€€ Quest nudge €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
   const [questNudge, setQuestNudge] = useState(null); // { quest, pct }
   const nudgeSentRef = useRef(new Set()); // track which quests have had a nudge sent
-  // \u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC
+  // €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [pendingItemSlug, setPendingItemSlug] = useState(null); // from /item/:slug URL
@@ -5062,16 +5062,16 @@ export default function RuneTrader() {
   function handleSort(col) { if (sortCol === col) { setSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSortCol(col); setSortDir("desc"); } setMarketRowsShown(200); }
   useEffect(() => { setMarketRowsShown(200); }, [filter, search]);
 
-  // \u2500\u2500 Quick-alert from market row \u2500\u2500
-  const [quickAlert, setQuickAlert] = useState(null); // { item } \u2014 the item to set an alert for
+  // ── Quick-alert from market row ──
+  const [quickAlert, setQuickAlert] = useState(null); // { item } — the item to set an alert for
   const [quickAlertPrice, setQuickAlertPrice] = useState("");
   const [quickAlertType, setQuickAlertType] = useState("above");
 
-  // \u2500\u2500 Category filter \u2500\u2500
+  // ── Category filter ──
   const [categoryFilter, setCategoryFilter] = useState("All");
   useEffect(() => { setMarketRowsShown(200); }, [categoryFilter]);
 
-  // \u2500\u2500 Advanced filters \u2500\u2500
+  // ── Advanced filters ──
   const [showAdvFilters, setShowAdvFilters] = useState(false);
   const [advFilters, setAdvFilters] = useState({
     minMargin: "", maxMargin: "",
@@ -5087,14 +5087,14 @@ export default function RuneTrader() {
   function resetAdvFilters() { setAdvFilters({ minMargin: "", maxMargin: "", minRoi: "", maxRoi: "", minVolume: "", maxVolume: "", minPrice: "", maxPrice: "", minGpFill: "", maxLastTrade: "", positiveOnly: false, priceDataOnly: false }); }
   const advFilterCount = Object.entries(advFilters).filter(([, v]) => v !== "" && v !== false).length;
 
-  // \u2500\u2500 AI Chat \u2500\u2500
+  // ── AI Chat ──
   const [messages, setMessages] = useState(() => [getWelcomeMsg()]);
   const [input, setInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const itemsRef = useRef([]);
 
-  // Market pulse \u2014 runs after items have loaded, picks a genuinely good flip
+  // Market pulse — runs after items have loaded, picks a genuinely good flip
   useEffect(() => {
     if (!questsLoaded || !showLoginCinematic) return;
     const nowSec = Math.floor(Date.now() / 1000);
@@ -5119,14 +5119,14 @@ export default function RuneTrader() {
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
   useEffect(() => { merchantAIMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, merchantAIOpen]);
 
-  // \u2500\u2500 Tracker \u2500\u2500
+  // ── Tracker ──
   const [flipsLog, setFlipsLog] = useState(() => { try { return JSON.parse(localStorage.getItem("runetrader_flips") || "[]"); } catch { return []; } });
   // eslint-disable-next-line no-unused-vars
   const [flipsLoading, setFlipsLoading] = useState(false); // eslint-disable-line no-unused-vars
   const [autoFlipsLog, setAutoFlipsLog] = useState([]);
 
 
-  // \u2500\u2500 Merchant P&L tracking (after flipsLog is declared) \u2500\u2500
+  // ── Merchant P&L tracking (after flipsLog is declared) ──
   useEffect(() => {
     if (!merchantMode) return;
     const todayManual = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.totalProfit || 0), 0);
@@ -5176,19 +5176,19 @@ export default function RuneTrader() {
   // eslint-disable-next-line no-unused-vars
   const [showAutocomplete, setShowAutocomplete] = useState(false); // eslint-disable-line no-unused-vars
 
-  // \u2500\u2500 Close flip modal \u2500\u2500
+  // ── Close flip modal ──
   const [closingFlip, setClosingFlip] = useState(null);
   const [closeFlipLoading, setCloseFlipLoading] = useState(false);
   const [flipCard, setFlipCard] = useState(null); // { itemName, profit, roi, dataUrl }
 
-  // \u2500\u2500 Demo Mode \u2500\u2500
+  // ── Demo Mode ──
   const [demoMode, setDemoMode] = useState(false);
   const [demoTourStep, setDemoTourStep] = useState(-1); // -1 = inactive, -2 = end screen
   const [demoTourRect, setDemoTourRect] = useState(null);
   const [demoTourTransitioning, setDemoTourTransitioning] = useState(false);
   const [demoMerchantIntro, setDemoMerchantIntro] = useState(false); // dramatic MM intro overlay
 
-  // \u2500\u2500 Watchlist (replaces Favourites) \u2500\u2500
+  // ── Watchlist (replaces Favourites) ──
   const [watchlist, setWatchlist] = useState(() => {
     try {
       const wl = localStorage.getItem("runetrader_watchlist");
@@ -5198,7 +5198,7 @@ export default function RuneTrader() {
       return [];
     } catch { return []; }
   });
-  const favourites = watchlist; // alias \u2014 MerchantMode and filtered still use `favourites`
+  const favourites = watchlist; // alias — MerchantMode and filtered still use `favourites`
 
   function toggleWatchlist(itemId) {
     if (!itemId) return;
@@ -5238,7 +5238,7 @@ export default function RuneTrader() {
   const [watchlistAlertOpen, setWatchlistAlertOpen] = useState(null);
   const [watchlistAlertInputs, setWatchlistAlertInputs] = useState({ above: "", below: "" });
 
-  // \u2500\u2500 Alerts \u2500\u2500
+  // ── Alerts ──
   const [alerts, setAlerts] = useState(() => {
     try { return JSON.parse(localStorage.getItem("runetrader_alerts") || "[]"); } catch { return []; }
   });
@@ -5270,7 +5270,7 @@ export default function RuneTrader() {
     return () => document.removeEventListener("mousedown", handler);
   }, [openPopover]);
 
-  // \u2500\u2500 Smart Alerts \u2500\u2500
+  // ── Smart Alerts ──
   const [smartAlertSettings, setSmartAlertSettings] = useState(() => {
     try { return JSON.parse(localStorage.getItem("runetrader_smart_alerts") || '{"marginSpike":true,"volumeSurge":true,"dumpDetected":true,"priceCrash":true,"autopilotSound":true,"autopilotPush":true}'); }
     catch { return { marginSpike: true, volumeSurge: true, dumpDetected: true, priceCrash: true, autopilotSound: true, autopilotPush: true }; }
@@ -5280,10 +5280,10 @@ export default function RuneTrader() {
   const [smartFeedSort, setSmartFeedSort] = useState("recent");  // recent | change | margin
   const [smartFeedSortDir, setSmartFeedSortDir] = useState("desc"); // asc | desc
   const prevItemsRef = useRef({});
-  const smartCooldownRef = useRef({}); // key: `${itemId}_${type}` \u2192 timestamp
-  // \u2500\u2500 Margin compression tracking \u2500\u2500
-  const marginHistoryRef = useRef({}); // itemId \u2192 [{ margin, time }] (last 24hr)
-  const [marginCompression, setMarginCompression] = useState({}); // itemId \u2192 { pct, direction, oldMargin, newMargin }
+  const smartCooldownRef = useRef({}); // key: `${itemId}_${type}` → timestamp
+  // ── Margin compression tracking ──
+  const marginHistoryRef = useRef({}); // itemId → [{ margin, time }] (last 24hr)
+  const [marginCompression, setMarginCompression] = useState({}); // itemId → { pct, direction, oldMargin, newMargin }
   const [mwatchOrder, setMwatchOrder] = useState("crashed-first"); // "crashed-first" | "compressed-first" | "recover-first"
   const [mwatchSearch, setMwatchSearch] = useState("");
   const [mwatchSortCol, setMwatchSortCol] = useState("pct");
@@ -5298,7 +5298,7 @@ export default function RuneTrader() {
   function runSmartAlerts(newItems) {
     const prev = prevItemsRef.current;
     if (!Object.keys(prev).length) {
-      // First load \u2014 just store baseline, don't fire
+      // First load — just store baseline, don't fire
       const baseline = {};
       newItems.forEach(i => { baseline[i.id] = { margin: i.margin, volume: i.volume, high: i.high, low: i.low }; });
       prevItemsRef.current = baseline;
@@ -5340,25 +5340,25 @@ export default function RuneTrader() {
       // Margin Spike: margin up >threshold% vs previous
       if (smartAlertSettings.marginSpike && canFire("marginSpike") && p.margin > 100) {
         const pct = ((item.margin - p.margin) / Math.abs(p.margin)) * 100;
-        if (pct >= thresholds.marginSpike) fire("marginSpike", "\uD83D\uDCC8", "spike", `Margin spiked +${Math.round(pct)}% to ${formatGP(item.margin)} gp`, p.margin, item.margin);
+        if (pct >= thresholds.marginSpike) fire("marginSpike", "📈", "spike", `Margin spiked +${Math.round(pct)}% to ${formatGP(item.margin)} gp`, p.margin, item.margin);
       }
 
       // Volume Surge: volume >threshold x previous
       if (smartAlertSettings.volumeSurge && canFire("volumeSurge") && p.volume > 10) {
-        if (item.volume >= p.volume * thresholds.volumeSurge && item.volume > 50) fire("volumeSurge", "\uD83D\uDD25", "surge", `Volume surged to ${item.volume.toLocaleString()}/day (was ${p.volume.toLocaleString()})`, p.volume, item.volume);
+        if (item.volume >= p.volume * thresholds.volumeSurge && item.volume > 50) fire("volumeSurge", "🔥", "surge", `Volume surged to ${item.volume.toLocaleString()}/day (was ${p.volume.toLocaleString()})`, p.volume, item.volume);
       }
 
       // Dump Detected: sell price dropped >threshold%
       if (smartAlertSettings.dumpDetected && canFire("dumpDetected") && p.high > 100 && item.high) {
         const drop = ((p.high - item.high) / p.high) * 100;
-        if (drop >= thresholds.dumpDetected) fire("dumpDetected", "\u26A0\uFE0F", "dump", `Sell price dropped ${Math.round(drop)}% to ${formatGP(item.high)} gp`, p.high, item.high);
+        if (drop >= thresholds.dumpDetected) fire("dumpDetected", "⚠️", "dump", `Sell price dropped ${Math.round(drop)}% to ${formatGP(item.high)} gp`, p.high, item.high);
       }
 
       // Price Crash: both buy and sell dropped >threshold%
       if (smartAlertSettings.priceCrash && canFire("priceCrash") && p.high > 100 && p.low > 100 && item.high && item.low) {
         const highDrop = ((p.high - item.high) / p.high) * 100;
         const lowDrop = ((p.low - item.low) / p.low) * 100;
-        if (highDrop >= thresholds.priceCrash && lowDrop >= thresholds.priceCrash) fire("priceCrash", "\uD83D\uDCA5", "crash", `Price crashed! Buy ${formatGP(item.low)} (\u2193${Math.round(lowDrop)}%), Sell ${formatGP(item.high)} (\u2193${Math.round(highDrop)}%)`, p.high, item.high);
+        if (highDrop >= thresholds.priceCrash && lowDrop >= thresholds.priceCrash) fire("priceCrash", "💥", "crash", `Price crashed! Buy ${formatGP(item.low)} (↓${Math.round(lowDrop)}%), Sell ${formatGP(item.high)} (↓${Math.round(highDrop)}%)`, p.high, item.high);
       }
     });
 
@@ -5372,13 +5372,13 @@ export default function RuneTrader() {
     prevItemsRef.current = updated;
   }
 
-  // \u2500\u2500 Push notifications \u2500\u2500
+  // ── Push notifications ──
   const [notifPermission, setNotifPermission] = useState(() =>
     typeof Notification !== "undefined" ? Notification.permission : "default"
   );
   const [notifLoading, setNotifLoading] = useState(false);
 
-  // \u2500\u2500 Demo Tour \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ── Demo Tour ────────────────────────────────────────────────────
   function measureDemoTarget(selector) {
     if (!selector) { setDemoTourRect(null); return; }
     setTimeout(() => {
@@ -5402,7 +5402,7 @@ export default function RuneTrader() {
 
   function advanceDemoTour(nextIdx) {
     if (nextIdx >= DEMO_TOUR_STEPS.length) {
-      // End \u2014 show CTA screen
+      // End — show CTA screen
       setDemoTourStep(-2);
       setDemoTourRect(null);
       return;
@@ -5410,7 +5410,7 @@ export default function RuneTrader() {
     const step = DEMO_TOUR_STEPS[nextIdx];
     setDemoTourStep(nextIdx);
 
-    // Navigate to correct tab \u2014 briefly show solid backdrop during transition
+    // Navigate to correct tab — briefly show solid backdrop during transition
     if (step.tab) {
       setDemoTourTransitioning(true);
       setDemoTourRect(null);
@@ -5467,7 +5467,7 @@ export default function RuneTrader() {
 
   // Auto-start demo tour when demoMode activates
   useEffect(() => {
-    if (!demoMode) return; // don\u2019t run on initial mount (default false)
+    if (!demoMode) return; // don’t run on initial mount (default false)
     // Force out of Merchant Mode and back to Market before tour starts
     setMerchantMode(false);
     setMerchantAIOpen(false);
@@ -5527,7 +5527,7 @@ export default function RuneTrader() {
     return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
   }
 
-  // \u2500\u2500 Load flips on user change \u2500\u2500
+  // ── Load flips on user change ──
   useEffect(() => {
     if (user) { loadAndMergeFlips(); }
     else { try { setFlipsLog(JSON.parse(localStorage.getItem("runetrader_flips") || "[]")); } catch { setFlipsLog([]); } }
@@ -5589,17 +5589,17 @@ export default function RuneTrader() {
     };
   }
 
-  // \u2500\u2500 Fetch market prices \u2500\u2500
-  // /mapping is static (item metadata \u2014 never changes), cached for the session
+  // ── Fetch market prices ──
+  // /mapping is static (item metadata — never changes), cached for the session
   // /volumes updates daily, refreshed every 10 min
-  // /latest updates every ~60s on wiki's end \u2014 poll every 30s to catch it fast
+  // /latest updates every ~60s on wiki's end — poll every 30s to catch it fast
   const volumeCacheTimeRef = useRef(0);
   const leftPanelRef = useRef(null); // for scroll preservation
   const fetchingRef = useRef(false); // prevent concurrent fetches
-  const [priceVersion, setPriceVersion] = useState(0); // lightweight counter \u2014 increments on background update instead of replacing arrays
+  const [priceVersion, setPriceVersion] = useState(0); // lightweight counter — increments on background update instead of replacing arrays
   useEffect(() => { fetchPrices(); const iv = setInterval(fetchPrices, 30 * 1000); return () => clearInterval(iv); }, []); // eslint-disable-line
 
-  // \u2500\u2500 Resolve pending /item/:slug once allItems is populated \u2500\u2500
+  // ── Resolve pending /item/:slug once allItems is populated ──
   useEffect(() => {
     if (!pendingItemSlug || allItems.length === 0) return;
     const match = allItems.find(i => i.name.toLowerCase() === pendingItemSlug)
@@ -5615,7 +5615,7 @@ export default function RuneTrader() {
       else if (!itemsRef.current.length) setLoading(true); // only show skeleton on first load
       setError(null);
 
-      // Always fetch latest prices \u2014 via our server cache (hits Wiki at most once/min)
+      // Always fetch latest prices — via our server cache (hits Wiki at most once/min)
       const latestRes = await fetch("/api/prices?type=latest");
       if (!latestRes.ok) throw new Error(`Prices API error: ${latestRes.status}`);
       const latestData = await latestRes.json();
@@ -5649,14 +5649,14 @@ export default function RuneTrader() {
       const volumeMap = volumeCacheRef.current;
       const TAX_EXEMPT_IDS = [13190, 13191, 13192];
 
-      // Capture nature rune price (ID 561) \u2014 used for High Alch profit calc
+      // Capture nature rune price (ID 561) — used for High Alch profit calc
       const natureRuneData = latestData.data["561"];
       if (natureRuneData && natureRuneData.low) setNatureRunePrice(natureRuneData.low);
       else if (natureRunePrice === 0) setNatureRunePrice(200); // fallback if no live data
 
       const flips = [];
 
-      // Build from full mapping catalog \u2014 show all items, even those with no live price
+      // Build from full mapping catalog — show all items, even those with no live price
       for (const [idStr, meta] of Object.entries(mappingMap)) {
         const id = parseInt(idStr);
         const prices = latestData.data[idStr] || {};
@@ -5681,11 +5681,11 @@ export default function RuneTrader() {
         setAllItems(flips);
         itemsRef.current = validFlips;
       } else {
-        // Background poll \u2014 update prices in-place to preserve scroll position
+        // Background poll — update prices in-place to preserve scroll position
         // Build a fast lookup map of new prices
         const priceMap = {};
         flips.forEach(f => { priceMap[f.id] = f; });
-        // Mutate existing array entries in-place \u2014 React won't see a new array reference
+        // Mutate existing array entries in-place — React won't see a new array reference
         itemsRef.current.forEach((item, idx) => {
           const updated = priceMap[item.id];
           if (updated) {
@@ -5706,10 +5706,10 @@ export default function RuneTrader() {
       }
       runSmartAlerts(flips);
 
-      // \u2500\u2500 Margin compression tracking \u2500\u2500
+      // ── Margin compression tracking ──
       const now24 = Date.now();
       const WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
-      const MAX_SNAPSHOTS = 120; // cap at 120 entries per item (~1hr at 30s) \u2014 beyond that oldest/newest is enough
+      const MAX_SNAPSHOTS = 120; // cap at 120 entries per item (~1hr at 30s) — beyond that oldest/newest is enough
       const MIN_VOLUME = 500;
       const THRESHOLD = 30;
       const hist = marginHistoryRef.current;
@@ -5758,10 +5758,10 @@ export default function RuneTrader() {
     finally { setLoading(false); setRefreshing(false); fetchingRef.current = false; }
   }
 
-  // \u2500\u2500 Sign out \u2500\u2500
+  // ── Sign out ──
   async function handleSignOut() {
     try { await supabase.auth.signOut(); } catch (e) { console.error("[signOut]", e?.message); }
-    // Clear all user-specific state \u2014 prevents data leaking to next user on shared device
+    // Clear all user-specific state — prevents data leaking to next user on shared device
     setUser(null);
     setFlipsLog([]);
     setAlerts([]);
@@ -5807,7 +5807,7 @@ export default function RuneTrader() {
     setMarketInnerView("items");
   }
 
-  // \u2500\u2500 Check alerts against live prices \u2500\u2500
+  // ── Check alerts against live prices ──
   const lastAlertCheckRef = React.useRef(0);
   useEffect(() => {
     if (!items.length || !alerts.length) return;
@@ -5824,7 +5824,7 @@ export default function RuneTrader() {
     }));
   }, [items]); // eslint-disable-line
 
-  // \u2500\u2500 Autocomplete helpers \u2500\u2500
+  // ── Autocomplete helpers ──
   const allNames = Object.values(allItemsMap);
   function handleItemInput(val, setForm, setAc, setShowAc) {
     setForm(f => ({ ...f, item: val }));
@@ -5837,7 +5837,7 @@ export default function RuneTrader() {
     setShowAc(false);
   }
 
-  // \u2500\u2500 Log a flip (buy-only or full) \u2500\u2500
+  // ── Log a flip (buy-only or full) ──
   // eslint-disable-next-line no-unused-vars
   async function logFlip() { // eslint-disable-line no-unused-vars
     const buy = parseInt(logForm.buyPrice.replace(/,/g, ""));
@@ -5900,7 +5900,7 @@ export default function RuneTrader() {
     }
   }
 
-  // \u2500\u2500 Close an open flip \u2500\u2500
+  // ── Close an open flip ──
   function generateFlipCard(itemName, totalProfit, roi) {
     try {
     const canvas = document.createElement("canvas");
@@ -5919,7 +5919,7 @@ export default function RuneTrader() {
     ctx.fillRect(2, 2, 596, 196);
     // Sword icon area
     ctx.font = "32px serif";
-    ctx.fillText("\uD83D\uDCC8", 28, 80);
+    ctx.fillText("📈", 28, 80);
     // RuneTrader label
     ctx.fillStyle = "#c9a84c";
     ctx.font = "bold 13px 'Arial'";
@@ -6003,7 +6003,7 @@ export default function RuneTrader() {
             if (bonusXP > 0) awardXP(bonusXP * 500, {});
             setDailyQuests(updated);
             saveQuests(updated, newCoins);
-            showToast(`Quest complete! +${bonusCoins} coins \uD83E\uDE99`, "success", 4000);
+            showToast(`Quest complete! +${bonusCoins} coins 🪙`, "success", 4000);
           } else {
             // Check for 50% nudge on any quest
             updated.forEach(q => {
@@ -6060,7 +6060,7 @@ export default function RuneTrader() {
     } catch (e) { console.error("[handleCloseFlipCancelled]", e?.message); showToast("Failed to cancel flip.", "error"); }
   }
 
-  // \u2500\u2500 Merchant Mode close handlers (no tab switching needed) \u2500\u2500
+  // ── Merchant Mode close handlers (no tab switching needed) ──
   async function merchantCloseFlip(flip, sellPrice, cancelled = false) {
     if (cancelled) {
       await handleCloseFlipCancelled(flip);
@@ -6095,7 +6095,7 @@ export default function RuneTrader() {
     } catch (e) { console.error("[merchantClosePortfolioPos]", e?.message); showToast("Failed to close position.", "error"); }
   }
 
-  // \u2500\u2500 "Flip This" from item modal \u2500\u2500
+  // ── "Flip This" from item modal ──
   // eslint-disable-next-line no-unused-vars
   async function deleteFlip(id) { // eslint-disable-line no-unused-vars
     if (user) { await supabase.from("flips").delete().eq("id", id).eq("user_id", user.id); }
@@ -6111,7 +6111,7 @@ export default function RuneTrader() {
     setFlipsLog([]);
   }
 
-  // \u2500\u2500 Alerts \u2500\u2500
+  // ── Alerts ──
   function addAlert() {
     if (!alertForm.item || !alertForm.price) return;
     const liveItem = items.find(i => i.name.toLowerCase() === alertForm.item.toLowerCase());
@@ -6133,7 +6133,7 @@ export default function RuneTrader() {
     });
   }
 
-  // \u20AC\u20AC\u20AC\u20AC AI sendMessage \u20AC\u20AC\u20AC\u20AC
+  // €€€€ AI sendMessage €€€€
   async function sendMessage(text) {
     setMessages(prev => [...prev, { role: "user", content: text, time: new Date() }].slice(-50));
     setInput(""); setAiLoading(true);
@@ -6292,7 +6292,7 @@ RULES:
     } finally { setAiLoading(false); }
   }
 
-  // \u2500\u2500 Stable callbacks for FlipRow memo \u2014 defined here so they don't change reference on every render \u2500\u2500
+  // ── Stable callbacks for FlipRow memo — defined here so they don't change reference on every render ──
   const handleQuickAlert = useCallback((item) => {
     setQuickAlert({ item });
     setQuickAlertPrice(item.hasPrice ? String(item.high) : "");
@@ -6303,7 +6303,7 @@ RULES:
     setMarketInnerView("marginwatch");
   }, []); // eslint-disable-line
 
-  // \u2500\u2500 Preserve scroll position on background price updates \u2500\u2500
+  // ── Preserve scroll position on background price updates ──
   const savedScrollRef = useRef(0);
   useEffect(() => {
     if (priceVersion === 0) return; // skip initial load
@@ -6315,7 +6315,7 @@ RULES:
     }
   }, [priceVersion]); // eslint-disable-line
 
-  // \u20AC\u20AC\u20AC\u20AC Picks mode filter \u2014 same tier logic as the Picks tab \u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC\u20AC
+  // €€€€ Picks mode filter — same tier logic as the Picks tab €€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€
   const picksNowSec = Math.floor(Date.now() / 1000);
   const picksPrefsForFilter = customizePrefs;
   const picksBudgetFilter = picksPrefsForFilter.cashStack ? (() => {
@@ -6344,7 +6344,7 @@ RULES:
     return ratio >= 50 && age <= 1800;
   }
 
-  // For 1gp filter, use allItems directly \u2014 these items fail isValidFlip (low < 50) but that's the point
+  // For 1gp filter, use allItems directly — these items fail isValidFlip (low < 50) but that's the point
   const filteredSource = useMemo(
     () => filter === "1gp" ? allItems : (allItems.length ? allItems : items),
     [filter, allItems, items, priceVersion] // eslint-disable-line
@@ -6368,7 +6368,7 @@ RULES:
       if (categoryFilter === "Misc"     && [
         "Runes","Food","Armour","Weapons","Potions","Seeds","Ammo"
       ].some(fc => {
-        // Return true if item passes any non-Misc category \u2014 then filter it out of Misc
+        // Return true if item passes any non-Misc category — then filter it out of Misc
         if (fc === "Runes"   && ((item.category||"").toLowerCase().includes("rune") || (item.name||"").toLowerCase().includes("rune"))) return true;
         if (fc === "Food"    && ["food","fish","meat","pie","cake","bread","stew","wine","beer","ale","milk","potato","egg"].some(k => (item.name||"").toLowerCase().includes(k))) return true;
         if (fc === "Armour"  && ["helm","platebody","platelegs","plateskirt","chainbody","shield","kite","sq shield","armour","chaps","coif","dhide","body","legs"].some(k => (item.name||"").toLowerCase().includes(k))) return true;
@@ -6430,7 +6430,7 @@ RULES:
   });
   }, [filteredSource, filter, search, categoryFilter, picksMode, advFilters, sortCol, sortDir, favourites, priceVersion, customizePrefs]); // eslint-disable-line
 
-  // \u2500\u2500 Tracker stats (manual + auto-tracked flips combined) \u2500\u2500
+  // ── Tracker stats (manual + auto-tracked flips combined) ──
   const closedFlips = flipsLog.filter(f => f.status !== "open");
   // eslint-disable-next-line no-unused-vars
   const openFlips = flipsLog.filter(f => f.status === "open");
@@ -6454,7 +6454,7 @@ RULES:
       <div className="toast-container">
         {toasts.map(t => (
           <div key={t.id} className={`toast ${t.type}`}>
-            {t.type === "success" ? "\u2705" : t.type === "error" ? "" : "\u26A1"} {t.msg}
+            {t.type === "success" ? "✅" : t.type === "error" ? "" : "⚡"} {t.msg}
           </div>
         ))}
       </div>
@@ -6465,7 +6465,7 @@ RULES:
       {showCapitalSetup && (
         <div className="capital-setup" onClick={e => e.target === e.currentTarget && setShowCapitalSetup(false)}>
           <div className="capital-setup-inner">
-            <div className="capital-setup-title">\uD83D\uDCC8 Activate Trading Terminal</div>
+            <div className="capital-setup-title">📈 Activate Trading Terminal</div>
             <div className="capital-setup-sub">Enter your total GP stack. This helps track capital efficiency, idle GP, and expected returns. You can update it any time.</div>
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               <label style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Total Capital (GP)</label>
@@ -6479,7 +6479,7 @@ RULES:
             </div>
             <button className="capital-setup-btn" disabled={!merchantCapitalInput || merchantLoading}
               onClick={() => saveMerchantCapital(merchantCapitalInput)}>
-              {merchantLoading ? "Activating..." : "Activate Trading Terminal \u2192"}
+              {merchantLoading ? "Activating..." : "Activate Trading Terminal →"}
             </button>
           </div>
         </div>
@@ -6527,7 +6527,7 @@ RULES:
                 label: "GP / Hour",
                 value: sessionSummary.gpHr !== null
                   ? (sessionSummary.gpHr >= 0 ? "+" : "") + (Math.abs(sessionSummary.gpHr) >= 1_000_000 ? (sessionSummary.gpHr / 1_000_000).toFixed(1) + "M" : Math.abs(sessionSummary.gpHr) >= 1_000 ? (sessionSummary.gpHr / 1_000).toFixed(0) + "k" : sessionSummary.gpHr.toLocaleString())
-                  : "\u2014",
+                  : "—",
                 color: sessionSummary.gpHr !== null && sessionSummary.gpHr >= 0 ? "var(--green)" : "var(--text-dim)",
                 sub: "avg rate",
               },
@@ -6545,7 +6545,7 @@ RULES:
             <div style={{ animation: "fadeInUp 0.5s ease 0.6s both", position: "relative", zIndex: 1, marginBottom: "24px", textAlign: "center" }}>
               <div style={{ fontSize: "11px", color: "var(--text-dim)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "8px" }}>Best flip today</div>
               <div style={{ display: "inline-flex", alignItems: "center", gap: "12px", background: "rgba(46,204,113,0.08)", border: "1px solid rgba(46,204,113,0.2)", borderRadius: "10px", padding: "10px 20px" }}>
-                <span style={{ fontSize: "18px" }}>\uD83C\uDFC6</span>
+                <span style={{ fontSize: "18px" }}>🏆</span>
                 <div style={{ textAlign: "left" }}>
                   <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text)" }}>{sessionSummary.bestFlip.item}</div>
                   <div style={{ fontSize: "12px", color: "var(--green)", fontWeight: 600 }}>
@@ -6567,7 +6567,7 @@ RULES:
               Terminal offline
             </div>
             <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "6px", opacity: 0.5 }}>
-              Good session{sessionSummary.totalGP > 0 ? " \uD83D\uDCC8" : ""}
+              Good session{sessionSummary.totalGP > 0 ? " 📈" : ""}
             </div>
           </div>
         </div>
@@ -6589,7 +6589,7 @@ RULES:
                 <div className="merchant-anim-stat-label">{title}</div>
               </div>
               <div className="merchant-anim-stat">
-                <div className="merchant-anim-stat-val">{loginStreak > 0 ? `\uD83D\uDD25 ${loginStreak}` : "\u2014"}</div>
+                <div className="merchant-anim-stat-val">{loginStreak > 0 ? `🔥 ${loginStreak}` : "—"}</div>
                 <div className="merchant-anim-stat-label">Day Streak</div>
               </div>
               <div className="merchant-anim-stat">
@@ -6605,7 +6605,7 @@ RULES:
               const diffColor = q.difficulty === "easy" ? "var(--green)" : q.difficulty === "medium" ? "var(--gold)" : "var(--red)";
               return (
                 <div key={q.id} className="merchant-anim-quest" style={{ animation: `statCardIn 0.4s ease ${2.8 + i * 0.15}s both` }}>
-                  <span style={{ fontSize: "16px" }}>{q.completed ? "\u2705" : q.emoji}</span>
+                  <span style={{ fontSize: "16px" }}>{q.completed ? "✅" : q.emoji}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: "12px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</span>
                     <span style={{ fontSize: "11px", color: "var(--text-dim)", marginLeft: "8px" }}>{q.desc}</span>
@@ -6668,7 +6668,7 @@ RULES:
                 <div className="tour-btn-row">
                   <button className="tour-skip" onClick={endMerchantTour}>Skip</button>
                   <button className="tour-next" onClick={() => advanceMerchantTour(merchantTourStep + 1)}>
-                    {merchantTourStep === MERCHANT_TOUR_STEPS.length - 1 ? "Let's go!" : "Next \u2192"}
+                    {merchantTourStep === MERCHANT_TOUR_STEPS.length - 1 ? "Let's go!" : "Next →"}
                   </button>
                 </div>
               </div>
@@ -6681,7 +6681,7 @@ RULES:
       {flipCard && flipCard.dataUrl && (
         <div className="flip-card-overlay" onClick={() => setFlipCard(null)}>
           <div className="flip-card-modal" onClick={e => e.stopPropagation()}>
-            <div className="flip-card-title">\uD83C\uDF89 Nice flip! Share it?</div>
+            <div className="flip-card-title">🎉 Nice flip! Share it?</div>
             <img src={flipCard.dataUrl} alt="Flip card" className="flip-card-image" />
             <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>
               Share your {formatGP(flipCard.profit)} gp profit on {flipCard.itemName} with your clan.
@@ -6693,12 +6693,12 @@ RULES:
                 link.download = `runetrader-${flipCard.itemName.replace(/\s+/g, "-").toLowerCase()}.png`;
                 link.href = flipCard.dataUrl;
                 link.click();
-              }}>\u2193 Download</button>
+              }}>↓ Download</button>
               <button className="flip-card-btn primary" onClick={() => {
                 const slug = flipCard.itemName.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-                const text = `I just made ${formatGP(flipCard.profit)} gp flipping ${flipCard.itemName} on RuneTrader.gg \uD83D\uDCC8\nrunetrader.gg/item/${slug}`;
-                navigator.clipboard.writeText(text).then(() => { showToast("Copied to clipboard! Paste in Discord \uD83D\uDD16", "success"); setFlipCard(null); }).catch(() => showToast("Copy failed \u2014 please copy manually.", "error"));
-              }}>\uD83D\uDCCB Copy for Discord</button>
+                const text = `I just made ${formatGP(flipCard.profit)} gp flipping ${flipCard.itemName} on RuneTrader.gg 📈\nrunetrader.gg/item/${slug}`;
+                navigator.clipboard.writeText(text).then(() => { showToast("Copied to clipboard! Paste in Discord 🔖", "success"); setFlipCard(null); }).catch(() => showToast("Copy failed — please copy manually.", "error"));
+              }}>📋 Copy for Discord</button>
             </div>
           </div>
         </div>
@@ -6709,8 +6709,8 @@ RULES:
         <div className="whats-new-overlay" onClick={() => setShowWhatsNew(false)}>
           <div className="whats-new-modal" onClick={e => e.stopPropagation()}>
             <div className="whats-new-header">
-              <div className="whats-new-title">\uD83D\uDCC8 What's New in RuneTrader</div>
-              <button onClick={() => setShowWhatsNew(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "18px", lineHeight: 1 }}>\u2715</button>
+              <div className="whats-new-title">📈 What's New in RuneTrader</div>
+              <button onClick={() => setShowWhatsNew(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "18px", lineHeight: 1 }}>✕</button>
             </div>
             <div className="whats-new-body">
               {CHANGELOG.slice(0, 1).map((release, ri) => (
@@ -6732,7 +6732,7 @@ RULES:
             </div>
             <div className="whats-new-footer">
               <button className="refresh-btn" onClick={() => { setShowWhatsNew(false); setActiveTab("changelog"); }}>View full changelog</button>
-              <button className="upgrade-cta" style={{ width: "auto", padding: "9px 24px", fontSize: "13px", letterSpacing: "0.5px" }} onClick={() => setShowWhatsNew(false)}>Got it \u2713</button>
+              <button className="upgrade-cta" style={{ width: "auto", padding: "9px 24px", fontSize: "13px", letterSpacing: "0.5px" }} onClick={() => setShowWhatsNew(false)}>Got it ✓</button>
             </div>
           </div>
         </div>
@@ -6742,7 +6742,7 @@ RULES:
       {upgradeModal && (
         <div className="upgrade-overlay" onClick={() => setUpgradeModal(null)}>
           <div className="upgrade-modal" onClick={e => e.stopPropagation()}>
-            <div className="upgrade-icon">\uD83D\uDCC8</div>
+            <div className="upgrade-icon">📈</div>
             <div className="upgrade-title">Trading Terminal</div>
             <div className="upgrade-desc">
               <strong style={{ color: "var(--text)" }}>{upgradeModal.feature}</strong> is a Trading Terminal feature.
@@ -6752,7 +6752,7 @@ RULES:
               <div className="upgrade-features">
                 {upgradeModal.bullets.map((b, i) => (
                   <div key={i} className="upgrade-feature-row">
-                    <span className="check">\u25C6</span>{b}
+                    <span className="check">◆</span>{b}
                   </div>
                 ))}
               </div>
@@ -6762,7 +6762,7 @@ RULES:
               setUpgradeModal(null);
               setActiveTab("pricing");
             }}>
-              See Pro Plans \u2192
+              See Pro Plans →
             </button>
             <button className="upgrade-dismiss" onClick={() => setUpgradeModal(null)}>Maybe later</button>
           </div>
@@ -6776,10 +6776,10 @@ RULES:
           <div style={{ background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "16px", width: "100%", maxWidth: "400px", padding: "28px", display: "flex", flexDirection: "column", gap: "18px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "17px", fontWeight: 700, color: "var(--gold)" }}>\uD83D\uDD14 Set Price Alert</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "17px", fontWeight: 700, color: "var(--gold)" }}>🔔 Set Price Alert</div>
                 <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "3px" }}>{quickAlert.item.name}</div>
               </div>
-              <button onClick={() => setQuickAlert(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "18px" }}>\u2715</button>
+              <button onClick={() => setQuickAlert(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "18px" }}>✕</button>
             </div>
             {quickAlert.item.hasPrice && (
               <div style={{ display: "flex", gap: "8px" }}>
@@ -6814,7 +6814,7 @@ RULES:
                       const liveItem = items.find(i => i.name.toLowerCase() === quickAlert.item.name.toLowerCase());
                       const newAlert = { id: Date.now(), item: quickAlert.item.name, price, type: quickAlertType, currentPrice: liveItem?.high || null, triggered: false };
                       setAlerts(prev => { const next = [newAlert, ...prev]; safeSetItem("runetrader_alerts", JSON.stringify(next)); return next; });
-                      showToast(`Alert set for ${quickAlert.item.name} \uD83D\uDD14`, "success");
+                      showToast(`Alert set for ${quickAlert.item.name} 🔔`, "success");
                       setQuickAlert(null);
                     }
                   }
@@ -6831,7 +6831,7 @@ RULES:
                   const liveItem = items.find(i => i.name.toLowerCase() === quickAlert.item.name.toLowerCase());
                   const newAlert = { id: Date.now(), item: quickAlert.item.name, price, type: quickAlertType, currentPrice: liveItem?.high || null, triggered: false };
                   setAlerts(prev => { const next = [newAlert, ...prev]; safeSetItem("runetrader_alerts", JSON.stringify(next)); return next; });
-                  showToast(`Alert set for ${quickAlert.item.name} \uD83D\uDD14`, "success");
+                  showToast(`Alert set for ${quickAlert.item.name} 🔔`, "success");
                   setQuickAlert(null);
                 }}
                 style={{ padding: "9px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif", opacity: quickAlertPrice ? 1 : 0.4 }}>
@@ -6854,7 +6854,7 @@ RULES:
           onShare={() => {
             const slug = selectedItem.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
             const url = `${window.location.origin}/item/${slug}`;
-            navigator.clipboard.writeText(url).then(() => showToast("Link copied! Share it on Discord or Reddit \uD83D\uDD16", "success")).catch(() => showToast("Copy failed \u2014 please copy manually.", "error"));
+            navigator.clipboard.writeText(url).then(() => showToast("Link copied! Share it on Discord or Reddit 🔖", "success")).catch(() => showToast("Copy failed — please copy manually.", "error"));
           }}
           isWatchlisted={watchlist.includes(selectedItem?.id)}
           onToggleWatchlist={() => toggleWatchlist(selectedItem?.id)}
@@ -6895,7 +6895,7 @@ RULES:
                 <div className="tour-dots">{TOUR_STEPS.map((_, i) => <div key={i} className={"tour-dot" + (i === tourStep ? " active" : "")} />)}</div>
                 <div className="tour-btn-row">
                   <button className="tour-skip" onClick={endTour}>Skip tour</button>
-                  <button className="tour-next" onClick={() => advanceTour(tourStep + 1)}>{tourStep === TOUR_STEPS.length - 1 ? "Let's go!" : "Next \u2192"}</button>
+                  <button className="tour-next" onClick={() => advanceTour(tourStep + 1)}>{tourStep === TOUR_STEPS.length - 1 ? "Let's go!" : "Next →"}</button>
                 </div>
               </div>
             </div>
@@ -6907,11 +6907,11 @@ RULES:
         {/* ALPHA BANNER */}
         <div className="alpha-banner">
           <span className="alpha-badge">Alpha</span>
-          <span>RuneTrader is in early access \u2014 features are actively being built.</span>
-          <a className="feedback-btn" href="mailto:feedback@runetrader.gg">\uD83D\uDCAC Send Feedback</a>
+          <span>RuneTrader is in early access — features are actively being built.</span>
+          <a className="feedback-btn" href="mailto:feedback@runetrader.gg">💬 Send Feedback</a>
         </div>
 
-        {/* \u20AC\u20AC\u20AC\u20AC LOGIN CINEMATIC \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ LOGIN CINEMATIC €€€€ */}
         {showLoginCinematic && user && (
           <div className={`cinematic-overlay${cinematicPhase === "fade" ? " fade-out" : ""}`}>
             <div className="cinematic-scan" />
@@ -6932,11 +6932,11 @@ RULES:
               <div className="cinematic-welcome">Welcome to RuneTrader</div>
               <div className="cinematic-username">{user.user_metadata?.username || user.email?.split("@")[0]}</div>
               {loginStreak >= 2 && (
-                <div className="cinematic-streak">\uD83D\uDD25 {loginStreak}-day streak</div>
+                <div className="cinematic-streak">🔥 {loginStreak}-day streak</div>
               )}
               {marketPulse && (
                 <div className="cinematic-pulse">
-                  \uD83D\uDCC8 {marketPulse.name} \u2014 {marketPulse.margin >= 1_000_000 ? (marketPulse.margin / 1_000_000).toFixed(1) + "M" : marketPulse.margin >= 1_000 ? (marketPulse.margin / 1_000).toFixed(0) + "k" : marketPulse.margin} gp margin · best GP/fill right now
+                  📈 {marketPulse.name} — {marketPulse.margin >= 1_000_000 ? (marketPulse.margin / 1_000_000).toFixed(1) + "M" : marketPulse.margin >= 1_000 ? (marketPulse.margin / 1_000).toFixed(0) + "k" : marketPulse.margin} gp margin · best GP/fill right now
                 </div>
               )}
             </div>
@@ -6954,14 +6954,14 @@ RULES:
                     const rewards = calcQuestRewards(q);
                     return (
                       <div key={q.id} className="cinematic-quest-card" style={{ animationDelay: `${i * 0.15}s`, borderColor: q.completed ? "rgba(46,204,113,0.2)" : "rgba(255,255,255,0.07)" }}>
-                        <span style={{ fontSize: "22px" }}>{q.completed ? "\u2705" : q.emoji}</span>
+                        <span style={{ fontSize: "22px" }}>{q.completed ? "✅" : q.emoji}</span>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: "13px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</div>
                           <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "1px" }}>{q.desc}</div>
                         </div>
                         <div style={{ textAlign: "right", flexShrink: 0 }}>
                           <div style={{ fontSize: "10px", color: diffColor, fontWeight: 700, textTransform: "uppercase" }}>{q.difficulty}</div>
-                          <div style={{ fontSize: "10px", color: "var(--gold)", marginTop: "2px" }}>+{rewards.coins}\uD83E\uDE99</div>
+                          <div style={{ fontSize: "10px", color: "var(--gold)", marginTop: "2px" }}>+{rewards.coins}🪙</div>
                         </div>
                       </div>
                     );
@@ -6972,7 +6972,7 @@ RULES:
           </div>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC CUSTOMIZE MODAL \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ CUSTOMIZE MODAL €€€€ */}
         {showCustomizeModal && (
           <div style={{ position: "fixed", inset: 0, zIndex: 700, background: "rgba(0,0,0,0.88)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.25s ease" }}
             onClick={e => { if (e.target === e.currentTarget) setShowCustomizeModal(false); }}>
@@ -6982,10 +6982,10 @@ RULES:
               {/* Header */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
-                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "#3498db" }}>\u2699 Customize Your Picks</div>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "#3498db" }}>⚙ Customize Your Picks</div>
                   <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "4px" }}>Tell us how you flip and we'll filter to your perfect items</div>
                 </div>
-                <button onClick={() => setShowCustomizeModal(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "20px" }}>\u2715</button>
+                <button onClick={() => setShowCustomizeModal(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "20px" }}>✕</button>
               </div>
 
               {/* Step dots */}
@@ -6993,7 +6993,7 @@ RULES:
                 {["Cash Stack", "Risk", "Speed", "Membership"].map((label, i) => (
                   <div key={i} onClick={() => setCustomizeStep(i)}
                     style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer", opacity: i <= customizeStep ? 1 : 0.4, transition: "opacity 0.2s" }}>
-                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: i === customizeStep ? "#3498db" : i < customizeStep ? "rgba(52,152,219,0.3)" : "var(--bg4)", border: `2px solid ${i <= customizeStep ? "#3498db" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: i === customizeStep ? "#fff" : i < customizeStep ? "#3498db" : "var(--text-dim)", transition: "all 0.2s" }}>{i < customizeStep ? "\u2713" : i + 1}</div>
+                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: i === customizeStep ? "#3498db" : i < customizeStep ? "rgba(52,152,219,0.3)" : "var(--bg4)", border: `2px solid ${i <= customizeStep ? "#3498db" : "var(--border)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: i === customizeStep ? "#fff" : i < customizeStep ? "#3498db" : "var(--text-dim)", transition: "all 0.2s" }}>{i < customizeStep ? "✓" : i + 1}</div>
                     <div style={{ fontSize: "9px", color: i === customizeStep ? "#3498db" : "var(--text-dim)", whiteSpace: "nowrap" }}>{label}</div>
                   </div>
                 ))}
@@ -7003,7 +7003,7 @@ RULES:
               {customizeStep === 0 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>\uD83D\uDCB0</div>
+                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>💰</div>
                     <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>What's your cash stack?</div>
                     <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>We'll only show items you can actually afford to flip.</div>
                   </div>
@@ -7024,15 +7024,15 @@ RULES:
               {customizeStep === 1 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>\u2696\uFE0F</div>
+                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>⚖️</div>
                     <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>Risk tolerance?</div>
                     <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>How aggressive do you want to flip?</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {[
-                      { v: "low",    emoji: "\uD83D\uDEE1\uFE0F", label: "Low Risk",    desc: "Items under 5M. Vol/limit \u2265 50×. Consistent fills." },
-                      { v: "medium", emoji: "\u2696\uFE0F", label: "Medium Risk", desc: "Items 5M\u201350M. Margin \u2265 15k. Vol/limit \u2265 10×." },
-                      { v: "high",   emoji: "\uD83D\uDD25", label: "High Risk",   desc: "Items 50M+. Bigger margins, slower fills." },
+                      { v: "low",    emoji: "🛡️", label: "Low Risk",    desc: "Items under 5M. Vol/limit ≥ 50×. Consistent fills." },
+                      { v: "medium", emoji: "⚖️", label: "Medium Risk", desc: "Items 5M–50M. Margin ≥ 15k. Vol/limit ≥ 10×." },
+                      { v: "high",   emoji: "🔥", label: "High Risk",   desc: "Items 50M+. Bigger margins, slower fills." },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, risk: opt.v }))}
                         style={{ padding: "14px 18px", borderRadius: "10px", border: `1px solid ${customizePrefs.risk === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.risk === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
@@ -7041,7 +7041,7 @@ RULES:
                           <div style={{ fontSize: "14px", fontWeight: 600, color: customizePrefs.risk === opt.v ? "var(--gold)" : "var(--text)", marginBottom: "2px" }}>{opt.label}</div>
                           <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>{opt.desc}</div>
                         </div>
-                        {customizePrefs.risk === opt.v && <span style={{ marginLeft: "auto", color: "var(--gold)", fontSize: "16px" }}>\u2713</span>}
+                        {customizePrefs.risk === opt.v && <span style={{ marginLeft: "auto", color: "var(--gold)", fontSize: "16px" }}>✓</span>}
                       </button>
                     ))}
                   </div>
@@ -7051,16 +7051,16 @@ RULES:
               {customizeStep === 2 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>\u23F3\uFE0F</div>
+                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>⏳️</div>
                     <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>How often do you flip?</div>
                     <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>We'll match items to how active you are.</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {[
-                      { v: "fast",   emoji: "\u26A1", label: "Constantly",           desc: "You check your offers frequently. Prioritises high trade volume items." },
-                      { v: "medium", emoji: "\uD83D\uDD50", label: "Every few hours",       desc: "Standard 4hr GE cycle. Good balance of volume and margin." },
-                      { v: "slow",   emoji: "\uD83D\uDCC5", label: "Once or twice a day", desc: "Patient flips. Focuses on higher margins.", warn: true },
-                      { v: "any",    emoji: "\uD83C\uDF10", label: "Show everything",        desc: "No filter on flip speed." },
+                      { v: "fast",   emoji: "⚡", label: "Constantly",           desc: "You check your offers frequently. Prioritises high trade volume items." },
+                      { v: "medium", emoji: "🕐", label: "Every few hours",       desc: "Standard 4hr GE cycle. Good balance of volume and margin." },
+                      { v: "slow",   emoji: "📅", label: "Once or twice a day", desc: "Patient flips. Focuses on higher margins.", warn: true },
+                      { v: "any",    emoji: "🌐", label: "Show everything",        desc: "No filter on flip speed." },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, flipSpeed: opt.v }))}
                         style={{ padding: "12px 16px", borderRadius: "10px", border: `1px solid ${customizePrefs.flipSpeed === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.flipSpeed === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", textAlign: "left", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
@@ -7072,7 +7072,7 @@ RULES:
                           </div>
                           <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{opt.desc}</div>
                         </div>
-                        {customizePrefs.flipSpeed === opt.v && <span style={{ marginLeft: "auto", color: "var(--gold)", fontSize: "14px", flexShrink: 0 }}>\u2713</span>}
+                        {customizePrefs.flipSpeed === opt.v && <span style={{ marginLeft: "auto", color: "var(--gold)", fontSize: "14px", flexShrink: 0 }}>✓</span>}
                       </button>
                     ))}
                   </div>
@@ -7082,14 +7082,14 @@ RULES:
               {customizeStep === 3 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>\uD83D\uDC65</div>
+                    <div style={{ fontSize: "36px", marginBottom: "8px" }}>👥</div>
                     <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>F2P or Members?</div>
                     <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>Filters out member-only items if needed.</div>
                   </div>
                   <div style={{ display: "flex", gap: "12px" }}>
                     {[
-                      { v: "members", emoji: "\uD83D\uDC8E", label: "Members", desc: "All items including members-only" },
-                      { v: "f2p",     emoji: "\uD83C\uDD93", label: "F2P Only", desc: "Free-to-play items only" },
+                      { v: "members", emoji: "💎", label: "Members", desc: "All items including members-only" },
+                      { v: "f2p",     emoji: "🆓", label: "F2P Only", desc: "Free-to-play items only" },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, membership: opt.v }))}
                         style={{ flex: 1, padding: "20px 16px", borderRadius: "12px", border: `2px solid ${customizePrefs.membership === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.membership === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", textAlign: "center", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
@@ -7106,12 +7106,12 @@ RULES:
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <button onClick={() => customizeStep > 0 ? setCustomizeStep(s => s - 1) : setShowCustomizeModal(false)}
                   style={{ padding: "10px 20px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
-                  {customizeStep === 0 ? "Cancel" : "\u2190 Back"}
+                  {customizeStep === 0 ? "Cancel" : "← Back"}
                 </button>
                 {customizeStep < 3 ? (
                   <button onClick={() => setCustomizeStep(s => s + 1)}
                     style={{ padding: "10px 28px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #1a6fa0, #3498db)", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
-                    Next \u2192
+                    Next →
                   </button>
                 ) : (
                   <button onClick={async () => {
@@ -7126,7 +7126,7 @@ RULES:
                     }
                     setShowCustomizeModal(false);
                     setPicksMode(true);
-                    showToast("Preferences saved \u2014 Picks is now active ", "success");
+                    showToast("Preferences saved — Picks is now active ", "success");
                   }}
                     style={{ padding: "10px 28px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>
                     Save & Apply Picks 
@@ -7137,45 +7137,45 @@ RULES:
           </div>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC QUEST NUDGE BANNER \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ QUEST NUDGE BANNER €€€€ */}
         {questNudge && (
           <div className="quest-nudge">
             <span style={{ fontSize: "18px" }}>{questNudge.quest.emoji}</span>
             <span style={{ color: "var(--text-dim)" }}>
               Halfway there on <strong style={{ color: "var(--gold)" }}>{questNudge.quest.title}</strong>
-              {questNudge.quest.target > 1 && ` \u2014 ${questNudge.quest.progress}/${questNudge.quest.target}`}
+              {questNudge.quest.target > 1 && ` — ${questNudge.quest.progress}/${questNudge.quest.target}`}
             </span>
-            <button onClick={() => setQuestNudge(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "13px", marginLeft: "4px" }}>\u2715</button>
+            <button onClick={() => setQuestNudge(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "13px", marginLeft: "4px" }}>✕</button>
           </div>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC STREAK BANNER \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ STREAK BANNER €€€€ */}
         {showStreakBanner && user && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 32px", background: "rgba(201,168,76,0.08)", borderBottom: "1px solid rgba(201,168,76,0.2)", fontSize: "13px", color: "var(--gold)", animation: "fadeIn 0.4s ease" }}>
             <span>
-              \uD83D\uDD25 <strong>{loginStreak}-day streak!</strong>
-              {loginStreak >= 7 ? " You're on fire \u2014 keep it up!" : loginStreak >= 3 ? " Nice consistency." : " Welcome back!"}
+              🔥 <strong>{loginStreak}-day streak!</strong>
+              {loginStreak >= 7 ? " You're on fire — keep it up!" : loginStreak >= 3 ? " Nice consistency." : " Welcome back!"}
             </span>
-            <button onClick={() => setShowStreakBanner(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "14px" }}>\u2715</button>
+            <button onClick={() => setShowStreakBanner(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "14px" }}>✕</button>
           </div>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC FIRST-LOGIN GOAL MODAL \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ FIRST-LOGIN GOAL MODAL €€€€ */}
         {showFirstLoginGoal && (
           <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.25s ease" }}
             onClick={e => { if (e.target === e.currentTarget) { setShowFirstLoginGoal(false); localStorage.setItem("rt_first_goal_set", "skipped"); } }}>
             <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "480px", padding: "36px", display: "flex", flexDirection: "column", gap: "24px", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }} />
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "36px", marginBottom: "12px" }}>\u2696\uFE0F</div>
+                <div style={{ fontSize: "36px", marginBottom: "12px" }}>⚖️</div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>Welcome to RuneTrader</div>
                 <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>What's your main goal right now?</div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
-                  { value: "grow_gp", emoji: "\uD83D\uDCB0", label: "Grow my GP stack",  desc: "I want to flip and build capital fast." },
-                  { value: "learn",   emoji: "\uD83D\uDCDA", label: "Learn to flip",      desc: "I'm new \u2014 show me how the GE works." },
-                  { value: "track",   emoji: "\uD83D\uDCCA", label: "Track my trades",    desc: "I already flip \u2014 I want to see my P&L." },
+                  { value: "grow_gp", emoji: "💰", label: "Grow my GP stack",  desc: "I want to flip and build capital fast." },
+                  { value: "learn",   emoji: "📚", label: "Learn to flip",      desc: "I'm new — show me how the GE works." },
+                  { value: "track",   emoji: "📊", label: "Track my trades",    desc: "I already flip — I want to see my P&L." },
                 ].map(opt => (
                   <button key={opt.value}
                     onClick={() => {
@@ -7201,14 +7201,14 @@ RULES:
           </div>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC DAILY GP GOAL PROMPT \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ DAILY GP GOAL PROMPT €€€€ */}
         {showDailyGoalPrompt && user && (
           <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.25s ease" }}
             onClick={e => { if (e.target === e.currentTarget) setShowDailyGoalPrompt(false); }}>
             <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "440px", padding: "36px", display: "flex", flexDirection: "column", gap: "20px", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }} />
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "36px", marginBottom: "12px" }}>\uD83C\uDFAF</div>
+                <div style={{ fontSize: "36px", marginBottom: "12px" }}>🎯</div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>What's your GP goal today?</div>
                 <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>Set a target and we'll track your progress as you flip.</div>
               </div>
@@ -7220,7 +7220,7 @@ RULES:
                       sessionStorage.setItem("rt_session_goal", JSON.stringify(goal));
                       setDailyGoalSession(goal);
                       setShowDailyGoalPrompt(false);
-                      showToast(`Goal set: ${label} GP today \uD83C\uDFAF`, "success");
+                      showToast(`Goal set: ${label} GP today 🎯`, "success");
                     }}
                     style={{ padding: "12px 28px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.3)", background: "rgba(201,168,76,0.07)", color: "var(--gold)", fontSize: "16px", fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif", transition: "all 0.15s" }}
                     onMouseOver={e => { e.currentTarget.style.background = "rgba(201,168,76,0.15)"; }}
@@ -7245,7 +7245,7 @@ RULES:
                     sessionStorage.setItem("rt_session_goal", JSON.stringify(goal));
                     setDailyGoalSession(goal);
                     setShowDailyGoalPrompt(false);
-                    showToast(`Goal set: ${label} GP today \uD83C\uDFAF`, "success");
+                    showToast(`Goal set: ${label} GP today 🎯`, "success");
                   }}
                 />
                 <button
@@ -7260,32 +7260,32 @@ RULES:
                     sessionStorage.setItem("rt_session_goal", JSON.stringify(goal));
                     setDailyGoalSession(goal);
                     setShowDailyGoalPrompt(false);
-                    showToast(`Goal set: ${label} GP today \uD83C\uDFAF`, "success");
+                    showToast(`Goal set: ${label} GP today 🎯`, "success");
                   }}
                   style={{ padding: "10px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}
-                >Set \u2192</button>
+                >Set →</button>
               </div>
-              <button onClick={() => setShowDailyGoalPrompt(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Skip \u2014 no goal today</button>
+              <button onClick={() => setShowDailyGoalPrompt(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Skip — no goal today</button>
             </div>
           </div>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC MARKET WIZARD (first visit) \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ MARKET WIZARD (first visit) €€€€ */}
         {showMarketWizard && user && (
           <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.88)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.25s ease" }}>
             <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "480px", padding: "36px", display: "flex", flexDirection: "column", gap: "24px", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }} />
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "36px", marginBottom: "12px" }}>\uD83D\uDCC8</div>
+                <div style={{ fontSize: "36px", marginBottom: "12px" }}>📈</div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>GE Tracker</div>
                 <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>What are you here to do today?</div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
-                  { value: "flip",   emoji: "\uD83D\uDCB9", label: "Flip for profit",        desc: "Take me to the best margins right now." },
+                  { value: "flip",   emoji: "💹", label: "Flip for profit",        desc: "Take me to the best margins right now." },
                   { value: "picks",  emoji: "", label: "Get personalised picks",  desc: "Show me items filtered to my style." },
-                  { value: "alch",   emoji: "\uD83D\uDD25", label: "High Alch",               desc: "Find profitable items to alch." },
-                  { value: "browse", emoji: "\uD83D\uDC40", label: "Just browsing",            desc: "Show me everything." },
+                  { value: "alch",   emoji: "🔥", label: "High Alch",               desc: "Find profitable items to alch." },
+                  { value: "browse", emoji: "👀", label: "Just browsing",            desc: "Show me everything." },
                 ].map(opt => (
                   <button key={opt.value}
                     onClick={() => {
@@ -7312,27 +7312,27 @@ RULES:
           </div>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC TRACKER WIZARD (first visit) \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ TRACKER WIZARD (first visit) €€€€ */}
         {showTrackerWizard && user && (
           <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.88)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.25s ease" }}>
             <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "480px", padding: "36px", display: "flex", flexDirection: "column", gap: "24px", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }} />
               <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "36px", marginBottom: "12px" }}>\uD83D\uDCCA</div>
+                <div style={{ fontSize: "36px", marginBottom: "12px" }}>📊</div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>Flip Tracker</div>
                 <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>Have you flipped before on RuneTrader?</div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
-                  { value: "yes",    emoji: "\u2705", label: "Yes \u2014 I've logged flips before",   desc: "Great, your history is already here." },
-                  { value: "plugin", emoji: "\uD83D\uDD0C", label: "Yes \u2014 via the RuneLite plugin",     desc: "Your GE slots sync automatically. Check below." },
-                  { value: "no",     emoji: "\uD83C\uDD95", label: "No \u2014 I'm just getting started",     desc: "Here's how the Tracker works..." },
+                  { value: "yes",    emoji: "✅", label: "Yes — I've logged flips before",   desc: "Great, your history is already here." },
+                  { value: "plugin", emoji: "🔌", label: "Yes — via the RuneLite plugin",     desc: "Your GE slots sync automatically. Check below." },
+                  { value: "no",     emoji: "🆕", label: "No — I'm just getting started",     desc: "Here's how the Tracker works..." },
                 ].map(opt => (
                   <button key={opt.value}
                     onClick={() => {
                       localStorage.setItem("rt_tracker_wizard_seen", "1");
                       setShowTrackerWizard(false);
-                      if (opt.value === "no") setTimeout(() => showToast("Log a flip using the Close button on any open offer \u2014 or use the RuneLite plugin to auto-track.", "info", 7000), 300);
+                      if (opt.value === "no") setTimeout(() => showToast("Log a flip using the Close button on any open offer — or use the RuneLite plugin to auto-track.", "info", 7000), 300);
                     }}
                     style={{ padding: "14px 18px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", transition: "all 0.15s", fontFamily: "Inter, sans-serif" }}
                     onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)"; e.currentTarget.style.background = "rgba(201,168,76,0.07)"; }}
@@ -7351,7 +7351,7 @@ RULES:
           </div>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC FIRST PROFITABLE FLIP CONFETTI \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ FIRST PROFITABLE FLIP CONFETTI €€€€ */}
         {showFlipConfetti && flipConfettiData && (
           <div style={{ position: "fixed", inset: 0, zIndex: 700, overflow: "hidden" }}>
             <style>{`
@@ -7373,20 +7373,20 @@ RULES:
               }} />
             ))}
             <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", background: "#0f1218", border: "2px solid var(--gold)", borderRadius: "20px", padding: "36px", textAlign: "center", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "380px", width: "90%", animation: "slideUp 0.4s ease", boxShadow: "0 20px 60px rgba(201,168,76,0.4)" }}>
-              <div style={{ fontSize: "52px" }}>\uD83C\uDF89</div>
+              <div style={{ fontSize: "52px" }}>🎉</div>
               <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 700, color: "var(--gold)" }}>First Profit!</div>
               <div style={{ fontSize: "14px", color: "var(--text-dim)", lineHeight: 1.6 }}>
                 You just made <strong style={{ color: "var(--green)", fontSize: "18px" }}>+{formatGP(flipConfettiData.profit)} gp</strong> flipping <strong style={{ color: "var(--text)" }}>{flipConfettiData.itemName}</strong>.
               </div>
               <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>Your flip history is being tracked. Check the Tracker tab to see your stats.</div>
               <button onClick={() => setShowFlipConfetti(false)} style={{ padding: "12px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif" }}>
-                Let's keep flipping \u2192
+                Let's keep flipping →
               </button>
             </div>
           </div>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC LEVEL-UP MODAL \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ LEVEL-UP MODAL €€€€ */}
         {showLevelUp && (() => {
           const { newLevel } = showLevelUp;
           const { title, emoji: _emoji2, color } = getLevelTitle(newLevel); const emoji = fixEmoji(_emoji2);
@@ -7395,7 +7395,7 @@ RULES:
             <div className="levelup-overlay" onClick={() => setShowLevelUp(null)}>
               <div className="levelup-card" style={{ position: "relative" }}>
                 <div className="levelup-rays" />
-                <div style={{ fontSize: "64px", lineHeight: 1 }}>{isMax ? "\uD83C\uDF93" : emoji}</div>
+                <div style={{ fontSize: "64px", lineHeight: 1 }}>{isMax ? "🎓" : emoji}</div>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: "13px", letterSpacing: "3px", textTransform: "uppercase", color: "var(--text-dim)" }}>
                   {isMax ? "CONGRATULATIONS" : "LEVEL UP"}
                 </div>
@@ -7416,24 +7416,24 @@ RULES:
                   ))}
                 </div>
                 <button onClick={() => setShowLevelUp(null)} style={{ padding: "10px 28px", borderRadius: "8px", border: `1px solid ${color}`, background: "transparent", color, fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
-                  Keep flipping \u2192
+                  Keep flipping →
                 </button>
               </div>
             </div>
           );
         })()}
 
-        {/* \u20AC\u20AC\u20AC\u20AC PROFIT CELEBRATION BANNER \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ PROFIT CELEBRATION BANNER €€€€ */}
         {showCelebration && (
           <div className="celebration-banner" style={{ background: `rgba(0,0,0,0.9)`, border: `2px solid ${showCelebration.color}`, color: showCelebration.color, boxShadow: `0 0 40px ${showCelebration.color}66` }}>
-            {showCelebration.emoji} {showCelebration.label} \u2014 +{formatGP(showCelebration.profit)} gp
+            {showCelebration.emoji} {showCelebration.label} — +{formatGP(showCelebration.profit)} gp
           </div>
         )}
 
         {/* SUPPORTER THANK YOU TOAST */}
         {showSupporterToastState && (
           <div className="supporter-toast">
-            <div className="supporter-toast-icon">\uD83D\uDC8E</div>
+            <div className="supporter-toast-icon">💎</div>
             <div>
               <div className="supporter-toast-title">Thank you for your support</div>
               <div className="supporter-toast-sub">Your contribution keeps RuneTrader running and new features coming. It genuinely means a lot.</div>
@@ -7441,7 +7441,7 @@ RULES:
           </div>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC ACHIEVEMENT TOASTS \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ ACHIEVEMENT TOASTS €€€€ */}
         <div style={{ position: "fixed", bottom: "80px", right: "24px", zIndex: 810, display: "flex", flexDirection: "column", gap: "8px", pointerEvents: "none" }}>
           {newAchievements.map((a, i) => (
             <div key={a.id} className="achievement-toast" style={{ animationDelay: `${i * 0.15}s` }}>
@@ -7461,14 +7461,14 @@ RULES:
                 <div style={{ fontSize: "10px", color: "var(--green)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "2px" }}>Quest Complete!</div>
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text)" }}>{q.title}</div>
                 <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>
-                  +{calcQuestRewards(q).xp.toLocaleString()} XP · +{calcQuestRewards(q).coins} coins \uD83E\uDE99
+                  +{calcQuestRewards(q).xp.toLocaleString()} XP · +{calcQuestRewards(q).coins} coins 🪙
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* \u20AC\u20AC\u20AC\u20AC PLAYER CARD PANEL \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ PLAYER CARD PANEL €€€€ */}
         {showPlayerCard && user && (
           <>
             <div style={{ position: "fixed", inset: 0, zIndex: 549, background: "rgba(0,0,0,0.4)" }} onClick={() => setShowPlayerCard(false)} />
@@ -7477,7 +7477,7 @@ RULES:
               <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid var(--border)", flexShrink: 0, background: "linear-gradient(135deg, rgba(201,168,76,0.06), transparent)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: "16px", fontWeight: 700, color: "var(--gold)" }}>Player Card</div>
-                  <button onClick={() => setShowPlayerCard(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "18px" }}>\u2715</button>
+                  <button onClick={() => setShowPlayerCard(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "18px" }}>✕</button>
                 </div>
                 {/* Avatar + name + title */}
                 <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
@@ -7488,7 +7488,7 @@ RULES:
                     <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "6px" }}>
                       {user.user_metadata?.username || user.email?.split("@")[0]}
                       {isSupporter && (
-                        <span title="Supporter" style={{ fontSize: "11px", background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "4px", padding: "1px 5px", color: "#c9a84c", fontWeight: 700 }}>\uD83D\uDC8E</span>
+                        <span title="Supporter" style={{ fontSize: "11px", background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "4px", padding: "1px 5px", color: "#c9a84c", fontWeight: 700 }}>💎</span>
                       )}
                     </div>
                     {(() => {
@@ -7496,7 +7496,7 @@ RULES:
                       const { title, emoji: _emoji3, color } = getLevelTitle(level); const emoji = fixEmoji(_emoji3);
                       return <div style={{ fontSize: "12px", color, marginTop: "2px" }}>{emoji} {title}</div>;
                     })()}
-                    {loginStreak >= 2 && <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>\uD83D\uDD25 {loginStreak}-day streak</div>}
+                    {loginStreak >= 2 && <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>🔥 {loginStreak}-day streak</div>}
                   </div>
                 </div>
                 {/* XP bar */}
@@ -7541,7 +7541,7 @@ RULES:
                     <div style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px" }}>
                       Today's Quests
                     </div>
-                    <div style={{ fontSize: "11px", color: "var(--gold)" }}>\uD83E\uDE99 {goldCoins.toLocaleString()} coins</div>
+                    <div style={{ fontSize: "11px", color: "var(--gold)" }}>🪙 {goldCoins.toLocaleString()} coins</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     {dailyQuests.map(q => {
@@ -7550,7 +7550,7 @@ RULES:
                       const canAffordReroll = goldCoins >= REROLL_COST;
                       return (
                         <div key={q.id} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "10px 12px", background: "var(--bg3)", borderRadius: "8px", border: q.completed ? "1px solid rgba(46,204,113,0.2)" : "1px solid var(--border)" }}>
-                          <span style={{ fontSize: "18px", flexShrink: 0, marginTop: "1px" }}>{q.completed ? "\u2705" : q.emoji}</span>
+                          <span style={{ fontSize: "18px", flexShrink: 0, marginTop: "1px" }}>{q.completed ? "✅" : q.emoji}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "6px", marginBottom: "2px" }}>
                               <div style={{ fontSize: "12px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</div>
@@ -7561,7 +7561,7 @@ RULES:
                                     onClick={() => rerollQuest(q.id)}
                                     title={canAffordReroll ? `Reroll for ${REROLL_COST} coins` : `Need ${REROLL_COST} coins`}
                                     style={{ padding: "1px 6px", borderRadius: "4px", border: `1px solid ${canAffordReroll ? "rgba(201,168,76,0.3)" : "var(--border)"}`, background: "transparent", color: canAffordReroll ? "var(--gold)" : "var(--text-dim)", fontSize: "9px", cursor: canAffordReroll ? "pointer" : "not-allowed", fontFamily: "Inter, sans-serif", opacity: canAffordReroll ? 1 : 0.5 }}>
-                                    \uD83C\uDFB2{REROLL_COST}
+                                    🎲{REROLL_COST}
                                   </button>
                                 )}
                               </div>
@@ -7569,7 +7569,7 @@ RULES:
                             <div style={{ fontSize: "11px", color: "var(--text-dim)", marginBottom: "4px", lineHeight: 1.4 }}>{q.desc}</div>
                             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                               <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>+{calcQuestRewards(q).xp.toLocaleString()} XP</span>
-                              <span style={{ fontSize: "10px", color: "var(--gold)" }}>+{calcQuestRewards(q).coins} \uD83E\uDE99</span>
+                              <span style={{ fontSize: "10px", color: "var(--gold)" }}>+{calcQuestRewards(q).coins} 🪙</span>
                               {q.target > 1 && !q.completed && <span style={{ fontSize: "10px", color: "var(--text-dim)", marginLeft: "auto" }}>{q.progress}/{q.target}</span>}
                               {q.completed && <span style={{ fontSize: "10px", color: "var(--green)", marginLeft: "auto", fontWeight: 600 }}>Done!</span>}
                             </div>
@@ -7609,14 +7609,14 @@ RULES:
                   style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg3)", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
                   onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
                   onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}>
-                  \uD83D\uDCCA View Full Portfolio \u2192
+                  📊 View Full Portfolio →
                 </button>
               </div>
             </div>
           </>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC QUEST PANEL \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ QUEST PANEL €€€€ */}
         {showQuestPanel && user && (
           <div className="quest-panel">
             <div style={{ padding: "14px 16px 10px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -7624,10 +7624,10 @@ RULES:
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: "14px", fontWeight: 700, color: "var(--gold)" }}>Daily Quests</div>
                 <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>
                   {dailyQuests.filter(q => q.completed).length}/{dailyQuests.length} complete
-                  · \uD83E\uDE99 {goldCoins.toLocaleString()} coins
+                  · 🪙 {goldCoins.toLocaleString()} coins
                 </div>
               </div>
-              <button onClick={() => setShowQuestPanel(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "16px" }}>\u2715</button>
+              <button onClick={() => setShowQuestPanel(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "16px" }}>✕</button>
             </div>
 
             {dailyQuests.map(q => {
@@ -7639,7 +7639,7 @@ RULES:
               return (
                 <div key={q.id} className={`quest-card${q.completed ? " completed" : ""}`}>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                    <span style={{ fontSize: "22px", flexShrink: 0, marginTop: "1px" }}>{q.completed ? "\u2705" : q.emoji}</span>
+                    <span style={{ fontSize: "22px", flexShrink: 0, marginTop: "1px" }}>{q.completed ? "✅" : q.emoji}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
                         <span style={{ fontSize: "13px", fontWeight: 600, color: q.completed ? "var(--green)" : "var(--text)" }}>{q.title}</span>
@@ -7648,7 +7648,7 @@ RULES:
                       <div style={{ fontSize: "11px", color: "var(--text-dim)", lineHeight: 1.5 }}>{q.desc}</div>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "6px" }}>
                         <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>+{rewards.xp.toLocaleString()} XP</span>
-                        <span style={{ fontSize: "10px", color: "var(--gold)" }}>+{rewards.coins} \uD83E\uDE99</span>
+                        <span style={{ fontSize: "10px", color: "var(--gold)" }}>+{rewards.coins} 🪙</span>
                         {q.target > 1 && !q.completed && (
                           <span style={{ fontSize: "10px", color: "var(--text-dim)", marginLeft: "auto" }}>
                             {q.progress}/{q.target}
@@ -7660,7 +7660,7 @@ RULES:
                             onClick={() => rerollQuest(q.id)}
                             title={canAffordReroll ? `Reroll this quest for ${REROLL_COST} coins` : `Need ${REROLL_COST} coins to reroll`}
                             style={{ marginLeft: q.target > 1 ? "0" : "auto", padding: "2px 7px", borderRadius: "5px", border: `1px solid ${canAffordReroll ? "rgba(201,168,76,0.3)" : "var(--border)"}`, background: "transparent", color: canAffordReroll ? "var(--gold)" : "var(--text-dim)", fontSize: "10px", cursor: canAffordReroll ? "pointer" : "not-allowed", fontFamily: "Inter, sans-serif", opacity: canAffordReroll ? 1 : 0.5, transition: "all 0.15s", whiteSpace: "nowrap" }}>
-                            \uD83C\uDFB2 {REROLL_COST}\uD83E\uDE99
+                            🎲 {REROLL_COST}🪙
                           </button>
                         )}
                       </div>
@@ -7676,12 +7676,12 @@ RULES:
             })}
 
             <div style={{ padding: "10px 16px", background: "rgba(201,168,76,0.04)", display: "flex", alignItems: "center", gap: "6px" }}>
-              <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Resets daily at midnight · \uD83C\uDFB2 Reroll any quest for {REROLL_COST} coins</span>
+              <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Resets daily at midnight · 🎲 Reroll any quest for {REROLL_COST} coins</span>
             </div>
           </div>
         )}
 
-        {/* \u20AC\u20AC\u20AC\u20AC ACHIEVEMENTS PAGE MODAL \u20AC\u20AC\u20AC\u20AC */}
+        {/* €€€€ ACHIEVEMENTS PAGE MODAL €€€€ */}
         {showAchievements && (
           <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.88)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}
             onClick={e => { if (e.target === e.currentTarget) setShowAchievements(false); }}>
@@ -7697,7 +7697,7 @@ RULES:
                     })()}
                   </div>
                 </div>
-                <button onClick={() => setShowAchievements(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "20px" }}>\u2715</button>
+                <button onClick={() => setShowAchievements(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "20px" }}>✕</button>
               </div>
 
               {/* XP Progress */}
@@ -7732,7 +7732,7 @@ RULES:
                         <div style={{ fontSize: "32px" }}>{a.emoji}</div>
                         <div style={{ fontSize: "13px", fontWeight: 700, color: unlocked ? "var(--gold)" : "var(--text-dim)" }}>{a.name}</div>
                         <div style={{ fontSize: "11px", color: "var(--text-dim)", lineHeight: 1.5 }}>{a.desc}</div>
-                        {unlocked && <div style={{ fontSize: "10px", color: "var(--green)", fontWeight: 600 }}>\u2713 Unlocked</div>}
+                        {unlocked && <div style={{ fontSize: "10px", color: "var(--green)", fontWeight: 600 }}>✓ Unlocked</div>}
                       </div>
                     );
                   })}
@@ -7766,7 +7766,7 @@ RULES:
 
         {/* HEADER */}
         <header className="header">
-          {/* \u20AC\u20AC\u20AC\u20AC TOP ROW \u20AC\u20AC\u20AC\u20AC */}
+          {/* €€€€ TOP ROW €€€€ */}
           <div className="header-top">
             <div className="logo">
               <svg className="logo-icon" viewBox="0 0 120 120" fill="none">
@@ -7801,8 +7801,8 @@ RULES:
                   onMouseOver={e => { if (!merchantMode) { e.currentTarget.style.background = "rgba(201,168,76,0.12)"; e.currentTarget.style.boxShadow = "0 0 12px rgba(201,168,76,0.12)"; } }}
                   onMouseOut={e => { if (!merchantMode) { e.currentTarget.style.background = "rgba(201,168,76,0.07)"; e.currentTarget.style.boxShadow = "none"; } }}>
                   {merchantMode && <div className="merchant-dot" style={{ background: "var(--green)" }} />}
-                  {!merchantMode && !isPro && !isOnTrial && <span style={{ fontSize: "11px", opacity: 0.7 }}>\uD83D\uDD12</span>}
-                  \uD83D\uDCC8 {merchantMode ? "Exit Terminal" : "Trading Terminal"}
+                  {!merchantMode && !isPro && !isOnTrial && <span style={{ fontSize: "11px", opacity: 0.7 }}>🔒</span>}
+                  📈 {merchantMode ? "Exit Terminal" : "Trading Terminal"}
                 </button>
               )}
 
@@ -7811,7 +7811,7 @@ RULES:
                 <button onClick={() => { const m = toggleMute(); setSoundMuted(m); }}
                   title={soundMuted ? "Sounds off" : "Sounds on"}
                   style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "15px", padding: "4px", lineHeight: 1, opacity: soundMuted ? 0.35 : 0.7 }}>
-                  {soundMuted ? "\uD83D\uDD07" : "\uD83D\uDD0A"}
+                  {soundMuted ? "🔇" : "🔊"}
                 </button>
               )}
 
@@ -7827,9 +7827,9 @@ RULES:
                     style={{ borderColor: allDone ? "var(--green-dim)" : "rgba(201,168,76,0.3)", background: allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.07)", color: allDone ? "var(--green)" : "var(--gold)" }}>
                     {emoji} Lv.{level}
                     <span style={{ color: "var(--text-dim)", fontSize: "10px" }}>·</span>
-                    <span>\uD83D\uDCCB</span>
+                    <span>📋</span>
                     <span style={{ background: allDone ? "var(--green)" : "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
-                      {questsLoaded ? `${doneQuests}/${dailyQuests.length}` : "\u2026"}
+                      {questsLoaded ? `${doneQuests}/${dailyQuests.length}` : "…"}
                     </span>
                   </button>
                 );
@@ -7847,20 +7847,20 @@ RULES:
                         <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "6px" }}>
                           {user.user_metadata?.username || user.email?.split("@")[0]}
                           {isSupporter && (
-                            <span title="Supporter" style={{ fontSize: "11px", background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "4px", padding: "1px 5px", color: "#c9a84c", fontWeight: 700, letterSpacing: "0.2px" }}>\uD83D\uDC8E</span>
+                            <span title="Supporter" style={{ fontSize: "11px", background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "4px", padding: "1px 5px", color: "#c9a84c", fontWeight: 700, letterSpacing: "0.2px" }}>💎</span>
                           )}
                         </div>
                         <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>
                           {isOnTrial
-                            ? <span style={{ color: "#f39c12" }}>\u23F3 Pro Trial \u2014 {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} left</span>
-                            : isPro ? "\u2713 Pro member" : "Free plan"}
+                            ? <span style={{ color: "#f39c12" }}>⏳ Pro Trial — {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} left</span>
+                            : isPro ? "✓ Pro member" : "Free plan"}
                         </div>
                       </div>
-                      <button className="profile-dropdown-item" onClick={() => { handleSetActiveTab("settings"); }}>\u2699\uFE0F Settings</button>
-                      <button className="profile-dropdown-item" onClick={() => handleSetActiveTab("referral")}>\uD83D\uDD16 Refer & Earn</button>
-                      <button className="profile-dropdown-item" onClick={() => setActiveTab("changelog")}>\uD83C\uDD95 What's New</button>
-                      <button className="profile-dropdown-item" onClick={() => setActiveTab("pricing")}>\u2728 {isPro ? "Pro Plan" : "Upgrade to Pro"}</button>
-                      <button className="profile-dropdown-item" onClick={() => { if (isPro || isOnTrial) { toggleMerchantMode(); setTimeout(startMerchantTour, 600); } else { toggleMerchantMode(); } }}>\uD83D\uDCD6 Terminal Tutorial</button>
+                      <button className="profile-dropdown-item" onClick={() => { handleSetActiveTab("settings"); }}>⚙️ Settings</button>
+                      <button className="profile-dropdown-item" onClick={() => handleSetActiveTab("referral")}>🔖 Refer & Earn</button>
+                      <button className="profile-dropdown-item" onClick={() => setActiveTab("changelog")}>🆕 What's New</button>
+                      <button className="profile-dropdown-item" onClick={() => setActiveTab("pricing")}>✨ {isPro ? "Pro Plan" : "Upgrade to Pro"}</button>
+                      <button className="profile-dropdown-item" onClick={() => { if (isPro || isOnTrial) { toggleMerchantMode(); setTimeout(startMerchantTour, 600); } else { toggleMerchantMode(); } }}>📖 Terminal Tutorial</button>
                       <div style={{ borderTop: "1px solid var(--border)", margin: "4px 0" }} />
                       <button className="profile-dropdown-item danger" onClick={handleSignOut}>Sign Out</button>
                     </div>
@@ -7873,7 +7873,7 @@ RULES:
             </div>
           </div>
 
-          {/* \u20AC\u20AC\u20AC\u20AC BOTTOM ROW \u2014 primary nav \u20AC\u20AC\u20AC\u20AC */}
+          {/* €€€€ BOTTOM ROW — primary nav €€€€ */}
           {!merchantMode && !merchantTransitioning && (
             <div className="header-bottom">
               <div className="nav-tabs">
@@ -7895,7 +7895,7 @@ RULES:
                       {v === "flips" && activeTab === "market"
                         ? (marketInnerView === "marginwatch" ? "Margin Watch" : marketInnerView === "alerts" ? "Alerts" : "Market")
                         : label}
-                      {dropdown && <span style={{ fontSize: "9px", opacity: 0.6, transition: "transform 0.15s", display: "inline-block", transform: marketDropdownOpen ? "rotate(180deg)" : "rotate(0deg)" }}>\u25BE</span>}
+                      {dropdown && <span style={{ fontSize: "9px", opacity: 0.6, transition: "transform 0.15s", display: "inline-block", transform: marketDropdownOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>}
                     </button>
                     {dropdown && marketDropdownOpen && (
                       <>
@@ -7927,7 +7927,7 @@ RULES:
                 ))}
               </div>
 
-              {/* Secondary nav \u2014 right side */}
+              {/* Secondary nav — right side */}
               <div className="nav-tabs">
                 {user && [["watchlist","Watchlist"],["settings","Settings"],["referral","Refer & Earn"]].map(([t, label]) => (
                   <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)} style={{ fontSize: "12px", color: activeTab === t ? undefined : "#aabbcc" }}>
@@ -7954,7 +7954,7 @@ RULES:
                   onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,0.18)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.45)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "rgba(201,168,76,0.1)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.25)"; }}
                 >
-                  \u2615 Support Development
+                  ☕ Support Development
                 </a>
               </div>
             </div>
@@ -8054,7 +8054,7 @@ RULES:
           <>
           <div className="left-panel" ref={leftPanelRef}>
 
-            {/* \u2500\u2500 WATCHLIST TAB \u2500\u2500 */}
+            {/* ── WATCHLIST TAB ── */}
             {activeTab === "watchlist" && (
               <WatchlistPage
                 user={user}
@@ -8080,7 +8080,7 @@ RULES:
               />
             )}
 
-            {/* \u2500\u2500 PRICING TAB \u2500\u2500 */}
+            {/* ── PRICING TAB ── */}
             {activeTab === "pricing" && (
               <PricingPage
                 user={user}
@@ -8090,7 +8090,7 @@ RULES:
               />
             )}
 
-            {/* \u2500\u2500 REFERRAL TAB \u2500\u2500 */}
+            {/* ── REFERRAL TAB ── */}
             {activeTab === "referral" && (
               <ReferralPage
                 user={user}
@@ -8100,12 +8100,12 @@ RULES:
               />
             )}
 
-            {/* \u20AC\u20AC\u20AC\u20AC TRACKER TAB \u2014 redirects to Trading Terminal \u20AC\u20AC\u20AC\u20AC */}
+            {/* €€€€ TRACKER TAB — redirects to Trading Terminal €€€€ */}
             {activeTab === "tracker" && (() => {
               setTimeout(() => setActiveTab("market"), 0);
               return (
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 24px", gap: "16px", textAlign: "center" }}>
-                  <div style={{ fontSize: "48px" }}>\uD83D\uDCC8</div>
+                  <div style={{ fontSize: "48px" }}>📈</div>
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "var(--gold)" }}>Flip tracking moved</div>
                   <div style={{ fontSize: "13px", color: "var(--text-dim)", maxWidth: "360px", lineHeight: 1.6 }}>
                     Your flip history and open positions now live inside the Trading Terminal.
@@ -8172,10 +8172,10 @@ RULES:
                 {notifPermission !== "granted" && (
                   <div className="notif-banner">
                     <div className="notif-banner-left">
-                      <span className="notif-banner-icon">\uD83D\uDD14\u20AC</span>
+                      <span className="notif-banner-icon">🔔€</span>
                       <div>
                         <div className="notif-banner-title">Get notified on your phone</div>
-                        <div className="notif-banner-sub">Alerts will fire even when the app is closed \u2014 on iPhone, Android, and desktop.</div>
+                        <div className="notif-banner-sub">Alerts will fire even when the app is closed — on iPhone, Android, and desktop.</div>
                       </div>
                     </div>
                     {!user ? (
@@ -8192,21 +8192,21 @@ RULES:
 
                 {notifPermission === "granted" && (
                   <div className="notif-active-banner">
-                    <span>\u2705 Push notifications active \u2014 you&apos;ll be alerted even when RuneTrader is closed.</span>
+                    <span>✅ Push notifications active — you&apos;ll be alerted even when RuneTrader is closed.</span>
                   </div>
                 )}
 
-                {/* \u2500\u2500 SMART ALERT TOGGLES \u2500\u2500 */}
+                {/* ── SMART ALERT TOGGLES ── */}
                 <div className="smart-alert-toggles">
-                  <div className="smart-alert-toggle-title">\u26A1 Smart Market Alerts</div>
+                  <div className="smart-alert-toggle-title">⚡ Smart Market Alerts</div>
                   <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
                     Automatically fires when market conditions shift. Monitors all items every 5 minutes.
                   </div>
                   {[
-                    { key: "marginSpike",  icon: "\uD83D\uDCC8", label: "Margin Spike",  desc: "Margin jumps 50%+ vs last poll \u2014 sudden profit opportunity", unit: "%",  min: 5,   max: 200, step: 5   },
-                    { key: "volumeSurge",  icon: "\uD83D\uDD25", label: "Volume Surge",  desc: "Daily volume triples \u2014 item getting heavily traded",           unit: "x",  min: 1.5, max: 10,  step: 0.5 },
-                    { key: "dumpDetected", icon: "\u26A0\uFE0F", label: "Dump Detected", desc: "Sell price drops 10%+ \u2014 someone offloading stock",             unit: "%",  min: 2,   max: 50,  step: 1   },
-                    { key: "priceCrash",   icon: "\uD83D\uDCA5", label: "Price Crash",   desc: "Both buy & sell drop 15%+ \u2014 avoid or buy the dip",             unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps 50%+ vs last poll — sudden profit opportunity", unit: "%",  min: 5,   max: 200, step: 5   },
+                    { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Daily volume triples — item getting heavily traded",           unit: "x",  min: 1.5, max: 10,  step: 0.5 },
+                    { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops 10%+ — someone offloading stock",             unit: "%",  min: 2,   max: 50,  step: 1   },
+                    { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy & sell drop 15%+ — avoid or buy the dip",             unit: "%",  min: 2,   max: 50,  step: 1   },
                   ].map(({ key, icon, label, desc, unit, min, max, step }) => (
                     <div key={key} className="smart-alert-toggle-row">
                       <div className="smart-alert-toggle-info">
@@ -8216,7 +8216,7 @@ RULES:
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         {merchantMode
                           ? <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} thresholds={thresholds} openPopover={openPopover} setOpenPopover={setOpenPopover} saveThreshold={saveThreshold} />
-                          : <button title="Custom thresholds \u2014 Merchant Mode feature" onClick={() => setUpgradeModal({ feature: "Custom Alert Thresholds", description: "Fine-tune exactly when each alert fires \u2014 set your own percentage triggers per alert type.", bullets: ["Adjust margin spike sensitivity (5\u2013200%)", "Set dump & crash detection thresholds", "Tune volume surge multiplier", "Per-alert granular control"] })} style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", padding: "3px 8px", cursor: "pointer", fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", gap: "4px" }}>\uD83D\uDD12 \u2699</button>
+                          : <button title="Custom thresholds — Merchant Mode feature" onClick={() => setUpgradeModal({ feature: "Custom Alert Thresholds", description: "Fine-tune exactly when each alert fires — set your own percentage triggers per alert type.", bullets: ["Adjust margin spike sensitivity (5–200%)", "Set dump & crash detection thresholds", "Tune volume surge multiplier", "Per-alert granular control"] })} style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", padding: "3px 8px", cursor: "pointer", fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", gap: "4px" }}>🔒 ⚙</button>
                         }
                         <label className="toggle-switch">
                           <input type="checkbox" checked={smartAlertSettings[key]} onChange={e => saveSmartAlertSettings(key, e.target.checked)} />
@@ -8227,16 +8227,16 @@ RULES:
                   ))}
                 </div>
 
-                {/* \u2500\u2500 AUTOPILOT ALERT SETTINGS \u2014 Merchant Mode only \u2500\u2500 */}
+                {/* ── AUTOPILOT ALERT SETTINGS — Merchant Mode only ── */}
                 {merchantMode && (
                 <div className="smart-alert-toggles">
-                  <div className="smart-alert-toggle-title">\uD83E\uDD16 Autopilot Alerts</div>
+                  <div className="smart-alert-toggle-title">🤖 Autopilot Alerts</div>
                   <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "-6px" }}>
                     Fires when your per-position rules are triggered in Active Operations.
                   </div>
                   <div className="smart-alert-toggle-row">
                     <div className="smart-alert-toggle-info">
-                      <div className="smart-alert-toggle-name">\uD83D\uDD0A Sound Alert</div>
+                      <div className="smart-alert-toggle-name">🔊 Sound Alert</div>
                       <div className="smart-alert-toggle-desc">Play a chime in-browser when an autopilot rule fires</div>
                     </div>
                     <label className="toggle-switch">
@@ -8246,8 +8246,8 @@ RULES:
                   </div>
                   <div className="smart-alert-toggle-row">
                     <div className="smart-alert-toggle-info">
-                      <div className="smart-alert-toggle-name">\uD83D\uDD14\u20AC Push Notification</div>
-                      <div className="smart-alert-toggle-desc">Fire a browser push notification \u2014 works even if RuneTrader is in the background</div>
+                      <div className="smart-alert-toggle-name">🔔€ Push Notification</div>
+                      <div className="smart-alert-toggle-desc">Fire a browser push notification — works even if RuneTrader is in the background</div>
                     </div>
                     <label className="toggle-switch">
                       <input type="checkbox" checked={smartAlertSettings.autopilotPush ?? true} onChange={e => saveSmartAlertSettings("autopilotPush", e.target.checked)} />
@@ -8257,10 +8257,10 @@ RULES:
                 </div>
                 )} {/* end merchantMode autopilot alerts */}
 
-                {/* \u2500\u2500 PRICE ALERT FORM \u2500\u2500 */}
-                <div className="alert-info">\u2139\uFE0F Price alerts check every 5 minutes. Triggered alerts won&apos;t fire again \u2014 delete and re-add to reset.</div>
+                {/* ── PRICE ALERT FORM ── */}
+                <div className="alert-info">ℹ️ Price alerts check every 5 minutes. Triggered alerts won&apos;t fire again — delete and re-add to reset.</div>
                 <div className="alert-form">
-                  <div className="alert-form-title">\uD83D\uDD14\u20AC Set a Price Alert</div>
+                  <div className="alert-form-title">🔔€ Set a Price Alert</div>
                   <div className="alert-form-row">
                     <div className="alert-field">
                       <label className="alert-label">Item Name</label>
@@ -8292,26 +8292,26 @@ RULES:
                   </div>
                 </div>
 
-                {/* \u2500\u2500 ACTIVE PRICE ALERTS \u2500\u2500 */}
+                {/* ── ACTIVE PRICE ALERTS ── */}
                 <div>
                   <div className="section-title">Active Price Alerts</div>
                   <div className="alerts-list">
                     <div className="alert-header-row"><span>Item</span><span>Condition</span><span>Target</span><span>Current</span><span></span></div>
                     {alerts.length === 0 ? (
-                      <div className="alerts-empty"><div className="icon">\uD83D\uDD14\u20AC</div><p>No alerts set</p><small>Add an alert above to get notified when prices move</small></div>
+                      <div className="alerts-empty"><div className="icon">🔔€</div><p>No alerts set</p><small>Add an alert above to get notified when prices move</small></div>
                     ) : alerts.map(a => (
                       <div key={a.id} className={"alert-row" + (a.triggered ? " alert-triggered" : "")}>
-                        <div><div className="alert-item-name">{a.item}</div>{a.triggered && <div className="alert-triggered-badge">\u26A1 Triggered!</div>}</div>
-                        <span className={"alert-badge " + a.type}>{a.type === "above" ? "\u2191 Above" : "\u2193 Below"}</span>
+                        <div><div className="alert-item-name">{a.item}</div>{a.triggered && <div className="alert-triggered-badge">⚡ Triggered!</div>}</div>
+                        <span className={"alert-badge " + a.type}>{a.type === "above" ? "↑ Above" : "↓ Below"}</span>
                         <span style={{ color: "var(--gold)", fontWeight: 600 }}>{formatGP(a.price)}</span>
-                        <span style={{ color: a.currentPrice ? "var(--text)" : "var(--text-dim)" }}>{a.currentPrice ? formatGP(a.currentPrice) : "\u2014"}</span>
-                        <button className="delete-btn" onClick={() => deleteAlert(a.id)}>\u2715</button>
+                        <span style={{ color: a.currentPrice ? "var(--text)" : "var(--text-dim)" }}>{a.currentPrice ? formatGP(a.currentPrice) : "—"}</span>
+                        <button className="delete-btn" onClick={() => deleteAlert(a.id)}>✕</button>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* \u2500\u2500 RECENT SMART ALERTS FEED (bottom, grows down) \u2500\u2500 */}
+                {/* ── RECENT SMART ALERTS FEED (bottom, grows down) ── */}
                 <div>
                   <div className="section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>Recent Smart Alerts</span>
@@ -8319,7 +8319,7 @@ RULES:
                       <button className="smart-refresh-btn" disabled={refreshing || refreshCooldown > 0}
                         onClick={() => fetchPrices(true)}
                         title={refreshCooldown > 0 ? `Wait ${refreshCooldown}s` : "Refresh prices"}>
-                        <span className={refreshing ? "refresh-spin" : ""}>\u21BB</span>
+                        <span className={refreshing ? "refresh-spin" : ""}>↻</span>
                         {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh"}
                       </button>
                       {smartEvents.length > 0 && (
@@ -8331,7 +8331,7 @@ RULES:
                   {smartEvents.length > 0 && (
                     <div className="smart-feed-controls" style={{ marginBottom: "10px", gap: "10px" }}>
                       <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                        {[["all","All"],["spike","\uD83D\uDCC8 Margin"],["surge","\uD83D\uDD25 Volume"],["dump","\u26A0\uFE0F Dump"],["crash","\uD83D\uDCA5 Crash"]].map(([v,l]) => (
+                        {[["all","All"],["spike","📈 Margin"],["surge","🔥 Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"]].map(([v,l]) => (
                           <button key={v} onClick={() => setSmartFeedFilter(v)}
                             style={{ padding: "4px 11px", borderRadius: "12px", border: "1px solid var(--border)", background: smartFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: smartFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
                             {l}
@@ -8343,7 +8343,7 @@ RULES:
                         {[["recent","Recent"],["change","% Change"],["margin","Margin"]].map(([v,l]) => (
                           <button key={v} onClick={() => { if (smartFeedSort === v) { setSmartFeedSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSmartFeedSort(v); setSmartFeedSortDir("desc"); } }}
                             style={{ padding: "4px 11px", borderRadius: "12px", border: "1px solid var(--border)", background: smartFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: smartFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "4px" }}>
-                            {l}{smartFeedSort === v && <span style={{ fontSize: "9px" }}>{smartFeedSortDir === "desc" ? "\u25BC" : "\u25B2"}</span>}
+                            {l}{smartFeedSort === v && <span style={{ fontSize: "9px" }}>{smartFeedSortDir === "desc" ? "▼" : "▲"}</span>}
                           </button>
                         ))}
                       </div>
@@ -8370,12 +8370,12 @@ RULES:
                           return dir * (mA - mB);
                         });
                       } else {
-                        // recent \u2014 sort by time
+                        // recent — sort by time
                         feed.sort((a, b) => dir * (new Date(a.time) - new Date(b.time)));
                       }
                       if (feed.length === 0) return (
                         <div className="smart-empty">
-                          {smartEvents.length > 0 ? "No alerts match this filter." : "No smart alerts yet \u2014 they'll appear here when market conditions shift."}
+                          {smartEvents.length > 0 ? "No alerts match this filter." : "No smart alerts yet — they'll appear here when market conditions shift."}
                         </div>
                       );
                       return feed.map(e => {
@@ -8390,7 +8390,7 @@ RULES:
                               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                 <span className="smart-event-name" style={{ color: liveItem ? "var(--gold)" : "var(--text)" }}>{e.itemName}</span>
                                 <span className={`smart-badge-${e.badge}`}>{e.badge.toUpperCase()}</span>
-                                {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view \u2192</span>}
+                                {liveItem && <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>· click to view →</span>}
                               </div>
                               <div className="smart-event-msg">{e.message}</div>
                               {liveItem && (
@@ -8413,7 +8413,7 @@ RULES:
               );
             })()}
 
-            {/* \u2500\u2500 PORTFOLIO TAB \u2500\u2500 */}
+            {/* ── PORTFOLIO TAB ── */}
             {activeTab === "portfolio" && (
               <PortfolioPage
                 user={user}
@@ -8424,16 +8424,16 @@ RULES:
               />
             )}
 
-            {/* \u20AC\u20AC\u20AC\u20AC FLIPS TAB \u20AC\u20AC\u20AC\u20AC */}
+            {/* €€€€ FLIPS TAB €€€€ */}
             {activeTab === "market" && (
               <>
-                {error && <div className="error-banner">\u26A0\uFE0F {error}</div>}
+                {error && <div className="error-banner">⚠️ {error}</div>}
 
-                {/* Picks mode hint \u2014 shown when picks is on */}
+                {/* Picks mode hint — shown when picks is on */}
                 {marketSubTab === "flips" && marketInnerView === "items" && picksMode && (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "12px", borderBottom: "1px solid var(--border)", marginBottom: "12px", gap: "12px", flexWrap: "wrap" }}>
                     <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>
-                      <strong style={{ color: "var(--gold)" }}>Personalised Picks</strong> \u2014 <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong> items match your preferences
+                      <strong style={{ color: "var(--gold)" }}>Personalised Picks</strong> — <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong> items match your preferences
                       {filtered.length < 20 && (
                         <span style={{ marginLeft: "8px", fontSize: "12px", color: "var(--text-dim)" }}>
                           · Few results? Try <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>adjusting your prefs</button> or <button onClick={() => setPicksMode(false)} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>show all items</button>
@@ -8441,14 +8441,14 @@ RULES:
                       )}
                     </div>
                     <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                      <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(52,152,219,0.35)", background: "rgba(52,152,219,0.07)", color: "#3498db", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>\u2699 Edit Prefs</button>
-                      <button className="picks-toggle-btn" onClick={() => setPicksMode(false)} style={{ fontSize: "11px", padding: "4px 10px" }}>\u2715 Clear</button>
+                      <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(52,152,219,0.35)", background: "rgba(52,152,219,0.07)", color: "#3498db", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>⚙ Edit Prefs</button>
+                      <button className="picks-toggle-btn" onClick={() => setPicksMode(false)} style={{ fontSize: "11px", padding: "4px 10px" }}>✕ Clear</button>
                     </div>
                   </div>
                 )}
 
 
-                {/* \u2500\u2500 HIGH ALCH TAB \u2500\u2500 */}
+                {/* ── HIGH ALCH TAB ── */}
                 {marketSubTab === "alch" && (() => {
                   const alchSortCol = alchSortState.col;
                   const alchSortDir = alchSortState.dir;
@@ -8493,7 +8493,7 @@ RULES:
                           Show unprofitable
                         </label>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "8px", background: "var(--bg3)", border: `1px solid ${isCustomPrice ? "var(--gold-dim)" : "var(--border)"}`, borderRadius: "8px", padding: "4px 10px" }}>
-                          <span style={{ fontSize: "12px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>\uD83C\uDF3F Nature rune:</span>
+                          <span style={{ fontSize: "12px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>🌿 Nature rune:</span>
                           <input
                             type="number"
                             min="0"
@@ -8510,7 +8510,7 @@ RULES:
                               style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "11px", padding: "0 2px", fontFamily: "Inter, sans-serif", transition: "color 0.15s" }}
                               onMouseOver={e => e.currentTarget.style.color = "var(--gold)"}
                               onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}
-                            >\u21BA live</button>
+                            >↺ live</button>
                           )}
                           {!isCustomPrice && natureRunePrice === 200 && (
                             <span style={{ color: "var(--red)", fontSize: "10px" }}>(fallback)</span>
@@ -8527,7 +8527,7 @@ RULES:
                         <div className="alch-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", display: "grid" }}>
                           {ALCH_COLS.map(([col, label, tip]) => (
                             <button key={col} className={`sort-btn ${alchSortCol === col ? "active" : ""}`} onClick={() => handleAlchSort(col)}>
-                              {label} {alchSortCol === col && <span className="sort-arrow">{alchSortDir === "desc" ? "\u25BC" : "\u25B2"}</span>}
+                              {label} {alchSortCol === col && <span className="sort-arrow">{alchSortDir === "desc" ? "▼" : "▲"}</span>}
                               <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
                                 <span className="stat-help">?</span>
                                 <span className="stat-tooltip">{tip}</span>
@@ -8555,9 +8555,9 @@ RULES:
                             </span>
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
                             <span style={{ fontSize: "13px", fontWeight: 600, color: item.maxProfit4hr >= 0 ? "var(--green)" : "var(--red)" }}>
-                              {item.buyLimit ? formatGP(item.maxProfit4hr) : "\u2014"}
+                              {item.buyLimit ? formatGP(item.maxProfit4hr) : "—"}
                             </span>
-                            <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "\u2014"}</span>
+                            <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
                           </div>
                         ))}
                       </div>
@@ -8577,7 +8577,7 @@ RULES:
                   );
                 })()}
 
-                {/* \u2500\u2500 DEATH'S COFFER TAB \u2500\u2500 */}
+                {/* ── DEATH'S COFFER TAB ── */}
                 {marketSubTab === "coffer" && (() => {
                   const handleCofferSort = col => setCofferSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
                   const cofferSortCol = cofferSortState.col;
@@ -8624,7 +8624,7 @@ RULES:
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                       <div className="coffer-target-bar">
-                        <span className="coffer-target-label">\uD83D\uDC80 Taget coffer amount:</span>
+                        <span className="coffer-target-label">💀 Taget coffer amount:</span>
                         <input
                           className="coffer-target-input"
                           placeholder="e.g. 5m, 2.5m, 500k"
@@ -8643,7 +8643,7 @@ RULES:
                         <div className="alch-header" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 1fr", display: "grid" }}>
                           {COFFER_COLS.map(([col, label, tip]) => (
                             <button key={col} className={`sort-btn ${cofferSortCol === col ? "active" : ""}`} onClick={() => handleCofferSort(col)}>
-                              {label} {cofferSortCol === col && <span className="sort-arrow">{cofferSortDir === "desc" ? "\u25BC" : "\u25B2"}</span>}
+                              {label} {cofferSortCol === col && <span className="sort-arrow">{cofferSortDir === "desc" ? "▼" : "▲"}</span>}
                               <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
                                 <span className="stat-help">?</span>
                                 <span className="stat-tooltip">{tip}</span>
@@ -8697,7 +8697,7 @@ RULES:
                   );
                 })()}
 
-                {/* \u2500\u2500 FLIPS TAB (existing content) \u2500\u2500 */}
+                {/* ── FLIPS TAB (existing content) ── */}
                 {marketSubTab === "tradeboard" && (
                   <TradeBoard
                     user={user}
@@ -8706,7 +8706,7 @@ RULES:
                   />
                 )}
 
-                {/* \u2500\u2500 MARGIN WATCH (inside Market tab) \u2500\u2500 */}
+                {/* ── MARGIN WATCH (inside Market tab) ── */}
                 {marketSubTab === "flips" && marketInnerView === "marginwatch" && (() => {
                   const allComp = Object.entries(marginCompression)
                     .map(([id, c]) => ({ ...c, id: parseInt(id), liveItem: allItems.find(i => i.id === parseInt(id)) }))
@@ -8741,9 +8741,9 @@ RULES:
                   const recover = sortGroup(searchedComp.filter(c => c.direction === "recover"));
 
                   const orderMap = {
-                    "crashed-first":    [{ items: crashed, label: "Crashed \u2014 margin down >60%",     lc: "var(--red)" }, { items: warn, label: "Compressed \u2014 margin down 30\u201360%", lc: "#f39c12" }, { items: recover, label: "Recovering \u2014 margin up >30%", lc: "var(--blue)" }],
-                    "compressed-first": [{ items: warn, label: "Compressed \u2014 margin down 30\u201360%", lc: "#f39c12" }, { items: crashed, label: "Crashed \u2014 margin down >60%", lc: "var(--red)" }, { items: recover, label: "Recovering \u2014 margin up >30%", lc: "var(--blue)" }],
-                    "recover-first":    [{ items: recover, label: "Recovering \u2014 margin up >30%", lc: "var(--blue)" }, { items: warn, label: "Compressed \u2014 margin down 30\u201360%", lc: "#f39c12" }, { items: crashed, label: "Crashed \u2014 margin down >60%", lc: "var(--red)" }],
+                    "crashed-first":    [{ items: crashed, label: "Crashed — margin down >60%",     lc: "var(--red)" }, { items: warn, label: "Compressed — margin down 30–60%", lc: "#f39c12" }, { items: recover, label: "Recovering — margin up >30%", lc: "var(--blue)" }],
+                    "compressed-first": [{ items: warn, label: "Compressed — margin down 30–60%", lc: "#f39c12" }, { items: crashed, label: "Crashed — margin down >60%", lc: "var(--red)" }, { items: recover, label: "Recovering — margin up >30%", lc: "var(--blue)" }],
+                    "recover-first":    [{ items: recover, label: "Recovering — margin up >30%", lc: "var(--blue)" }, { items: warn, label: "Compressed — margin down 30–60%", lc: "#f39c12" }, { items: crashed, label: "Crashed — margin down >60%", lc: "var(--red)" }],
                   };
                   const groups = orderMap[mwatchOrder].filter(g => g.items.length > 0);
                   const totalFlagged = crashed.length + warn.length;
@@ -8803,9 +8803,9 @@ RULES:
 
                       {allComp.length === 0 ? (
                         <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "60px 24px", textAlign: "center" }}>
-                          <div style={{ fontSize: "32px", marginBottom: "12px", opacity: 0.4 }}>\uD83D\uDCCA</div>
+                          <div style={{ fontSize: "32px", marginBottom: "12px", opacity: 0.4 }}>📊</div>
                           <div style={{ fontSize: "14px", color: "var(--text-dim)", marginBottom: "6px" }}>No compression detected yet</div>
-                          <div style={{ fontSize: "12px", color: "var(--text-dim)", opacity: 0.7 }}>Data builds up over time \u2014 check back after a few price refreshes.</div>
+                          <div style={{ fontSize: "12px", color: "var(--text-dim)", opacity: 0.7 }}>Data builds up over time — check back after a few price refreshes.</div>
                         </div>
                       ) : groups.length === 0 ? (
                         <div style={{ padding: "40px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>No items match your search.</div>
@@ -8831,14 +8831,14 @@ RULES:
                                   ].map(({ col, label }) => (
                                     col ? (
                                       <button key={label} className={`sort-btn${mwatchSortCol === col ? " active" : ""}`} onClick={() => handleMwatchSort(col)} style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                                        {label} {mwatchSortCol === col && <span className="sort-arrow">{mwatchSortDir === "asc" ? "\u25B2" : "\u25BC"}</span>}
+                                        {label} {mwatchSortCol === col && <span className="sort-arrow">{mwatchSortDir === "asc" ? "▲" : "▼"}</span>}
                                       </button>
                                     ) : <span key={label} style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</span>
                                   ))}
                                 </div>
                                 {group.items.map(c => {
                                   const cls = c.direction === "crash" ? "crash" : c.direction === "recover" ? "recover" : "warn";
-                                  const verdictLabel = c.direction === "crash" ? "Avoid \u2014 crashing" : c.direction === "recover" ? "Recovering \u2014 watch" : "Caution \u2014 compressing";
+                                  const verdictLabel = c.direction === "crash" ? "Avoid — crashing" : c.direction === "recover" ? "Recovering — watch" : "Caution — compressing";
                                   const verdictCls   = c.direction === "crash" ? "avoid" : c.direction === "recover" ? "recover" : "caution";
                                   const marginColor  = c.direction === "recover" ? "var(--green)" : c.direction === "crash" ? "var(--red)" : "#f39c12";
                                   return (
@@ -8855,16 +8855,16 @@ RULES:
                                       <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(c.oldMargin)}</span>
                                       <span style={{ fontSize: "13px", fontWeight: 600, color: marginColor }}>{formatGP(c.newMargin)}</span>
                                       <span className={`compress-pill ${cls}`} style={{ marginLeft: 0, width: "fit-content" }}>
-                                        {c.pct > 0 ? "\u25B2" : "\u25BC"} {c.pct > 0 ? "+" : ""}{c.pct}%
+                                        {c.pct > 0 ? "▲" : "▼"} {c.pct > 0 ? "+" : ""}{c.pct}%
                                       </span>
                                       <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>
-                                        {c.liveItem?.low ? formatGP(c.liveItem.low) : "\u2014"}
+                                        {c.liveItem?.low ? formatGP(c.liveItem.low) : "—"}
                                       </span>
                                       <span style={{ fontSize: "12px", color: (c.volume || 0) >= 500 ? "var(--green)" : "var(--text-dim)" }}>
                                         {(c.volume || 0) >= 1000 ? ((c.volume||0)/1000).toFixed(1)+"k" : (c.volume||0).toLocaleString()}
                                       </span>
                                       <span style={{ fontSize: "12px", color: (c.liveItem?.roi || 0) > 4 ? "var(--gold)" : (c.liveItem?.roi || 0) >= 1 ? "var(--green)" : "var(--text-dim)" }}>
-                                        {c.liveItem?.roi != null ? c.liveItem.roi + "%" : "\u2014"}
+                                        {c.liveItem?.roi != null ? c.liveItem.roi + "%" : "—"}
                                       </span>
                                       <span className={`mwatch-verdict ${verdictCls}`}>{verdictLabel}</span>
                                     </div>
@@ -8882,14 +8882,14 @@ RULES:
                   );
                 })()}
 
-                {/* \u2500\u2500 ITEMS VIEW (inside Market tab) \u2500\u2500 */}
+                {/* ── ITEMS VIEW (inside Market tab) ── */}
                 {marketSubTab === "flips" && marketInnerView === "items" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div className="filter-bar">
                   <span className="filter-label">Filter:</span>
                   {["all", "f2p", "members", "highvol", "favourites", "1gp"].map(f => (
                     <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : f === "1gp" ? "\u26A0 1gp Sales" : `\uD83D\uDD17 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
+                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : f === "1gp" ? "⚠ 1gp Sales" : `🔗 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                     </button>
                   ))}
                   <button
@@ -8897,14 +8897,14 @@ RULES:
                     style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 12px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.35)", background: picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
                     onMouseOver={e => { e.currentTarget.style.background = "rgba(201,168,76,0.14)"; }}
                     onMouseOut={e => { e.currentTarget.style.background = picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)"; }}>
-                    \u2728 Help me decide{picksMode ? " \u25CF" : ""}
+                    ✨ Help me decide{picksMode ? " ●" : ""}
                   </button>
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
                   <button
                     className={`adv-filters-btn${showAdvFilters || advFilterCount > 0 || categoryFilter !== "All" ? " active" : ""}`}
                     onClick={() => setShowAdvFilters(v => !v)}
                   >
-                    \u2699 Filters {(advFilterCount > 0 || categoryFilter !== "All") && <span className="adv-filter-badge">{advFilterCount + (categoryFilter !== "All" ? 1 : 0)}</span>}
+                    ⚙ Filters {(advFilterCount > 0 || categoryFilter !== "All") && <span className="adv-filter-badge">{advFilterCount + (categoryFilter !== "All" ? 1 : 0)}</span>}
                   </button>
                   <button
                     className="refresh-btn"
@@ -8912,7 +8912,7 @@ RULES:
                     disabled={refreshing || loading || refreshCooldown > 0}
                     title={refreshCooldown > 0 ? `Wait ${refreshCooldown}s` : "Refresh all prices"}
                   >
-                    <span className={refreshing ? "refresh-spin" : ""}>\u21BB</span>
+                    <span className={refreshing ? "refresh-spin" : ""}>↻</span>
                     {refreshing ? "Refreshing..." : refreshCooldown > 0 ? `${refreshCooldown}s` : "Refresh"}
                   </button>
                   <button
@@ -8955,7 +8955,7 @@ RULES:
                       URL.revokeObjectURL(url);
                     }}
                   >
-                    \u2193 Export
+                    ↓ Export
                   </button>
                 </div>
 
@@ -8978,7 +8978,7 @@ RULES:
                       <div className="adv-filter-label">Margin (gp)</div>
                       <div className="adv-filter-row">
                         <input className="adv-filter-input" placeholder="Min" value={advFilters.minMargin} onChange={e => setAdv("minMargin", e.target.value)} type="number" />
-                        <span className="adv-filter-sep">\u2013</span>
+                        <span className="adv-filter-sep">–</span>
                         <input className="adv-filter-input" placeholder="Max" value={advFilters.maxMargin} onChange={e => setAdv("maxMargin", e.target.value)} type="number" />
                       </div>
                     </div>
@@ -8986,7 +8986,7 @@ RULES:
                       <div className="adv-filter-label">ROI (%)</div>
                       <div className="adv-filter-row">
                         <input className="adv-filter-input" placeholder="Min" value={advFilters.minRoi} onChange={e => setAdv("minRoi", e.target.value)} type="number" step="0.1" />
-                        <span className="adv-filter-sep">\u2013</span>
+                        <span className="adv-filter-sep">–</span>
                         <input className="adv-filter-input" placeholder="Max" value={advFilters.maxRoi} onChange={e => setAdv("maxRoi", e.target.value)} type="number" step="0.1" />
                       </div>
                     </div>
@@ -8994,7 +8994,7 @@ RULES:
                       <div className="adv-filter-label">Vol/Day</div>
                       <div className="adv-filter-row">
                         <input className="adv-filter-input" placeholder="Min" value={advFilters.minVolume} onChange={e => setAdv("minVolume", e.target.value)} type="number" />
-                        <span className="adv-filter-sep">\u2013</span>
+                        <span className="adv-filter-sep">–</span>
                         <input className="adv-filter-input" placeholder="Max" value={advFilters.maxVolume} onChange={e => setAdv("maxVolume", e.target.value)} type="number" />
                       </div>
                     </div>
@@ -9002,7 +9002,7 @@ RULES:
                       <div className="adv-filter-label">Buy Price (gp)</div>
                       <div className="adv-filter-row">
                         <input className="adv-filter-input" placeholder="Min" value={advFilters.minPrice} onChange={e => setAdv("minPrice", e.target.value)} type="number" />
-                        <span className="adv-filter-sep">\u2013</span>
+                        <span className="adv-filter-sep">–</span>
                         <input className="adv-filter-input" placeholder="Max" value={advFilters.maxPrice} onChange={e => setAdv("maxPrice", e.target.value)} type="number" />
                       </div>
                     </div>
@@ -9035,13 +9035,13 @@ RULES:
                     </div>
                     <div className="adv-filter-footer">
                       <span>{filtered.length.toLocaleString()} items match</span>
-                      {(advFilterCount > 0 || categoryFilter !== "All") && <button className="adv-filters-btn" onClick={() => { resetAdvFilters(); setCategoryFilter("All"); }}>\u2715 Clear all filters</button>}
+                      {(advFilterCount > 0 || categoryFilter !== "All") && <button className="adv-filters-btn" onClick={() => { resetAdvFilters(); setCategoryFilter("All"); }}>✕ Clear all filters</button>}
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading\u2026" : `${filtered.length.toLocaleString()} items`}</span></div>
+                  <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
                   <div className="flips-table">
                     <div className="table-header">
                       {[
@@ -9057,7 +9057,7 @@ RULES:
                         ["sparkline", "24hr Trend", null],
                       ].map(([col, label, tip]) => (
                         <button key={col} className={`sort-btn ${sortCol === col ? "active" : ""}`} onClick={() => handleSort(col)}>
-                          {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "\u25BC" : "\u25B2"}</span>}
+                          {label} {sortCol === col && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
                           {tip && (
                             <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
                               <span className="stat-help">?</span>
@@ -9072,7 +9072,7 @@ RULES:
                         <div key={i} className="flip-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px" }}>{Array.from({ length: 10 }).map((_, j) => <div key={j} className="skeleton" style={{ width: j === 0 ? "80%" : "60%", animationDelay: `${i * 0.1}s` }} />)}</div>
                       ))
                     ) : filtered.length === 0 ? (
-                      <div className="empty-state"><div className="icon">\uD83D\uDD0D</div><p>No items match your filters</p></div>
+                      <div className="empty-state"><div className="icon">🔍</div><p>No items match your filters</p></div>
                     ) : (
                       filtered.slice(0, marketRowsShown).map(item => (
                         <FlipRow
@@ -9114,12 +9114,12 @@ RULES:
           )}
         </div>
 
-        {/* \u2500\u2500 DEMO MERCHANT INTRO OVERLAY \u2500\u2500 */}
+        {/* ── DEMO MERCHANT INTRO OVERLAY ── */}
         {demoMerchantIntro && (
           <div className={`demo-merchant-intro${demoMerchantIntro === "fading" ? " demo-merchant-intro-exit" : ""}`}>
             <div className="demo-merchant-scan" />
             <div className="demo-merchant-grid" />
-            <div className="demo-merchant-eyebrow">RuneTrader.gg \u2014 Flagship Feature</div>
+            <div className="demo-merchant-eyebrow">RuneTrader.gg — Flagship Feature</div>
             <div className="demo-merchant-title">Trading Terminal</div>
             <div className="demo-merchant-sub">Initialising trading terminal</div>
             <div className="demo-merchant-bars">
@@ -9127,11 +9127,11 @@ RULES:
                 <div key={i} className="demo-merchant-bar" style={{ height: `${h * 28}px`, animationDelay: `${1.6 + i * 0.06}s` }} />
               ))}
             </div>
-            <div className="demo-merchant-status">\u25CF System Ready</div>
+            <div className="demo-merchant-status">● System Ready</div>
           </div>
         )}
 
-        {/* \u2500\u2500 DEMO TOUR \u2500\u2500 */}
+        {/* ── DEMO TOUR ── */}
         {demoMode && demoTourStep >= 0 && (() => {
           const step = DEMO_TOUR_STEPS[demoTourStep];
           const isCenter = step.placement === "center" || !step.target || !demoTourRect;
@@ -9216,7 +9216,7 @@ RULES:
                     </div>
                   </div>
                   <button className="demo-tour-next" onClick={() => advanceDemoTour(demoTourStep + 1)}>
-                    {demoTourStep === DEMO_TOUR_STEPS.length - 1 ? "Finish \u2192" : "Next \u2192"}
+                    {demoTourStep === DEMO_TOUR_STEPS.length - 1 ? "Finish →" : "Next →"}
                   </button>
                 </div>
               </div>
@@ -9227,13 +9227,13 @@ RULES:
         {/* DEMO TOUR END SCREEN */}
         {demoMode && demoTourStep === -2 && (
           <div className="demo-tour-end-overlay">
-            <div style={{ fontSize: "48px" }}>\uD83D\uDCC8</div>
+            <div style={{ fontSize: "48px" }}>📈</div>
             <div className="demo-tour-end-title">Ready to flip smarter?</div>
             <div className="demo-tour-end-sub">
-              You\u2019ve seen what RuneTrader can do. Free to start \u2014 install the RuneLite plugin and you\u2019re live in 2 minutes.
+              You’ve seen what RuneTrader can do. Free to start — install the RuneLite plugin and you’re live in 2 minutes.
             </div>
             <button className="demo-tour-end-cta" onClick={() => { setDemoTourStep(-1); setDemoMode(false); setShowAuth(true); }}>
-              Create Free Account \u2192
+              Create Free Account →
             </button>
             <button className="demo-tour-end-dismiss" onClick={() => { setDemoTourStep(-1); }}>
               Keep exploring the demo
@@ -9241,7 +9241,7 @@ RULES:
           </div>
         )}
 
-        {/* \u2500\u2500 GLOBAL AI BUBBLE (all pages) \u2500\u2500 */}
+        {/* ── GLOBAL AI BUBBLE (all pages) ── */}
         {!merchantAIOpen && (
           <div className="merchant-ai-bubble" onClick={() => {
             // Refresh welcome if this is the first open (only 1 message = the welcome)
@@ -9249,15 +9249,15 @@ RULES:
             setMerchantAIOpen(true);
           }} title="AI Advisor">
             <div className="bubble-ping" />
-            <span>\uD83D\uDCC8</span>
+            <span>📈</span>
           </div>
         )}
         {merchantAIOpen && (
           <div className="merchant-ai-modal">
             <div className="merchant-ai-modal-header">
-              <span style={{ fontSize: 20 }}>\uD83D\uDCC8</span>
+              <span style={{ fontSize: 20 }}>📈</span>
               <div><h4>AI Advisor</h4><p>Live GE data · Powered by Claude</p></div>
-              <button className="merchant-ai-close" onClick={() => setMerchantAIOpen(false)}>\u2715</button>
+              <button className="merchant-ai-close" onClick={() => setMerchantAIOpen(false)}>✕</button>
             </div>
             <div className="merchant-ai-modal-body">
               {messages.map((msg, i) => (
@@ -9280,7 +9280,7 @@ RULES:
                 onChange={e => { setInput(e.target.value); e.target.style.height = "36px"; e.target.style.height = Math.min(e.target.scrollHeight, 80) + "px"; }}
                 onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (input.trim()) sendMessage(input.trim()); } }}
               />
-              <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>\u27A4</button>
+              <button className="send-btn" disabled={!input.trim() || aiLoading} onClick={() => sendMessage(input.trim())}>➤</button>
             </div>
           </div>
         )}

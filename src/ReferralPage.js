@@ -131,7 +131,7 @@ export default function ReferralPage({ user, supabase, showToast, userRefCode })
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  // Seed from App.js prop immediately \u2014 avoids the "generating" flash
+  // Seed from App.js prop immediately — avoids the "generating" flash
   useEffect(() => {
     if (userRefCode && !refCode) setRefCode(userRefCode);
   }, [userRefCode]); // eslint-disable-line
@@ -186,13 +186,13 @@ export default function ReferralPage({ user, supabase, showToast, userRefCode })
 
   function copyDiscord() {
     navigator.clipboard.writeText(
-      `Hey! Check out RuneTrader.gg \u2014 it's an AI-powered GE flipping tool for OSRS. Use my link for 50% off your first month: ${refLink}`
+      `Hey! Check out RuneTrader.gg — it's an AI-powered GE flipping tool for OSRS. Use my link for 50% off your first month: ${refLink}`
     ).then(() => showToast("Discord message copied!", "success"));
   }
 
   if (!user) return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"16px", padding:"80px 20px", textAlign:"center", color:"var(--text-dim)" }}>
-      <div style={{ fontSize:"40px", opacity:0.4 }}>\uD83D\uDD17</div>
+      <div style={{ fontSize:"40px", opacity:0.4 }}>🔗</div>
       <p style={{ fontSize:"15px" }}>Sign in to access your referral link</p>
     </div>
   );
@@ -204,16 +204,16 @@ export default function ReferralPage({ user, supabase, showToast, userRefCode })
 
         {lifetimePro && (
           <div className="ref-lifetime">
-            <div className="ref-lifetime-icon">\uD83D\uDC51</div>
+            <div className="ref-lifetime-icon">👑</div>
             <div>
-              <div className="ref-lifetime-title">Pro for Life \u2014 Unlocked</div>
+              <div className="ref-lifetime-title">Pro for Life — Unlocked</div>
               <div className="ref-lifetime-sub">You referred 3 friends. RuneTrader Pro is yours forever, free of charge.</div>
             </div>
           </div>
         )}
 
         <div className="ref-hero">
-          <span className="ref-hero-crown">\uD83D\uDC51</span>
+          <span className="ref-hero-crown">👑</span>
           <div className="ref-hero-title">Refer & Earn</div>
           <div className="ref-hero-sub">
             Share RuneTrader with friends and both get <strong>50% off your first month</strong> of Pro.
@@ -221,17 +221,17 @@ export default function ReferralPage({ user, supabase, showToast, userRefCode })
           </div>
           <div className="ref-rewards">
             <div className="ref-reward-pill">
-              <span className="ref-reward-pill-icon">\uD83E\uDD1D</span>
+              <span className="ref-reward-pill-icon">🤝</span>
               <span className="ref-reward-pill-text">50% off</span>
               <span className="ref-reward-pill-sub">for you &amp; your friend</span>
             </div>
             <div className="ref-reward-pill">
-              <span className="ref-reward-pill-icon">\uD83D\uDC51</span>
+              <span className="ref-reward-pill-icon">👑</span>
               <span className="ref-reward-pill-text">Pro for life</span>
               <span className="ref-reward-pill-sub">at 3 conversions</span>
             </div>
             <div className="ref-reward-pill">
-              <span className="ref-reward-pill-icon">\u26A1</span>
+              <span className="ref-reward-pill-icon">⚡</span>
               <span className="ref-reward-pill-text">Instant</span>
               <span className="ref-reward-pill-sub">discount applied at checkout</span>
             </div>
@@ -250,11 +250,11 @@ export default function ReferralPage({ user, supabase, showToast, userRefCode })
                   <span className="ref-link-code">{refCode}</span>
                 </div>
                 <button className="ref-copy-btn" onClick={copyLink}>
-                  {copied ? "\u2713 Copied!" : "Copy Link"}
+                  {copied ? "✓ Copied!" : "Copy Link"}
                 </button>
               </div>
               <div className="ref-share-row">
-                <button className="ref-share-btn" onClick={() => window.open(`https://reddit.com/submit?url=${encodeURIComponent(refLink)}&title=Try RuneTrader \u2014 AI-powered OSRS flipping tool (50% off first month)`, "_blank")}>
+                <button className="ref-share-btn" onClick={() => window.open(`https://reddit.com/submit?url=${encodeURIComponent(refLink)}&title=Try RuneTrader — AI-powered OSRS flipping tool (50% off first month)`, "_blank")}>
                   Share on Reddit
                 </button>
                 <button className="ref-share-btn" onClick={copyDiscord}>
@@ -264,7 +264,7 @@ export default function ReferralPage({ user, supabase, showToast, userRefCode })
             </>
           ) : (
             <div className="ref-no-link">
-              {loading ? "Loading your referral link..." : "No referral code found \u2014 try signing out and back in."}
+              {loading ? "Loading your referral link..." : "No referral code found — try signing out and back in."}
             </div>
           )}
         </div>
@@ -292,7 +292,7 @@ export default function ReferralPage({ user, supabase, showToast, userRefCode })
                 <div className="ref-progress-title">Progress to Pro for Life</div>
                 <div className="ref-progress-subtitle">
                   {referralCount >= 3
-                    ? "You've hit the target \u2014 lifetime Pro incoming!"
+                    ? "You've hit the target — lifetime Pro incoming!"
                     : `${3 - referralCount} more conversion${3 - referralCount !== 1 ? "s" : ""} to go`}
                 </div>
               </div>
@@ -306,9 +306,9 @@ export default function ReferralPage({ user, supabase, showToast, userRefCode })
                 const done = referralCount >= n;
                 return (
                   <div key={n} className={`ref-milestone${done ? " done" : ""}`}>
-                    <div className="ref-milestone-num">{done ? "\u2713" : n}</div>
+                    <div className="ref-milestone-num">{done ? "✓" : n}</div>
                     <div className="ref-milestone-label">
-                      {n === 1 ? "First friend converts" : n === 2 ? "Second friend converts" : "Pro for life \uD83D\uDC51"}
+                      {n === 1 ? "First friend converts" : n === 2 ? "Second friend converts" : "Pro for life 👑"}
                     </div>
                   </div>
                 );
@@ -329,7 +329,7 @@ export default function ReferralPage({ user, supabase, showToast, userRefCode })
                   {new Date(r.created_at).toLocaleDateString([], { month:"short", day:"numeric", year:"numeric" })}
                 </div>
                 <span className={r.status === "converted" ? "ref-status-converted" : "ref-status-pending"}>
-                  {r.status === "converted" ? "\u2713 Upgraded to Pro" : "Signed up"}
+                  {r.status === "converted" ? "✓ Upgraded to Pro" : "Signed up"}
                 </span>
               </div>
             ))}

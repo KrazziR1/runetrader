@@ -9,7 +9,7 @@ const CATEGORIES = ["All", "Weapons", "Armour", "3rd Age", "Raids", "Skilling", 
 const MAX_CASH = 2_147_483_647;
 
 function formatGP(n) {
-  if (!n) return "\u2014";
+  if (!n) return "—";
   return Math.round(n).toLocaleString("en-GB") + " gp";
 }
 
@@ -37,7 +37,7 @@ function ItemImage({ name, size = 44 }) {
   if (failed) {
     return (
       <div style={{ width: size, height: size, borderRadius: "8px", background: "var(--bg4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
-        \uD83D\uDCE6
+        📦
       </div>
     );
   }
@@ -187,7 +187,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
         <div>
           <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>
-Player-to-player trades. All transactions occur in-game \u2014 RuneTrader does not facilitate, verify, or take responsibility for any trade.
+Player-to-player trades. All transactions occur in-game — RuneTrader does not facilitate, verify, or take responsibility for any trade.
           </div>
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
@@ -199,7 +199,7 @@ Player-to-player trades. All transactions occur in-game \u2014 RuneTrader does n
           )}
           <button onClick={loadListings}
             style={{ padding: "7px 12px", borderRadius: "8px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
-            \u21BB
+            ↻
           </button>
           {user ? (
             <button onClick={() => setShowPostForm(true)}
@@ -242,7 +242,7 @@ Player-to-player trades. All transactions occur in-game \u2014 RuneTrader does n
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-dim)", background: "var(--bg3)", borderRadius: "12px", border: "1px solid #1c2a3a" }}>
-          <div style={{ fontSize: "32px", marginBottom: "12px" }}>\uD83D\uDCCB</div>
+          <div style={{ fontSize: "32px", marginBottom: "12px" }}>📋</div>
           <div style={{ fontSize: "15px", marginBottom: "6px" }}>No listings yet</div>
           <div style={{ fontSize: "13px" }}>{user ? "Be the first to post a listing." : "Sign in to post a listing."}</div>
         </div>
@@ -381,7 +381,7 @@ Player-to-player trades. All transactions occur in-game \u2014 RuneTrader does n
                   ) : (
                     <div>{formatGP(perItem)}</div>
                   )}
-                  {total > MAX_CASH && <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>Above max cash \u2014 player-to-player trade required</div>}
+                  {total > MAX_CASH && <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>Above max cash — player-to-player trade required</div>}
                 </div>
               );
             })()}
@@ -418,7 +418,7 @@ Player-to-player trades. All transactions occur in-game \u2014 RuneTrader does n
               </button>
               <button onClick={submitListing} disabled={posting}
                 style={{ flex: 2, padding: "12px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "14px", fontWeight: 700, cursor: posting ? "wait" : "pointer", fontFamily: "Cinzel, serif", letterSpacing: "0.5px", opacity: posting ? 0.7 : 1 }}>
-                {posting ? "Posting..." : "Post Listing \u2192"}
+                {posting ? "Posting..." : "Post Listing →"}
               </button>
             </div>
           </div>
