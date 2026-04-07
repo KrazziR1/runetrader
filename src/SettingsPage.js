@@ -476,7 +476,7 @@ export default function SettingsPage({
           <Row label="Clear flip history" desc="Permanently delete all logged flips from your account and this device. This cannot be undone.">
             <button className="settings-btn danger" onClick={() => setConfirm({
               title: "Clear Flip History",
-              desc: "This will permanently delete all your logged flips from the database and this device. Your watchlist, alerts and settings will be kept. This cannot be undone.",
+              desc: "This will permanently delete all your closed flip history from the database and this device. Only flip data is removed — your watchlist, price alerts, and settings are not affected. This cannot be undone.",
               action: clearFlipHistory,
             })}>
               Clear History
