@@ -3,56 +3,56 @@ import { useState, useEffect } from "react";
 
 const STYLES = `
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-  .settings-page { display:flex; flex-direction:column; gap:8px; max-width:720px; }
+  .settings-page { display:flex; flex-direction:column; gap:20px; max-width:720px; }
   .settings-section { background:#111620; border:1px solid #1c2a3a; border-radius:12px; overflow:hidden; }
-  .settings-section-header { display:flex; align-items:center; gap:12px; padding:14px 20px; border-bottom:1px solid #1c2a3a; cursor:pointer; user-select:none; }
+  .settings-section-header { display:flex; align-items:center; gap:12px; padding:16px 22px; border-bottom:1px solid #1c2a3a; cursor:pointer; user-select:none; }
   .settings-section-header:hover { background:rgba(255,255,255,0.02); }
-  .settings-section-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
-  .settings-section-title { font-family:'Cinzel',serif; font-size:13px; font-weight:700; color:#e8e8e8; letter-spacing:0.5px; }
-  .settings-section-sub { font-size:11px; color:#6a7d90; margin-top:2px; }
+  .settings-section-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+  .settings-section-title { font-family:'Cinzel',serif; font-size:14px; font-weight:700; color:#e8e8e8; letter-spacing:0.5px; }
+  .settings-section-sub { font-size:12px; color:#6a7d90; margin-top:2px; }
   .settings-section-chevron { margin-left:auto; font-size:11px; color:#3d5060; transition:transform 0.2s; }
   .settings-section-chevron.open { transform:rotate(180deg); }
   .settings-rows { display:flex; flex-direction:column; }
-  .settings-row { display:flex; align-items:center; padding:13px 20px; border-bottom:1px solid #0f1820; gap:16px; }
+  .settings-row { display:flex; align-items:center; padding:16px 22px; border-bottom:1px solid #0f1820; gap:20px; }
   .settings-row:last-child { border-bottom:none; }
   .settings-row-info { flex:1; min-width:0; }
-  .settings-row-label { font-size:13px; font-weight:500; color:#e8e8e8; }
-  .settings-row-desc { font-size:11px; color:#6a7d90; margin-top:2px; line-height:1.5; }
+  .settings-row-label { font-size:14px; font-weight:500; color:#e8e8e8; }
+  .settings-row-desc { font-size:12px; color:#6a7d90; margin-top:3px; line-height:1.5; }
   .settings-row-control { flex-shrink:0; }
 
   /* Toggle switch */
-  .toggle-wrap { position:relative; width:40px; height:22px; flex-shrink:0; }
+  .toggle-wrap { position:relative; width:52px; height:28px; flex-shrink:0; }
   .toggle-wrap input { opacity:0; width:0; height:0; position:absolute; }
-  .toggle-track { position:absolute; inset:0; border-radius:20px; background:#1c2a3a; border:1px solid #28394d; cursor:pointer; transition:all 0.2s; }
-  .toggle-track.on { background:rgba(201,168,76,0.25); border-color:rgba(201,168,76,0.5); }
-  .toggle-thumb { position:absolute; top:3px; left:3px; width:14px; height:14px; border-radius:50%; background:#3d5060; transition:all 0.2s; pointer-events:none; }
-  .toggle-track.on .toggle-thumb { left:21px; background:#c9a84c; }
+  .toggle-track { position:absolute; inset:0; border-radius:28px; background:#243040; border:2px solid #3a4f65; cursor:pointer; transition:all 0.2s; }
+  .toggle-track.on { background:rgba(201,168,76,0.22); border-color:rgba(201,168,76,0.65); }
+  .toggle-thumb { position:absolute; top:4px; left:4px; width:16px; height:16px; border-radius:50%; background:#8fa0b0; transition:all 0.22s; pointer-events:none; }
+  .toggle-track.on .toggle-thumb { left:28px; background:#c9a84c; }
 
   /* Select */
-  .settings-select { background:#0c1018; border:1px solid #28394d; border-radius:6px; color:#e8e8e8; font-size:12px; padding:6px 10px; font-family:'Inter',sans-serif; cursor:pointer; outline:none; }
+  .settings-select { background:#0c1018; border:1px solid #28394d; border-radius:6px; color:#e8e8e8; font-size:13px; padding:8px 12px; font-family:'Inter',sans-serif; cursor:pointer; outline:none; min-width:180px; }
   .settings-select:focus { border-color:rgba(201,168,76,0.4); }
   .settings-select option { background:#0c1018; }
 
   /* Input */
-  .settings-input { background:#0c1018; border:1px solid #28394d; border-radius:6px; color:#e8e8e8; font-size:12px; padding:6px 10px; font-family:'Inter',sans-serif; outline:none; width:200px; transition:border-color 0.15s; }
+  .settings-input { background:#0c1018; border:1px solid #28394d; border-radius:6px; color:#e8e8e8; font-size:13px; padding:8px 12px; font-family:'Inter',sans-serif; outline:none; width:200px; transition:border-color 0.15s; }
   .settings-input:focus { border-color:rgba(201,168,76,0.4); }
   .settings-input::placeholder { color:#3d5060; }
 
   /* Button */
-  .settings-btn { padding:7px 16px; border-radius:6px; border:1px solid #28394d; background:transparent; color:#99aabb; font-size:12px; font-weight:500; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; white-space:nowrap; }
+  .settings-btn { padding:9px 18px; border-radius:7px; border:1px solid #28394d; background:transparent; color:#99aabb; font-size:13px; font-weight:500; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; white-space:nowrap; }
   .settings-btn:hover { border-color:rgba(201,168,76,0.3); color:#c9a84c; }
   .settings-btn.gold { background:linear-gradient(135deg,#8a6f2e,#c9a84c); color:#000; border:none; font-weight:700; }
   .settings-btn.gold:hover { opacity:0.88; }
-  .settings-btn.danger { border-color:rgba(231,76,60,0.3); color:#e74c3c; }
-  .settings-btn.danger:hover { background:rgba(231,76,60,0.08); border-color:rgba(231,76,60,0.5); }
+  .settings-btn.danger { border-color:rgba(231,76,60,0.35); color:#e74c3c; }
+  .settings-btn.danger:hover { background:rgba(231,76,60,0.08); border-color:rgba(231,76,60,0.55); }
   .settings-btn:disabled { opacity:0.4; cursor:not-allowed; }
 
   /* Code box */
   .settings-code { background:#0c1018; border:1px solid #1c2a3a; border-radius:6px; padding:10px 14px; font-size:12px; color:#c9a84c; font-family:monospace; word-break:break-all; line-height:1.5; }
 
   /* New key banner */
-  .new-key-banner { background:rgba(46,204,113,0.06); border:1px solid rgba(46,204,113,0.2); border-radius:8px; padding:14px 16px; display:flex; flex-direction:column; gap:10px; margin:0 20px 4px; }
-  .new-key-banner-title { font-size:12px; color:#2ecc71; font-weight:600; }
+  .new-key-banner { background:rgba(46,204,113,0.06); border:1px solid rgba(46,204,113,0.2); border-radius:8px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; margin:4px 22px 8px; }
+  .new-key-banner-title { font-size:13px; color:#2ecc71; font-weight:600; }
   .new-key-banner-row { display:flex; gap:8px; align-items:center; }
 
   /* Confirm modal */
@@ -66,14 +66,14 @@ const STYLES = `
   .settings-skeleton { background:linear-gradient(90deg,#0c1018 25%,#111620 50%,#0c1018 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:5px; height:14px; }
 
   /* Status pill */
-  .status-pill { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+  .status-pill { display:inline-flex; align-items:center; gap:5px; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:600; }
   .status-pill.green { background:rgba(46,204,113,0.1); color:#2ecc71; border:1px solid rgba(46,204,113,0.2); }
   .status-pill.amber { background:rgba(201,168,76,0.1); color:#c9a84c; border:1px solid rgba(201,168,76,0.2); }
   .status-pill.dim { background:rgba(255,255,255,0.04); color:#6a7d90; border:1px solid #1c2a3a; }
 
   /* Key table */
-  .key-table-head { display:grid; grid-template-columns:2fr 1fr 1fr 60px; padding:8px 20px; font-size:10px; color:#6a7d90; text-transform:uppercase; letter-spacing:1px; font-weight:600; border-bottom:1px solid #0f1820; background:#0c1018; }
-  .key-table-row { display:grid; grid-template-columns:2fr 1fr 1fr 60px; padding:12px 20px; border-bottom:1px solid #0f1820; align-items:center; transition:background 0.1s; }
+  .key-table-head { display:grid; grid-template-columns:2fr 1fr 1fr 70px; padding:9px 22px; font-size:11px; color:#6a7d90; text-transform:uppercase; letter-spacing:1px; font-weight:600; border-bottom:1px solid #0f1820; background:#0c1018; }
+  .key-table-row { display:grid; grid-template-columns:2fr 1fr 1fr 70px; padding:14px 22px; border-bottom:1px solid #0f1820; align-items:center; transition:background 0.1s; }
   .key-table-row:last-child { border-bottom:none; }
   .key-table-row:hover { background:rgba(255,255,255,0.02); }
 `;
@@ -387,7 +387,7 @@ export default function SettingsPage({
           <Row label="Sync pause timeout" desc="Matches the General setting — how long before sync auto-resumes">
             <span style={{ fontSize: "13px", color: "#c9a84c", fontWeight: 600 }}>{pauseTimeout} min</span>
           </Row>
-          <div style={{ padding: "0 20px 4px" }}>
+          <div style={{ padding: "0 22px 4px" }}>
             {/* New key reveal */}
             {newKey && (
               <div className="new-key-banner">
@@ -432,11 +432,11 @@ export default function SettingsPage({
               )) : keys.map((key, i) => (
                 <div key={key.id} className="key-table-row">
                   <div>
-                    <div style={{ fontSize: "13px", fontWeight: 500, color: "#e8e8e8" }}>{key.label || "Unlabelled"}</div>
-                    <div style={{ fontSize: "11px", color: "#3d5060", fontFamily: "monospace", marginTop: "2px" }}>rt_••••••••</div>
+                    <div style={{ fontSize: "14px", fontWeight: 500, color: "#e8e8e8" }}>{key.label || "Unlabelled"}</div>
+                    <div style={{ fontSize: "12px", color: "#3d5060", fontFamily: "monospace", marginTop: "2px" }}>rt_••••••••</div>
                   </div>
-                  <span style={{ fontSize: "12px", color: "#6a7d90" }}>{fmtDate(key.created_at)}</span>
-                  <span style={{ fontSize: "12px", color: key.last_used ? "#6a7d90" : "#2a3a4a" }}>{key.last_used ? fmtDate(key.last_used) : "Never"}</span>
+                  <span style={{ fontSize: "13px", color: "#6a7d90" }}>{fmtDate(key.created_at)}</span>
+                  <span style={{ fontSize: "13px", color: key.last_used ? "#6a7d90" : "#2a3a4a" }}>{key.last_used ? fmtDate(key.last_used) : "Never"}</span>
                   <button className="settings-btn danger" style={{ padding: "4px 10px", fontSize: "11px" }}
                     onClick={() => setConfirm({ title: "Revoke API Key", desc: `Revoke "${key.label || "Unlabelled"}"? The RuneLite plugin using this key will stop syncing immediately.`, action: () => revokeKey(key.id) })}
                     disabled={revoking === key.id}>
