@@ -21,10 +21,10 @@ const STYLES = `
   .settings-row-control { flex-shrink:0; }
 
   /* Toggle switch */
-  .tog { display:inline-flex; align-items:center; width:64px; height:34px; border-radius:34px; background:#243040; border:2px solid #344a62; cursor:pointer; transition:background 0.22s, border-color 0.22s; flex-shrink:0; position:relative; box-sizing:border-box; }
+  .tog { display:inline-flex; align-items:center; width:44px; height:24px; border-radius:24px; background:#243040; border:2px solid #344a62; cursor:pointer; transition:background 0.22s, border-color 0.22s; flex-shrink:0; position:relative; box-sizing:border-box; }
   .tog.on { background:#1e2e1a; border-color:#c9a84c; }
-  .tog-thumb { position:absolute; left:4px; width:22px; height:22px; border-radius:50%; background:#6a8099; transition:left 0.22s, background 0.22s; }
-  .tog.on .tog-thumb { left:34px; background:#c9a84c; }
+  .tog-thumb { position:absolute; left:3px; width:14px; height:14px; border-radius:50%; background:#6a8099; transition:left 0.22s, background 0.22s; }
+  .tog.on .tog-thumb { left:23px; background:#c9a84c; }
 
   /* Select */
   .settings-select { background:#0c1018; border:1px solid #28394d; border-radius:6px; color:#e8e8e8; font-size:13px; padding:8px 12px; font-family:'Inter',sans-serif; cursor:pointer; outline:none; min-width:180px; }
@@ -250,11 +250,9 @@ export default function SettingsPage({
     try {
       if (user) {
         await supabase.from("ge_flips_live").delete().eq("user_id", user.id);
-        await supabase.from("flips").delete().eq("user_id", user.id);
       }
       localStorage.removeItem("runetrader_flips");
-      showToast("Flip history cleared.", "success");
-      window.location.reload();
+      showToast("Flip history cleared. Reload the page to see changes.", "success");
     } catch (e) { showToast("Failed to clear history: " + e.message, "error"); }
   }
 
