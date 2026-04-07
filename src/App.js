@@ -8799,6 +8799,7 @@ RULES:
                         ))}
                       </div>
                     </div>
+                    <div className="adv-filter-group">
                       <div className="adv-filter-label">Margin (gp)</div>
                       <div className="adv-filter-row">
                         <input className="adv-filter-input" placeholder="Min" value={advFilters.minMargin} onChange={e => setAdv("minMargin", e.target.value)} type="number" />
