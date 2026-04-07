@@ -1050,6 +1050,21 @@ const STYLES = `
 
 // ─── HELPERS ────────────────────────────────────────────────────────────────
 
+// Fixes double-encoded UTF-8 emoji (mojibake) that can come from XPSystem.js
+// when the file was saved/read with wrong encoding. Converts latin-1 byte
+// sequences back to the correct Unicode characters.
+function fixEmoji(str) {
+  if (!str) return str;
+  try {
+    if (/[\xC0-\xFF]/.test(str)) {
+      const bytes = Array.from(str).map(c => c.charCodeAt(0));
+      const uint8 = new Uint8Array(bytes);
+      return new TextDecoder('utf-8').decode(uint8);
+    }
+  } catch (e) { /* fall through */ }
+  return str;
+}
+
 // Safe localStorage wrapper — QuotaExceededError is a real browser exception
 function safeSetItem(key, value) {
   try { localStorage.setItem(key, value); }
@@ -6445,7 +6460,7 @@ RULES:
         <div className="merchant-anim-divider" style={{ width: "200px", marginBottom: "8px" }} />
         {(() => {
           const level = xpToLevel(totalXP);
-          const { title, emoji } = getLevelTitle(level);
+          const { title, emoji: _emoji1 } = getLevelTitle(level); const emoji = fixEmoji(_emoji1);
           const doneQuests = dailyQuests.filter(q => q.completed).length;
           return (
             <div className="merchant-anim-stats">
@@ -6488,7 +6503,7 @@ RULES:
       </div>
 
       {/* MERCHANT TOUR */}
-      {merchantTourStep >= 0 && (() => {
+      {merchantMode && merchantTourStep >= 0 && (() => {
         const step = MERCHANT_TOUR_STEPS[merchantTourStep];
         const isCenter = step.placement === "center" || !merchantTourRect;
         const pad = 10;
@@ -7254,7 +7269,7 @@ RULES:
         {/* €€€€ LEVEL-UP MODAL €€€€ */}
         {showLevelUp && (() => {
           const { newLevel } = showLevelUp;
-          const { title, emoji, color } = getLevelTitle(newLevel);
+          const { title, emoji: _emoji2, color } = getLevelTitle(newLevel); const emoji = fixEmoji(_emoji2);
           const isMax = newLevel >= 99;
           return (
             <div className="levelup-overlay" onClick={() => setShowLevelUp(null)}>
@@ -7342,7 +7357,7 @@ RULES:
                     <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>{user.user_metadata?.username || user.email?.split("@")[0]}</div>
                     {(() => {
                       const level = xpToLevel(totalXP);
-                      const { title, emoji, color } = getLevelTitle(level);
+                      const { title, emoji: _emoji3, color } = getLevelTitle(level); const emoji = fixEmoji(_emoji3);
                       return <div style={{ fontSize: "12px", color, marginTop: "2px" }}>{emoji} {title}</div>;
                     })()}
                     {loginStreak >= 2 && <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>🔥 {loginStreak}-day streak</div>}
@@ -7541,7 +7556,7 @@ RULES:
                   <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "4px" }}>
                     {(() => {
                       const level = xpToLevel(totalXP);
-                      const { title, emoji } = getLevelTitle(level);
+                      const { title, emoji: _emoji4 } = getLevelTitle(level); const emoji = fixEmoji(_emoji4);
                       return `${emoji} Level ${level} ${title} · ${totalXP.toLocaleString()} XP · ${unlockedAchievements.length}/${ACHIEVEMENTS.length} achievements`;
                     })()}
                   </div>
@@ -7667,7 +7682,7 @@ RULES:
               {/* Combined Level + Quests button */}
               {user && (() => {
                 const level = xpToLevel(totalXP);
-                const { emoji } = getLevelTitle(level);
+                const { emoji: _emoji5 } = getLevelTitle(level); const emoji = fixEmoji(_emoji5);
                 const doneQuests = dailyQuests.filter(q => q.completed).length;
                 const allDone = questsLoaded && doneQuests === dailyQuests.length && dailyQuests.length > 0;
                 return (
@@ -7704,7 +7719,7 @@ RULES:
                       <button className="profile-dropdown-item" onClick={() => handleSetActiveTab("referral")}>🔖 Refer & Earn</button>
                       <button className="profile-dropdown-item" onClick={() => setActiveTab("changelog")}>🆕 What's New</button>
                       <button className="profile-dropdown-item" onClick={() => setActiveTab("pricing")}>✨ {isPro ? "Pro Plan" : "Upgrade to Pro"}</button>
-                      <button className="profile-dropdown-item" onClick={() => { toggleMerchantMode(); setTimeout(startMerchantTour, 600); }}>📖 Terminal Tutorial</button>
+                      <button className="profile-dropdown-item" onClick={() => { if (isPro || isOnTrial) { toggleMerchantMode(); setTimeout(startMerchantTour, 600); } else { toggleMerchantMode(); } }}>📖 Terminal Tutorial</button>
                       <div style={{ borderTop: "1px solid var(--border)", margin: "4px 0" }} />
                       <button className="profile-dropdown-item danger" onClick={handleSignOut}>Sign Out</button>
                     </div>
