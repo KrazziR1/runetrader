@@ -290,7 +290,7 @@ export default function SettingsPage({
     { col: "name", dir: "asc", label: "Name (A → Z)" },
     { col: "lastTradeTime", dir: "desc", label: "Last Traded (recent first)" },
   ];
-  const currentSortLabel = SORT_OPTIONS.find(o => o.col === sortCol && o.dir === sortDir)?.label || "Vol/Day (high → low)";
+
 
   if (!user) return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"16px", padding:"80px 20px", textAlign:"center", color:"#6a7d90" }}>
