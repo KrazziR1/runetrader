@@ -97,12 +97,12 @@ const STYLES = `
 
   /* HEADER */
   .header { display: flex; flex-direction: column; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 0 var(--border-gold), 0 4px 24px rgba(0,0,0,0.5); }
-  .header-top { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 56px; gap: 8px; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 62px; gap: 8px; }
   .header-bottom { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 40px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.25); }
-  .logo { display: flex; align-items: center; gap: 10px; }
-  .logo-icon { width: 28px; height: 28px; }
-  .logo-text { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 1px; }
-  .logo-dot { color: var(--text-dim); font-size: 13px; margin-left: 2px; }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon { width: 36px; height: 36px; }
+  .logo-text { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 2px; }
+  .logo-dot { color: var(--text-dim); font-size: 15px; margin-left: 2px; }
   .header-right { display: flex; align-items: center; gap: 8px; }
   .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(46,204,113,0.07); border: 1px solid rgba(46,204,113,0.2); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--green); }
   .paused-pill { display: flex; align-items: center; gap: 6px; background: rgba(243,156,18,0.08); border: 1px solid rgba(243,156,18,0.25); border-radius: 20px; padding: 3px 10px; font-size: 11px; color: #f39c12; }
@@ -186,18 +186,18 @@ const STYLES = `
   .adv-filters-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); font-size: 12px; padding: 5px 12px; cursor: pointer; font-family: Inter, sans-serif; transition: all 0.15s; white-space: nowrap; }
   .adv-filters-btn:hover, .adv-filters-btn.active { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.05); }
   .adv-filter-badge { background: var(--gold); color: #000; border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 700; }
-  .adv-filter-panel { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 4px; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
-  .adv-filter-group { display: flex; flex-direction: column; gap: 6px; }
-  .adv-filter-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .adv-filter-panel { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 4px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px 24px; }
+  .adv-filter-group { display: flex; flex-direction: column; gap: 7px; padding: 12px 14px; background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; }
+  .adv-filter-label { font-size: 10px; color: #8899aa; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 2px; }
   .adv-filter-row { display: flex; gap: 6px; align-items: center; }
-  .adv-filter-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12px; padding: 5px 8px; width: 100%; font-family: Inter, sans-serif; transition: border-color 0.15s; }
-  .adv-filter-input:focus { outline: none; border-color: var(--gold-dim); }
-  .adv-filter-input::placeholder { color: var(--text-dim); opacity: 0.6; }
-  .adv-filter-sep { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+  .adv-filter-input { background: var(--bg2); border: 1px solid var(--border-bright); border-radius: 5px; color: var(--text); font-size: 12px; padding: 6px 8px; width: 100%; font-family: Inter, sans-serif; transition: border-color 0.15s; }
+  .adv-filter-input:focus { outline: none; border-color: var(--gold-dim); box-shadow: 0 0 0 2px rgba(201,168,76,0.08); }
+  .adv-filter-input::placeholder { color: #3d5060; }
+  .adv-filter-sep { font-size: 11px; color: #3d5060; flex-shrink: 0; font-weight: 600; }
   .adv-filter-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: var(--text-dim); user-select: none; padding: 4px 0; }
   .adv-filter-toggle input { accent-color: var(--gold); width: 14px; height: 14px; cursor: pointer; }
   .adv-filter-toggle.active { color: var(--gold); }
-  .adv-filter-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); }
+  .adv-filter-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); }
   .filter-input::placeholder { color: var(--text-dim); }
   .filter-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif; }
   .filter-btn:hover { color: var(--text); border-color: var(--border-bright); background: var(--bg4); }
@@ -743,10 +743,10 @@ const STYLES = `
   .watchlist-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 80px 20px; text-align: center; color: var(--text-dim); }
   .watchlist-empty .icon { font-size: 40px; opacity: 0.4; }
   .watchlist-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .watchlist-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 84px 140px 44px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
-  .watchlist-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 84px 140px 44px; padding: 11px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.15s; }
+  .watchlist-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 70px 90px 140px 44px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: #8899aa; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); border-radius: 10px 10px 0 0; font-weight: 600; }
+  .watchlist-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 70px 90px 140px 44px; padding: 11px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.1s, box-shadow 0.1s; }
   .watchlist-row:last-child { border-bottom: none; }
-  .watchlist-row:hover { background: var(--bg4); }
+  .watchlist-row:hover { background: rgba(201,168,76,0.04); box-shadow: inset 3px 0 0 rgba(201,168,76,0.35); }
   .watchlist-remove-btn { background: none; border: none; cursor: pointer; color: var(--text-dim); font-size: 15px; padding: 0 4px; transition: color 0.15s; line-height: 1; }
   .watchlist-remove-btn:hover { color: var(--red); }
   .watchlist-add-row { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg4); position: relative; }
@@ -2148,7 +2148,30 @@ const WatchlistPage = React.memo(function WatchlistPage({
   setSelectedItem, onSignIn, setUpgradeModal,
   demoMode, formatGP,
 }) {
-  const watchedItems = items.filter(i => watchlist.includes(i.id));
+  const [sortCol, setSortCol] = React.useState("name");
+  const [sortDir, setSortDir] = React.useState("asc");
+  const [popoverPos, setPopoverPos] = React.useState(null); // {top, left, itemId}
+
+  const watchedItems = React.useMemo(() => {
+    const base = items.filter(i => watchlist.includes(i.id));
+    return [...base].sort((a, b) => {
+      let av, bv;
+      if (sortCol === "name")   { av = a.name.toLowerCase(); bv = b.name.toLowerCase(); }
+      else if (sortCol === "low")    { av = a.low || 0;    bv = b.low || 0; }
+      else if (sortCol === "high")   { av = a.high || 0;   bv = b.high || 0; }
+      else if (sortCol === "margin") { av = a.margin || 0; bv = b.margin || 0; }
+      else if (sortCol === "roi")    { av = a.roi || 0;    bv = b.roi || 0; }
+      else { av = 0; bv = 0; }
+      if (av < bv) return sortDir === "asc" ? -1 : 1;
+      if (av > bv) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [items, watchlist, sortCol, sortDir]);
+
+  function handleSort(col) {
+    if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortCol(col); setSortDir(col === "name" ? "asc" : "desc"); }
+  }
 
   function handleAddSearch(val) {
     setWatchlistAddSearch(val);
@@ -2163,9 +2186,19 @@ const WatchlistPage = React.memo(function WatchlistPage({
     setWatchlistAddAutocomplete([]);
   }
 
-  function openAlertPopover(itemId) {
+  function openAlertPopover(itemId, btnEl) {
     const existing = watchlistAlerts[itemId] || {};
     setWatchlistAlertInputs({ above: existing.above ? String(existing.above) : "", below: existing.below ? String(existing.below) : "" });
+    if (btnEl) {
+      const rect = btnEl.getBoundingClientRect();
+      const popW = 240;
+      let left = rect.left;
+      if (left + popW > window.innerWidth - 16) left = window.innerWidth - popW - 16;
+      // open above if not enough space below
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const top = spaceBelow > 220 ? rect.bottom + 6 : rect.top - 220;
+      setPopoverPos({ top, left, itemId });
+    }
     setWatchlistAlertOpen(itemId);
   }
 
@@ -2177,9 +2210,20 @@ const WatchlistPage = React.memo(function WatchlistPage({
     if (!isNaN(below) && below > 0) setWatchlistAlert(itemId, "below", below);
     else clearWatchlistAlert(itemId, "below");
     setWatchlistAlertOpen(null);
+    setPopoverPos(null);
   }
 
   const hasAlertFor = (itemId) => { const a = watchlistAlerts[itemId]; return a && (a.above || a.below); };
+
+  const COLS = [
+    { key: "name",   label: "Item",    tip: null },
+    { key: "low",    label: "Buy",     tip: "Lowest current buy offer on the GE" },
+    { key: "high",   label: "Sell",    tip: "Highest current sell offer on the GE" },
+    { key: "margin", label: "Margin",  tip: "Sell price minus buy price minus GE tax" },
+    { key: "roi",    label: "ROI",     tip: "Margin ÷ buy price. Return per flip." },
+    { key: "trend",  label: "24hr Trend", tip: "Price sparkline over the last 24 hours", noSort: true },
+    { key: "alert",  label: "Alert",   tip: "Set a price alert for this item", noSort: true },
+  ];
 
   return (
     <div className="watchlist-wrap">
@@ -2189,6 +2233,7 @@ const WatchlistPage = React.memo(function WatchlistPage({
           {!user && !demoMode && (<span> <button onClick={onSignIn} style={{ background: "none", border: "none", color: "var(--gold)", cursor: "pointer", fontSize: "inherit", fontFamily: "inherit", padding: 0, textDecoration: "underline" }}>Sign in</button> to sync your watchlist across devices.</span>)}
         </span>
       </div>
+
       {watchedItems.length === 0 ? (
         <div className="watchlist-empty">
           <div className="icon">🔗</div>
@@ -2197,9 +2242,38 @@ const WatchlistPage = React.memo(function WatchlistPage({
         </div>
       ) : (
         <div className="watchlist-table">
+          {/* ── SORTABLE HEADER ── */}
           <div className="watchlist-header">
-            <span>Item</span><span>Buy</span><span>Sell</span><span>Margin</span><span>24hr Trend</span><span>Alert</span><span />
+            {COLS.map(col => (
+              <div key={col.key} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                {col.noSort ? (
+                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    {col.label}
+                    {col.tip && (
+                      <div className="stat-tooltip-wrap">
+                        <span className="stat-help">?</span>
+                        <div className="stat-tooltip" style={{ bottom: "auto", top: "calc(100% + 6px)" }}>{col.tip}</div>
+                      </div>
+                    )}
+                  </span>
+                ) : (
+                  <button className={`sort-btn${sortCol === col.key ? " active" : ""}`} onClick={() => handleSort(col.key)}
+                    style={{ fontSize: "11px", letterSpacing: "1px", textTransform: "uppercase", fontWeight: 600 }}>
+                    {col.label}
+                    {sortCol === col.key && <span className="sort-arrow">{sortDir === "desc" ? "▼" : "▲"}</span>}
+                    {col.tip && (
+                      <div className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
+                        <span className="stat-help">?</span>
+                        <div className="stat-tooltip" style={{ bottom: "auto", top: "calc(100% + 6px)" }}>{col.tip}</div>
+                      </div>
+                    )}
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
+
+          {/* ── ROWS ── */}
           {watchedItems.map(item => {
             const alertSet = hasAlertFor(item.id);
             const al = watchlistAlerts[item.id] || {};
@@ -2210,36 +2284,26 @@ const WatchlistPage = React.memo(function WatchlistPage({
                     <img src={`https://oldschool.runescape.wiki/images/${encodeURIComponent(item.name.replace(/ /g, "_"))}_detail.png`} alt="" style={{ width: 24, height: 24, objectFit: "contain", imageRendering: "pixelated", flexShrink: 0 }} onError={e => { e.target.style.display = "none"; }} />
                     <span style={{ fontWeight: 500, fontSize: "13px" }}>{item.name}</span>
                   </div>
-                  <span style={{ fontSize: "13px" }}>{item.hasPrice ? formatGP(item.low) : "—"}</span>
-                  <span style={{ fontSize: "13px" }}>{item.hasPrice ? formatGP(item.high) : "—"}</span>
-                  <span style={{ fontSize: "13px", fontWeight: 600, color: item.margin > 0 ? "var(--green)" : "var(--red)" }}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
+                  <span style={{ fontSize: "13px", color: "#ccd8e0" }}>{item.hasPrice ? formatGP(item.low) : "—"}</span>
+                  <span style={{ fontSize: "13px", color: "#ccd8e0" }}>{item.hasPrice ? formatGP(item.high) : "—"}</span>
+                  <span style={{ fontSize: "13px", fontWeight: 600, color: item.margin > 0 ? "var(--green)" : item.margin < 0 ? "var(--red)" : "var(--text-dim)" }}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
+                  <span style={{ fontSize: "12px", color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice && item.roi != null ? item.roi + "%" : "—"}</span>
                   <div onClick={e => e.stopPropagation()}><Sparkline itemId={item.id} width={78} height={28} /></div>
-                  <div onClick={e => e.stopPropagation()} style={{ position: "relative" }}>
-                    <button className={`watchlist-alert-badge ${alertSet ? "set" : "unset"}`} onClick={() => { if (!user && !demoMode) { setUpgradeModal({ feature: "Watchlist Alerts", description: "Sign up free to set price alerts on your watchlist items." }); return; } openAlertPopover(item.id); }}>
-                      🔔€ {alertSet ? `${al.above ? "↑" + formatGP(al.above) : ""}${al.above && al.below ? " · " : ""}${al.below ? "↓" + formatGP(al.below) : ""}` : "Set alert"}
+                  <div onClick={e => e.stopPropagation()}>
+                    <button className={`watchlist-alert-badge ${alertSet ? "set" : "unset"}`}
+                      onClick={e => {
+                        if (!user && !demoMode) { setUpgradeModal({ feature: "Watchlist Alerts", description: "Sign up free to set price alerts on your watchlist items." }); return; }
+                        openAlertPopover(item.id, e.currentTarget);
+                      }}>
+                      🔔 {alertSet ? `${al.above ? "↑" + formatGP(al.above) : ""}${al.above && al.below ? " · " : ""}${al.below ? "↓" + formatGP(al.below) : ""}` : "Set alert"}
                     </button>
-                    {watchlistAlertOpen === item.id && (
-                      <div className="watchlist-alert-popover" style={{ top: "32px", left: 0 }}>
-                        <div className="watchlist-alert-popover-title">Price Alert</div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                          <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Alert when sell price goes above:</div>
-                          <input className="watchlist-alert-input" placeholder="e.g. 1,850,000" value={watchlistAlertInputs.above} onChange={e => setWatchlistAlertInputs(v => ({ ...v, above: e.target.value }))} />
-                          <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Alert when buy price drops below:</div>
-                          <input className="watchlist-alert-input" placeholder="e.g. 1,800,000" value={watchlistAlertInputs.below} onChange={e => setWatchlistAlertInputs(v => ({ ...v, below: e.target.value }))} />
-                        </div>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                          <button className="watchlist-alert-set-btn" style={{ flex: 1 }} onClick={() => saveAlerts(item.id)}>Save</button>
-                          <button onClick={() => setWatchlistAlertOpen(null)} style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>Cancel</button>
-                        </div>
-                        {alertSet && (<button onClick={() => { clearWatchlistAlert(item.id, "above"); clearWatchlistAlert(item.id, "below"); setWatchlistAlertOpen(null); }} style={{ background: "none", border: "none", color: "var(--red)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0 }}>Clear all alerts for this item</button>)}
-                      </div>
-                    )}
                   </div>
                   <button className="watchlist-remove-btn" onClick={e => { e.stopPropagation(); toggleWatchlist(item.id); }} title="Remove from watchlist">✕</button>
                 </div>
               </div>
             );
           })}
+
           <div className="watchlist-add-row" style={{ position: "relative" }}>
             <input className="watchlist-add-input" placeholder="Search to add an item..." value={watchlistAddSearch} onChange={e => handleAddSearch(e.target.value)} />
             {watchlistAddAutocomplete.length > 0 && (
@@ -2256,6 +2320,31 @@ const WatchlistPage = React.memo(function WatchlistPage({
             )}
           </div>
         </div>
+      )}
+
+      {/* ── ALERT POPOVER — fixed position to avoid clipping ── */}
+      {watchlistAlertOpen && popoverPos && (
+        <>
+          <div style={{ position: "fixed", inset: 0, zIndex: 299 }} onClick={() => { setWatchlistAlertOpen(null); setPopoverPos(null); }} />
+          <div className="watchlist-alert-popover" style={{ position: "fixed", top: popoverPos.top, left: popoverPos.left, zIndex: 300, width: "240px" }}>
+            <div className="watchlist-alert-popover-title">Price Alert</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Alert when sell price goes above:</div>
+              <input className="watchlist-alert-input" placeholder="e.g. 1,850,000" value={watchlistAlertInputs.above} onChange={e => setWatchlistAlertInputs(v => ({ ...v, above: e.target.value }))} autoFocus />
+              <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Alert when buy price drops below:</div>
+              <input className="watchlist-alert-input" placeholder="e.g. 1,800,000" value={watchlistAlertInputs.below} onChange={e => setWatchlistAlertInputs(v => ({ ...v, below: e.target.value }))} />
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button className="watchlist-alert-set-btn" style={{ flex: 1 }} onClick={() => saveAlerts(watchlistAlertOpen)}>Save</button>
+              <button onClick={() => { setWatchlistAlertOpen(null); setPopoverPos(null); }} style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>Cancel</button>
+            </div>
+            {hasAlertFor(watchlistAlertOpen) && (
+              <button onClick={() => { clearWatchlistAlert(watchlistAlertOpen, "above"); clearWatchlistAlert(watchlistAlertOpen, "below"); setWatchlistAlertOpen(null); setPopoverPos(null); }} style={{ background: "none", border: "none", color: "var(--red)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0 }}>
+                Clear all alerts for this item
+              </button>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
@@ -8789,12 +8878,12 @@ RULES:
                   <div className="adv-filter-panel">
                     <div className="adv-filter-group" style={{ gridColumn: "1 / -1" }}>
                       <div className="adv-filter-label">Category</div>
-                      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap", marginTop: "2px" }}>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "2px" }}>
                         {["All","Runes","Food","Armour","Weapons","Potions","Seeds","Ammo","Misc"].map(cat => (
                           <button key={cat} onClick={() => setCategoryFilter(cat)} style={{
-                            padding: "3px 10px", borderRadius: "12px", border: `1px solid ${categoryFilter === cat ? "rgba(201,168,76,0.5)" : "var(--border)"}`,
-                            background: categoryFilter === cat ? "rgba(201,168,76,0.12)" : "transparent",
-                            color: categoryFilter === cat ? "var(--gold)" : "#99aabb",
+                            padding: "4px 12px", borderRadius: "20px", border: `1px solid ${categoryFilter === cat ? "rgba(201,168,76,0.5)" : "var(--border-bright)"}`,
+                            background: categoryFilter === cat ? "rgba(201,168,76,0.12)" : "var(--bg2)",
+                            color: categoryFilter === cat ? "var(--gold)" : "#8fa0b0",
                             fontSize: "11px", fontWeight: categoryFilter === cat ? 600 : 400, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s"
                           }}>{cat}</button>
                         ))}
