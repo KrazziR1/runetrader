@@ -7897,6 +7897,23 @@ RULES:
                     )}
                   </button>
                 ))}
+                <a
+                  href="https://buymeacoffee.com/runetrader"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "5px",
+                    padding: "5px 11px", borderRadius: "6px",
+                    background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)",
+                    color: "#c9a84c", fontSize: "12px", fontWeight: 600,
+                    textDecoration: "none", letterSpacing: "0.2px",
+                    transition: "background 0.15s, border-color 0.15s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,0.18)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.45)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(201,168,76,0.1)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.25)"; }}
+                >
+                  ☕ Support
+                </a>
               </div>
             </div>
           )}
