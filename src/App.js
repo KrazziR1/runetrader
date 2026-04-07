@@ -975,6 +975,14 @@ const STYLES = `
   @keyframes achieveIn { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
   .achievement-toast { display: flex; align-items: center; gap: 12px; background: #0f1218; border: 1px solid var(--gold-dim); border-radius: 10px; padding: 12px 16px; animation: achieveIn 0.4s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 8px 24px rgba(0,0,0,0.6); pointer-events: all; max-width: 300px; }
 
+  /* SUPPORTER TOAST */
+  @keyframes supporterToastIn { from{opacity:0;transform:translateY(24px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+  @keyframes supporterToastOut { from{opacity:1;transform:translateY(0) scale(1)} to{opacity:0;transform:translateY(12px) scale(0.97)} }
+  .supporter-toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 900; background: linear-gradient(135deg, #0f1a26, #111e2b); border: 1px solid rgba(201,168,76,0.4); border-radius: 14px; padding: 18px 24px; display: flex; align-items: center; gap: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(201,168,76,0.08); animation: supporterToastIn 0.5s cubic-bezier(0.34,1.56,0.64,1); min-width: 320px; max-width: 420px; pointer-events: none; }
+  .supporter-toast-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.25); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 22px; }
+  .supporter-toast-title { font-size: 14px; font-weight: 700; color: #c9a84c; margin-bottom: 3px; }
+  .supporter-toast-sub { font-size: 12px; color: #8fa0b0; line-height: 1.5; }
+
   /* LOGIN CINEMATIC */
   @keyframes cinematicFadeIn  { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
   @keyframes cinematicFadeOut { from{opacity:1} to{opacity:0} }
@@ -4536,10 +4544,20 @@ export default function RuneTrader() {
           }, 800);
         } else if (session?.user?.id) {
           // Load ref code, pro status, trial, and sync pause state for returning users
-          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at").eq("user_id", session.user.id).single()
+          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter").eq("user_id", session.user.id).single()
             .then(({ data }) => {
               if (data?.ref_code) setUserRefCode(data.ref_code);
               if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(data.sync_paused_at ? new Date(data.sync_paused_at) : new Date()); }
+              if (data?.is_supporter) {
+                setIsSupporter(true);
+                const toastKey = "rt_supporter_toast_shown";
+                if (!localStorage.getItem(toastKey)) {
+                  setTimeout(() => {
+                    showSupporterToast();
+                    localStorage.setItem(toastKey, "1");
+                  }, 2000);
+                }
+              }
               if (data?.is_pro) { setIsPro(true); return; }
               // Check active trial
               if (data?.trial_ends_at) {
@@ -4627,6 +4645,9 @@ export default function RuneTrader() {
   const [merchantMode, setMerchantMode] = useState(false);
   const [upgradeModal, setUpgradeModal] = useState(null);
   const [isPro, setIsPro] = useState(false);
+  const [isSupporter, setIsSupporter] = useState(false);
+  const [showSupporterToastState, setShowSupporterToastState] = useState(false);
+  function showSupporterToast() { setShowSupporterToastState(true); setTimeout(() => setShowSupporterToastState(false), 6000); }
   const [userRefCode, setUserRefCode] = useState(null);
   const [syncPaused, setSyncPaused] = useState(false);
   const [syncPausedAt, setSyncPausedAt] = useState(null);
@@ -7409,6 +7430,17 @@ RULES:
           </div>
         )}
 
+        {/* SUPPORTER THANK YOU TOAST */}
+        {showSupporterToastState && (
+          <div className="supporter-toast">
+            <div className="supporter-toast-icon">💎</div>
+            <div>
+              <div className="supporter-toast-title">Thank you for your support</div>
+              <div className="supporter-toast-sub">Your contribution keeps RuneTrader running and new features coming. It genuinely means a lot.</div>
+            </div>
+          </div>
+        )}
+
         {/* €€€€ ACHIEVEMENT TOASTS €€€€ */}
         <div style={{ position: "fixed", bottom: "80px", right: "24px", zIndex: 810, display: "flex", flexDirection: "column", gap: "8px", pointerEvents: "none" }}>
           {newAchievements.map((a, i) => (
@@ -7453,7 +7485,12 @@ RULES:
                     {(user.user_metadata?.username || user.email?.split("@")[0] || "?")[0].toUpperCase()}
                   </div>
                   <div>
-                    <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>{user.user_metadata?.username || user.email?.split("@")[0]}</div>
+                    <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "6px" }}>
+                      {user.user_metadata?.username || user.email?.split("@")[0]}
+                      {isSupporter && (
+                        <span title="Supporter" style={{ fontSize: "11px", background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "4px", padding: "1px 5px", color: "#c9a84c", fontWeight: 700 }}>💎</span>
+                      )}
+                    </div>
                     {(() => {
                       const level = xpToLevel(totalXP);
                       const { title, emoji: _emoji3, color } = getLevelTitle(level); const emoji = fixEmoji(_emoji3);
@@ -7807,7 +7844,12 @@ RULES:
                   {showProfileMenu && (
                     <div className="profile-dropdown" onClick={() => setShowProfileMenu(false)}>
                       <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid var(--border)" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)" }}>{user.user_metadata?.username || user.email?.split("@")[0]}</div>
+                        <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "6px" }}>
+                          {user.user_metadata?.username || user.email?.split("@")[0]}
+                          {isSupporter && (
+                            <span title="Supporter" style={{ fontSize: "11px", background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "4px", padding: "1px 5px", color: "#c9a84c", fontWeight: 700, letterSpacing: "0.2px" }}>💎</span>
+                          )}
+                        </div>
                         <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>
                           {isOnTrial
                             ? <span style={{ color: "#f39c12" }}>⏳ Pro Trial — {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} left</span>
@@ -7912,7 +7954,7 @@ RULES:
                   onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,0.18)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.45)"; }}
                   onMouseLeave={e => { e.currentTarget.style.background = "rgba(201,168,76,0.1)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.25)"; }}
                 >
-                  ☕ Support
+                  ☕ Support Development
                 </a>
               </div>
             </div>
