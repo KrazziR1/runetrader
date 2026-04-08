@@ -8190,23 +8190,7 @@ RULES:
                 </button>
               )}
 
-              {/* Upgrade to Pro — only show for free users */}
-              {user && !isPro && !isOnTrial && (
-                <button onClick={() => setActiveTab("pricing")}
-                  style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "7px 14px", borderRadius: "8px", border: "1px solid rgba(52,152,219,0.4)", background: "rgba(52,152,219,0.08)", color: "#5dade2", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s", whiteSpace: "nowrap" }}
-                  onMouseOver={e => { e.currentTarget.style.background = "rgba(52,152,219,0.16)"; e.currentTarget.style.borderColor = "rgba(52,152,219,0.6)"; }}
-                  onMouseOut={e => { e.currentTarget.style.background = "rgba(52,152,219,0.08)"; e.currentTarget.style.borderColor = "rgba(52,152,219,0.4)"; }}>
-                  ✦ Upgrade to Pro
-                </button>
-              )}
 
-              {/* Support Development */}
-              <a href="https://buymeacoffee.com/runetrader" target="_blank" rel="noopener noreferrer"
-                style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "7px 13px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.25)", background: "rgba(201,168,76,0.07)", color: "var(--gold)", fontSize: "13px", fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,0.15)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.45)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "rgba(201,168,76,0.07)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.25)"; }}>
-                ☕ Support
-              </a>
 
               {/* Combined Level + Quests + Profile button */}
               {user && (() => {
@@ -8336,6 +8320,23 @@ RULES:
                 ))}
               </div>
 
+              {/* Far-right: Upgrade to Pro + Support Development */}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                {user && !isPro && !isOnTrial && (
+                  <button onClick={() => setActiveTab("pricing")}
+                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "7px", border: "1px solid rgba(52,152,219,0.4)", background: "rgba(52,152,219,0.08)", color: "#5dade2", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s", whiteSpace: "nowrap" }}
+                    onMouseOver={e => { e.currentTarget.style.background = "rgba(52,152,219,0.16)"; e.currentTarget.style.borderColor = "rgba(52,152,219,0.6)"; }}
+                    onMouseOut={e => { e.currentTarget.style.background = "rgba(52,152,219,0.08)"; e.currentTarget.style.borderColor = "rgba(52,152,219,0.4)"; }}>
+                    ✦ Upgrade to Pro
+                  </button>
+                )}
+                <a href="https://buymeacoffee.com/runetrader" target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "6px 13px", borderRadius: "7px", border: "1px solid rgba(201,168,76,0.22)", background: "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "13px", fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,0.14)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.4)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(201,168,76,0.06)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.22)"; }}>
+                  ☕ Support Development
+                </a>
+              </div>
 
             </div>
           )}
