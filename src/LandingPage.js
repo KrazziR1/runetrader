@@ -35,16 +35,15 @@ const STYLES = `
     position: fixed; top: 37px; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
     padding: 18px 48px;
-    background: rgba(7,10,13,0.92);
+    background: #070a0d;
     border-bottom: 1px solid var(--border-solid);
-    backdrop-filter: blur(12px);
   }
   .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
   .nav-logo-icon { width: 36px; height: 36px; border-radius: 8px; }
   .nav-logo-text { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 900; background: linear-gradient(135deg,#b8922e,#e8c96a,#c9a84c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing: 3px; text-transform: uppercase; }
   .nav-logo-tld { font-size: 16px; -webkit-text-fill-color: transparent; background: linear-gradient(135deg,#b8922e,#e8c96a,#c9a84c); -webkit-background-clip:text; background-clip:text; }
   .nav-links { display: flex; align-items: center; gap: 28px; }
-  .nav-link { color: var(--text-dim); font-size: 14px; text-decoration: none; transition: color 0.2s; letter-spacing: 0.3px; font-family: 'Inter', sans-serif; font-weight: 500; }
+  .nav-link { color: var(--text-dim); font-size: 16px; text-decoration: none; transition: color 0.2s; letter-spacing: 0.4px; font-family: 'Inter', sans-serif; font-weight: 600; }
   .nav-link:hover { color: var(--gold); }
   .nav-cta {
     padding: 10px 26px; border-radius: 7px; font-size: 15px; letter-spacing: 1px;
@@ -317,54 +316,77 @@ const STYLES = `
 
   /* COMPARISON */
   .comparison { padding: 120px 48px; background: var(--bg); }
-  .comparison-table { max-width: 800px; margin: 64px auto 0; }
-  .comparison-header { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; margin-bottom: 2px; }
+  .comparison-inner { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 2fr; gap: 80px; align-items: start; }
+  .comparison-table { margin-top: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-solid); }
+  .comparison-header { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; }
   .comparison-col-header {
-    padding: 14px 24px; text-align: center; font-family: 'Cinzel', serif;
-    font-size: 13px; letter-spacing: 1px; text-transform: uppercase; font-weight: 700;
+    padding: 16px 24px; text-align: center; font-family: 'Cinzel', serif;
+    font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 800;
   }
-  .comparison-col-header.us { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: var(--bg); }
-  .comparison-col-header.them { background: var(--bg3); color: var(--text-dim); border: 1px solid var(--border-solid); }
-  .comparison-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; border-bottom: 1px solid var(--border-solid); }
+  .comparison-col-header.blank { background: var(--bg2); border-bottom: 1px solid var(--border-solid); }
+  .comparison-col-header.us { background: linear-gradient(135deg, #7a5a1a, var(--gold)); color: var(--bg); }
+  .comparison-col-header.them { background: var(--bg3); color: var(--text-dim); border-left: 1px solid var(--border-solid); border-bottom: 1px solid var(--border-solid); }
+  .comparison-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; border-bottom: 1px solid var(--border-solid); transition: background 0.15s; }
   .comparison-row:last-child { border-bottom: none; }
-  .comparison-cell { padding: 14px 24px; font-size: 14px; }
-  .comparison-cell.feature-name { color: var(--text); }
-  .comparison-cell.check { text-align: center; font-size: 16px; }
+  .comparison-row:hover { background: rgba(201,168,76,0.03); }
+  .comparison-cell { padding: 13px 20px; font-size: 14px; display: flex; align-items: center; }
+  .comparison-cell.feature-name { color: var(--text); font-weight: 500; }
+  .comparison-cell.check { justify-content: center; font-size: 16px; }
   .comparison-cell.us-check { background: rgba(201,168,76,0.04); }
-  .comparison-cell.them-check { background: var(--bg3); }
+  .comparison-cell.them-check { background: rgba(0,0,0,0.2); border-left: 1px solid var(--border-solid); }
+  .comparison-left { padding-top: 4px; }
+  .comparison-highlight { margin-top: 28px; padding: 20px; border-radius: 10px; background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.15); }
+  .comparison-highlight-title { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--gold); margin-bottom: 12px; }
+  .comparison-highlight-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-dim); padding: 5px 0; border-bottom: 1px solid rgba(201,168,76,0.08); }
+  .comparison-highlight-item:last-child { border-bottom: none; }
+  .comparison-highlight-item::before { content: '✦'; color: var(--gold); font-size: 8px; flex-shrink: 0; }
 
   /* PRICING */
-  .pricing { padding: 120px 48px; background: var(--bg2); }
-  .pricing-card {
-    background: var(--bg3); border: 1px solid var(--border-solid); border-radius: 12px;
-    padding: 40px 32px; text-align: center; position: relative; transition: all 0.25s;
+  .pricing { padding: 120px 48px; background: var(--bg2); position: relative; overflow: hidden; }
+  .pricing::before {
+    content: ''; position: absolute; top: -150px; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 400px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(201,168,76,0.05) 0%, transparent 65%);
   }
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 680px; margin: 48px auto 0; position: relative; }
+  .pricing-card {
+    background: var(--bg3); border: 1px solid var(--border-solid); border-radius: 16px;
+    padding: 36px 32px; text-align: left; position: relative; transition: all 0.3s;
+  }
+  .pricing-card:hover { transform: translateY(-3px); border-color: rgba(201,168,76,0.2); }
   .pricing-card.featured {
-    border-color: rgba(201,168,76,0.4); background: linear-gradient(160deg, rgba(201,168,76,0.06), var(--bg3));
-    box-shadow: 0 0 40px rgba(201,168,76,0.08);
+    border-color: rgba(201,168,76,0.45);
+    background: linear-gradient(160deg, rgba(201,168,76,0.08), rgba(201,168,76,0.02), var(--bg3));
+    box-shadow: 0 0 0 1px rgba(201,168,76,0.08), 0 20px 60px rgba(0,0,0,0.4), 0 0 60px rgba(201,168,76,0.08);
   }
   .pricing-badge {
-    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-    background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: var(--bg); font-family: 'Cinzel', serif;
-    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    position: absolute; top: -13px; left: 24px;
+    background: linear-gradient(135deg, #7a5a1a, var(--gold)); color: #070a0d; font-family: 'Cinzel', serif;
+    font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
     padding: 4px 14px; border-radius: 20px;
   }
-  .pricing-name { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--text); margin-bottom: 4px; }
-  .pricing-price { font-family: 'Cinzel', serif; font-size: 52px; font-weight: 700; color: var(--gold); margin: 12px 0 4px; }
-  .pricing-period { font-size: 13px; color: var(--text-dim); }
-  .pricing-features { list-style: none; margin: 24px 0; text-align: left; display: flex; flex-direction: column; gap: 10px; }
+  .pricing-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
+  .pricing-price { font-family: 'Cinzel', serif; font-size: 56px; font-weight: 900; color: var(--gold); line-height: 1; }
+  .pricing-price-free { font-family: 'Cinzel', serif; font-size: 56px; font-weight: 900; color: var(--text); line-height: 1; }
+  .pricing-period { font-size: 13px; color: var(--text-dim); margin-top: 6px; margin-bottom: 24px; }
+  .pricing-divider { height: 1px; background: var(--border-solid); margin: 0 0 20px; }
+  .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 11px; margin-bottom: 28px; }
   .pricing-features li { font-size: 14px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
-  .pricing-features li::before { content: '◆'; color: var(--gold); font-size: 8px; flex-shrink: 0; }
   .pricing-features li.active { color: var(--text); }
+  .pricing-features li.active::before { content: '✓'; color: var(--green); font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .pricing-features li:not(.active)::before { content: '✓'; color: var(--text-dim); opacity: 0.3; font-size: 13px; flex-shrink: 0; }
   .pricing-btn {
-    width: 100%; padding: 15px; border-radius: 8px; font-family: 'Cinzel', serif;
-    font-size: 15px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
-    cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-solid);
-    background: transparent; color: var(--text);
+    width: 100%; padding: 15px; border-radius: 10px; font-family: 'Cinzel', serif;
+    font-size: 14px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s; border: 1px solid rgba(201,168,76,0.25);
+    background: rgba(201,168,76,0.06); color: var(--text-dim);
   }
-  .pricing-btn:hover { border-color: rgba(201,168,76,0.4); color: var(--gold); }
-  .pricing-btn.featured-btn { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: var(--bg); border: none; font-size: 15px; font-weight: 800; }
-  .pricing-btn.featured-btn:hover { opacity: 0.88; box-shadow: 0 6px 24px rgba(201,168,76,0.2); }
+  .pricing-btn:hover { border-color: rgba(201,168,76,0.4); color: var(--gold); background: rgba(201,168,76,0.1); }
+  .pricing-btn.featured-btn {
+    background: linear-gradient(135deg, #7a5a1a, var(--gold)); color: #070a0d; border: none;
+    font-size: 14px; font-weight: 800; box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+  }
+  .pricing-btn.featured-btn:hover { opacity: 0.9; box-shadow: 0 8px 32px rgba(201,168,76,0.35); transform: translateY(-1px); }
 
   /* CTA */
   .cta-section {
@@ -672,53 +694,7 @@ export default function LandingPage({ onEnterApp }) {
         </div>
       </section>
 
-      {/* PRODUCT MOCKUP */}
-      <div className="mockup-section">
-        <div className="mockup-frame">
-          <div className="mockup-topbar">
-            <div className="mockup-dot" style={{ background: "#e74c3c" }} />
-            <div className="mockup-dot" style={{ background: "#f39c12" }} />
-            <div className="mockup-dot" style={{ background: "#2ecc71" }} />
-            <div className="mockup-url">runetrader.gg</div>
-          </div>
-          <div className="mockup-nav">
-            {["Market", "High Alch", "Recipes", "Death's Coffer", "Trade Board"].map((t, i) => (
-              <div key={t} className={`mockup-tab${i === 0 ? " active" : ""}`}>{t}</div>
-            ))}
-          </div>
-          <div className="mockup-body">
-            {[
-              { label: "Best Margin", value: "+45,000gp", sub: "Bandos chestplate" },
-              { label: "GP / Hour", value: "2.4M", sub: "↑ 12% this session" },
-              { label: "Items Tracked", value: "4,525", sub: "Updated 3s ago" },
-            ].map(c => (
-              <div key={c.label} className="mockup-card">
-                <div className="mockup-card-label">{c.label}</div>
-                <div className="mockup-card-value">{c.value}</div>
-                <div className="mockup-card-sub">{c.sub}</div>
-              </div>
-            ))}
-          </div>
-          <div className="mockup-table">
-            <div className="mockup-row header">
-              <span>Item</span><span>Margin</span><span>ROI</span><span>Vol/Day</span>
-            </div>
-            {[
-              { name: "Bandos chestplate", margin: "+45,000gp", roi: "+3.2%", vol: "High" },
-              { name: "Abyssal whip", margin: "+12,400gp", roi: "+1.8%", vol: "High" },
-              { name: "Dragon bones", margin: "+2,847gp", roi: "+4.1%", vol: "High" },
-              { name: "Twisted bow", margin: "+180K gp", roi: "+0.9%", vol: "Low" },
-            ].map(r => (
-              <div key={r.name} className="mockup-row">
-                <span className="mockup-item-name">{r.name}</span>
-                <span className="mockup-profit">{r.margin}</span>
-                <span className="mockup-dim">{r.roi}</span>
-                <span className="mockup-pill">{r.vol}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+
 
       {/* FEATURES */}
       <section className="section" id="features">
@@ -876,61 +852,75 @@ export default function LandingPage({ onEnterApp }) {
 
       {/* COMPARISON */}
       <section className="comparison" id="compare">
-        <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <div className="section-label">Why RuneTrader</div>
-          <h2 className="section-title">Everything a serious<br />flipper needs</h2>
-          <p className="section-sub">We built RuneTrader because we wanted something better. Here's exactly what that means.</p>
-          <div className="comparison-table">
-            <div className="comparison-header">
-              <div className="comparison-col-header" />
-              <div className="comparison-col-header us">RuneTrader</div>
-              <div className="comparison-col-header them">Other Tools</div>
+        <div className="comparison-inner">
+          <div className="comparison-left">
+            <div className="section-label">Why RuneTrader</div>
+            <h2 className="section-title">Everything a<br />serious flipper<br />needs</h2>
+            <p className="section-sub" style={{ marginTop: "16px" }}>We built RuneTrader because we wanted something better.</p>
+            <div className="comparison-highlight">
+              <div className="comparison-highlight-title">Only on RuneTrader</div>
+              {["AI advisor with live GE context", "Per-slot drift alerts", "Autopilot rules", "Trading Terminal command centre", "Ask questions in plain English"].map(item => (
+                <div key={item} className="comparison-highlight-item">{item}</div>
+              ))}
             </div>
-            {COMPARISON_ROWS.map((row, i) => (
-              <div key={i} className="comparison-row">
-                <div className="comparison-cell feature-name">{row.feature}</div>
-                <div className="comparison-cell check us-check">{row.us}</div>
-                <div className="comparison-cell check them-check">{row.them}</div>
+          </div>
+          <div>
+            <div className="comparison-table">
+              <div className="comparison-header">
+                <div className="comparison-col-header blank" />
+                <div className="comparison-col-header us">RuneTrader</div>
+                <div className="comparison-col-header them">Others</div>
               </div>
-            ))}
+              {COMPARISON_ROWS.map((row, i) => (
+                <div key={i} className="comparison-row">
+                  <div className="comparison-cell feature-name">{row.feature}</div>
+                  <div className="comparison-cell check us-check">{row.us}</div>
+                  <div className="comparison-cell check them-check">{row.them}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* PRICING */}
       <section className="pricing" id="pricing">
-        <div style={{ textAlign: "center", maxWidth: "640px", margin: "0 auto" }}>
+        <div style={{ textAlign: "center", position: "relative", zIndex: 1 }}>
           <div className="section-label" style={{ justifyContent: "center" }}>Pricing</div>
           <h2 className="section-title">Free to start.<br /><span style={{ color: "var(--gold)" }}>Pro</span> when you're ready.</h2>
-          <p className="section-sub" style={{ margin: "16px auto 48px" }}>The free tier gives you full market access, AI advisor, and flip tracking. Upgrade to Pro for the Trading Terminal, live GE slot tracking, and advanced features.</p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", maxWidth: "600px", margin: "0 auto" }}>
-            <div className="pricing-card" style={{ textAlign: "left", padding: "28px" }}>
-              <div className="pricing-name">Free</div>
-              <div className="pricing-price" style={{ fontSize: "40px" }}>$0</div>
-              <div className="pricing-period">Forever free</div>
-              <ul className="pricing-features" style={{ marginTop: "20px" }}>
-                <li className="active">Live market data — 4,525 items</li>
-                <li className="active">AI Advisor (limited context)</li>
-                <li className="active">Watchlist & price alerts</li>
-                <li className="active">Flip tracker & profit history</li>
-                <li className="active">Smart alerts</li>
-              </ul>
-              <button className="pricing-btn" onClick={() => onEnterApp && onEnterApp()} style={{ marginTop: "8px" }}>Get started free</button>
-            </div>
-            <div className="pricing-card featured" style={{ textAlign: "left", padding: "28px" }}>
-              <div className="pricing-badge">Most Popular</div>
-              <div className="pricing-name" style={{ color: "var(--gold)" }}>Pro</div>
-              <div className="pricing-price">$9.99</div>
-              <div className="pricing-period">per month</div>
-              <ul className="pricing-features" style={{ marginTop: "20px" }}>
-                <li className="active">Everything in Free</li>
-                <li className="active">Trading Terminal</li>
-                <li className="active">Live GE slot tracking</li>
-                <li className="active">AI Advisor with full context</li>
-                <li className="active">Autopilot rules & GP goals</li>
-              </ul>
-              <button className="pricing-btn featured-btn" onClick={() => onEnterApp && onEnterApp()} style={{ marginTop: "8px" }}>Upgrade to Pro →</button>
-            </div>
+          <p className="section-sub" style={{ margin: "16px auto 0", maxWidth: "520px" }}>Full market access and AI advisor free forever. Upgrade to Pro for the Trading Terminal and live GE slot tracking.</p>
+        </div>
+        <div className="pricing-grid">
+          {/* FREE */}
+          <div className="pricing-card">
+            <div className="pricing-name">Free</div>
+            <div className="pricing-price-free">$0</div>
+            <div className="pricing-period">Forever free — no card needed</div>
+            <div className="pricing-divider" />
+            <ul className="pricing-features">
+              <li className="active">Live market data — 4,525 items</li>
+              <li className="active">AI Advisor (limited context)</li>
+              <li className="active">Watchlist &amp; price alerts</li>
+              <li className="active">Flip tracker &amp; profit history</li>
+              <li className="active">Smart alerts</li>
+            </ul>
+            <button className="pricing-btn" onClick={() => onEnterApp && onEnterApp()}>Get started free</button>
+          </div>
+          {/* PRO */}
+          <div className="pricing-card featured">
+            <div className="pricing-badge">Most Popular</div>
+            <div className="pricing-name" style={{ color: "var(--gold)" }}>Pro</div>
+            <div className="pricing-price">$9.99</div>
+            <div className="pricing-period">per month · cancel anytime</div>
+            <div className="pricing-divider" />
+            <ul className="pricing-features">
+              <li className="active">Everything in Free</li>
+              <li className="active">Trading Terminal</li>
+              <li className="active">Live GE slot tracking</li>
+              <li className="active">AI Advisor with full context</li>
+              <li className="active">Autopilot rules &amp; GP goals</li>
+            </ul>
+            <button className="pricing-btn featured-btn" onClick={() => onEnterApp && onEnterApp()}>Upgrade to Pro →</button>
           </div>
         </div>
       </section>
