@@ -118,8 +118,8 @@ const STYLES = `
   .header-bottom { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 40px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.25); }
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon { width: 36px; height: 36px; }
-  .logo-text { font-family: 'Cinzel Decorative', serif; font-size: 20px; font-weight: 700; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 1px; }
-  .logo-dot { font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; margin-left: 1px; -webkit-text-fill-color: var(--gold-dim); color: var(--gold-dim); }
+  .logo-text { font-family: 'Cinzel Decorative', serif; font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 1px; }
+  .logo-dot { font-family: 'Cinzel Decorative', serif; font-size: 18px; font-weight: 700; margin-left: 1px; -webkit-text-fill-color: transparent; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; background-clip: text; }
   .header-right { display: flex; align-items: center; gap: 8px; }
   .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(46,204,113,0.07); border: 1px solid rgba(46,204,113,0.2); border-radius: 20px; padding: 3px 10px; font-size: 12px; color: var(--green); }
   .paused-pill { display: flex; align-items: center; gap: 6px; background: rgba(243,156,18,0.08); border: 1px solid rgba(243,156,18,0.25); border-radius: 20px; padding: 3px 10px; font-size: 12px; color: #f39c12; }
@@ -168,7 +168,7 @@ const STYLES = `
   /* STAT CARDS */
   .stat-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 4px; transition: border-color 0.2s; }
   .stat-card:hover { border-color: var(--border-bright); }
-  .stat-label { font-size: 11px; color: #8899aa; text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+  .stat-label { font-size: 12px; color: #8899aa; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
   .stat-value { font-size: 22px; font-weight: 600; color: var(--gold); font-family: 'Cinzel', serif; }
   .stat-sub { font-size: 12px; color: var(--text-dim); }
 
@@ -185,7 +185,7 @@ const STYLES = `
   .alch-row:last-child { border-bottom: none; }
   .alch-row:hover { background: var(--bg4); }
   .recipe-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .recipe-header { display: grid; padding: 12px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); align-items: center; }
+  .recipe-header { display: grid; padding: 12px 16px; background: var(--bg4); font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); align-items: center; }
   .recipe-row { display: grid; padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; font-size: 13px; }
   .recipe-row:last-child { border-bottom: none; }
   .recipe-row:hover { background: var(--bg4); }
@@ -206,9 +206,9 @@ const STYLES = `
   /* FILTER BAR */
   .filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .filter-label { font-size: 13px; color: var(--text-dim); white-space: nowrap; }
-  .filter-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .filter-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--text); font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
   .filter-input:focus { border-color: var(--gold-dim); box-shadow: 0 0 0 3px rgba(201,168,76,0.08); }
-  .adv-filters-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); font-size: 13px; padding: 5px 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .adv-filters-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); font-size: 14px; font-weight: 600; padding: 5px 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
   .adv-filters-btn:hover, .adv-filters-btn.active { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.05); }
   .adv-filter-badge { background: var(--gold); color: #000; border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 700; }
   .adv-filter-panel { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 4px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px 24px; }
@@ -232,8 +232,8 @@ const STYLES = `
   .section-title { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border-bright), transparent); }
   .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; overflow: visible; box-shadow: 0 2px 16px rgba(0,0,0,0.3); }
-  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: #8899aa; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0; }
-  .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-family: "DM Sans", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; font-weight: 600; }
+  .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 10px 16px; background: var(--bg4); font-size: 12px; color: #8899aa; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0; }
+  .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-family: "DM Sans", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; font-weight: 600; }
   .sort-btn:hover { color: var(--gold); }
   .sort-btn.active { color: var(--gold); }
   .sort-arrow { font-size: 9px; opacity: 0.7; }
@@ -271,7 +271,7 @@ const STYLES = `
 
   /* MARGIN WATCH TAB */
   .mwatch-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .mwatch-header { display: grid; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+  .mwatch-header { display: grid; padding: 10px 16px; background: var(--bg4); font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid var(--border); }
   .mwatch-row { display: grid; padding: 11px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.15s; }
   .mwatch-row:last-child { border-bottom: none; }
   .mwatch-row:hover { background: var(--bg4); }
@@ -323,7 +323,7 @@ const STYLES = `
   .upgrade-dismiss:hover { color: var(--text); }
 
   /* REFRESH BUTTON */
-  .refresh-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: "DM Sans", sans-serif; }
+  .refresh-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: "DM Sans", sans-serif; }
   .refresh-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
   .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .refresh-spin { display: inline-block; animation: spin 0.8s linear infinite; }
@@ -3603,7 +3603,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
             )}
 
             {/* Table */}
-            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "DM Sans, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
+            <div className="section-title">All Items <span style={{ fontSize: "14px", color: "var(--text-dim)", fontFamily: "DM Sans, sans-serif", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
             <div className="flips-table">
               <div className="table-header">
                 {[
@@ -8813,7 +8813,7 @@ RULES:
                       <span style={{ color: "var(--border)", margin: "0 6px" }}>·</span>
                       <button onClick={() => { setPicksMode(false); setFilter("all"); setSearch(""); setCategoryFilter("All"); }} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", padding: 0, textDecoration: "underline" }}>Show all items</button>
                       {filtered.length < 20 && (
-                        <span style={{ marginLeft: "10px", fontSize: "12px", color: "var(--text-dim)" }}>· Few results? Try broadening your preferences.</span>
+                        <span style={{ marginLeft: "10px", fontSize: "13px", color: "var(--text-dim)" }}>· Few results? Try broadening your preferences.</span>
                       )}
                     </div>
                   </div>
@@ -8889,7 +8889,7 @@ RULES:
                         </div>
                         {isCustomPrice && <span style={{ fontSize: "11px", color: "var(--gold-dim)" }}>Custom · Live: {natureRunePrice.toLocaleString()}gp</span>}
                         <input className="filter-input" placeholder="Search items..." value={alchSearch} onChange={e => setAlchSearch(e.target.value)} style={{ marginLeft: "auto" }} />
-                        <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>{alchItems.length.toLocaleString()} items</span>
+                        <span style={{ fontSize: "13px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>{alchItems.length.toLocaleString()} items</span>
                       </div>
                       <div className="alch-table">
                         <div className="alch-header" style={{ gridTemplateColumns: ALCH_GRID, display: "grid" }}>
@@ -9124,7 +9124,7 @@ RULES:
 
                         {/* Search — far right */}
                         <input className="filter-input" placeholder="Search..." value={recipeSearch} onChange={e => { setRecipeSearch(e.target.value); setRecipeRowsShown(100); }} style={{ maxWidth: "160px", marginLeft: "auto" }} />
-                        <span style={{ fontSize: "11px", color: "var(--text-dim)", alignSelf: "center", whiteSpace: "nowrap" }}>
+                        <span style={{ fontSize: "13px", color: "var(--text-dim)", alignSelf: "center", whiteSpace: "nowrap" }}>
                           {processedRecipes.length} results
                         </span>
                       </div>
@@ -9150,18 +9150,18 @@ RULES:
                           <div style={{ width: "1px", height: "20px", background: "var(--border)" }} />
                           {/* Min profit */}
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min profit</span>
+                            <span style={{ fontSize: "13px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min profit</span>
                             <input type="text" value={recipeMinProfit} onChange={e => { setRecipeMinProfit(e.target.value); setRecipeRowsShown(100); }} placeholder="e.g. 10k" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "65px", padding: "3px 7px", fontFamily: "DM Sans, sans-serif" }} />
                           </div>
                           {/* Min ROI */}
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min ROI</span>
+                            <span style={{ fontSize: "13px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min ROI</span>
                             <input type="number" value={recipeMinRoi} onChange={e => { setRecipeMinRoi(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "50px", padding: "3px 7px", fontFamily: "DM Sans, sans-serif" }} />
                             <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>%</span>
                           </div>
                           {/* Min volume */}
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min vol</span>
+                            <span style={{ fontSize: "13px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min vol</span>
                             <input type="number" value={recipeMinVolume} onChange={e => { setRecipeMinVolume(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "65px", padding: "3px 7px", fontFamily: "DM Sans, sans-serif" }} />
                           </div>
                         </div>
@@ -9515,7 +9515,7 @@ RULES:
                           Show negative savings
                         </label>
                         <input className="filter-input" placeholder="Search items..." value={cofferSearch} onChange={e => setCofferSearch(e.target.value)} style={{ marginLeft: "auto", width: "200px" }} />
-                        <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>{cofferItems.length.toLocaleString()} items</span>
+                        <span style={{ fontSize: "13px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>{cofferItems.length.toLocaleString()} items</span>
                       </div>
                       <div className="alch-table">
                         <div className="alch-header" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 0.8fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 0.8fr 1fr", display: "grid" }}>
@@ -9775,7 +9775,7 @@ RULES:
                   ))}
                   <button
                     onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }}
-                    style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 12px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.35)", background: picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
+                    style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 12px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.35)", background: picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
                     onMouseOver={e => { e.currentTarget.style.background = "rgba(201,168,76,0.14)"; }}
                     onMouseOut={e => { e.currentTarget.style.background = picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)"; }}>
                     ✨ Help me decide{picksMode ? " ●" : ""}
@@ -9922,7 +9922,7 @@ RULES:
                 )}
 
                 <div>
-                  <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "DM Sans, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
+                  <div className="section-title">All Items <span style={{ fontSize: "14px", color: "var(--text-dim)", fontFamily: "DM Sans, sans-serif", fontWeight: 500, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
                   <div className="flips-table">
                     <div className="table-header">
                       {[
