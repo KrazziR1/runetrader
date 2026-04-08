@@ -56,8 +56,8 @@ const STYLES = `
 
   /* URGENCY BANNER */
   .urgency-banner {
-    background: linear-gradient(90deg, rgba(201,168,76,0.08), rgba(201,168,76,0.14), rgba(201,168,76,0.08));
-    border-bottom: 1px solid rgba(201,168,76,0.2);
+    background: #1a1200;
+    border-bottom: 1px solid rgba(201,168,76,0.35);
     text-align: center; padding: 9px 24px; font-size: 13px;
     color: var(--gold); font-family: 'Inter', sans-serif; font-weight: 500;
     letter-spacing: 0.3px; position: fixed; top: 0; left: 0; right: 0; z-index: 101;
@@ -255,30 +255,31 @@ const STYLES = `
 
   /* GE SLOT TERMINAL WIDGET */
   .tv {
-    background: var(--bg); border-radius: 14px;
-    border: 1px solid rgba(201,168,76,0.2);
+    background: #070a0d; border-radius: 14px;
+    border: 1px solid rgba(201,168,76,0.25);
     overflow: hidden;
-    box-shadow: 0 0 0 1px rgba(201,168,76,0.04), 0 32px 80px rgba(0,0,0,0.6), 0 0 60px rgba(201,168,76,0.07);
+    box-shadow: 0 0 0 1px rgba(201,168,76,0.06), 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(201,168,76,0.1);
   }
   .tv-bar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 11px 16px; background: var(--bg3); border-bottom: 1px solid var(--border-solid);
+    padding: 12px 16px; background: linear-gradient(135deg, #0c1018, #0f1520);
+    border-bottom: 1px solid rgba(201,168,76,0.18);
   }
   .tv-title { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 800; color: var(--gold); letter-spacing: 2px; }
   .tv-live { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--green); font-weight: 700; letter-spacing: 1px; }
   .tv-live::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.5s infinite; }
   .tv-stats { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border-solid); }
-  .tv-stat { padding: 12px 14px; border-right: 1px solid var(--border-solid); }
+  .tv-stat { padding: 12px 14px; border-right: 1px solid var(--border-solid); background: rgba(201,168,76,0.02); }
   .tv-stat:last-child { border-right: none; }
   .tv-stat-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
-  .tv-stat-val { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); margin-top: 3px; transition: color 0.3s; }
+  .tv-stat-val { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-top: 3px; transition: all 0.4s; }
   .tv-stat-delta { font-size: 10px; color: var(--green); font-weight: 600; margin-top: 1px; }
   .tv-slots { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
   .tv-slot {
     border-radius: 8px; border: 1px solid var(--border-solid);
-    background: var(--bg3); overflow: hidden; transition: border-color 0.4s;
+    background: #0c1018; overflow: hidden; transition: border-color 0.4s, box-shadow 0.4s;
   }
-  .tv-slot.drift { border-color: rgba(231,76,60,0.5); background: rgba(231,76,60,0.03); }
+  .tv-slot.drift { background: rgba(231,76,60,0.03); animation: driftGlow 2s ease-in-out infinite; }
   .tv-slot.filled { border-color: rgba(46,204,113,0.4); background: rgba(46,204,113,0.03); }
   .tv-slot.buying { border-color: rgba(52,152,219,0.35); }
   .tv-slot-top { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; }
@@ -287,7 +288,7 @@ const STYLES = `
   .tv-badge-buying { background: rgba(52,152,219,0.15); color: #5dade2; border: 1px solid rgba(52,152,219,0.3); }
   .tv-badge-selling { background: rgba(201,168,76,0.12); color: var(--gold); border: 1px solid rgba(201,168,76,0.25); }
   .tv-badge-filled { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.25); }
-  .tv-badge-drift { background: rgba(231,76,60,0.12); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+  .tv-badge-drift { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.4); animation: badgePulse 1.8s ease-in-out infinite; }
   .tv-slot-bar { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; padding: 0 12px 8px; font-size: 11px; }
   .tv-slot-kv { display: flex; flex-direction: column; gap: 1px; }
   .tv-kv-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
@@ -393,6 +394,14 @@ const STYLES = `
   /* ANIMATIONS */
   @keyframes fadeInDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes driftGlow {
+    0%,100% { box-shadow: 0 0 0px rgba(231,76,60,0); border-color: rgba(231,76,60,0.4); }
+    50%      { box-shadow: 0 0 14px rgba(231,76,60,0.35), inset 0 0 8px rgba(231,76,60,0.06); border-color: rgba(231,76,60,0.8); }
+  }
+  @keyframes badgePulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.55; }
+  }
 
   /* LIVE TICKER */
   @keyframes ticker { 0%{transform:translateX(-25%)} 100%{transform:translateX(-75%)} }
