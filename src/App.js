@@ -5068,6 +5068,7 @@ export default function RuneTrader() {
   const [recipeSearch, setRecipeSearch] = useState("");
   const [recipeSortState, setRecipeSortState] = useState({ col: "profit", dir: "desc" });
   const [recipeRowsShown, setRecipeRowsShown] = useState(100);
+  const [recipeCategory, setRecipeCategory] = useState("all");
   const [cofferTarget, setCofferTarget] = useState("");
   const [cofferSearch, setCofferSearch] = useState("");
   const [cofferShowLosses, setCofferShowLosses] = useState(false);
@@ -5232,10 +5233,58 @@ export default function RuneTrader() {
     { set: "Raging echoes relic hunter (t3) armour set", pieces: ["Raging echoes relic hunter (t3) helm","Raging echoes relic hunter (t3) top","Raging echoes relic hunter (t3) trousers"] },
   ];
   // Auto-generate making + breaking for each set
-  const STATIC_RECIPES = GE_SETS.flatMap(({ set, pieces }) => [
-    { name: `Making ${set}`, skill: "Grand Exchange", inputs: pieces.map(p => ({ name: p })), outputs: [{ name: set }] },
-    { name: `Breaking ${set}`, skill: "Grand Exchange", inputs: [{ name: set }], outputs: pieces.map(p => ({ name: p })) },
+  const SET_RECIPES = GE_SETS.flatMap(({ set, pieces }) => [
+    { name: `Making ${set}`, category: "sets", skill: "Grand Exchange", inputs: pieces.map(p => ({ name: p })), outputs: [{ name: set }] },
+    { name: `Breaking ${set}`, category: "sets", skill: "Grand Exchange", inputs: [{ name: set }], outputs: pieces.map(p => ({ name: p })) },
   ]);
+
+  // ── Potion decanting — 4x(3-dose) → 3x(4-dose) and 3x(4-dose) → 4x(3-dose) ──
+  const POTION_NAMES = [
+    "Agility potion","Ancient brew","Anti-venom","Anti-venom+","Antidote+","Antidote++",
+    "Antifire potion","Antipoison","Armadyl brew","Attack potion","Bastion potion",
+    "Battlemage potion","Blighted overload","Combat potion","Compost potion",
+    "Defence potion","Divine bastion potion","Divine battlemage potion","Divine magic potion",
+    "Divine ranging potion","Divine super attack potion","Divine super combat potion",
+    "Divine super defence potion","Divine super strength potion","Energy potion",
+    "Extended anti-venom+","Extended antifire","Extended stamina potion","Extended super antifire",
+    "Extreme energy potion","Fishing potion","Forgotten brew","Goading potion","Guthix balance",
+    "Guthix rest","Haemostatic dressing","Hunter potion","Magic potion","Menaphite remedy",
+    "Prayer potion","Prayer regeneration potion","Ranging potion","Relicym's balm",
+    "Restore potion","Sacred oil","Sanfew serum","Saradomin brew","Serum 207",
+    "Stamina potion","Strength potion","Super antifire potion","Super attack","Super combat potion",
+    "Super defence","Super energy","Super fishing potion","Super hunter potion","Super restore",
+    "Super strength","Superantipoison","Zamorak brew",
+  ];
+  const POTION_RECIPES = POTION_NAMES.flatMap(name => {
+    const r3 = { name: `${name}(3)` };
+    const r4 = { name: `${name}(4)` };
+    const r1 = { name: `${name}(1)` };
+    const r2 = { name: `${name}(2)` };
+    return [
+      // 4×(3-dose) → 3×(4-dose): buy cheap 3-dose, sell as 4-dose
+      { name: `Decant ${name}: 3→4 dose`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r3, quantity:4}], outputs: [{...r4, quantity:3}] },
+      // 3×(4-dose) → 4×(3-dose): buy cheap 4-dose, sell as 3-dose
+      { name: `Decant ${name}: 4→3 dose`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r4, quantity:3}], outputs: [{...r3, quantity:4}] },
+      // 4×(2-dose) → 2×(4-dose)
+      { name: `Decant ${name}: 2→4 dose`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r2, quantity:4}], outputs: [{...r4, quantity:2}] },
+      // 2×(4-dose) → 4×(2-dose)
+      { name: `Decant ${name}: 4→2 dose`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r4, quantity:2}], outputs: [{...r2, quantity:4}] },
+    ];
+  });
+
+  // ── Jewelry charging — noted items with charges sold on GE ──
+  const JEWELRY_RECIPES = [
+    // Amulets of glory
+    { name: "Amulet of glory(4) → (6) recharge equiv", category: "jewelry", skill: "Fountain of Rune", inputs: [{name:"Amulet of glory(4)", quantity:3}], outputs: [{name:"Amulet of glory(6)", quantity:2}] },
+    // Combat bracelets
+    { name: "Combat bracelet(4) → (6) recharge equiv", category: "jewelry", skill: "Ranging Guild", inputs: [{name:"Combat bracelet(4)", quantity:3}], outputs: [{name:"Combat bracelet(6)", quantity:2}] },
+    // Skills necklaces
+    { name: "Skills necklace(4) → (6) recharge equiv", category: "jewelry", skill: "Fishing Guild", inputs: [{name:"Skills necklace(4)", quantity:3}], outputs: [{name:"Skills necklace(6)", quantity:2}] },
+    // Ring of wealth
+    { name: "Ring of wealth(5) arbitrage", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Ring of wealth (5)"}], outputs: [{name:"Ring of wealth (5)"}] },
+  ];
+
+  const STATIC_RECIPES = [...SET_RECIPES, ...POTION_RECIPES, ...JEWELRY_RECIPES];
 
   // ── Advanced filters ──
   const [showAdvFilters, setShowAdvFilters] = useState(false);
@@ -8753,14 +8802,6 @@ RULES:
                   (allItems || []).forEach(item => { priceByName[item.name?.toLowerCase().trim()] = item; });
                   const lookupItem = (inp) => priceByName[inp.name?.toLowerCase().trim()];
 
-                  // Debug: find set items in allItems not covered by static list
-                  const coveredSets = new Set(GE_SETS.map(s => s.set.toLowerCase()));
-                  const uncoveredSets = (allItems || []).filter(item =>
-                    item.hasPrice &&
-                    /set \(|armour set|dragonhide set|robes set|d'hide set/.test(item.name?.toLowerCase()) &&
-                    !coveredSets.has(item.name?.toLowerCase())
-                  ).map(i => i.name);
-
                   const processedRecipes = STATIC_RECIPES.map(r => {
                     let inputCost = 0; let inputsOk = true;
                     (r.inputs || []).forEach(inp => {
@@ -8779,7 +8820,8 @@ RULES:
                     const roi = inputCost > 0 ? parseFloat(((profit / inputCost) * 100).toFixed(1)) : 0;
                     return { ...r, inputCost, outputValue, profit, roi, resolvable: inputsOk && outputsOk };
                   })
-                  .filter(r => r.resolvable && r.inputCost > 0)
+                  .filter(r => r.resolvable && r.inputCost > 0 && r.profit !== 0)
+                  .filter(r => recipeCategory === "all" || r.category === recipeCategory)
                   .filter(r => !recipeSearch || r.name.toLowerCase().includes(recipeSearch.toLowerCase()))
                   .sort((a, b) => {
                     const dir = recipeSortDir === "asc" ? 1 : -1;
@@ -8790,6 +8832,13 @@ RULES:
                     if (recipeSortCol === "roi")         return dir * (a.roi - b.roi);
                     return dir * (a.profit - b.profit);
                   });
+
+                  const CATS = [
+                    { id: "all",     label: "All" },
+                    { id: "sets",    label: "GE Sets" },
+                    { id: "potions", label: "Potion Decanting" },
+                    { id: "jewelry", label: "Jewelry" },
+                  ];
 
                   const COLS_DEF = [
                     ["name",        "Recipe",       "The exchange recipe name."],
@@ -8803,11 +8852,19 @@ RULES:
 
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                      <div className="filter-bar">
-                        <input className="filter-input" placeholder="Search recipes..." value={recipeSearch} onChange={e => setRecipeSearch(e.target.value)} />
-                        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>
-                          {processedRecipes.length} recipes · GE set exchanges
-                          {uncoveredSets.length > 0 && <span style={{ color: "rgba(243,156,18,0.7)", marginLeft: "8px" }}>· {uncoveredSets.length} sets not yet mapped</span>}
+                      <div className="filter-bar" style={{ flexWrap: "wrap", gap: "8px" }}>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          {CATS.map(c => (
+                            <button key={c.id}
+                              onClick={() => { setRecipeCategory(c.id); setRecipeRowsShown(100); }}
+                              style={{ padding: "5px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", border: recipeCategory === c.id ? "1px solid var(--gold)" : "1px solid var(--border)", background: recipeCategory === c.id ? "rgba(201,168,76,0.12)" : "transparent", color: recipeCategory === c.id ? "var(--gold)" : "var(--text-dim)" }}>
+                              {c.label}
+                            </button>
+                          ))}
+                        </div>
+                        <input className="filter-input" placeholder="Search..." value={recipeSearch} onChange={e => { setRecipeSearch(e.target.value); setRecipeRowsShown(100); }} style={{ maxWidth: "180px" }} />
+                        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)", alignSelf: "center" }}>
+                          {processedRecipes.length} results
                         </span>
                       </div>
                       {processedRecipes.length === 0 ? (
