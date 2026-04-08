@@ -707,7 +707,7 @@ const STYLES = `
   .merchant-anim-status { font-size: 13px; letter-spacing: 4px; color: var(--green); text-transform: uppercase; animation: fadeInUp 0.5s ease 4.0s both; margin-top: 8px; }
   .merchant-anim-ready-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 8px; animation: readyPulse 1.2s ease infinite; }
   .merchant-anim-exit { animation: merchantFadeOut 0.6s ease forwards; }
-  .merchant-ai-bubble { position: fixed; bottom: 28px; right: 28px; z-index: 9000; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #c9a84c, #a06c20); border: 2px solid var(--gold); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 20px rgba(201,168,76,0.4); animation: bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; transition: transform 0.2s, box-shadow 0.2s; }
+  .merchant-ai-bubble { position: fixed; bottom: 28px; right: 28px; z-index: 9000; transition: right 0.25s ease; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #c9a84c, #a06c20); border: 2px solid var(--gold); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 20px rgba(201,168,76,0.4); animation: bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; transition: transform 0.2s, box-shadow 0.2s; }
   .merchant-ai-bubble:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(201,168,76,0.6); }
   .merchant-ai-bubble .bubble-ping { position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--gold); animation: bubblePing 2s ease-out infinite; opacity: 0; }
   @keyframes bubblePing { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.6); opacity: 0; } }
@@ -7984,7 +7984,7 @@ RULES:
               </div>
 
               {/* Footer buttons */}
-              <div style={{ padding: "14px 20px", borderTop: "1px solid var(--border)", flexShrink: 0, display: "flex", gap: "8px" }}>
+              <div style={{ padding: "14px 20px 18px", borderTop: "1px solid var(--border)", flexShrink: 0, display: "flex", gap: "8px" }}>
                 <button onClick={() => { setShowPlayerCard(false); setActiveTab("portfolio"); }}
                   style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg3)", color: "var(--text-dim)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}
                   onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
@@ -8537,6 +8537,21 @@ RULES:
 
 
             {activeTab === "settings" && (
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                  <div>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 900, color: "var(--text)", letterSpacing: "0.3px" }}>Settings</div>
+                    <div style={{ fontSize: "14px", color: "var(--text-dim)", marginTop: "4px" }}>Manage your RuneTrader preferences</div>
+                  </div>
+                  <button
+                    onClick={() => handleSetActiveTab("market")}
+                    style={{ width: "36px", height: "36px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", flexShrink: 0 }}
+                    onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(231,76,60,0.4)"; e.currentTarget.style.color = "#e74c3c"; }}
+                    onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
+                    title="Close settings">
+                    ✕
+                  </button>
+                </div>
               <SettingsPage
                 user={user}
                 supabase={supabase}
@@ -8556,6 +8571,7 @@ RULES:
                 flipsLog={flipsLog}
                 autoFlipsLog={autoFlipsLog}
               />
+              </div>
             )}
 
             {activeTab === "changelog" && (
