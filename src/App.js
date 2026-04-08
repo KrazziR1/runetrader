@@ -3572,6 +3572,19 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     Has live price data
                   </label>
                 </div>
+                <div className="adv-filter-group">
+                  <div className="adv-filter-label">Category</div>
+                  <div className="adv-filter-row" style={{ flexWrap: "wrap", gap: "6px" }}>
+                    {[["all", "All"], ["members", "Members"], ["f2p", "F2P"], ["highvol", "High Volume"]].map(([val, label]) => (
+                      <button key={val}
+                        className={`filter-btn${filter === val ? " active" : ""}`}
+                        style={{ fontSize: "11px", padding: "4px 10px" }}
+                        onClick={() => setFilter(filter === val ? "all" : val)}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="adv-filter-footer">
                   <span>{filtered.length.toLocaleString()} items match</span>
                   {advFilterCount > 0 && <button className="adv-filters-btn" onClick={resetAdvFilters}>✕ Clear all filters</button>}
@@ -8778,18 +8791,18 @@ RULES:
 
                 {/* Picks mode hint — shown when picks is on */}
                 {marketSubTab === "flips" && marketInnerView === "items" && picksMode && (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "12px", borderBottom: "1px solid var(--border)", marginBottom: "12px", gap: "12px", flexWrap: "wrap" }}>
-                    <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>
-                      <strong style={{ color: "var(--gold)" }}>Personalised Picks</strong> — <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong> items match your preferences
+                  <div style={{ display: "flex", alignItems: "center", paddingBottom: "12px", borderBottom: "1px solid var(--border)", marginBottom: "12px", gap: "12px", flexWrap: "wrap" }}>
+                    <div style={{ fontSize: "13px", color: "var(--text-dim)", flex: 1 }}>
+                      <strong style={{ color: "var(--gold)" }}>Personalised Picks</strong>
+                      <span style={{ color: "var(--text-dim)" }}> — </span>
+                      <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong>
+                      <span style={{ color: "var(--text-dim)" }}> items match your preferences</span>
+                      <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ marginLeft: "10px", background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>Edit prefs</button>
+                      <span style={{ color: "var(--border)", margin: "0 6px" }}>·</span>
+                      <button onClick={() => { setPicksMode(false); setFilter("all"); setSearch(""); setCategoryFilter("All"); }} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>Show all items</button>
                       {filtered.length < 20 && (
-                        <span style={{ marginLeft: "8px", fontSize: "12px", color: "var(--text-dim)" }}>
-                          · Few results? Try <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>adjusting your prefs</button> or <button onClick={() => { setPicksMode(false); setFilter("all"); setSearch(""); setCategoryFilter("All"); }} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>show all items</button>
-                        </span>
+                        <span style={{ marginLeft: "10px", fontSize: "12px", color: "var(--text-dim)" }}>· Few results? Try broadening your preferences.</span>
                       )}
-                    </div>
-                    <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                      <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(52,152,219,0.35)", background: "rgba(52,152,219,0.07)", color: "#3498db", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>⚙ Edit Prefs</button>
-                      <button className="picks-toggle-btn" onClick={() => setPicksMode(false)} style={{ fontSize: "11px", padding: "4px 10px" }}>✕ Clear</button>
                     </div>
                   </div>
                 )}
@@ -8900,7 +8913,14 @@ RULES:
                             <span className={item.alchProfit >= 0 ? "profit-positive" : "profit-negative"}>
                               {item.alchProfit >= 0 ? "+" : ""}{formatGP(item.alchProfit)}
                             </span>
-                            <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit ? item.buyLimit.toLocaleString() : "?"}</span>
+                            <span className="price" style={{ color: "var(--text-dim)" }}>
+                              {item.buyLimit ? item.buyLimit.toLocaleString() : (
+                                <span className="stat-tooltip-wrap">
+                                  <span style={{ color: "var(--text-dim)", cursor: "help", borderBottom: "1px dashed var(--text-dim)" }}>?</span>
+                                  <span className="stat-tooltip">Buy limit not available for this item. This usually means it's a rarely traded item or the wiki hasn't recorded a limit for it. A default of 500 may apply.</span>
+                                </span>
+                              )}
+                            </span>
                             <span style={{ fontSize: "13px", fontWeight: 600, color: item.maxProfit4hr >= 0 ? "var(--green)" : "var(--red)" }}>
                               {item.buyLimit ? formatGP(item.maxProfit4hr) : "—"}
                             </span>
@@ -9471,7 +9491,7 @@ RULES:
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                       <div className="coffer-target-bar">
-                        <span className="coffer-target-label">💀 Taget coffer amount:</span>
+                        <span className="coffer-target-label">💀 Target coffer amount:</span>
                         <input
                           className="coffer-target-input"
                           placeholder="e.g. 5m, 2.5m, 500k"
@@ -9734,9 +9754,9 @@ RULES:
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 <div className="filter-bar">
                   <span className="filter-label">Filter:</span>
-                  {["all", "f2p", "members", "highvol", "favourites", "1gp"].map(f => (
+                  {["all", "f2p", "favourites", "1gp"].map(f => (
                     <button key={f} className={`filter-btn ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
-                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "members" ? "Members" : f === "highvol" ? "High Volume" : f === "1gp" ? "⚠ 1gp Sales" : `🔗 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
+                      {f === "all" ? "All Items" : f === "f2p" ? "F2P" : f === "1gp" ? "⚠ 1gp Sales" : `🔗 Watchlist${favourites.length > 0 ? ` (${favourites.length})` : ""}`}
                     </button>
                   ))}
                   <button
