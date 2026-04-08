@@ -249,6 +249,7 @@ const STYLES = `
   .ticker {
     display: flex; gap: 64px; white-space: nowrap;
     animation: ticker 30s linear infinite;
+    justify-content: center;
   }
   .ticker-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); }
   .ticker-item .name { color: var(--text); font-family: 'Cinzel', serif; font-size: 18px; letter-spacing: 0.5px; }
