@@ -244,17 +244,17 @@ const STYLES = `
   /* LIVE TICKER */
   .ticker-wrap {
     width: 100%; overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-    background: var(--bg2); padding: 0;
+    background: var(--bg2); height: 44px; display: flex; align-items: center;
   }
   .ticker {
     display: inline-flex; gap: 64px; white-space: nowrap;
     animation: ticker 30s linear infinite;
-    align-items: center; padding: 12px 0;
+    align-items: center; flex-shrink: 0;
   }
-  .ticker-item { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-dim); }
-  .ticker-item .name { color: var(--text); font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 0.5px; }
-  .ticker-item .up { color: var(--green); }
-  .ticker-item .down { color: var(--red); }
+  .ticker-item { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); line-height: 1; }
+  .ticker-item .name { color: var(--text); font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 0.5px; line-height: 1; }
+  .ticker-item .up { color: var(--green); line-height: 1; }
+  .ticker-item .down { color: var(--red); line-height: 1; }
   @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
 
   /* DIVIDER */

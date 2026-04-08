@@ -167,6 +167,14 @@ const STYLES = `
   .alch-row { display: grid; padding: 11px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; }
   .alch-row:last-child { border-bottom: none; }
   .alch-row:hover { background: var(--bg4); }
+  .recipe-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .recipe-header { display: grid; padding: 12px 16px; background: var(--bg4); font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; border-bottom: 1px solid var(--border); align-items: center; }
+  .recipe-row { display: grid; padding: 10px 16px; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; align-items: center; font-size: 13px; }
+  .recipe-row:last-child { border-bottom: none; }
+  .recipe-row:hover { background: var(--bg4); }
+  .recipe-icons { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+  .recipe-icon { width: 24px; height: 24px; object-fit: contain; }
+  .recipe-arrow { color: var(--text-dim); font-size: 12px; margin: 0 3px; }
   .profit-positive { font-size: 13px; font-weight: 600; color: var(--green); }
   .profit-negative { font-size: 13px; font-weight: 600; color: var(--red); }
   .coffer-efficiency-great { display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; background: rgba(46,204,113,0.12); color: var(--green); }
@@ -5055,6 +5063,11 @@ export default function RuneTrader() {
   const [alchSearch, setAlchSearch] = useState("");
   const [alchSortState, setAlchSortState] = useState({ col: "alchProfit", dir: "desc" });
   const [alchRowsShown, setAlchRowsShown] = useState(200);
+  const [recipeData, setRecipeData] = useState([]);
+  const [recipeSearch, setRecipeSearch] = useState("");
+  const [recipeSortState, setRecipeSortState] = useState({ col: "profit", dir: "desc" });
+  const [recipeRowsShown, setRecipeRowsShown] = useState(100);
+  const [recipeLoading, setRecipeLoading] = useState(false);
   const [cofferTarget, setCofferTarget] = useState("");
   const [cofferSearch, setCofferSearch] = useState("");
   const [cofferShowLosses, setCofferShowLosses] = useState(false);
@@ -5654,6 +5667,16 @@ export default function RuneTrader() {
       const natureRuneData = latestData.data["561"];
       if (natureRuneData && natureRuneData.low) setNatureRunePrice(natureRuneData.low);
       else if (natureRunePrice === 0) setNatureRunePrice(200); // fallback if no live data
+
+      // Fetch recipe data once prices are loaded
+      if (recipeData.length === 0 && !recipeLoading) {
+        setRecipeLoading(true);
+        fetch("https://prices.runescape.wiki/api/v1/osrs/recipes", { headers: { "User-Agent": "RuneTrader/1.0" } })
+          .then(r => r.json())
+          .then(json => { if (Array.isArray(json)) setRecipeData(json); })
+          .catch(() => {})
+          .finally(() => setRecipeLoading(false));
+      }
 
       const flips = [];
 
@@ -7885,6 +7908,7 @@ RULES:
                 {[
                   { v: "flips",      label: "Market", dropdown: true },
                   { v: "alch",       label: "High Alch" },
+                  { v: "recipes",    label: "Recipes" },
                   { v: "coffer",     label: "Death's Coffer" },
                   { v: "tradeboard", label: "Trade Board" },
                 ].map(({ v, label, dropdown }) => (
@@ -8571,6 +8595,159 @@ RULES:
                             Load more ({alchItems.length - alchRowsShown} remaining)
                           </button>
                         </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* ── RECIPES TAB ── */}
+                {marketSubTab === "recipes" && (() => {
+                  const RECIPE_COLS = "3fr 1.2fr 1.2fr 1fr 1fr 0.8fr 0.8fr";
+                  const recipeSortCol = recipeSortState.col;
+                  const recipeSortDir = recipeSortState.dir;
+                  const handleRecipeSort = col => setRecipeSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
+
+                  // Build price lookup from allItems
+                  const priceById = {};
+                  (allItems || []).forEach(item => { priceById[item.id] = item; });
+
+                  // Process recipes
+                  const processedRecipes = recipeData.map(r => {
+                    // Calculate input cost
+                    let inputCost = 0;
+                    let inputsResolvable = true;
+                    (r.inputs || []).forEach(inp => {
+                      const item = priceById[inp.id];
+                      if (!item || !item.low) { inputsResolvable = false; return; }
+                      inputCost += (item.low || 0) * (inp.quantity || 1);
+                    });
+
+                    // Calculate output value
+                    let outputValue = 0;
+                    let outputsResolvable = true;
+                    (r.outputs || []).forEach(out => {
+                      const item = priceById[out.id];
+                      if (!item || !item.high) { outputsResolvable = false; return; }
+                      // Apply GE tax (2%, max 5M)
+                      const rawVal = (item.high || 0) * (out.quantity || 1);
+                      const tax = item.high < 50 ? 0 : Math.min(Math.floor(item.high * 0.02), 5_000_000) * (out.quantity || 1);
+                      outputValue += rawVal - tax;
+                    });
+
+                    const profit = outputValue - inputCost;
+                    const roi = inputCost > 0 ? parseFloat(((profit / inputCost) * 100).toFixed(1)) : 0;
+                    const resolvable = inputsResolvable && outputsResolvable;
+
+                    return { ...r, inputCost, outputValue, profit, roi, resolvable };
+                  })
+                  .filter(r => r.resolvable && r.inputCost > 0)
+                  .filter(r => !recipeSearch || r.name.toLowerCase().includes(recipeSearch.toLowerCase()))
+                  .sort((a, b) => {
+                    const dir = recipeSortDir === "asc" ? 1 : -1;
+                    if (recipeSortCol === "name") return dir * a.name.localeCompare(b.name);
+                    if (recipeSortCol === "inputCost") return dir * (a.inputCost - b.inputCost);
+                    if (recipeSortCol === "outputValue") return dir * (a.outputValue - b.outputValue);
+                    if (recipeSortCol === "profit") return dir * (a.profit - b.profit);
+                    if (recipeSortCol === "roi") return dir * (a.roi - b.roi);
+                    return dir * (a.profit - b.profit);
+                  });
+
+                  const COLS_DEF = [
+                    ["name",        "Recipe",       "The recipe name."],
+                    ["inputs",      "Inputs",       "Items required to perform this recipe."],
+                    ["outputs",     "Outputs",      "Items received from this recipe."],
+                    ["inputCost",   "Input Cost",   "Total GE buy price of all required inputs."],
+                    ["outputValue", "Output Value", "Total GE sell value of all outputs after GE tax."],
+                    ["profit",      "Profit",       "Output Value minus Input Cost after GE tax."],
+                    ["roi",         "ROI",          "Return on investment as a percentage."],
+                  ];
+
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <div className="filter-bar">
+                        <input className="filter-input" placeholder="Search recipes..." value={recipeSearch} onChange={e => setRecipeSearch(e.target.value)} />
+                        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>
+                          {recipeLoading ? "Loading recipes..." : `${processedRecipes.length.toLocaleString()} recipes`}
+                        </span>
+                      </div>
+                      {recipeLoading ? (
+                        <div style={{ padding: "60px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>Loading recipe data...</div>
+                      ) : recipeData.length === 0 ? (
+                        <div style={{ padding: "60px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>No recipe data available</div>
+                      ) : (
+                        <>
+                          <div className="recipe-table">
+                            <div className="recipe-header" style={{ gridTemplateColumns: RECIPE_COLS }}>
+                              {COLS_DEF.map(([col, label, tip]) => (
+                                <button key={col} className={`sort-btn ${recipeSortCol === col ? "active" : ""}`} onClick={() => handleRecipeSort(col)}>
+                                  {label} {recipeSortCol === col && <span className="sort-arrow">{recipeSortDir === "desc" ? "▼" : "▲"}</span>}
+                                  <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
+                                    <span className="stat-help">?</span>
+                                    <span className="stat-tooltip">{tip}</span>
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                            {processedRecipes.slice(0, recipeRowsShown).map((r, i) => (
+                              <div key={i} className="recipe-row" style={{ gridTemplateColumns: RECIPE_COLS }}>
+                                {/* Recipe name */}
+                                <div>
+                                  <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{r.name}</div>
+                                  {r.skill && <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>{r.skill}{r.level ? ` (lv. ${r.level})` : ""}</div>}
+                                </div>
+                                {/* Inputs */}
+                                <div className="recipe-icons">
+                                  {(r.inputs || []).map((inp, j) => {
+                                    const item = priceById[inp.id];
+                                    return (
+                                      <span key={j} title={`${item?.name || inp.id} ×${inp.quantity || 1}`} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                                        <img src={item ? itemIconUrl(item.name) : ""} alt={item?.name || ""} className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                        {(inp.quantity || 1) > 1 && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700, marginLeft: "1px" }}>×{inp.quantity}</span>}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                                {/* Outputs */}
+                                <div className="recipe-icons">
+                                  <span className="recipe-arrow">→</span>
+                                  {(r.outputs || []).map((out, j) => {
+                                    const item = priceById[out.id];
+                                    return (
+                                      <span key={j} title={`${item?.name || out.id} ×${out.quantity || 1}`} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                                        <img src={item ? itemIconUrl(item.name) : ""} alt={item?.name || ""} className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                        {(out.quantity || 1) > 1 && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700, marginLeft: "1px" }}>×{out.quantity}</span>}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+                                {/* Input Cost */}
+                                <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.inputCost)}</span>
+                                {/* Output Value */}
+                                <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.outputValue)}</span>
+                                {/* Profit */}
+                                <span style={{ fontSize: "13px", fontWeight: 600, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>
+                                  {r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}
+                                </span>
+                                {/* ROI */}
+                                <span style={{ fontSize: "12px", fontWeight: 600, padding: "2px 7px", borderRadius: "5px", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>
+                                  {r.roi >= 0 ? "+" : ""}{r.roi}%
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          {processedRecipes.length > recipeRowsShown && (
+                            <div style={{ textAlign: "center", padding: "8px 0" }}>
+                              <button
+                                onClick={() => setRecipeRowsShown(n => n + 100)}
+                                style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                                onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
+                                onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
+                              >
+                                Load more ({processedRecipes.length - recipeRowsShown} remaining)
+                              </button>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   );
