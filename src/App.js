@@ -139,6 +139,11 @@ const STYLES = `
     14%     { box-shadow: 0 0 0px rgba(201,168,76,0); border-color: rgba(201,168,76,0.35); }
     100%    { box-shadow: 0 0 0px rgba(201,168,76,0); border-color: rgba(201,168,76,0.35); }
   }
+  @keyframes terminalTextGlow {
+    0%,100% { color: #c9a84c; text-shadow: none; }
+    7%      { color: #f0d070; text-shadow: 0 0 12px rgba(240,208,112,0.7), 0 0 24px rgba(201,168,76,0.3); }
+    14%     { color: #c9a84c; text-shadow: none; }
+  }
   .nav-tabs { display: flex; gap: 3px; }
   .nav-tab { padding: 7px 16px; border-radius: 7px; border: 1px solid transparent; cursor: pointer; font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif; background: transparent; color: #9ab0c0; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.2px; }
   .nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.05); border-color: var(--border); }
@@ -8185,26 +8190,55 @@ RULES:
                 const allDone = questsLoaded && doneQuests === dailyQuests.length && dailyQuests.length > 0;
                 const initial = (user.user_metadata?.username || user.email?.split("@")[0] || "?")[0].toUpperCase();
                 return (
-                  <div style={{ display: "flex", alignItems: "center", gap: "0" }}>
-                    {/* Level + Quests pill */}
-                    <button className="level-btn"
+                  {/* Unified player card button */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <button
                       onClick={() => setShowPlayerCard(v => !v)}
                       title="Player Card & Quests"
-                      style={{ borderColor: allDone ? "rgba(46,204,113,0.5)" : "rgba(201,168,76,0.35)", background: allDone ? "rgba(46,204,113,0.09)" : "rgba(201,168,76,0.09)", color: allDone ? "var(--green)" : "var(--gold)", gap: "8px", borderRadius: "10px 0 0 10px", borderRight: "none", padding: "7px 14px", fontSize: "14px", fontWeight: 700 }}>
-                      <span style={{ fontSize: "16px" }}>{emoji}</span>
-                      <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 900, letterSpacing: "0.5px" }}>Lv.{level}</span>
-                      <span style={{ width: "1px", height: "14px", background: allDone ? "rgba(46,204,113,0.25)" : "rgba(201,168,76,0.2)", flexShrink: 0 }} />
-                      <span style={{ fontSize: "12px", opacity: 0.75, fontWeight: 600 }}>Quests</span>
-                      <span style={{ background: allDone ? "var(--green)" : "var(--gold)", color: "#000", borderRadius: "10px", padding: "1px 8px", fontSize: "11px", fontWeight: 800, letterSpacing: "0.3px" }}>
-                        {questsLoaded ? `${doneQuests}/${dailyQuests.length}` : "…"}
-                      </span>
+                      style={{
+                        display: "flex", alignItems: "center", gap: "10px",
+                        padding: "6px 12px 6px 8px", borderRadius: "10px",
+                        border: `1px solid ${allDone ? "rgba(46,204,113,0.45)" : "rgba(201,168,76,0.3)"}`,
+                        background: allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.06)",
+                        cursor: "pointer", transition: "all 0.15s",
+                      }}
+                      onMouseOver={e => { e.currentTarget.style.borderColor = allDone ? "rgba(46,204,113,0.65)" : "rgba(201,168,76,0.5)"; e.currentTarget.style.background = allDone ? "rgba(46,204,113,0.11)" : "rgba(201,168,76,0.1)"; }}
+                      onMouseOut={e => { e.currentTarget.style.borderColor = allDone ? "rgba(46,204,113,0.45)" : "rgba(201,168,76,0.3)"; e.currentTarget.style.background = allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.06)"; }}>
+                      {/* Avatar circle */}
+                      <div style={{
+                        width: "30px", height: "30px", borderRadius: "50%", flexShrink: 0,
+                        background: allDone ? "linear-gradient(135deg, rgba(46,204,113,0.25), rgba(46,204,113,0.1))" : "linear-gradient(135deg, rgba(201,168,76,0.3), rgba(201,168,76,0.1))",
+                        border: `1.5px solid ${allDone ? "rgba(46,204,113,0.6)" : "rgba(201,168,76,0.5)"}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "13px", fontWeight: 900, fontFamily: "'Cinzel', serif",
+                        color: allDone ? "var(--green)" : "var(--gold)", letterSpacing: "0.5px",
+                      }}>
+                        {initial}
+                      </div>
+                      {/* Level + XP bar + quests */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: "80px" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
+                          <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 900, fontSize: "13px", color: allDone ? "var(--green)" : "var(--gold)", letterSpacing: "0.5px" }}>
+                            {emoji} Lv.{level}
+                          </span>
+                          <span style={{ fontSize: "11px", color: allDone ? "var(--green)" : "var(--gold)", fontWeight: 700, opacity: 0.85 }}>
+                            {questsLoaded ? `${doneQuests}/${dailyQuests.length}` : "…"} quests
+                          </span>
+                        </div>
+                        {/* XP progress bar */}
+                        <div style={{ height: "3px", borderRadius: "2px", background: allDone ? "rgba(46,204,113,0.15)" : "rgba(201,168,76,0.12)", overflow: "hidden", width: "100%" }}>
+                          <div style={{ height: "100%", borderRadius: "2px", width: `${Math.min(xpProgress(totalXP) * 100, 100)}%`, background: allDone ? "var(--green)" : "linear-gradient(90deg, #c9a84c, #e8c96a)", transition: "width 0.4s ease" }} />
+                        </div>
+                      </div>
                     </button>
-                    {/* Avatar / profile button */}
+                    {/* Profile / settings caret */}
                     <button
                       onClick={() => setShowProfileMenu(v => !v)}
                       title="Profile & Settings"
-                      style={{ width: "36px", height: "36px", borderRadius: "0 10px 10px 0", background: allDone ? "rgba(46,204,113,0.12)" : "linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.08))", border: `1px solid ${allDone ? "rgba(46,204,113,0.5)" : "rgba(201,168,76,0.35)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 900, color: allDone ? "var(--green)" : "var(--gold)", fontFamily: "'Cinzel', serif", cursor: "pointer", flexShrink: 0, letterSpacing: "0.5px" }}>
-                      {initial}
+                      style={{ width: "28px", height: "28px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", transition: "all 0.15s", flexShrink: 0 }}
+                      onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.4)"; e.currentTarget.style.color = "var(--gold)"; }}
+                      onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}>
+                      ▾
                     </button>
                   </div>
                 );
@@ -8304,35 +8338,29 @@ RULES:
                   </div>
                 ))}
 
-                {/* Divider + Trading Terminal as Option C nav tab */}
-                {user && (
-                  <>
-                    <div style={{ width: "1px", height: "20px", background: "var(--border)", margin: "0 4px", flexShrink: 0 }} />
-                    <button
-                      onClick={toggleMerchantMode}
-                      style={{
-                        display: "flex", alignItems: "center", gap: "7px",
-                        padding: "7px 16px", borderRadius: "7px", cursor: "pointer",
-                        fontFamily: "'DM Sans', sans-serif", fontSize: "15px", fontWeight: 600,
-                        letterSpacing: "0.2px", whiteSpace: "nowrap", transition: "all 0.15s",
-                        border: `1px solid ${merchantMode ? "var(--gold)" : "rgba(201,168,76,0.28)"}`,
-                        background: merchantMode ? "rgba(201,168,76,0.15)" : "rgba(201,168,76,0.07)",
-                        color: "var(--gold)",
-                        animation: merchantMode ? "none" : "terminalGlow 15s ease-in-out infinite",
-                        boxShadow: merchantMode ? "0 0 12px rgba(201,168,76,0.15)" : undefined,
-                      }}
-                      onMouseOver={e => { e.currentTarget.style.animation = "none"; e.currentTarget.style.background = "rgba(201,168,76,0.15)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"; }}
-                      onMouseOut={e => { if (!merchantMode) { e.currentTarget.style.animation = "terminalGlow 15s ease-in-out infinite"; e.currentTarget.style.background = "rgba(201,168,76,0.07)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.28)"; } }}>
-                      {merchantMode
-                        ? <><div className="merchant-dot" style={{ background: "var(--green)" }} /> Exit Terminal</>
-                        : <>{!isPro && !isOnTrial && <span style={{ fontSize: "11px", opacity: 0.7 }}>🔒</span>} 📈 Trading Terminal</>}
-                    </button>
-                  </>
-                )}
+
               </div>
 
-              {/* Far-right: Upgrade to Pro + Support Development */}
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {/* Far-right: Trading Terminal + Upgrade to Pro + Support Development */}
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                {user && (
+                  <button
+                    onClick={toggleMerchantMode}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: "6px",
+                      border: "none", background: "none", padding: "4px 6px",
+                      fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 700,
+                      cursor: "pointer", whiteSpace: "nowrap", letterSpacing: "0.2px",
+                      color: merchantMode ? "var(--green)" : "var(--gold)",
+                      animation: merchantMode ? "none" : "terminalTextGlow 15s ease-in-out infinite",
+                    }}
+                    onMouseOver={e => { e.currentTarget.style.animation = "none"; e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "#e8c96a"; }}
+                    onMouseOut={e => { if (!merchantMode) { e.currentTarget.style.animation = "terminalTextGlow 15s ease-in-out infinite"; e.currentTarget.style.color = "var(--gold)"; } }}>
+                    {merchantMode
+                      ? <><div className="merchant-dot" style={{ background: "var(--green)", marginRight: "2px" }} /> Exit Terminal</>
+                      : <>{!isPro && !isOnTrial && <span style={{ fontSize: "11px", opacity: 0.7 }}>🔒</span>} Trading Terminal</>}
+                  </button>
+                )}
                 {user && !isPro && !isOnTrial && (
                   <button onClick={() => setActiveTab("pricing")}
                     style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 6px", border: "none", background: "none", color: "#5dade2", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "color 0.15s", whiteSpace: "nowrap" }}
