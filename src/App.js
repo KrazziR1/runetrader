@@ -8923,7 +8923,7 @@ RULES:
 
                 {/* ── RECIPES TAB ── */}
                 {marketSubTab === "recipes" && (() => {
-                  const RECIPE_COLS = "2.2fr 1.3fr 1.3fr 1fr 1fr 0.8fr 0.8fr 0.8fr";
+                  const RECIPE_COLS = "2.2fr 1.3fr 1.3fr 1fr 1fr 0.8fr 0.9fr 1fr";
                   const recipeSortCol = recipeSortState.col;
                   const recipeSortDir = recipeSortState.dir;
                   const handleRecipeSort = col => setRecipeSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
@@ -9100,6 +9100,12 @@ RULES:
                         <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)", alignSelf: "center" }}>
                           {processedRecipes.length} results
                         </span>
+                      </div>
+
+                      {/* Data disclaimer */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", background: "rgba(52,152,219,0.06)", border: "1px solid rgba(52,152,219,0.15)", borderRadius: "8px", fontSize: "12px", color: "var(--text-dim)" }}>
+                        <span style={{ color: "#3498db", flexShrink: 0 }}>ℹ</span>
+                        <span>Only recipes where all items have recent GE trades are shown. Items that haven't traded in 24–48hrs are excluded — actual opportunities may be higher. Prices update every 60 seconds.</span>
                       </div>
 
                       {processedRecipes.length === 0 ? (
