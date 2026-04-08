@@ -3,16 +3,36 @@ import { useState, useEffect, useCallback } from "react";
 
 const WIKI_MAP = "https://prices.runescape.wiki/api/v1/osrs/mapping";
 const WIKI_IMG = (name) => `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}_detail.png`;
-
 const CATEGORIES = ["All", "Weapons", "Armour", "3rd Age", "Raids", "Skilling", "Other"];
-
 const MAX_CASH = 2_147_483_647;
 
-function formatGP(n) {
-  if (!n) return "—";
-  return Math.round(n).toLocaleString("en-GB") + " gp";
+// ── Parse k/m/b shorthand: "100k" → 100000, "2.5m" → 2500000 ──
+function parseGPInput(raw) {
+  if (!raw && raw !== 0) return 0;
+  const s = String(raw).trim().toLowerCase().replace(/,/g, "");
+  const match = s.match(/^(\d+\.?\d*)\s*([kmb]?)$/);
+  if (!match) return parseInt(s.replace(/[^0-9]/g, "")) || 0;
+  const num = parseFloat(match[1]);
+  const suffix = match[2];
+  if (suffix === "k") return Math.round(num * 1_000);
+  if (suffix === "m") return Math.round(num * 1_000_000);
+  if (suffix === "b") return Math.round(num * 1_000_000_000);
+  return Math.round(num);
 }
 
+// ── Compact display: 2500000 → "2.5M" ──
+function compactGP(n) {
+  if (!n) return "0";
+  if (n >= 1_000_000_000) return (n / 1_000_000_000 % 1 === 0 ? n / 1_000_000_000 : (n / 1_000_000_000).toFixed(1)) + "B";
+  if (n >= 1_000_000)     return (n / 1_000_000 % 1 === 0 ? n / 1_000_000 : (n / 1_000_000).toFixed(1)) + "M";
+  if (n >= 1_000)         return (n / 1_000 % 1 === 0 ? n / 1_000 : (n / 1_000).toFixed(1)) + "K";
+  return n.toLocaleString("en-GB");
+}
+
+function formatGP(n) {
+  if (!n && n !== 0) return "—";
+  return Math.round(n).toLocaleString("en-GB") + " gp";
+}
 
 function timeAgo(ts) {
   const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
@@ -30,30 +50,23 @@ function timeLeft(ts) {
   return `${Math.floor(diff / 86400)}d left`;
 }
 
+function timeLeftPct(ts) {
+  const total = 7 * 24 * 3600;
+  const remaining = Math.max(0, (new Date(ts) - Date.now()) / 1000);
+  return Math.min(100, (remaining / total) * 100);
+}
+
 function ItemImage({ name, size = 44 }) {
   const [src, setSrc] = useState(WIKI_IMG(name));
   const [failed, setFailed] = useState(false);
-
-  if (failed) {
-    return (
-      <div style={{ width: size, height: size, borderRadius: "8px", background: "var(--bg4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>
-        📦
-      </div>
-    );
-  }
-
+  if (failed) return (
+    <div style={{ width: size, height: size, borderRadius: "8px", background: "var(--bg4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: Math.round(size * 0.45) + "px", flexShrink: 0 }}>📦</div>
+  );
   return (
-    <img
-      src={src}
-      alt={name}
-      width={size}
-      height={size}
+    <img src={src} alt={name} width={size} height={size}
       onError={() => {
-        if (src.includes("_detail")) {
-          setSrc(`https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}.png`);
-        } else {
-          setFailed(true);
-        }
+        if (src.includes("_detail")) setSrc(`https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}.png`);
+        else setFailed(true);
       }}
       style={{ width: size, height: size, objectFit: "contain", flexShrink: 0, borderRadius: "8px", background: "var(--bg4)", padding: "4px" }}
     />
@@ -66,16 +79,23 @@ export default function TradeBoard({ user, supabase, showToast }) {
   const [filter, setFilter] = useState("All");
   const [typeFilter, setTypeFilter] = useState("All");
   const [showPostForm, setShowPostForm] = useState(false);
+  const [search, setSearch] = useState("");
   const [itemSearch, setItemSearch] = useState("");
   const [itemSuggestions, setItemSuggestions] = useState([]);
   const [allItems, setAllItems] = useState([]);
   const [myListings, setMyListings] = useState(false);
+  const [bumping, setBumping] = useState(null);
+  const [copied, setCopied] = useState(null);
+  const [priceView, setPriceView] = useState("total"); // "total" | "each"
+  const [reportModal, setReportModal] = useState(null); // listing object
+  const [reportReason, setReportReason] = useState("");
+  const [submittingReport, setSubmittingReport] = useState(false);
 
-  // Form state
   const [form, setForm] = useState({
     item_name: "", item_image: "", type: "WTS",
     price: "", quantity: "1", notes: "",
-    discord: "", rsn: "", category: "Other"
+    discord: "", rsn: "", category: "Other",
+    bundle_only: false,
   });
   const [posting, setPosting] = useState(false);
 
@@ -83,6 +103,13 @@ export default function TradeBoard({ user, supabase, showToast }) {
     loadListings();
     loadItemNames();
   }, []); // eslint-disable-line
+
+  // Pre-fill RSN from user profile on mount
+  useEffect(() => {
+    if (!user) return;
+    const username = user.user_metadata?.username || user.email?.split("@")[0] || "";
+    setForm(f => ({ ...f, rsn: f.rsn || username }));
+  }, [user]);
 
   async function loadItemNames() {
     try {
@@ -96,9 +123,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("trade_listings")
-        .select("*")
-        .eq("active", true)
+        .from("trade_listings").select("*").eq("active", true)
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false });
       if (!error) setListings(data || []);
@@ -110,8 +135,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
     setItemSearch(val);
     setForm(f => ({ ...f, item_name: val, item_image: WIKI_IMG(val) }));
     if (val.length < 2) { setItemSuggestions([]); return; }
-    const matches = allItems.filter(n => n.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
-    setItemSuggestions(matches);
+    setItemSuggestions(allItems.filter(n => n.toLowerCase().includes(val.toLowerCase())).slice(0, 8));
   }
 
   function selectItem(name) {
@@ -122,13 +146,14 @@ export default function TradeBoard({ user, supabase, showToast }) {
 
   async function submitListing() {
     if (!form.item_name) return showToast("Please enter an item name", "error");
-    if (allItems.length > 0 && !allItems.includes(form.item_name)) return showToast("Please select a valid in-game item from the suggestions", "error");
+    if (allItems.length > 0 && !allItems.includes(form.item_name)) return showToast("Please select a valid item from the suggestions", "error");
     if (!form.price) return showToast("Please enter a price", "error");
     if (!form.discord && !form.rsn) return showToast("Please add at least one contact method", "error");
     if (!user) return showToast("Please sign in to post", "error");
 
-    const price = parseInt(form.price.replace(/[^0-9]/g, ""));
-    if (isNaN(price) || price <= 0) return showToast("Invalid price", "error");
+    const price = parseGPInput(form.price);
+    if (!price || price <= 0) return showToast("Invalid price — try e.g. 2.5m or 500k", "error");
+    const qty = parseGPInput(form.quantity) || parseInt(form.quantity) || 1;
 
     setPosting(true);
     try {
@@ -138,72 +163,111 @@ export default function TradeBoard({ user, supabase, showToast }) {
         item_image: form.item_image,
         type: form.type,
         price,
-        quantity: parseInt(form.quantity) || 1,
+        quantity: qty,
         notes: form.notes || null,
         discord: form.discord || null,
         rsn: form.rsn || null,
         category: form.category,
+        bundle_only: form.bundle_only,
       });
-
       if (error) throw error;
-      showToast("Listing posted! It will expire in 7 days.", "success");
+      showToast("Listing posted! Expires in 7 days.", "success");
       setShowPostForm(false);
-      setForm({ item_name: "", item_image: "", type: "WTS", price: "", quantity: "1", notes: "", discord: "", rsn: "", category: "Other" });
+      setForm({ item_name: "", item_image: "", type: "WTS", price: "", quantity: "1", notes: "", discord: "", rsn: user?.user_metadata?.username || "", category: "Other", bundle_only: false });
       setItemSearch("");
       loadListings();
     } catch (e) {
-      console.error("Post listing error:", e);
-      showToast("Failed to post listing. Please try again.", "error");
-    } finally {
-      setPosting(false);
-    }
+      console.error(e);
+      showToast("Failed to post listing.", "error");
+    } finally { setPosting(false); }
   }
 
   async function closeListing(id) {
-    const { error } = await supabase
-      .from("trade_listings")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", user.id);
-    if (error) {
-      showToast("Failed to remove listing: " + error.message, "error");
-    } else {
-      setListings(prev => prev.filter(l => l.id !== id));
-      showToast("Listing removed", "success");
-    }
+    const { error } = await supabase.from("trade_listings").delete().eq("id", id).eq("user_id", user.id);
+    if (error) showToast("Failed to remove: " + error.message, "error");
+    else { setListings(prev => prev.filter(l => l.id !== id)); showToast("Listing removed", "success"); }
+  }
+
+  async function bumpListing(id) {
+    setBumping(id);
+    try {
+      const newExpiry = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+      const { error } = await supabase.from("trade_listings")
+        .update({ created_at: new Date().toISOString(), expires_at: newExpiry })
+        .eq("id", id).eq("user_id", user.id);
+      if (error) throw error;
+      showToast("Listing bumped to top!", "success");
+      loadListings();
+    } catch { showToast("Failed to bump listing", "error"); }
+    setBumping(null);
+  }
+
+  function copyTradeMessage(l) {
+    const contact = l.discord ? l.discord : (l.rsn || "");
+    const totalPrice = l.price * (l.quantity || 1);
+    const priceStr = `${compactGP(l.price)} gp each${l.quantity > 1 ? ` (${compactGP(totalPrice)} total)` : ""}`;
+    const msg = `Hi ${contact} — interested in your ${l.item_name} listing on RuneTrader.gg (${l.type === "WTS" ? "selling" : "buying"} ${l.quantity > 1 ? `×${l.quantity.toLocaleString()} @ ` : ""}${priceStr})`;
+    navigator.clipboard?.writeText(msg).then(() => {
+      setCopied(l.id);
+      setTimeout(() => setCopied(null), 2500);
+      showToast("Trade message copied!", "success");
+    });
+  }
+
+  async function submitReport() {
+    if (!reportReason.trim()) return showToast("Please describe the issue", "error");
+    setSubmittingReport(true);
+    try {
+      await supabase.from("trade_reports").insert({
+        listing_id: reportModal.id,
+        reporter_id: user?.id || null,
+        reason: reportReason.trim(),
+      });
+      showToast("Report submitted. Thank you.", "success");
+      setReportModal(null);
+      setReportReason("");
+    } catch { showToast("Failed to submit report", "error"); }
+    setSubmittingReport(false);
   }
 
   const filtered = listings.filter(l => {
     if (typeFilter !== "All" && l.type !== typeFilter) return false;
     if (filter !== "All" && l.category !== filter) return false;
     if (myListings && l.user_id !== user?.id) return false;
+    if (search.trim() && !l.item_name.toLowerCase().includes(search.trim().toLowerCase())) return false;
     return true;
   });
+
+  const inputStyle = { width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" };
+  const labelStyle = { fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 700, display: "block", marginBottom: "6px", fontFamily: "'DM Sans', sans-serif" };
+
+  // Price preview in form
+  const formPriceNum = parseGPInput(form.price);
+  const formQtyNum = parseGPInput(form.quantity) || parseInt(form.quantity) || 1;
+  const formTotal = formPriceNum * formQtyNum;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
-      {/* Header */}
+      {/* Header row */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
-        <div>
-          <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6 }}>
-Player-to-player trades. All transactions occur in-game — RuneTrader does not facilitate, verify, or take responsibility for any trade.
-          </div>
+        <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.6, maxWidth: "580px" }}>
+          Player-to-player trades. All transactions occur in-game — RuneTrader does not facilitate, verify, or take responsibility for any trade.
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
           {user && (
             <button onClick={() => setMyListings(m => !m)}
-              style={{ padding: "7px 14px", borderRadius: "8px", border: `1px solid ${myListings ? "var(--gold-dim)" : "var(--border)"}`, background: myListings ? "rgba(201,168,76,0.1)" : "transparent", color: myListings ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+              style={{ padding: "7px 14px", borderRadius: "8px", border: `1px solid ${myListings ? "var(--gold-dim)" : "var(--border)"}`, background: myListings ? "rgba(201,168,76,0.1)" : "transparent", color: myListings ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
               My Listings
             </button>
           )}
-          <button onClick={loadListings}
-            style={{ padding: "7px 12px", borderRadius: "8px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+          <button onClick={loadListings} title="Refresh"
+            style={{ padding: "7px 12px", borderRadius: "8px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
             ↻
           </button>
           {user ? (
             <button onClick={() => setShowPostForm(true)}
-              style={{ padding: "7px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #c9a84c, #e8c96a)", color: "#0a0e14", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Cinzel, serif", letterSpacing: "0.5px", boxShadow: "0 2px 8px rgba(201,168,76,0.3)" }}>
+              style={{ padding: "7px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #c9a84c, #e8c96a)", color: "#0a0e14", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.5px", boxShadow: "0 2px 8px rgba(201,168,76,0.3)" }}>
               + Post Listing
             </button>
           ) : (
@@ -212,114 +276,207 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
         </div>
       </div>
 
-      {/* Filters */}
-      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-        <div style={{ display: "flex", gap: "6px" }}>
+      {/* Search + filter row */}
+      <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+        {/* Search */}
+        <input
+          value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Search items..."
+          style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", padding: "7px 14px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", minWidth: "180px", width: "220px", transition: "border-color 0.15s" }}
+          onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
+          onBlur={e => e.target.style.borderColor = "var(--border)"}
+        />
+
+        <div style={{ width: "1px", height: "22px", background: "var(--border)" }} />
+
+        {/* WTS / WTB */}
+        <div style={{ display: "flex", gap: "5px" }}>
           {["All", "WTS", "WTB"].map(t => (
             <button key={t} onClick={() => setTypeFilter(t)}
-              style={{ padding: "5px 12px", borderRadius: "6px", border: `1px solid ${typeFilter === t ? (t === "WTS" ? "rgba(231,76,60,0.5)" : t === "WTB" ? "rgba(46,204,113,0.5)" : "var(--gold-dim)") : "var(--border)"}`, background: typeFilter === t ? (t === "WTS" ? "rgba(231,76,60,0.1)" : t === "WTB" ? "rgba(46,204,113,0.1)" : "rgba(201,168,76,0.1)") : "transparent", color: typeFilter === t ? (t === "WTS" ? "var(--red)" : t === "WTB" ? "var(--green)" : "var(--gold)") : "var(--text-dim)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+              style={{ padding: "5px 13px", borderRadius: "6px", border: `1px solid ${typeFilter === t ? (t === "WTS" ? "rgba(231,76,60,0.5)" : t === "WTB" ? "rgba(46,204,113,0.5)" : "var(--gold-dim)") : "var(--border)"}`, background: typeFilter === t ? (t === "WTS" ? "rgba(231,76,60,0.1)" : t === "WTB" ? "rgba(46,204,113,0.1)" : "rgba(201,168,76,0.1)") : "transparent", color: typeFilter === t ? (t === "WTS" ? "var(--red)" : t === "WTB" ? "var(--green)" : "var(--gold)") : "var(--text-dim)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
               {t}
             </button>
           ))}
         </div>
-        <div style={{ width: "1px", height: "20px", background: "var(--border)" }} />
-        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+
+        <div style={{ width: "1px", height: "22px", background: "var(--border)" }} />
+
+        {/* Category */}
+        <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
           {CATEGORIES.map(c => (
             <button key={c} onClick={() => setFilter(c)}
-              style={{ padding: "5px 12px", borderRadius: "6px", border: `1px solid ${filter === c ? "var(--border)" : "transparent"}`, background: filter === c ? "var(--bg3)" : "transparent", color: filter === c ? "var(--text)" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+              style={{ padding: "5px 12px", borderRadius: "6px", border: `1px solid ${filter === c ? "rgba(255,255,255,0.15)" : "transparent"}`, background: filter === c ? "var(--bg3)" : "transparent", color: filter === c ? "var(--text)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
               {c}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ marginLeft: "auto", display: "flex", gap: "5px" }}>
+          {["total", "each"].map(v => (
+            <button key={v} onClick={() => setPriceView(v)}
+              style={{ padding: "5px 12px", borderRadius: "6px", border: `1px solid ${priceView === v ? "var(--border)" : "transparent"}`, background: priceView === v ? "var(--bg3)" : "transparent", color: priceView === v ? "var(--text)" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
+              {v === "total" ? "Total price" : "Per item"}
             </button>
           ))}
         </div>
       </div>
 
+      {/* Listing count */}
+      {!loading && (
+        <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>
+          {filtered.length} listing{filtered.length !== 1 ? "s" : ""}{search ? ` matching "${search}"` : ""}
+        </div>
+      )}
+
       {/* Listings */}
       {loading ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {Array(4).fill(0).map((_, i) => (
-            <div key={i} style={{ height: "80px", background: "var(--bg3)", borderRadius: "12px", opacity: 0.5 }} />
+            <div key={i} style={{ height: "88px", background: "var(--bg3)", borderRadius: "12px", opacity: 0.4 + i * 0.1 }} />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-dim)", background: "var(--bg3)", borderRadius: "12px", border: "1px solid #1c2a3a" }}>
           <div style={{ fontSize: "32px", marginBottom: "12px" }}>📋</div>
-          <div style={{ fontSize: "15px", marginBottom: "6px" }}>No listings yet</div>
+          <div style={{ fontSize: "15px", marginBottom: "6px" }}>{search ? `No listings for "${search}"` : "No listings yet"}</div>
           <div style={{ fontSize: "13px" }}>{user ? "Be the first to post a listing." : "Sign in to post a listing."}</div>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-          {filtered.map(l => (
-            <div key={l.id} style={{ display: "grid", gridTemplateColumns: "56px 1fr auto", gap: "14px", alignItems: "center", background: "#111620", border: "1px solid #1c2a3a", borderRadius: "12px", padding: "14px 16px", transition: "border-color 0.15s" }}
-              onMouseOver={e => e.currentTarget.style.borderColor = "var(--border-hover, rgba(255,255,255,0.15))"}
-              onMouseOut={e => e.currentTarget.style.borderColor = "var(--border)"}>
+          {filtered.map(l => {
+            const total = l.price * (l.quantity || 1);
+            const displayPrice = priceView === "each" || l.quantity <= 1 ? l.price : total;
+            const isOwn = user?.id === l.user_id;
+            const pct = timeLeftPct(l.expires_at);
+            const expiryColor = pct > 50 ? "var(--green)" : pct > 20 ? "#f39c12" : "var(--red)";
 
-              <ItemImage name={l.item_name} size={56} />
+            return (
+              <div key={l.id}
+                style={{ display: "grid", gridTemplateColumns: "60px 1fr auto", gap: "14px", alignItems: "center", background: "#111620", border: `1px solid ${isOwn ? "rgba(201,168,76,0.18)" : "#1c2a3a"}`, borderRadius: "12px", padding: "14px 16px", transition: "border-color 0.15s" }}
+                onMouseOver={e => e.currentTarget.style.borderColor = isOwn ? "rgba(201,168,76,0.35)" : "rgba(255,255,255,0.1)"}
+                onMouseOut={e => e.currentTarget.style.borderColor = isOwn ? "rgba(201,168,76,0.18)" : "#1c2a3a"}>
 
-              <div style={{ minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "4px" }}>
-                  <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--text)" }}>{l.item_name}</span>
-                  <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "12px", fontWeight: 700, background: l.type === "WTS" ? "rgba(231,76,60,0.12)" : "rgba(46,204,113,0.12)", color: l.type === "WTS" ? "var(--red)" : "var(--green)", border: `1px solid ${l.type === "WTS" ? "rgba(231,76,60,0.3)" : "rgba(46,204,113,0.3)"}` }}>
-                    {l.type}
-                  </span>
-                  {l.quantity > 1 && <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>×{l.quantity.toLocaleString()}</span>}
-                </div>
-                <div style={{ display: "flex", gap: "16px", fontSize: "13px", color: "var(--text-dim)", flexWrap: "wrap" }}>
-                  {l.discord && <span>Discord: <span style={{ color: "var(--text)" }}>{l.discord}</span></span>}
-                  {l.rsn && <span>RSN: <span style={{ color: "var(--text)" }}>{l.rsn}</span></span>}
-                  {l.notes && <span style={{ color: "var(--text-dim)", fontStyle: "italic" }}>{l.notes}</span>}
-                </div>
-                <div style={{ display: "flex", gap: "12px", marginTop: "4px", fontSize: "13px", color: "var(--text-dim)" }}>
-                  <span>{timeAgo(l.created_at)}</span>
-                  <span style={{ color: "var(--gold-dim)" }}>{timeLeft(l.expires_at)}</span>
-                </div>
-              </div>
+                <ItemImage name={l.item_name} size={56} />
 
-              <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <div style={{ fontFamily: "Cinzel, serif", fontSize: "16px", fontWeight: 700, color: "var(--gold)" }}>
-                  {l.quantity > 1 ? formatGP(l.price * l.quantity) : formatGP(l.price)}
-                </div>
-                {l.quantity > 1 && (
-                  <div style={{ fontSize: "13px", color: "var(--text-dim)", marginTop: "2px" }}>
-                    {formatGP(l.price)} each · {l.quantity.toLocaleString()} qty
+                <div style={{ minWidth: 0 }}>
+                  {/* Top row: name + badges */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "5px" }}>
+                    <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--text)" }}>{l.item_name}</span>
+                    <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: l.type === "WTS" ? "rgba(231,76,60,0.12)" : "rgba(46,204,113,0.12)", color: l.type === "WTS" ? "var(--red)" : "var(--green)", border: `1px solid ${l.type === "WTS" ? "rgba(231,76,60,0.3)" : "rgba(46,204,113,0.3)"}` }}>
+                      {l.type}
+                    </span>
+                    {l.quantity > 1 && <span style={{ fontSize: "13px", color: "var(--text-dim)", fontWeight: 600 }}>×{l.quantity.toLocaleString()}</span>}
+                    {l.bundle_only && (
+                      <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "rgba(52,152,219,0.1)", color: "#4fc3f7", border: "1px solid rgba(52,152,219,0.3)" }}>
+                        Bundle only
+                      </span>
+                    )}
                   </div>
-                )}
-                {(l.quantity > 1 ? l.price * l.quantity : l.price) > MAX_CASH && (
-                  <div style={{ fontSize: "12px", color: "var(--gold-dim)", marginTop: "2px" }}>Above max cash</div>
-                )}
-                {user?.id === l.user_id && (
-                  <button onClick={() => closeListing(l.id)}
-                    style={{ marginTop: "6px", padding: "3px 10px", borderRadius: "4px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
-                    onMouseOver={e => { e.target.style.color = "var(--red)"; e.target.style.borderColor = "var(--red)"; }}
-                    onMouseOut={e => { e.target.style.color = "var(--text-dim)"; e.target.style.borderColor = "var(--border)"; }}>
-                    Remove
-                  </button>
-                )}
+
+                  {/* Contact + notes row */}
+                  <div style={{ display: "flex", gap: "14px", fontSize: "13px", color: "var(--text-dim)", flexWrap: "wrap", marginBottom: "6px" }}>
+                    {l.rsn && <span>RSN: <span style={{ color: "var(--text)", fontWeight: 600 }}>{l.rsn}</span></span>}
+                    {l.discord && <span>Discord: <span style={{ color: "var(--text)" }}>{l.discord}</span></span>}
+                    {l.notes && <span style={{ fontStyle: "italic" }}>{l.notes}</span>}
+                  </div>
+
+                  {/* Bottom row: time + expiry bar + actions */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{timeAgo(l.created_at)}</span>
+                    {/* Expiry bar */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <div style={{ width: "60px", height: "4px", borderRadius: "2px", background: "var(--bg4)", overflow: "hidden" }}>
+                        <div style={{ width: `${pct}%`, height: "100%", background: expiryColor, borderRadius: "2px", transition: "width 0.3s" }} />
+                      </div>
+                      <span style={{ fontSize: "12px", color: expiryColor, fontWeight: 600 }}>{timeLeft(l.expires_at)}</span>
+                    </div>
+
+                    {/* Action buttons */}
+                    <button onClick={() => copyTradeMessage(l)}
+                      style={{ padding: "3px 10px", borderRadius: "5px", border: `1px solid ${copied === l.id ? "rgba(46,204,113,0.4)" : "rgba(255,255,255,0.1)"}`, background: copied === l.id ? "rgba(46,204,113,0.08)" : "transparent", color: copied === l.id ? "var(--green)" : "var(--text-dim)", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}>
+                      {copied === l.id ? "✓ Copied" : "📋 Copy message"}
+                    </button>
+
+                    {!isOwn && (
+                      <button onClick={() => { setReportModal(l); setReportReason(""); }}
+                        style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid transparent", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: 0.5, transition: "all 0.15s" }}
+                        onMouseOver={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.3)"; }}
+                        onMouseOut={e => { e.currentTarget.style.opacity = "0.5"; e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.borderColor = "transparent"; }}>
+                        ⚑ Report
+                      </button>
+                    )}
+                    {isOwn && (
+                      <>
+                        <button onClick={() => bumpListing(l.id)} disabled={bumping === l.id}
+                          style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid rgba(201,168,76,0.25)", background: "transparent", color: bumping === l.id ? "var(--text-dim)" : "var(--gold)", fontSize: "11px", fontWeight: 600, cursor: bumping === l.id ? "wait" : "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
+                          onMouseOver={e => { if (bumping !== l.id) { e.currentTarget.style.background = "rgba(201,168,76,0.08)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"; }}}
+                          onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.25)"; }}>
+                          {bumping === l.id ? "Bumping..." : "↑ Bump"}
+                        </button>
+                        <button onClick={() => closeListing(l.id)}
+                          style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid rgba(231,76,60,0.2)", background: "transparent", color: "#c0564a", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
+                          onMouseOver={e => { e.currentTarget.style.background = "rgba(231,76,60,0.08)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.5)"; e.currentTarget.style.color = "var(--red)"; }}
+                          onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.2)"; e.currentTarget.style.color = "#c0564a"; }}>
+                          Remove
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Price column */}
+                <div style={{ textAlign: "right", flexShrink: 0, minWidth: "120px" }}>
+                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", lineHeight: 1.1 }}>
+                    {compactGP(displayPrice)} <span style={{ fontSize: "13px", fontWeight: 400 }}>gp</span>
+                  </div>
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "3px" }}>
+                    {displayPrice.toLocaleString("en-GB")} gp
+                  </div>
+                  {l.quantity > 1 && (
+                    <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "2px" }}>
+                      {priceView === "total"
+                        ? `${compactGP(l.price)} each`
+                        : `${compactGP(total)} total`}
+                    </div>
+                  )}
+                  {total > MAX_CASH && (
+                    <div style={{ fontSize: "11px", color: "var(--gold-dim)", marginTop: "3px" }}>Above max cash</div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* Post form modal */}
+      {/* ── POST FORM MODAL ── */}
       {showPostForm && user && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}
           onClick={e => { if (e.target === e.currentTarget) setShowPostForm(false); }}>
-          <div style={{ background: "#111620", border: "1px solid #1c2a3a", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "480px", display: "flex", flexDirection: "column", gap: "16px", maxHeight: "90vh", overflowY: "auto" }}
+          <div
+            style={{ background: "#111620", border: "1px solid #1c2a3a", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "500px", display: "flex", flexDirection: "column", gap: "18px", maxHeight: "90vh", overflowY: "auto" }}
             onClick={e => e.stopPropagation()}>
 
-            <div style={{ fontFamily: "Cinzel, serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)" }}>Post a Listing</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)" }}>Post a Listing</div>
+              <button onClick={() => setShowPostForm(false)}
+                style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "20px", cursor: "pointer", lineHeight: 1 }}>✕</button>
+            </div>
 
             {/* Item search */}
             <div style={{ position: "relative" }}>
-              <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Item Name *</label>
-              <input value={itemSearch} onChange={e => handleItemSearch(e.target.value)} placeholder="e.g. Twisted bow"
+              <label style={labelStyle}>Item Name *</label>
+              <input value={itemSearch} onChange={e => handleItemSearch(e.target.value)}
+                placeholder="e.g. Twisted bow"
                 onBlur={() => setTimeout(() => setItemSuggestions([]), 200)}
-                style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
+                style={inputStyle} />
               {itemSuggestions.length > 0 && (
-                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#111620", border: "1px solid #1c2a3a", borderRadius: "8px", zIndex: 10, maxHeight: "200px", overflowY: "auto", marginTop: "4px" }}>
+                <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111620", border: "1px solid #1c2a3a", borderRadius: "8px", zIndex: 10, maxHeight: "200px", overflowY: "auto", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
                   {itemSuggestions.map(s => (
-                    <div key={s} onClick={() => selectItem(s)}
-                      style={{ padding: "8px 12px", fontSize: "13px", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+                    <div key={s}
+                      onMouseDown={e => { e.preventDefault(); selectItem(s); }}
+                      style={{ padding: "8px 12px", fontSize: "14px", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px" }}
                       onMouseOver={e => e.currentTarget.style.background = "var(--bg3)"}
                       onMouseOut={e => e.currentTarget.style.background = "transparent"}>
                       <ItemImage name={s} size={24} />
@@ -333,20 +490,20 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
             {/* Type + Category */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               <div>
-                <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Type *</label>
+                <label style={labelStyle}>Type *</label>
                 <div style={{ display: "flex", gap: "8px" }}>
                   {["WTS", "WTB"].map(t => (
                     <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))}
-                      style={{ flex: 1, padding: "9px", borderRadius: "8px", border: `1px solid ${form.type === t ? (t === "WTS" ? "rgba(231,76,60,0.5)" : "rgba(46,204,113,0.5)") : "var(--border)"}`, background: form.type === t ? (t === "WTS" ? "rgba(231,76,60,0.1)" : "rgba(46,204,113,0.1)") : "transparent", color: form.type === t ? (t === "WTS" ? "var(--red)" : "var(--green)") : "var(--text-dim)", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                      style={{ flex: 1, padding: "10px", borderRadius: "8px", border: `1px solid ${form.type === t ? (t === "WTS" ? "rgba(231,76,60,0.5)" : "rgba(46,204,113,0.5)") : "var(--border)"}`, background: form.type === t ? (t === "WTS" ? "rgba(231,76,60,0.1)" : "rgba(46,204,113,0.1)") : "transparent", color: form.type === t ? (t === "WTS" ? "var(--red)" : "var(--green)") : "var(--text-dim)", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
                       {t === "WTS" ? "Selling" : "Buying"}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Category</label>
+                <label style={labelStyle}>Category</label>
                 <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                  style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "9px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "Inter, sans-serif", outline: "none" }}>
+                  style={{ ...inputStyle, padding: "10px 12px" }}>
                   {CATEGORIES.filter(c => c !== "All").map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
@@ -354,71 +511,128 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
 
             {/* Price + Qty */}
             <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "12px" }}>
-              {[
-                { key: "price", label: "Price per item (gp) *", placeholder: "e.g. 2500000000" },
-                { key: "quantity", label: "Quantity", placeholder: "1" },
-              ].map(({ key, label, placeholder }) => (
-                <div key={key}>
-                  <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>{label}</label>
-                  <input value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} placeholder={placeholder}
-                    style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
-                </div>
-              ))}
+              <div>
+                <label style={labelStyle}>Price per item (gp) *</label>
+                <input value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+                  placeholder="e.g. 2.5b or 500k"
+                  style={inputStyle} />
+                {form.price && formPriceNum > 0 && (
+                  <div style={{ fontSize: "12px", color: "var(--gold)", marginTop: "5px", paddingLeft: "2px" }}>
+                    = {compactGP(formPriceNum)} ({formPriceNum.toLocaleString("en-GB")} gp)
+                  </div>
+                )}
+                {!form.price && <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "5px", paddingLeft: "2px", opacity: 0.7 }}>Supports 100k, 2.5m, 1b</div>}
+              </div>
+              <div>
+                <label style={labelStyle}>Quantity</label>
+                <input value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))}
+                  placeholder="1"
+                  style={inputStyle} />
+                {form.quantity && parseGPInput(form.quantity) > 1 && (
+                  <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "5px", paddingLeft: "2px" }}>
+                    = {parseGPInput(form.quantity).toLocaleString("en-GB")}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Price preview */}
-            {form.price && (() => {
-              const perItem = parseInt(form.price.replace(/[^0-9]/g, "")) || 0;
-              const qty = parseInt(form.quantity) || 1;
-              const total = perItem * qty;
-              return (
-                <div style={{ fontSize: "13px", color: "var(--gold)", background: "rgba(201,168,76,0.08)", border: "1px solid var(--gold-dim)", borderRadius: "8px", padding: "10px 14px", display: "flex", flexDirection: "column", gap: "4px" }}>
-                  {qty > 1 ? (
-                    <>
-                      <div><span style={{ color: "var(--text-dim)" }}>Per item:</span> {formatGP(perItem)}</div>
-                      <div><span style={{ color: "var(--text-dim)" }}>Total ({qty.toLocaleString()}x):</span> <strong>{formatGP(total)}</strong></div>
-                    </>
-                  ) : (
-                    <div>{formatGP(perItem)}</div>
-                  )}
-                  {total > MAX_CASH && <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>Above max cash — player-to-player trade required</div>}
+            {/* Price summary */}
+            {formPriceNum > 0 && (
+              <div style={{ fontSize: "13px", color: "var(--gold)", background: "rgba(201,168,76,0.07)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "8px", padding: "12px 14px", display: "flex", flexDirection: "column", gap: "5px" }}>
+                {formQtyNum > 1 ? (
+                  <>
+                    <div><span style={{ color: "var(--text-dim)" }}>Per item:</span> {compactGP(formPriceNum)} ({formatGP(formPriceNum)})</div>
+                    <div><span style={{ color: "var(--text-dim)" }}>Total ({formQtyNum.toLocaleString()}×):</span> <strong>{compactGP(formTotal)}</strong> ({formatGP(formTotal)})</div>
+                  </>
+                ) : (
+                  <div><span style={{ color: "var(--text-dim)" }}>Price:</span> <strong>{compactGP(formPriceNum)}</strong> ({formatGP(formPriceNum)})</div>
+                )}
+                {formTotal > MAX_CASH && <div style={{ color: "var(--text-dim)", fontSize: "12px" }}>⚠ Above max cash — player-to-player trade required</div>}
+              </div>
+            )}
+
+            {/* Bundle only toggle */}
+            {formQtyNum > 1 && (
+              <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", userSelect: "none", fontSize: "14px", color: "var(--text-dim)" }}>
+                <div className={`tog${form.bundle_only ? " on" : ""}`} onClick={() => setForm(f => ({ ...f, bundle_only: !f.bundle_only }))}>
+                  <div className="tog-thumb" />
                 </div>
-              );
-            })()}
+                <div>
+                  <span style={{ color: "var(--text)", fontWeight: 600 }}>Bundle only</span>
+                  <span style={{ marginLeft: "8px", fontSize: "12px" }}>— buyer must take the full quantity</span>
+                </div>
+              </label>
+            )}
 
             {/* Contact */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-              {[
-                { key: "discord", label: "Discord Username", placeholder: "Username#0000" },
-                { key: "rsn", label: "RSN", placeholder: "In-game name" },
-              ].map(({ key, label, placeholder }) => (
-                <div key={key}>
-                  <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>{label}</label>
-                  <input value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} placeholder={placeholder}
-                    style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
-                </div>
-              ))}
+              <div>
+                <label style={labelStyle}>Discord Username</label>
+                <input value={form.discord} onChange={e => setForm(f => ({ ...f, discord: e.target.value }))}
+                  placeholder="username#0000" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>RSN</label>
+                <input value={form.rsn} onChange={e => setForm(f => ({ ...f, rsn: e.target.value }))}
+                  placeholder="In-game name" style={inputStyle} />
+              </div>
             </div>
 
             {/* Notes */}
             <div>
-              <label style={{ fontSize: "13px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px", display: "block", marginBottom: "6px" }}>Notes (optional)</label>
-              <input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="e.g. Will split payment, bundle only, swap offers welcome..."
-                style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "Inter, sans-serif", outline: "none", boxSizing: "border-box" }} />
+              <label style={labelStyle}>Notes (optional)</label>
+              <input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                placeholder="e.g. Will split, swap offers welcome, DM before trading..."
+                style={inputStyle} />
             </div>
 
-            <div style={{ fontSize: "13px", color: "var(--text-dim)", fontStyle: "italic" }}>
-              Listing expires automatically after 7 days. All trades occur in-game. The sale of account names, services, or anything violating RuneScape rules is prohibited.
+            <div style={{ fontSize: "12px", color: "var(--text-dim)", fontStyle: "italic", lineHeight: 1.6 }}>
+              Listing expires after 7 days. All trades occur in-game. Sale of accounts, services, or anything violating RuneScape rules is prohibited.
             </div>
 
             <div style={{ display: "flex", gap: "10px" }}>
               <button onClick={() => setShowPostForm(false)}
-                style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "14px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
                 Cancel
               </button>
               <button onClick={submitListing} disabled={posting}
-                style={{ flex: 2, padding: "12px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #c9a84c, #e8c96a)", color: "#0a0e14", fontSize: "14px", fontWeight: 700, cursor: posting ? "wait" : "pointer", fontFamily: "Cinzel, serif", letterSpacing: "0.5px", opacity: posting ? 0.7 : 1, boxShadow: "0 2px 8px rgba(201,168,76,0.3)" }}>
+                style={{ flex: 2, padding: "12px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #c9a84c, #e8c96a)", color: "#0a0e14", fontSize: "14px", fontWeight: 700, cursor: posting ? "wait" : "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.5px", opacity: posting ? 0.7 : 1 }}>
                 {posting ? "Posting..." : "Post Listing →"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── REPORT MODAL ── */}
+      {reportModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1001, padding: "20px" }}
+          onClick={e => { if (e.target === e.currentTarget) setReportModal(null); }}>
+          <div style={{ background: "#111620", border: "1px solid #1c2a3a", borderRadius: "14px", padding: "26px", width: "100%", maxWidth: "400px", display: "flex", flexDirection: "column", gap: "16px" }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ fontFamily: "'Cinzel', serif", fontSize: "16px", fontWeight: 700, color: "var(--text)" }}>Report Listing</div>
+            <div style={{ fontSize: "14px", color: "var(--text-dim)" }}>
+              Reporting <strong style={{ color: "var(--text)" }}>{reportModal.item_name}</strong> listed by {reportModal.rsn || reportModal.discord || "unknown"}
+            </div>
+            <div>
+              <label style={labelStyle}>Reason *</label>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "10px" }}>
+                {["Scam / phishing", "Wrong item category", "Inflated or misleading price", "Duplicate listing", "Other"].map(r => (
+                  <button key={r} onClick={() => setReportReason(r)}
+                    style={{ padding: "9px 14px", borderRadius: "7px", border: `1px solid ${reportReason === r ? "rgba(231,76,60,0.45)" : "var(--border)"}`, background: reportReason === r ? "rgba(231,76,60,0.08)" : "transparent", color: reportReason === r ? "var(--red)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", textAlign: "left", transition: "all 0.1s" }}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setReportModal(null)}
+                style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                Cancel
+              </button>
+              <button onClick={submitReport} disabled={submittingReport || !reportReason}
+                style={{ flex: 2, padding: "10px", borderRadius: "8px", border: "none", background: submittingReport || !reportReason ? "var(--bg3)" : "rgba(231,76,60,0.8)", color: submittingReport || !reportReason ? "var(--text-dim)" : "#fff", fontSize: "13px", fontWeight: 700, cursor: submittingReport || !reportReason ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                {submittingReport ? "Submitting..." : "Submit Report"}
               </button>
             </div>
           </div>
