@@ -5238,7 +5238,9 @@ export default function RuneTrader() {
     { name: `Breaking ${set}`, category: "sets", skill: "Grand Exchange", inputs: [{ name: set }], outputs: pieces.map(p => ({ name: p })) },
   ]);
 
-  // ── Potion decanting — 4x(3-dose) → 3x(4-dose) and 3x(4-dose) → 4x(3-dose) ──
+  // ── Potion decanting — only using dose variants confirmed to have wiki prices ──
+  // Wiki prices exist primarily for (1) and (3) dose variants
+  // 4x(1-dose) → 1x(4-dose) equivalent: use 3x(1) → 1x(3) which are both priced
   const POTION_NAMES = [
     "Agility potion","Ancient brew","Anti-venom","Anti-venom+","Antidote+","Antidote++",
     "Antifire potion","Antipoison","Armadyl brew","Attack potion","Bastion potion",
@@ -5248,39 +5250,47 @@ export default function RuneTrader() {
     "Divine super defence potion","Divine super strength potion","Energy potion",
     "Extended anti-venom+","Extended antifire","Extended stamina potion","Extended super antifire",
     "Extreme energy potion","Fishing potion","Forgotten brew","Goading potion","Guthix balance",
-    "Guthix rest","Haemostatic dressing","Hunter potion","Magic potion","Menaphite remedy",
+    "Guthix rest","Hunter potion","Magic potion","Menaphite remedy",
     "Prayer potion","Prayer regeneration potion","Ranging potion","Relicym's balm",
-    "Restore potion","Sacred oil","Sanfew serum","Saradomin brew","Serum 207",
+    "Restore potion","Sacred oil","Sanfew serum","Saradomin brew",
     "Stamina potion","Strength potion","Super antifire potion","Super attack","Super combat potion",
     "Super defence","Super energy","Super fishing potion","Super hunter potion","Super restore",
     "Super strength","Superantipoison","Zamorak brew",
   ];
   const POTION_RECIPES = POTION_NAMES.flatMap(name => {
+    const r1 = { name: `${name}(1)` };
+    const r2 = { name: `${name}(2)` };
     const r3 = { name: `${name}(3)` };
     const r4 = { name: `${name}(4)` };
-    const r2 = { name: `${name}(2)` };
     return [
-      // 4×(3-dose) → 3×(4-dose): buy cheap 3-dose, sell as 4-dose
-      { name: `Decant ${name}: 3→4 dose`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r3, quantity:4}], outputs: [{...r4, quantity:3}] },
-      // 3×(4-dose) → 4×(3-dose): buy cheap 4-dose, sell as 3-dose
-      { name: `Decant ${name}: 4→3 dose`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r4, quantity:3}], outputs: [{...r3, quantity:4}] },
-      // 4×(2-dose) → 2×(4-dose)
-      { name: `Decant ${name}: 2→4 dose`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r2, quantity:4}], outputs: [{...r4, quantity:2}] },
-      // 2×(4-dose) → 4×(2-dose)
-      { name: `Decant ${name}: 4→2 dose`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r4, quantity:2}], outputs: [{...r2, quantity:4}] },
+      // 3→4: buy 4x(3-dose), sell 3x(4-dose)
+      { name: `Decant ${name}: (3)→(4)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r3, quantity:4}], outputs: [{...r4, quantity:3}] },
+      // 4→3: buy 3x(4-dose), sell 4x(3-dose)
+      { name: `Decant ${name}: (4)→(3)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r4, quantity:3}], outputs: [{...r3, quantity:4}] },
+      // 1→3: buy 3x(1-dose), sell 1x(3-dose)
+      { name: `Decant ${name}: (1)→(3)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r1, quantity:3}], outputs: [{...r3, quantity:1}] },
+      // 3→1: buy 1x(3-dose), sell 3x(1-dose)
+      { name: `Decant ${name}: (3)→(1)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r3, quantity:1}], outputs: [{...r1, quantity:3}] },
+      // 2→4: buy 2x(2-dose), sell 1x(4-dose)
+      { name: `Decant ${name}: (2)→(4)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r2, quantity:2}], outputs: [{...r4, quantity:1}] },
+      // 4→2: buy 1x(4-dose), sell 2x(2-dose)
+      { name: `Decant ${name}: (4)→(2)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r4, quantity:1}], outputs: [{...r2, quantity:2}] },
     ];
   });
 
-  // ── Jewelry charging — noted items with charges sold on GE ──
+  // ── Jewelry: charge arbitrage — buy uncharged, sell charged (or vice versa) ──
+  // Only including pairs where both charge variants have confirmed wiki prices
   const JEWELRY_RECIPES = [
-    // Amulets of glory
-    { name: "Amulet of glory(4) → (6) recharge equiv", category: "jewelry", skill: "Fountain of Rune", inputs: [{name:"Amulet of glory(4)", quantity:3}], outputs: [{name:"Amulet of glory(6)", quantity:2}] },
-    // Combat bracelets
-    { name: "Combat bracelet(4) → (6) recharge equiv", category: "jewelry", skill: "Ranging Guild", inputs: [{name:"Combat bracelet(4)", quantity:3}], outputs: [{name:"Combat bracelet(6)", quantity:2}] },
-    // Skills necklaces
-    { name: "Skills necklace(4) → (6) recharge equiv", category: "jewelry", skill: "Fishing Guild", inputs: [{name:"Skills necklace(4)", quantity:3}], outputs: [{name:"Skills necklace(6)", quantity:2}] },
-    // Ring of wealth
-    { name: "Ring of wealth(5) arbitrage", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Ring of wealth (5)"}], outputs: [{name:"Ring of wealth (5)"}] },
+    { name: "Amulet of glory (6) vs uncharaged", category: "jewelry", skill: "Fountain of Rune", inputs: [{name:"Amulet of glory"}], outputs: [{name:"Amulet of glory(6)"}] },
+    { name: "Games necklace (8) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Games necklace"}], outputs: [{name:"Games necklace(8)"}] },
+    { name: "Ring of dueling (8) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Ring of dueling"}], outputs: [{name:"Ring of dueling(8)"}] },
+    { name: "Combat bracelet (6) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Combat bracelet"}], outputs: [{name:"Combat bracelet(6)"}] },
+    { name: "Skills necklace (6) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Skills necklace"}], outputs: [{name:"Skills necklace(6)"}] },
+    { name: "Burning amulet (5) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Bracelet of slaughter"}], outputs: [{name:"Burning amulet(5)"}] },
+    { name: "Ring of wealth (5) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Ring of wealth"}], outputs: [{name:"Ring of wealth (5)"}] },
+    { name: "Necklace of passage (5) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Necklace of passage"}], outputs: [{name:"Necklace of passage(5)"}] },
+    { name: "Ring of returning (5) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Ring of returning"}], outputs: [{name:"Ring of returning(5)"}] },
+    { name: "Castle wars bracelet (3) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Bracelet of clay"}], outputs: [{name:"Castle wars bracelet(3)"}] },
   ];
 
   const STATIC_RECIPES = [...SET_RECIPES, ...POTION_RECIPES, ...JEWELRY_RECIPES];
