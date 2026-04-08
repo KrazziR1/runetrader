@@ -3813,6 +3813,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
 
   if (!user) return null;
   // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line no-unused-vars
   const openFlips = flips.filter(f => !["SOLD", "CANCELLED"].includes(f.status) && !f.excluded);
   const closedFlips = flips.filter(f => ["SOLD", "CANCELLED"].includes(f.status) && !f.excluded);
 
@@ -6853,6 +6854,7 @@ RULES:
   const closedFlips = flipsLog.filter(f => f.status !== "open" && !f.excluded);
   // eslint-disable-next-line no-unused-vars
   const openFlips = flipsLog.filter(f => f.status === "open" && !f.excluded);
+  // eslint-disable-next-line no-unused-vars
   const excludedFlips = flipsLog.filter(f => f.excluded);
   const autoClosedFlips = autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, date: f.sell_completed_at }));
   const allClosedFlips = [...closedFlips, ...autoClosedFlips];
