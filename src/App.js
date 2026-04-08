@@ -1644,7 +1644,7 @@ function ProfitChart({ flipsLog, autoFlipsLog = [] }) {
     const W = rect.width, H = rect.height, pad = { top: 10, right: 10, bottom: 30, left: 60 };
     ctx.clearRect(0, 0, W, H);
     // Merge manual closed flips + auto closed flips, sorted by date
-    const manualClosed = flipsLog.filter(f => f.status !== "open").map(f => ({ profit: f.totalProfit || 0, date: f.date }));
+    const manualClosed = flipsLog.filter(f => f.status !== "open" && !f.excluded).map(f => ({ profit: f.totalProfit || 0, date: f.date }));
     const autoClosed = autoFlipsLog.map(f => ({ profit: f.profit || 0, date: f.sell_completed_at }));
     const closedFlips = [...manualClosed, ...autoClosed];
     if (closedFlips.length < 2) return;
@@ -1682,7 +1682,7 @@ function ProfitChart({ flipsLog, autoFlipsLog = [] }) {
     ctx.strokeStyle = isPositive ? "#2ecc71" : "#e74c3c"; ctx.lineWidth = 2; ctx.stroke();
   }, [flipsLog, autoFlipsLog]);
 
-  const closedCount = flipsLog.filter(f => f.status !== "open").length + autoFlipsLog.length;
+  const closedCount = flipsLog.filter(f => f.status !== "open" && !f.excluded).length + autoFlipsLog.length;
   if (closedCount < 2) return null;
   return (
     <div className="profit-chart-wrap">
@@ -1700,7 +1700,7 @@ function CloseFlipModal({ flip, items, onSold, onCancelled, onDismiss, loading }
   const [step, setStep] = useState("choose"); // "choose" | "sold"
   const [sellPrice, setSellPrice] = useState("");
 
-  const liveItem = items.find(i => i.name.toLowerCase() === flip.item.toLowerCase());
+  const liveItem = items.find(i => i.name.toLowerCase() === (flip.item || "").toLowerCase());
   const defaultSell = liveItem ? String(liveItem.high) : "";
 
   useEffect(() => {
@@ -1806,12 +1806,12 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
 
   // ── All closed flips (plugin + tracker) ──
   const allClosed = [
-    ...flipsLog.filter(f => f.status !== "open").map(f => ({ ...f, _date: f.date ? new Date(f.date) : null })),
+    ...flipsLog.filter(f => f.status !== "open" && !f.excluded).map(f => ({ ...f, _date: f.date ? new Date(f.date) : null })),
     ...autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, roi: f.roi || 0, qty: f.quantity || 1, buyPrice: f.buy_price || 0, _date: f.sell_completed_at ? new Date(f.sell_completed_at) : null })),
   ];
 
   // ── Open positions (tracker open flips only — no manual entry) ──
-  const trackerOpenFlips = flipsLog.filter(f => f.status === "open");
+  const trackerOpenFlips = flipsLog.filter(f => f.status === "open" && !f.excluded);
   const totalOpenValue = trackerOpenFlips.reduce((s, f) => s + (f.buyPrice || 0) * (f.qty || 1), 0);
 
   // Capital allocation — open tracker flips only
@@ -2571,7 +2571,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
   }, [liveOps, items, smartAlertSettings]); // eslint-disable-line
 
   // ── Build open positions ──
-  const trackerOpen = flipsLog.filter(f => f.status === "open").map(f => ({
+  const trackerOpen = flipsLog.filter(f => f.status === "open" && !f.excluded).map(f => ({
     id: f.id, name: f.item, gpIn: (f.buyPrice || 0) * (f.qty || 1),
     qty: f.qty || 1, buyPrice: f.buyPrice || 0, source: "tracker",
     openedAt: f.date ? new Date(f.date) : new Date(),
@@ -2606,7 +2606,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
   const efficiencyPct = merchantCapital > 0 ? Math.round((totalDeployed / merchantCapital) * 100) : 0;
   const circumference = 2 * Math.PI * 32;
   const dashOffset = circumference - (efficiencyPct / 100) * circumference;
-  const todayFlips = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString());
+  const todayFlips = flipsLog.filter(f => f.status !== "open" && !f.excluded && f.date && new Date(f.date).toDateString() === new Date().toDateString());
   const autoTodayFlips = (autoFlipsLog || []).filter(f => f.sell_completed_at && new Date(f.sell_completed_at).toDateString() === new Date().toDateString());
   const realisedToday = todayFlips.reduce((s, f) => s + (f.totalProfit || 0), 0) + autoTodayFlips.reduce((s, f) => s + (f.profit || 0), 0);
   const unrealisedTotal = allOpenPositions.reduce((s, pos) => {
@@ -2714,7 +2714,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
   function saveGoal(val) {
     const n = parseInt(val.replace(/[^0-9]/g, "")) || 0;
     setDailyGoal(n);
-    localStorage.setItem("rt_daily_goal", String(n));
+    safeSetItem("rt_daily_goal", String(n));
     setShowGoalInput(false);
   }
 
@@ -2724,7 +2724,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
     const entry = { id: Date.now(), name: name.trim(), margin: item?.margin || 0, score: item?.score || 0, buyLimit: item?.buyLimit || 0 };
     const updated = [...flipQueue, entry];
     setFlipQueue(updated);
-    localStorage.setItem("rt_flip_queue", JSON.stringify(updated));
+    safeSetItem("rt_flip_queue", JSON.stringify(updated));
     setQueueInput("");
     setShowQueueAdd(false);
   }
@@ -2732,7 +2732,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
   function removeFromQueue(id) {
     const updated = flipQueue.filter(q => q.id !== id);
     setFlipQueue(updated);
-    localStorage.setItem("rt_flip_queue", JSON.stringify(updated));
+    safeSetItem("rt_flip_queue", JSON.stringify(updated));
   }
 
   // ── Rotation picks ──
@@ -3803,8 +3803,8 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
 
   if (!user) return null;
   // eslint-disable-next-line no-unused-vars
-  const openFlips = flips.filter(f => !["SOLD", "CANCELLED"].includes(f.status));
-  const closedFlips = flips.filter(f => ["SOLD", "CANCELLED"].includes(f.status));
+  const openFlips = flips.filter(f => !["SOLD", "CANCELLED"].includes(f.status) && !f.excluded);
+  const closedFlips = flips.filter(f => ["SOLD", "CANCELLED"].includes(f.status) && !f.excluded);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -3821,20 +3821,36 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 90px 80px 80px 80px 100px", gap: "10px", padding: "0 4px 8px", fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              <span>Item</span><span>Status</span><span>Buy</span><span>Sell</span><span>Qty</span><span>Started</span>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 90px 80px 80px 80px 80px 80px", gap: "8px", padding: "0 4px 8px", fontSize: "10px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <span>Item</span><span>Status</span><span>Buy</span><span>Sell</span><span>Qty</span><span>Started</span><span></span>
             </div>
-            {openFlips.map(f => (
-              <div key={f.id} style={{ display: "grid", gridTemplateColumns: "2fr 90px 80px 80px 80px 100px", gap: "10px", padding: "10px 4px", borderTop: "1px solid var(--border)", alignItems: "center" }}>
+            {/* Exclusion info banner */}
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", padding: "10px 14px", background: "rgba(52,152,219,0.06)", border: "1px solid rgba(52,152,219,0.15)", borderRadius: "8px", marginBottom: "8px", fontSize: "13px", color: "var(--text-dim)" }}>
+              <span style={{ color: "#3498db", flexShrink: 0, marginTop: "1px" }}>ℹ</span>
+              <span>Bought items to exchange as a set or for personal use? Use <strong style={{ color: "var(--text)" }}>Exclude</strong> to remove them from your stats. Excluded items won't affect your GP/hr, win rate, or flip count. You can't exclude a closed flip that lost GP.</span>
+            </div>
+            {/* All open flips including excluded (shown dimmed) */}
+            {flipsLog.filter(f => f.status === "open").map(f => (
+              <div key={f.id} style={{ display: "grid", gridTemplateColumns: "2fr 90px 80px 80px 80px 80px 80px", gap: "8px", padding: "10px 4px", borderTop: "1px solid var(--border)", alignItems: "center", opacity: f.excluded ? 0.45 : 1, transition: "opacity 0.2s" }}>
                 <div>
-                  <div style={{ fontSize: "13px", fontWeight: 500 }}>{f.item_name}</div>
-                  <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>Slot {f.slot + 1}</div>
+                  <div style={{ fontSize: "13px", fontWeight: 500, textDecoration: f.excluded ? "line-through" : "none", color: f.excluded ? "var(--text-dim)" : "var(--text)" }}>{f.item_name}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-dim)", display: "flex", alignItems: "center", gap: "6px" }}>
+                    Slot {f.slot + 1}
+                    {f.excluded && <span style={{ fontSize: "10px", background: "rgba(255,255,255,0.06)", border: "1px solid var(--border)", borderRadius: "3px", padding: "0 5px", color: "var(--text-dim)", letterSpacing: "0.5px" }}>EXCLUDED</span>}
+                  </div>
                 </div>
                 {statusBadge(f.status)}
                 <span style={{ fontSize: "12px" }}>{f.buy_price ? formatGP(f.buy_price) : "—"}</span>
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{f.sell_price ? formatGP(f.sell_price) : "—"}</span>
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.quantity || 0).toLocaleString()}</span>
                 <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{fmtDate(f.buy_started_at)}</span>
+                <button
+                  onClick={() => toggleFlipExclude(f.id)}
+                  style={{ padding: "3px 8px", borderRadius: "5px", border: `1px solid ${f.excluded ? "rgba(46,204,113,0.3)" : "rgba(255,255,255,0.1)"}`, background: f.excluded ? "rgba(46,204,113,0.08)" : "transparent", color: f.excluded ? "var(--green)" : "var(--text-dim)", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
+                  onMouseOver={e => { if (!f.excluded) { e.currentTarget.style.borderColor = "rgba(231,76,60,0.3)"; e.currentTarget.style.color = "#e74c3c"; } }}
+                  onMouseOut={e => { if (!f.excluded) { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "var(--text-dim)"; } }}>
+                  {f.excluded ? "✓ Excluded" : "Exclude"}
+                </button>
               </div>
             ))}
           </div>
@@ -4779,7 +4795,7 @@ export default function RuneTrader() {
     if (ref) {
       // Sanitize — ref codes are alphanumeric only, max 16 chars
       const safeRef = ref.replace(/[^a-zA-Z0-9]/g, "").slice(0, 16);
-      if (safeRef) localStorage.setItem("rt_ref_code", safeRef);
+      if (safeRef) safeSetItem("rt_ref_code", safeRef);
       const url = new URL(window.location.href);
       url.searchParams.delete("ref");
       window.history.replaceState({}, "", url.toString());
@@ -4886,7 +4902,7 @@ export default function RuneTrader() {
                 if (!localStorage.getItem(toastKey)) {
                   setTimeout(() => {
                     showSupporterToast();
-                    localStorage.setItem(toastKey, "1");
+                    safeSetItem(toastKey, "1");
                   }, 2000);
                 }
               }
@@ -4900,7 +4916,7 @@ export default function RuneTrader() {
           // Show What's New modal if this deploy is new to them
           const seen = localStorage.getItem(DEPLOY_KEY);
           if (!seen) { setTimeout(() => setShowWhatsNew(true), 1200); }
-          localStorage.setItem(DEPLOY_KEY, "1");
+          safeSetItem(DEPLOY_KEY, "1");
           // ── Login streak ──
           const todayLocal = new Date();
           const today = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth()+1).padStart(2,'0')}-${String(todayLocal.getDate()).padStart(2,'0')}`;
@@ -4914,8 +4930,8 @@ export default function RuneTrader() {
             else if (lastLogin === yesterday) { newStreak = storedStreak + 1; }
             else { newStreak = 1; }
           }
-          localStorage.setItem("rt_last_login", today);
-          localStorage.setItem("rt_login_streak", String(newStreak));
+          safeSetItem("rt_last_login", today);
+          safeSetItem("rt_login_streak", String(newStreak));
           setLoginStreak(newStreak);
           // Login cinematic — fire once per session on a new day
           if (lastLogin !== today) {
@@ -4939,7 +4955,7 @@ export default function RuneTrader() {
             setTimeout(() => setShowFirstLoginGoal(true), 2000);
           }
           // Show daily GP goal prompt if signed in today and no session goal yet
-          const hasSessionGoal = sessionStorage.getItem("rt_session_goal");
+          const hasSessionGoal = (() => { try { return sessionStorage.getItem("rt_session_goal"); } catch { return null; } })();
           if (!hasSessionGoal && lastLogin !== today) {
             setTimeout(() => setShowDailyGoalPrompt(true), 3200);
           }
@@ -5107,7 +5123,7 @@ export default function RuneTrader() {
     const today = new Date().toISOString().slice(0, 10);
     const lastFlipDay = localStorage.getItem("rt_last_flip_day");
     const isFirstFlipOfDay = lastFlipDay !== today;
-    if (isFirstFlipOfDay) localStorage.setItem("rt_last_flip_day", today);
+    if (isFirstFlipOfDay) safeSetItem("rt_last_flip_day", today);
 
     const earned = calcFlipXP(profit, isFirstFlipOfDay);
     if (earned <= 0) return;
@@ -5179,7 +5195,7 @@ export default function RuneTrader() {
       });
       const tourKey = `runetrader_merchant_tour_seen_${user.id}`;
       if (!localStorage.getItem(tourKey)) {
-        localStorage.setItem(tourKey, "1");
+        safeSetItem(tourKey, "1");
         setTimeout(() => startMerchantTour(), 400);
       }
     } catch (e) { console.error("[saveMerchantCapital]", e?.message); showToast("Failed to save capital. Try again.", "error"); }
@@ -5228,9 +5244,9 @@ export default function RuneTrader() {
       const sessionM = Math.floor((sessionMs % 3600000) / 60000);
       const sessionTime = sessionH > 0 ? `${sessionH}h ${sessionM}m` : `${sessionM}m`;
       const today = new Date().toDateString();
-      const todayManual = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === today);
+      const todayManual = flipsLog.filter(f => f.status !== "open" && !f.excluded && f.date && new Date(f.date).toDateString() === today);
       const todayAuto = autoFlipsLog.filter(f => f.sell_completed_at && new Date(f.sell_completed_at).toDateString() === today);
-      const allToday = [...todayManual.map(f => ({ item: f.item, profit: f.totalProfit || 0 })), ...todayAuto.map(f => ({ item: f.item_name, profit: f.profit || 0 }))];
+      const allToday = [...todayManual.filter(f => !f.excluded).map(f => ({ item: f.item, profit: f.totalProfit || 0 })), ...todayAuto.map(f => ({ item: f.item_name, profit: f.profit || 0 }))];
       const totalGP = allToday.reduce((s, f) => s + f.profit, 0);
       const flipsCount = allToday.length;
       const bestFlip = allToday.length ? allToday.reduce((b, f) => f.profit > b.profit ? f : b, allToday[0]) : null;
@@ -5481,7 +5497,7 @@ export default function RuneTrader() {
   // ── Merchant P&L tracking (after flipsLog is declared) ──
   useEffect(() => {
     if (!merchantMode) return;
-    const todayManual = flipsLog.filter(f => f.status !== "open" && f.date && new Date(f.date).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.totalProfit || 0), 0);
+    const todayManual = flipsLog.filter(f => f.status !== "open" && !f.excluded && f.date && new Date(f.date).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.totalProfit || 0), 0);
     const todayAuto = autoFlipsLog.filter(f => f.sell_completed_at && new Date(f.sell_completed_at).toDateString() === new Date().toDateString()).reduce((s, f) => s + (f.profit || 0), 0);
     const totalRealised = todayManual + todayAuto;
     const snap = { time: Date.now(), value: totalRealised };
@@ -5938,6 +5954,7 @@ export default function RuneTrader() {
       roi: r.roi,
       date: r.date || new Date().toISOString(),
       status: r.status || "closed",
+      excluded: r.excluded || false,
     };
   }
 
@@ -6006,10 +6023,10 @@ export default function RuneTrader() {
             // Clean up entries older than 30 days
             const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
             Object.keys(newDates).forEach(id => { if (newDates[id] < cutoff) delete newDates[id]; });
-            localStorage.setItem(NEW_ITEMS_DATES_KEY, JSON.stringify(newDates));
+            safeSetItem(NEW_ITEMS_DATES_KEY, JSON.stringify(newDates));
           }
           // Always update the known IDs snapshot
-          localStorage.setItem(NEW_ITEMS_KEY, JSON.stringify([...currentIds]));
+          safeSetItem(NEW_ITEMS_KEY, JSON.stringify([...currentIds]));
           setNewItemDates(newDates);
         } catch (e) { /* localStorage quota */ }
       }
@@ -6404,7 +6421,7 @@ export default function RuneTrader() {
         }
         // First profitable flip celebration (one-time ever)
         if (totalProfit > 0 && !localStorage.getItem("rt_first_profit_celebrated")) {
-          localStorage.setItem("rt_first_profit_celebrated", "1");
+          safeSetItem("rt_first_profit_celebrated", "1");
           setFlipConfettiData({ itemName: flip.item, profit: totalProfit, roi });
           setShowFlipConfetti(true);
           setTimeout(() => setShowFlipConfetti(false), 6000);
@@ -6438,6 +6455,18 @@ export default function RuneTrader() {
       setClosingFlip(null);
       showToast(`${flip.item} removed from open flips.`, "info");
     } catch (e) { console.error("[handleCloseFlipCancelled]", e?.message); showToast("Failed to cancel flip.", "error"); }
+  }
+
+  // ── Flip exclusion toggle ──
+  function toggleFlipExclude(id) {
+    const updated = flipsLog.map(f => {
+      if (f.id !== id) return f;
+      // Block exclusion if closed with negative profit
+      if (f.status !== "open" && (f.totalProfit || 0) < 0) return f;
+      return { ...f, excluded: !f.excluded };
+    });
+    setFlipsLog(updated);
+    safeSetItem("runetrader_flips", JSON.stringify(updated));
   }
 
   // ── Merchant Mode close handlers (no tab switching needed) ──
@@ -6581,7 +6610,7 @@ export default function RuneTrader() {
     // Keep items the user specifically asked about even if outside their tier
     const mentionedItems = itemsRef.current
       .filter(i => text.toLowerCase().includes(i.name.toLowerCase()))
-      .map(i => `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, volume ${i.volume.toLocaleString()}/day, score ${i.score}`)
+      .map(i => `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, volume ${(i.volume||0).toLocaleString()}/day, score ${i.score ?? 0}`)
       .join("\n");
 
     const topFlips = reliableItems.slice(0, 60).map(i => {
@@ -6597,7 +6626,7 @@ export default function RuneTrader() {
       else if (i.volume >= 5_000)   expFill = Math.min(lim, mkt4hr * 0.08);
       else                          expFill = Math.min(lim, mkt4hr * 0.03);
       const gpPerFill = Math.round((i.margin || 0) * Math.max(expFill, 1));
-      return `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, vol ${i.volume.toLocaleString()}/day, limit ${i.buyLimit.toLocaleString()}, cycles/day ~${cyclesPerDay}, GP/fill ~${formatGP(gpPerFill)}, data ${freshness}`;
+      return `${i.name}: buy ${formatGP(i.low)}, sell ${formatGP(i.high)}, margin ${formatGP(i.margin)}, ROI ${i.roi}%, vol ${(i.volume||0).toLocaleString()}/day, limit ${(i.buyLimit || 0).toLocaleString()}, cycles/day ~${cyclesPerDay}, GP/fill ~${formatGP(gpPerFill)}, data ${freshness}`;
     }).join("\n");
 
     const tierDesc = {
@@ -6811,9 +6840,10 @@ RULES:
   }, [filteredSource, filter, search, categoryFilter, picksMode, advFilters, sortCol, sortDir, favourites, priceVersion, customizePrefs]); // eslint-disable-line
 
   // ── Tracker stats (manual + auto-tracked flips combined) ──
-  const closedFlips = flipsLog.filter(f => f.status !== "open");
+  const closedFlips = flipsLog.filter(f => f.status !== "open" && !f.excluded);
   // eslint-disable-next-line no-unused-vars
-  const openFlips = flipsLog.filter(f => f.status === "open");
+  const openFlips = flipsLog.filter(f => f.status === "open" && !f.excluded);
+  const excludedFlips = flipsLog.filter(f => f.excluded);
   const autoClosedFlips = autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, date: f.sell_completed_at }));
   const allClosedFlips = [...closedFlips, ...autoClosedFlips];
   const totalProfit = allClosedFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
@@ -7544,7 +7574,7 @@ RULES:
         {/* €€€€ FIRST-LOGIN GOAL MODAL €€€€ */}
         {showFirstLoginGoal && (
           <div style={{ position: "fixed", inset: 0, zIndex: 600, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", animation: "fadeIn 0.25s ease" }}
-            onClick={e => { if (e.target === e.currentTarget) { setShowFirstLoginGoal(false); localStorage.setItem("rt_first_goal_set", "skipped"); } }}>
+            onClick={e => { if (e.target === e.currentTarget) { setShowFirstLoginGoal(false); safeSetItem("rt_first_goal_set", "skipped"); } }}>
             <div style={{ background: "#0f1218", border: "1px solid #2a3340", borderRadius: "20px", width: "100%", maxWidth: "480px", padding: "36px", display: "flex", flexDirection: "column", gap: "24px", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, var(--gold), transparent)" }} />
               <div style={{ textAlign: "center" }}>
@@ -7560,7 +7590,7 @@ RULES:
                 ].map(opt => (
                   <button key={opt.value}
                     onClick={() => {
-                      localStorage.setItem("rt_first_goal_set", opt.value);
+                      safeSetItem("rt_first_goal_set", opt.value);
                       setShowFirstLoginGoal(false);
                       if (opt.value === "learn") { handleSetActiveTab("market"); setTimeout(() => setShowMarketWizard(true), 400); }
                       if (opt.value === "track") handleSetActiveTab("tracker");
@@ -7577,7 +7607,7 @@ RULES:
                   </button>
                 ))}
               </div>
-              <button onClick={() => { setShowFirstLoginGoal(false); localStorage.setItem("rt_first_goal_set", "skipped"); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>Skip for now</button>
+              <button onClick={() => { setShowFirstLoginGoal(false); safeSetItem("rt_first_goal_set", "skipped"); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>Skip for now</button>
             </div>
           </div>
         )}
@@ -7670,7 +7700,7 @@ RULES:
                 ].map(opt => (
                   <button key={opt.value}
                     onClick={() => {
-                      localStorage.setItem("rt_market_wizard_seen", "1");
+                      safeSetItem("rt_market_wizard_seen", "1");
                       setShowMarketWizard(false);
                       if (opt.value === "picks") setMarketSubTab("picks");
                       else if (opt.value === "alch") setMarketSubTab("alch");
@@ -7688,7 +7718,7 @@ RULES:
                   </button>
                 ))}
               </div>
-              <button onClick={() => { localStorage.setItem("rt_market_wizard_seen", "1"); setShowMarketWizard(false); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>Skip</button>
+              <button onClick={() => { safeSetItem("rt_market_wizard_seen", "1"); setShowMarketWizard(false); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>Skip</button>
             </div>
           </div>
         )}
@@ -7711,7 +7741,7 @@ RULES:
                 ].map(opt => (
                   <button key={opt.value}
                     onClick={() => {
-                      localStorage.setItem("rt_tracker_wizard_seen", "1");
+                      safeSetItem("rt_tracker_wizard_seen", "1");
                       setShowTrackerWizard(false);
                       if (opt.value === "no") setTimeout(() => showToast("Log a flip using the Close button on any open offer — or use the RuneLite plugin to auto-track.", "info", 7000), 300);
                     }}
@@ -7727,7 +7757,7 @@ RULES:
                   </button>
                 ))}
               </div>
-              <button onClick={() => { localStorage.setItem("rt_tracker_wizard_seen", "1"); setShowTrackerWizard(false); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>Skip</button>
+              <button onClick={() => { safeSetItem("rt_tracker_wizard_seen", "1"); setShowTrackerWizard(false); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>Skip</button>
             </div>
           </div>
         )}
@@ -7904,8 +7934,8 @@ RULES:
               {/* Stats */}
               <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
                 {[
-                  { label: "Total Profit", value: formatGP(flipsLog.filter(f => f.status !== "open").reduce((s, f) => s + (f.totalProfit || 0), 0)) },
-                  { label: "Flips", value: flipsLog.filter(f => f.status !== "open").length },
+                  { label: "Total Profit", value: formatGP(flipsLog.filter(f => f.status !== "open" && !f.excluded).reduce((s, f) => s + (f.totalProfit || 0), 0)) },
+                  { label: "Flips", value: flipsLog.filter(f => f.status !== "open" && !f.excluded).length },
                   { label: "Achievements", value: `${unlockedAchievements.length}/${ACHIEVEMENTS.length}` },
                 ].map((s, i) => (
                   <div key={i} style={{ background: "var(--bg3)", borderRadius: "8px", padding: "10px", textAlign: "center" }}>
