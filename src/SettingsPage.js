@@ -3,77 +3,107 @@ import { useState, useEffect } from "react";
 
 const STYLES = `
   @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-  .settings-page { display:flex; flex-direction:column; gap:20px; max-width:720px; }
-  .settings-section { background:#111620; border:1px solid #1c2a3a; border-radius:12px; overflow:hidden; }
-  .settings-section-header { display:flex; align-items:center; gap:12px; padding:16px 22px; border-bottom:1px solid #1c2a3a; cursor:pointer; user-select:none; }
-  .settings-section-header:hover { background:rgba(255,255,255,0.02); }
-  .settings-section-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
-  .settings-section-title { font-family:'Cinzel',serif; font-size:15px; font-weight:700; color:#e8e8e8; letter-spacing:0.5px; }
-  .settings-section-sub { font-size:13px; color:#8fa0b0; margin-top:3px; }
-  .settings-section-chevron { margin-left:auto; font-size:12px; color:#3d5060; transition:transform 0.2s; }
-  .settings-section-chevron.open { transform:rotate(180deg); }
-  .settings-rows { display:flex; flex-direction:column; }
-  .settings-row { display:flex; align-items:center; padding:16px 22px; border-bottom:1px solid #0f1820; gap:20px; }
-  .settings-row:last-child { border-bottom:none; }
-  .settings-row-info { flex:1; min-width:0; }
-  .settings-row-label { font-size:14px; font-weight:500; color:#e8e8e8; }
-  .settings-row-desc { font-size:13px; color:#8fa0b0; margin-top:4px; line-height:1.6; }
-  .settings-row-control { flex-shrink:0; }
 
-  /* Toggle switch */
-  .tog { display:inline-flex; align-items:center; width:44px; height:24px; border-radius:24px; background:#243040; border:2px solid #344a62; cursor:pointer; transition:background 0.22s, border-color 0.22s; flex-shrink:0; position:relative; box-sizing:border-box; }
-  .tog.on { background:#1e2e1a; border-color:#c9a84c; }
-  .tog-thumb { position:absolute; left:3px; width:14px; height:14px; border-radius:50%; background:#6a8099; transition:left 0.22s, background 0.22s; }
+  .sp { display:flex; gap:0; min-height:500px; font-family:'DM Sans',sans-serif; }
+
+  /* Sidebar */
+  .sp-nav { width:210px; flex-shrink:0; border-right:1px solid #1c2a3a; padding:8px 0; }
+  .sp-nav-item {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 18px; cursor:pointer; font-size:14px; font-weight:600;
+    color:#6a8099; transition:all 0.15s; border-left:2px solid transparent;
+    white-space:nowrap; user-select:none;
+  }
+  .sp-nav-item:hover { color:#a8bccb; background:rgba(255,255,255,0.03); }
+  .sp-nav-item.active { color:#c9a84c; border-left-color:#c9a84c; background:rgba(201,168,76,0.06); }
+  .sp-nav-icon { font-size:16px; width:20px; text-align:center; flex-shrink:0; }
+  .sp-nav-divider { height:1px; background:#0f1820; margin:6px 16px; }
+
+  /* Content area */
+  .sp-content { flex:1; padding:28px 32px; min-width:0; overflow-y:auto; }
+  .sp-content-title {
+    font-family:'Cinzel',serif; font-size:18px; font-weight:900;
+    color:#e8e8e8; margin-bottom:6px; letter-spacing:0.3px;
+  }
+  .sp-content-sub { font-size:14px; color:#6a8099; margin-bottom:28px; line-height:1.6; }
+
+  /* Setting groups */
+  .sp-group { background:#111620; border:1px solid #1c2a3a; border-radius:12px; overflow:hidden; margin-bottom:16px; }
+  .sp-group-label { font-size:11px; font-weight:700; color:#3d5060; text-transform:uppercase; letter-spacing:2px; padding:14px 20px 8px; }
+  .sp-row { display:flex; align-items:center; gap:20px; padding:14px 20px; border-bottom:1px solid #0f1820; }
+  .sp-row:last-child { border-bottom:none; }
+  .sp-row-info { flex:1; min-width:0; }
+  .sp-row-label { font-size:14px; font-weight:600; color:#dde8f0; }
+  .sp-row-desc { font-size:13px; color:#6a8099; margin-top:3px; line-height:1.55; }
+  .sp-row-control { flex-shrink:0; display:flex; align-items:center; }
+
+  /* Toggle */
+  .tog { display:inline-flex; align-items:center; width:44px; height:24px; border-radius:24px; background:#1c2a3a; border:1.5px solid #28394d; cursor:pointer; transition:all 0.22s; flex-shrink:0; position:relative; box-sizing:border-box; }
+  .tog.on { background:rgba(201,168,76,0.15); border-color:#c9a84c; }
+  .tog-thumb { position:absolute; left:3px; width:14px; height:14px; border-radius:50%; background:#3d5060; transition:all 0.22s; }
   .tog.on .tog-thumb { left:23px; background:#c9a84c; }
 
   /* Select */
-  .settings-select { background:#0c1018; border:1px solid #28394d; border-radius:6px; color:#e8e8e8; font-size:13px; padding:8px 12px; font-family:'Inter',sans-serif; cursor:pointer; outline:none; min-width:180px; }
-  .settings-select:focus { border-color:rgba(201,168,76,0.4); }
-  .settings-select option { background:#0c1018; }
+  .sp-select { background:#0c1018; border:1px solid #28394d; border-radius:7px; color:#dde8f0; font-size:13px; padding:8px 12px; font-family:'DM Sans',sans-serif; cursor:pointer; outline:none; min-width:190px; transition:border-color 0.15s; }
+  .sp-select:focus { border-color:rgba(201,168,76,0.45); }
+  .sp-select option { background:#0c1018; }
 
   /* Input */
-  .settings-input { background:#0c1018; border:1px solid #28394d; border-radius:6px; color:#e8e8e8; font-size:13px; padding:8px 12px; font-family:'Inter',sans-serif; outline:none; width:200px; transition:border-color 0.15s; }
-  .settings-input:focus { border-color:rgba(201,168,76,0.4); }
-  .settings-input::placeholder { color:#3d5060; }
+  .sp-input { background:#0c1018; border:1px solid #28394d; border-radius:7px; color:#dde8f0; font-size:13px; padding:8px 12px; font-family:'DM Sans',sans-serif; outline:none; width:200px; transition:border-color 0.15s; }
+  .sp-input:focus { border-color:rgba(201,168,76,0.45); }
+  .sp-input::placeholder { color:#2a3a4a; }
 
-  /* Button */
-  .settings-btn { padding:9px 18px; border-radius:7px; border:1px solid #28394d; background:transparent; color:#99aabb; font-size:13px; font-weight:500; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; white-space:nowrap; }
-  .settings-btn:hover { border-color:rgba(201,168,76,0.3); color:#c9a84c; }
-  .settings-btn.gold { background:linear-gradient(135deg,#8a6f2e,#c9a84c); color:#000; border:none; font-weight:700; }
-  .settings-btn.gold:hover { opacity:0.88; }
-  .settings-btn.danger { border-color:rgba(231,76,60,0.35); color:#e74c3c; }
-  .settings-btn.danger:hover { background:rgba(231,76,60,0.08); border-color:rgba(231,76,60,0.55); }
-  .settings-btn:disabled { opacity:0.4; cursor:not-allowed; }
-
-  /* Code box */
-  .settings-code { background:#0c1018; border:1px solid #1c2a3a; border-radius:6px; padding:10px 14px; font-size:13px; color:#c9a84c; font-family:monospace; word-break:break-all; line-height:1.5; }
-
-  /* New key banner */
-  .new-key-banner { background:rgba(46,204,113,0.06); border:1px solid rgba(46,204,113,0.2); border-radius:8px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; margin:4px 22px 8px; }
-  .new-key-banner-title { font-size:14px; color:#2ecc71; font-weight:600; }
-  .new-key-banner-row { display:flex; gap:8px; align-items:center; }
-
-  /* Confirm modal */
-  .confirm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:600; display:flex; align-items:center; justify-content:center; padding:24px; }
-  .confirm-modal { background:#0c1018; border:1px solid #1c2a3a; border-radius:12px; padding:28px; max-width:400px; width:100%; display:flex; flex-direction:column; gap:16px; }
-  .confirm-title { font-family:'Cinzel',serif; font-size:17px; font-weight:700; color:#e8e8e8; }
-  .confirm-desc { font-size:14px; color:#8fa0b0; line-height:1.7; }
-  .confirm-actions { display:flex; gap:10px; justify-content:flex-end; }
-
-  /* Skeleton */
-  .settings-skeleton { background:linear-gradient(90deg,#0c1018 25%,#111620 50%,#0c1018 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:5px; height:14px; }
+  /* Buttons */
+  .sp-btn { padding:8px 16px; border-radius:7px; border:1px solid #28394d; background:transparent; color:#8fa0b0; font-size:13px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.15s; white-space:nowrap; }
+  .sp-btn:hover { border-color:rgba(201,168,76,0.35); color:#c9a84c; }
+  .sp-btn.gold { background:linear-gradient(135deg,#8a6f2e,#c9a84c); color:#000; border:none; font-weight:700; }
+  .sp-btn.gold:hover { opacity:0.88; }
+  .sp-btn.danger { border-color:rgba(231,76,60,0.3); color:#c0564a; }
+  .sp-btn.danger:hover { background:rgba(231,76,60,0.08); border-color:rgba(231,76,60,0.5); color:#e74c3c; }
+  .sp-btn:disabled { opacity:0.38; cursor:not-allowed; }
 
   /* Status pill */
-  .status-pill { display:inline-flex; align-items:center; gap:5px; padding:5px 14px; border-radius:20px; font-size:13px; font-weight:600; }
-  .status-pill.green { background:rgba(46,204,113,0.1); color:#2ecc71; border:1px solid rgba(46,204,113,0.2); }
-  .status-pill.amber { background:rgba(201,168,76,0.1); color:#c9a84c; border:1px solid rgba(201,168,76,0.2); }
-  .status-pill.dim { background:rgba(255,255,255,0.04); color:#8fa0b0; border:1px solid #1c2a3a; }
+  .sp-pill { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:20px; font-size:13px; font-weight:600; }
+  .sp-pill.green { background:rgba(46,204,113,0.1); color:#2ecc71; border:1px solid rgba(46,204,113,0.2); }
+  .sp-pill.dim { background:rgba(255,255,255,0.04); color:#6a8099; border:1px solid #1c2a3a; }
+
+  /* Code / key */
+  .sp-code { background:#0a0e14; border:1px solid #1c2a3a; border-radius:7px; padding:10px 14px; font-size:12px; color:#c9a84c; font-family:monospace; word-break:break-all; line-height:1.5; }
+  .sp-key-banner { background:rgba(46,204,113,0.05); border:1px solid rgba(46,204,113,0.18); border-radius:10px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+  .sp-key-banner-title { font-size:14px; color:#2ecc71; font-weight:600; }
+  .sp-key-banner-row { display:flex; gap:8px; align-items:center; }
 
   /* Key table */
-  .key-table-head { display:grid; grid-template-columns:2fr 1fr 1fr 70px; padding:9px 22px; font-size:12px; color:#8fa0b0; text-transform:uppercase; letter-spacing:1px; font-weight:600; border-bottom:1px solid #0f1820; background:#0c1018; }
-  .key-table-row { display:grid; grid-template-columns:2fr 1fr 1fr 70px; padding:14px 22px; border-bottom:1px solid #0f1820; align-items:center; transition:background 0.1s; }
-  .key-table-row:last-child { border-bottom:none; }
-  .key-table-row:hover { background:rgba(255,255,255,0.02); }
+  .sp-key-table { border:1px solid #1c2a3a; border-radius:10px; overflow:hidden; margin-top:12px; }
+  .sp-key-head { display:grid; grid-template-columns:2fr 1fr 1fr 70px; padding:10px 16px; font-size:11px; color:#3d5060; text-transform:uppercase; letter-spacing:1.2px; font-weight:700; background:#0a0e14; border-bottom:1px solid #0f1820; }
+  .sp-key-row { display:grid; grid-template-columns:2fr 1fr 1fr 70px; padding:13px 16px; border-bottom:1px solid #0f1820; align-items:center; transition:background 0.1s; }
+  .sp-key-row:last-child { border-bottom:none; }
+  .sp-key-row:hover { background:rgba(255,255,255,0.02); }
+
+  /* Danger zone */
+  .sp-danger-zone { border:1px solid rgba(231,76,60,0.2); border-radius:12px; overflow:hidden; margin-top:8px; }
+  .sp-danger-header { padding:14px 20px; background:rgba(231,76,60,0.04); border-bottom:1px solid rgba(231,76,60,0.15); font-size:13px; font-weight:700; color:#c0564a; text-transform:uppercase; letter-spacing:1.5px; }
+
+  /* Support card */
+  .sp-support { background:linear-gradient(135deg,#0f1a26,#111e2b); border:1px solid #1c2a3a; border-radius:12px; padding:22px 24px; display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:16px; }
+
+  /* Skeleton */
+  .sp-skel { background:linear-gradient(90deg,#0c1018 25%,#111620 50%,#0c1018 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:5px; height:13px; }
+
+  /* Confirm modal */
+  .sp-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:600; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .sp-modal { background:#0c1018; border:1px solid #1c2a3a; border-radius:14px; padding:28px; max-width:420px; width:100%; display:flex; flex-direction:column; gap:16px; }
+  .sp-modal-title { font-family:'Cinzel',serif; font-size:17px; font-weight:700; color:#e8e8e8; }
+  .sp-modal-desc { font-size:14px; color:#8fa0b0; line-height:1.7; }
+  .sp-modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+
+  @media(max-width:640px) {
+    .sp { flex-direction:column; }
+    .sp-nav { width:100%; border-right:none; border-bottom:1px solid #1c2a3a; display:flex; overflow-x:auto; padding:6px 8px; gap:2px; }
+    .sp-nav-item { border-left:none; border-bottom:2px solid transparent; padding:8px 14px; flex-shrink:0; }
+    .sp-nav-item.active { border-left:none; border-bottom-color:#c9a84c; }
+    .sp-content { padding:20px 16px; }
+  }
 `;
 
 function Toggle({ on, onChange }) {
@@ -84,34 +114,26 @@ function Toggle({ on, onChange }) {
   );
 }
 
-function Section({ icon, iconBg, title, sub, children, defaultOpen = true }) {
-  const [open, setOpen] = useState(defaultOpen);
+function Row({ label, desc, children }) {
   return (
-    <div className="settings-section">
-      <div className="settings-section-header" onClick={() => setOpen(v => !v)}>
-        <div className="settings-section-icon" style={{ background: iconBg }}>{icon}</div>
-        <div>
-          <div className="settings-section-title">{title}</div>
-          <div className="settings-section-sub">{sub}</div>
-        </div>
-        <span className={`settings-section-chevron${open ? " open" : ""}`}>▼</span>
+    <div className="sp-row">
+      <div className="sp-row-info">
+        <div className="sp-row-label">{label}</div>
+        {desc && <div className="sp-row-desc">{desc}</div>}
       </div>
-      {open && <div className="settings-rows">{children}</div>}
+      <div className="sp-row-control">{children}</div>
     </div>
   );
 }
 
-function Row({ label, desc, children }) {
-  return (
-    <div className="settings-row">
-      <div className="settings-row-info">
-        <div className="settings-row-label">{label}</div>
-        {desc && <div className="settings-row-desc">{desc}</div>}
-      </div>
-      <div className="settings-row-control">{children}</div>
-    </div>
-  );
-}
+const NAV = [
+  { id: "general",       icon: "⚙️",  label: "General" },
+  { id: "alerts",        icon: "🔔",  label: "Alerts" },
+  { id: "plugin",        icon: "🔌",  label: "RuneLite Plugin" },
+  { id: "connections",   icon: "🔗",  label: "Connections" },
+  { id: "support",       icon: "☕",  label: "Support Us" },
+  { id: "account",       icon: "🗑️",  label: "Account" },
+];
 
 export default function SettingsPage({
   user, supabase, showToast,
@@ -122,6 +144,8 @@ export default function SettingsPage({
   sortCol, sortDir, onSetDefaultSort,
   flipsLog = [], autoFlipsLog = [],
 }) {
+  const [active, setActive] = useState("general");
+
   // ── API keys ──
   const [keys, setKeys] = useState([]);
   const [keysLoading, setKeysLoading] = useState(true);
@@ -136,23 +160,18 @@ export default function SettingsPage({
   const [discordLoading, setDiscordLoading] = useState(false);
   const [discordChecking, setDiscordChecking] = useState(true);
 
-  // ── Alert frequency (stored locally, checked client-side) ──
+  // ── Prefs ──
   const [alertFreq, setAlertFreq] = useState(() => {
     try { return localStorage.getItem("runetrader_alert_freq") || "5"; } catch { return "5"; }
   });
-
-  // ── What's New toggle ──
   const [whatsNewEnabled, setWhatsNewEnabled] = useState(() => {
     try { return localStorage.getItem("runetrader_disable_whats_new") !== "1"; } catch { return true; }
   });
-
-  // ── Confirm modal ──
-  const [confirm, setConfirm] = useState(null); // { title, desc, action }
-
-  // ── Sync pause timeout ──
   const [pauseTimeout, setPauseTimeout] = useState(() => {
     try { return localStorage.getItem("runetrader_pause_timeout") || "60"; } catch { return "60"; }
   });
+
+  const [confirm, setConfirm] = useState(null);
 
   useEffect(() => { if (user) { fetchKeys(); checkDiscordLinked(); } }, [user]); // eslint-disable-line
 
@@ -188,7 +207,7 @@ export default function SettingsPage({
         body: JSON.stringify({ code: discordCode.trim() }),
       });
       const json = await res.json();
-      if (json.ok) { setDiscordLinked(true); showToast("Discord account linked!", "success"); }
+      if (json.ok) { setDiscordLinked(true); showToast("Discord linked!", "success"); }
       else showToast(json.error || "Invalid or expired code.", "error");
     } catch { showToast("Failed to link Discord.", "error"); }
     setDiscordLoading(false);
@@ -207,7 +226,7 @@ export default function SettingsPage({
       const json = await res.json();
       if (json.ok) {
         setNewKey(json.api_key); setNewLabel(""); fetchKeys();
-        showToast("API key generated! Copy it now — it won't be shown again.", "info", 8000);
+        showToast("Key generated — copy it now, it won't be shown again.", "info", 8000);
       } else showToast(json.error || "Failed to generate key.", "error");
     } catch { showToast("Failed to generate key.", "error"); }
     setGenerating(false);
@@ -219,8 +238,8 @@ export default function SettingsPage({
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`/api/api-keys?id=${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${session.access_token}` } });
       const json = await res.json();
-      if (json.ok) { setKeys(prev => prev.filter(k => k.id !== id)); showToast("API key revoked.", "success"); }
-      else showToast(json.error || "Failed to revoke key.", "error");
+      if (json.ok) { setKeys(prev => prev.filter(k => k.id !== id)); showToast("Key revoked.", "success"); }
+      else showToast(json.error || "Failed to revoke.", "error");
     } catch { showToast("Failed to revoke key.", "error"); }
     setRevoking(null);
   }
@@ -248,12 +267,10 @@ export default function SettingsPage({
 
   async function clearFlipHistory() {
     try {
-      if (user) {
-        await supabase.from("ge_flips_live").delete().eq("user_id", user.id);
-      }
+      if (user) await supabase.from("ge_flips_live").delete().eq("user_id", user.id);
       localStorage.removeItem("runetrader_flips");
-      showToast("Flip history cleared. Reload the page to see changes.", "success");
-    } catch (e) { showToast("Failed to clear history: " + e.message, "error"); }
+      showToast("Flip history cleared.", "success");
+    } catch (e) { showToast("Failed: " + e.message, "error"); }
   }
 
   async function deleteAccount() {
@@ -265,9 +282,9 @@ export default function SettingsPage({
         await supabase.auth.signOut();
       }
       ["runetrader_flips","runetrader_watchlist","runetrader_alerts","runetrader_thresholds","runetrader_smart_alerts"].forEach(k => localStorage.removeItem(k));
-      showToast("Account deleted. Sorry to see you go.", "info");
+      showToast("Account deleted.", "info");
       window.location.reload();
-    } catch (e) { showToast("Failed to delete account: " + e.message, "error"); }
+    } catch (e) { showToast("Failed: " + e.message, "error"); }
   }
 
   function fmtDate(iso) {
@@ -276,14 +293,13 @@ export default function SettingsPage({
   }
 
   const SORT_OPTIONS = [
-    { col: "volume", dir: "desc", label: "Vol/Day (high → low)" },
-    { col: "margin", dir: "desc", label: "Margin (high → low)" },
-    { col: "gpPerFill", dir: "desc", label: "GP/Fill (high → low)" },
-    { col: "roi", dir: "desc", label: "ROI % (high → low)" },
-    { col: "name", dir: "asc", label: "Name (A → Z)" },
-    { col: "lastTradeTime", dir: "desc", label: "Last Traded (recent first)" },
+    { col: "volume",       dir: "desc", label: "Vol/Day (high → low)" },
+    { col: "margin",       dir: "desc", label: "Margin (high → low)" },
+    { col: "gpPerFill",    dir: "desc", label: "GP/Fill (high → low)" },
+    { col: "roi",          dir: "desc", label: "ROI % (high → low)" },
+    { col: "name",         dir: "asc",  label: "Name (A → Z)" },
+    { col: "lastTradeTime",dir: "desc", label: "Last Traded (recent first)" },
   ];
-
 
   if (!user) return (
     <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"16px", padding:"80px 20px", textAlign:"center", color:"#6a7d90" }}>
@@ -292,13 +308,13 @@ export default function SettingsPage({
     </div>
   );
 
-  return (
-    <>
-      <style>{STYLES}</style>
-      <div className="settings-page">
-
-        {/* ── GENERAL ── */}
-        <Section icon="⚙️" iconBg="rgba(52,152,219,0.15)" title="General" sub="Display and behaviour preferences">
+  // ── Section renderers ──
+  const sections = {
+    general: (
+      <>
+        <div className="sp-content-title">General</div>
+        <div className="sp-content-sub">Display and behaviour preferences</div>
+        <div className="sp-group">
           <Row label="Sound effects" desc="Coin clinks, level-up chimes, and profit fanfares">
             <Toggle on={!soundMuted} onChange={() => onToggleSound()} />
           </Row>
@@ -311,127 +327,140 @@ export default function SettingsPage({
               try { val ? localStorage.removeItem("runetrader_disable_whats_new") : localStorage.setItem("runetrader_disable_whats_new", "1"); } catch {}
             }} />
           </Row>
+        </div>
+        <div className="sp-group">
           <Row label="Default market sort" desc="Which column the market table opens sorted by">
-            <select className="settings-select" value={`${sortCol}:${sortDir}`} onChange={e => {
+            <select className="sp-select" value={`${sortCol}:${sortDir}`} onChange={e => {
               const [col, dir] = e.target.value.split(":");
               onSetDefaultSort(col, dir);
               showToast("Default sort saved.", "success");
             }}>
-              {SORT_OPTIONS.map(o => (
-                <option key={o.col} value={`${o.col}:${o.dir}`}>{o.label}</option>
-              ))}
+              {SORT_OPTIONS.map(o => <option key={o.col} value={`${o.col}:${o.dir}`}>{o.label}</option>)}
             </select>
           </Row>
-          <Row label="Sync pause auto-resume" desc="How long before sync auto-resumes after being paused (minutes)">
-            <select className="settings-select" value={pauseTimeout} onChange={e => {
+          <Row label="Sync pause auto-resume" desc="How long before sync auto-resumes after being paused">
+            <select className="sp-select" value={pauseTimeout} onChange={e => {
               setPauseTimeout(e.target.value);
               try { localStorage.setItem("runetrader_pause_timeout", e.target.value); } catch {}
-              showToast("Pause timeout saved.", "success");
+              showToast("Saved.", "success");
             }}>
-              {["15","30","60","120","240"].map(v => <option key={v} value={v}>{v} min</option>)}
+              {["15","30","60","120","240"].map(v => <option key={v} value={v}>{v} minutes</option>)}
             </select>
           </Row>
-        </Section>
+        </div>
+      </>
+    ),
 
-        {/* ── ALERTS & NOTIFICATIONS ── */}
-        <Section icon="🔔" iconBg="rgba(201,168,76,0.12)" title="Alerts & Notifications" sub="How and when you get notified">
-          <Row label="Push notifications" desc="Get alerted on your phone or desktop even when the app is closed">
+    alerts: (
+      <>
+        <div className="sp-content-title">Alerts & Notifications</div>
+        <div className="sp-content-sub">Control how and when you get notified about market events</div>
+        <div className="sp-group">
+          <Row label="Push notifications" desc="Get alerted on your device even when the app is closed">
             {notifPermission === "granted" ? (
-              <span className="status-pill green">✓ Enabled</span>
+              <span className="sp-pill green">✓ Enabled</span>
             ) : notifPermission === "denied" ? (
-              <span className="status-pill dim">Blocked by browser</span>
+              <span className="sp-pill dim">Blocked by browser</span>
             ) : (
-              <button className="settings-btn gold" disabled={notifLoading} onClick={onRequestNotif}>
+              <button className="sp-btn gold" disabled={notifLoading} onClick={onRequestNotif}>
                 {notifLoading ? "Enabling..." : "Enable"}
               </button>
             )}
           </Row>
-          <Row label="Alert check frequency" desc="How often price alerts are evaluated against live prices">
-            <select className="settings-select" value={alertFreq} onChange={e => {
+          <Row label="Alert check frequency" desc="How often price alerts are evaluated against live data">
+            <select className="sp-select" value={alertFreq} onChange={e => {
               setAlertFreq(e.target.value);
               try { localStorage.setItem("runetrader_alert_freq", e.target.value); } catch {}
-              showToast("Alert frequency saved.", "success");
+              showToast("Saved.", "success");
             }}>
-              <option value="5">Every 5 min</option>
-              <option value="10">Every 10 min</option>
-              <option value="15">Every 15 min</option>
-              <option value="30">Every 30 min</option>
+              <option value="5">Every 5 minutes</option>
+              <option value="10">Every 10 minutes</option>
+              <option value="15">Every 15 minutes</option>
+              <option value="30">Every 30 minutes</option>
             </select>
           </Row>
+        </div>
+        <div className="sp-group">
+          <div className="sp-group-label">Smart Alert Types</div>
           {[
-            { key: "marginSpike",  icon: "📈", label: "Margin Spike",  desc: "Margin jumps significantly above recent levels" },
-            { key: "volumeSurge",  icon: "🔥", label: "Volume Surge",  desc: "Daily volume multiplies suddenly" },
-            { key: "dumpDetected", icon: "⚠️", label: "Dump Detected", desc: "Sell price drops sharply — someone selling in bulk" },
-            { key: "priceCrash",   icon: "💥", label: "Price Crash",   desc: "Both buy and sell prices collapse" },
-          ].map(({ key, icon, label, desc }) => (
-            <Row key={key} label={`${icon} ${label}`} desc={desc}>
+            { key: "marginSpike",  label: "Margin Spike",  desc: "Margin jumps significantly above recent levels" },
+            { key: "volumeSurge",  label: "Volume Surge",  desc: "Daily volume multiplies suddenly" },
+            { key: "dumpDetected", label: "Dump Detected", desc: "Sell price drops sharply — someone selling in bulk" },
+            { key: "priceCrash",   label: "Price Crash",   desc: "Both buy and sell prices collapse" },
+          ].map(({ key, label, desc }) => (
+            <Row key={key} label={label} desc={desc}>
               <Toggle on={smartAlertSettings?.[key] ?? true} onChange={val => onSaveSmartAlert(key, val)} />
             </Row>
           ))}
-        </Section>
+        </div>
+      </>
+    ),
 
-        {/* ── RUNELITE PLUGIN ── */}
-        <Section icon="🔌" iconBg="rgba(52,152,219,0.12)" title="RuneLite Plugin" sub="Plugin connection and API key management">
-          <Row label="Plugin Hub" desc="Install the RuneTrader plugin from the RuneLite Plugin Hub, then paste your API key below">
-            <a href="https://runelite.net/plugin-hub" target="_blank" rel="noreferrer" className="settings-btn" style={{ textDecoration: "none", display: "inline-block" }}>
+    plugin: (
+      <>
+        <div className="sp-content-title">RuneLite Plugin</div>
+        <div className="sp-content-sub">Connect your RuneLite client to sync GE slots in real time</div>
+
+        <div className="sp-group">
+          <Row label="Plugin Hub" desc="Search 'RuneTrader' in the RuneLite Plugin Hub and click install">
+            <a href="https://runelite.net/plugin-hub" target="_blank" rel="noreferrer" className="sp-btn" style={{ textDecoration:"none", display:"inline-block" }}>
               Open Plugin Hub ↗
             </a>
           </Row>
-          <Row label="Sync pause timeout" desc="Matches the General setting — how long before sync auto-resumes">
-            <span style={{ fontSize: "13px", color: "#c9a84c", fontWeight: 600 }}>{pauseTimeout} min</span>
+          <Row label="Sync pause timeout" desc="How long before sync auto-resumes after a manual pause">
+            <span style={{ fontSize:"14px", color:"#c9a84c", fontWeight:700 }}>{pauseTimeout} min</span>
           </Row>
-          <div style={{ padding: "0 22px 4px" }}>
-            {/* New key reveal */}
-            {newKey && (
-              <div className="new-key-banner">
-                <div className="new-key-banner-title">✅ New key generated — copy it now. It won't be shown again.</div>
-                <div className="new-key-banner-row">
-                  <code className="settings-code" style={{ flex: 1 }}>{newKey}</code>
-                  <button className="settings-btn" onClick={() => { navigator.clipboard.writeText(newKey); showToast("Copied!", "success"); }}>Copy</button>
-                </div>
-                <button onClick={() => setNewKey(null)} style={{ background: "none", border: "none", color: "#6a7d90", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, alignSelf: "flex-start" }}>
-                  I've copied it — dismiss
-                </button>
+        </div>
+
+        <div className="sp-group">
+          <div className="sp-group-label">API Keys</div>
+          {newKey && (
+            <div className="sp-key-banner" style={{ margin:"4px 20px 8px" }}>
+              <div className="sp-key-banner-title">✅ New key generated — copy it now. It won't be shown again.</div>
+              <div className="sp-key-banner-row">
+                <code className="sp-code" style={{ flex:1 }}>{newKey}</code>
+                <button className="sp-btn" onClick={() => { navigator.clipboard.writeText(newKey); showToast("Copied!", "success"); }}>Copy</button>
               </div>
-            )}
-            {/* Generate form */}
-            <div style={{ display: "flex", gap: "10px", alignItems: "center", padding: "12px 0 4px" }}>
-              <input
-                className="settings-input" style={{ flex: 1 }}
-                placeholder='Label, e.g. "My RuneLite client"'
-                value={newLabel} onChange={e => setNewLabel(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") generateKey(); }}
-                maxLength={64}
-              />
-              <button className="settings-btn gold" onClick={generateKey} disabled={generating || !newLabel.trim() || keys.length >= 5}>
-                {generating ? "Generating..." : "Generate Key"}
+              <button onClick={() => setNewKey(null)} style={{ background:"none", border:"none", color:"#3d5060", fontSize:"12px", cursor:"pointer", fontFamily:"DM Sans, sans-serif", padding:0, alignSelf:"flex-start" }}>
+                Dismiss
               </button>
             </div>
-            {keys.length >= 5 && <div style={{ fontSize: "12px", color: "#6a7d90", paddingBottom: "8px" }}>Maximum of 5 keys reached. Revoke one to create a new key.</div>}
+          )}
+          <div style={{ padding:"12px 20px", display:"flex", gap:"10px", alignItems:"center" }}>
+            <input
+              className="sp-input" style={{ flex:1 }}
+              placeholder='Label, e.g. "My RuneLite client"'
+              value={newLabel} onChange={e => setNewLabel(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") generateKey(); }}
+              maxLength={64}
+            />
+            <button className="sp-btn gold" onClick={generateKey} disabled={generating || !newLabel.trim() || keys.length >= 5}>
+              {generating ? "Generating..." : "Generate Key"}
+            </button>
           </div>
-          {/* Key table */}
+          {keys.length >= 5 && <div style={{ fontSize:"12px", color:"#3d5060", padding:"0 20px 12px" }}>Max 5 keys reached. Revoke one to add a new key.</div>}
           {(keysLoading || keys.length > 0) && (
-            <div style={{ borderTop: "1px solid #0f1820" }}>
-              <div className="key-table-head">
+            <div className="sp-key-table" style={{ margin:"0 20px 16px" }}>
+              <div className="sp-key-head">
                 <span>Label</span><span>Created</span><span>Last Used</span><span></span>
               </div>
               {keysLoading ? [1,2].map(i => (
-                <div key={i} className="key-table-row">
-                  <div className="settings-skeleton" style={{ width: "60%" }} />
-                  <div className="settings-skeleton" style={{ width: "70px" }} />
-                  <div className="settings-skeleton" style={{ width: "70px" }} />
-                  <div className="settings-skeleton" style={{ width: "40px" }} />
+                <div key={i} className="sp-key-row">
+                  <div className="sp-skel" style={{ width:"60%" }} />
+                  <div className="sp-skel" style={{ width:"70px" }} />
+                  <div className="sp-skel" style={{ width:"70px" }} />
+                  <div className="sp-skel" style={{ width:"40px" }} />
                 </div>
-              )) : keys.map((key, i) => (
-                <div key={key.id} className="key-table-row">
+              )) : keys.map(key => (
+                <div key={key.id} className="sp-key-row">
                   <div>
-                    <div style={{ fontSize: "14px", fontWeight: 500, color: "#e8e8e8" }}>{key.label || "Unlabelled"}</div>
-                    <div style={{ fontSize: "12px", color: "#3d5060", fontFamily: "monospace", marginTop: "2px" }}>rt_••••••••</div>
+                    <div style={{ fontSize:"14px", fontWeight:600, color:"#dde8f0" }}>{key.label || "Unlabelled"}</div>
+                    <div style={{ fontSize:"11px", color:"#2a3a4a", fontFamily:"monospace", marginTop:"2px" }}>rt_••••••••</div>
                   </div>
-                  <span style={{ fontSize: "13px", color: "#8fa0b0" }}>{fmtDate(key.created_at)}</span>
-                  <span style={{ fontSize: "13px", color: key.last_used ? "#8fa0b0" : "#2a3a4a" }}>{key.last_used ? fmtDate(key.last_used) : "Never"}</span>
-                  <button className="settings-btn danger" style={{ padding: "4px 10px", fontSize: "11px" }}
-                    onClick={() => setConfirm({ title: "Revoke API Key", desc: `Revoke "${key.label || "Unlabelled"}"? The RuneLite plugin using this key will stop syncing immediately.`, action: () => revokeKey(key.id) })}
+                  <span style={{ fontSize:"13px", color:"#6a8099" }}>{fmtDate(key.created_at)}</span>
+                  <span style={{ fontSize:"13px", color:key.last_used ? "#6a8099" : "#2a3a4a" }}>{key.last_used ? fmtDate(key.last_used) : "Never"}</span>
+                  <button className="sp-btn danger" style={{ padding:"4px 10px", fontSize:"11px" }}
+                    onClick={() => setConfirm({ title:"Revoke API Key", desc:`Revoke "${key.label || "Unlabelled"}"? The RuneLite plugin using this key will stop syncing immediately.`, action:() => revokeKey(key.id) })}
                     disabled={revoking === key.id}>
                     {revoking === key.id ? "..." : "Revoke"}
                   </button>
@@ -439,115 +468,162 @@ export default function SettingsPage({
               ))}
             </div>
           )}
-        </Section>
+        </div>
+      </>
+    ),
 
-        {/* ── CONNECTIONS ── */}
-        <Section icon="🔗" iconBg="rgba(114,137,218,0.15)" title="Connections" sub="Linked accounts and integrations">
-          <Row label="Discord account" desc={discordLinked ? "Your Discord is linked — bot commands and flip sync are active" : "Run !verify in Discord to get your code, then enter it below"}>
+    connections: (
+      <>
+        <div className="sp-content-title">Connections</div>
+        <div className="sp-content-sub">Link external accounts and integrations</div>
+        <div className="sp-group">
+          <Row
+            label="Discord account"
+            desc={discordLinked ? "Your Discord is linked — bot commands and flip sync are active" : "Run !verify in the RuneTrader Discord server, then enter your code below"}
+          >
             {discordChecking ? (
-              <span className="settings-skeleton" style={{ width: "80px", display: "inline-block" }} />
+              <span className="sp-skel" style={{ width:"80px", display:"inline-block", height:"28px", borderRadius:"14px" }} />
             ) : discordLinked ? (
-              <span className="status-pill green">✓ Linked</span>
+              <span className="sp-pill green">✓ Linked</span>
             ) : (
-              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <div style={{ display:"flex", gap:"8px", alignItems:"center" }}>
                 <input
-                  className="settings-input" style={{ width: "140px" }}
+                  className="sp-input" style={{ width:"130px" }}
                   placeholder="RT-XXXXXX"
                   value={discordCode}
                   onChange={e => setDiscordCode(e.target.value.toUpperCase())}
                   onKeyDown={e => { if (e.key === "Enter") linkDiscord(); }}
                   maxLength={9}
                 />
-                <button className="settings-btn gold" onClick={linkDiscord} disabled={discordLoading || discordCode.length < 9}>
+                <button className="sp-btn gold" onClick={linkDiscord} disabled={discordLoading || discordCode.length < 9}>
                   {discordLoading ? "Linking..." : "Link"}
                 </button>
               </div>
             )}
           </Row>
-        </Section>
+        </div>
+      </>
+    ),
 
-        {/* ── ACCOUNT ── */}
-        {/* ── SUPPORT CARD ── */}
-        <div style={{
-          background: "linear-gradient(135deg, #0f1a26 0%, #111e2b 100%)",
-          border: "1px solid #1c2a3a",
-          borderRadius: "12px",
-          padding: "22px 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "20px",
-          flexWrap: "wrap",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: "200px" }}>
-            <div style={{
-              width: "42px", height: "42px", borderRadius: "10px",
-              background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.2)",
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0,
-            }}>☕</div>
+    support: (
+      <>
+        <div className="sp-content-title">Support Us</div>
+        <div className="sp-content-sub">RuneTrader is free and always will be</div>
+        <div className="sp-support">
+          <div style={{ display:"flex", alignItems:"center", gap:"16px", flex:1, minWidth:"200px" }}>
+            <div style={{ width:"48px", height:"48px", borderRadius:"12px", background:"rgba(201,168,76,0.1)", border:"1px solid rgba(201,168,76,0.2)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"22px", flexShrink:0 }}>☕</div>
             <div>
-              <div style={{ fontSize: "14px", fontWeight: 600, color: "#e8e8e8", marginBottom: "4px" }}>Support RuneTrader</div>
-              <div style={{ fontSize: "13px", color: "#8fa0b0", lineHeight: "1.5" }}>
-                RuneTrader is free and always will be. If it's saved you GP, a coffee goes a long way toward keeping the lights on and new features coming.
+              <div style={{ fontSize:"15px", fontWeight:700, color:"#e8e8e8", marginBottom:"6px" }}>Buy Me a Coffee</div>
+              <div style={{ fontSize:"13px", color:"#6a8099", lineHeight:"1.6", maxWidth:"380px" }}>
+                If RuneTrader has saved you GP, a coffee goes a long way toward keeping the lights on and new features shipping. Every supporter gets a 💎 badge.
               </div>
             </div>
           </div>
           <a
             href="https://buymeacoffee.com/runetrader"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "inline-flex", alignItems: "center", gap: "8px",
-              padding: "10px 18px", borderRadius: "8px", flexShrink: 0,
-              background: "linear-gradient(135deg, #8a6f2e, #c9a84c)",
-              color: "#0a0e14", fontSize: "13px", fontWeight: 700,
-              textDecoration: "none", letterSpacing: "0.3px",
-              transition: "opacity 0.2s",
-            }}
+            target="_blank" rel="noopener noreferrer"
+            style={{ display:"inline-flex", alignItems:"center", gap:"8px", padding:"11px 22px", borderRadius:"9px", flexShrink:0, background:"linear-gradient(135deg,#8a6f2e,#c9a84c)", color:"#0a0e14", fontSize:"14px", fontWeight:700, textDecoration:"none", transition:"opacity 0.2s" }}
             onMouseEnter={e => e.currentTarget.style.opacity = "0.85"}
             onMouseLeave={e => e.currentTarget.style.opacity = "1"}
           >
-            ☕ Buy Me a Coffee
+            ☕ Support Development
           </a>
         </div>
+        <div style={{ background:"#111620", border:"1px solid #1c2a3a", borderRadius:"12px", padding:"20px 24px" }}>
+          <div style={{ fontSize:"13px", color:"#3d5060", textTransform:"uppercase", letterSpacing:"1.5px", fontWeight:700, marginBottom:"12px" }}>What your support funds</div>
+          {[
+            ["Server & hosting costs", "Vercel, Supabase, and Railway keep the site running 24/7"],
+            ["New features", "Leaderboard, GE Oracle, group flipping, and more on the roadmap"],
+            ["Plugin development", "Ongoing RuneLite plugin improvements and new overlay features"],
+          ].map(([title, desc]) => (
+            <div key={title} style={{ display:"flex", alignItems:"flex-start", gap:"12px", padding:"10px 0", borderBottom:"1px solid #0f1820" }}>
+              <div style={{ width:"6px", height:"6px", borderRadius:"50%", background:"#c9a84c", flexShrink:0, marginTop:"6px" }} />
+              <div>
+                <div style={{ fontSize:"14px", fontWeight:600, color:"#dde8f0" }}>{title}</div>
+                <div style={{ fontSize:"13px", color:"#6a8099", marginTop:"3px" }}>{desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    ),
 
-        <Section icon="🗑️" iconBg="rgba(231,76,60,0.1)" title="Account" sub="Data export and danger zone" defaultOpen={false}>
+    account: (
+      <>
+        <div className="sp-content-title">Account</div>
+        <div className="sp-content-sub">Data export and account management</div>
+        <div className="sp-group">
           <Row label="Export flip history" desc={`Download all ${flipsLog.filter(f => f.status !== "open").length + autoFlipsLog.length} closed flips as a CSV file`}>
-            <button className="settings-btn" onClick={exportData}>
-              ↓ Export CSV
-            </button>
+            <button className="sp-btn" onClick={exportData}>↓ Export CSV</button>
           </Row>
-          <Row label="Clear flip history" desc="Permanently delete all logged flips from your account and this device. This cannot be undone.">
-            <button className="settings-btn danger" onClick={() => setConfirm({
-              title: "Clear Flip History",
-              desc: "This will permanently delete all your closed flip history from the database and this device. Only flip data is removed — your watchlist, price alerts, and settings are not affected. This cannot be undone.",
-              action: clearFlipHistory,
-            })}>
-              Clear History
-            </button>
-          </Row>
-          <Row label="Delete account" desc="Permanently remove your account, all data, and cancel any active subscription.">
-            <button className="settings-btn danger" onClick={() => setConfirm({
-              title: "Delete Account",
-              desc: "This will permanently delete your account and all associated data including flip history, GE slot data, and your profile. Your Stripe subscription will need to be cancelled separately. This cannot be undone.",
-              action: deleteAccount,
-            })}>
-              Delete Account
-            </button>
-          </Row>
-        </Section>
+        </div>
+        <div className="sp-danger-zone">
+          <div className="sp-danger-header">Danger Zone</div>
+          <div className="sp-row">
+            <div className="sp-row-info">
+              <div className="sp-row-label" style={{ color:"#c0564a" }}>Clear flip history</div>
+              <div className="sp-row-desc">Permanently delete all logged flips. Watchlist, alerts and settings are not affected.</div>
+            </div>
+            <div className="sp-row-control">
+              <button className="sp-btn danger" onClick={() => setConfirm({
+                title:"Clear Flip History",
+                desc:"This will permanently delete all your closed flip history. This cannot be undone.",
+                action: clearFlipHistory,
+              })}>Clear History</button>
+            </div>
+          </div>
+          <div className="sp-row">
+            <div className="sp-row-info">
+              <div className="sp-row-label" style={{ color:"#c0564a" }}>Delete account</div>
+              <div className="sp-row-desc">Permanently remove your account, all data, and cancel any active subscription.</div>
+            </div>
+            <div className="sp-row-control">
+              <button className="sp-btn danger" onClick={() => setConfirm({
+                title:"Delete Account",
+                desc:"This will permanently delete your account and all associated data. Your Stripe subscription will need to be cancelled separately. This cannot be undone.",
+                action: deleteAccount,
+              })}>Delete Account</button>
+            </div>
+          </div>
+        </div>
+      </>
+    ),
+  };
+
+  return (
+    <>
+      <style>{STYLES}</style>
+      <div className="sp">
+
+        {/* Sidebar nav */}
+        <div className="sp-nav">
+          {NAV.map((n, i) => (
+            <div key={n.id}>
+              {i === NAV.length - 2 && <div className="sp-nav-divider" />}
+              <div className={`sp-nav-item${active === n.id ? " active" : ""}`} onClick={() => setActive(n.id)}>
+                <span className="sp-nav-icon">{n.icon}</span>
+                {n.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="sp-content">
+          {sections[active]}
+        </div>
 
       </div>
 
-      {/* ── CONFIRM MODAL ── */}
+      {/* Confirm modal */}
       {confirm && (
-        <div className="confirm-overlay" onClick={() => setConfirm(null)}>
-          <div className="confirm-modal" onClick={e => e.stopPropagation()}>
-            <div className="confirm-title">{confirm.title}</div>
-            <div className="confirm-desc">{confirm.desc}</div>
-            <div className="confirm-actions">
-              <button className="settings-btn" onClick={() => setConfirm(null)}>Cancel</button>
-              <button className="settings-btn danger" onClick={() => { confirm.action(); setConfirm(null); }}>Confirm</button>
+        <div className="sp-overlay" onClick={() => setConfirm(null)}>
+          <div className="sp-modal" onClick={e => e.stopPropagation()}>
+            <div className="sp-modal-title">{confirm.title}</div>
+            <div className="sp-modal-desc">{confirm.desc}</div>
+            <div className="sp-modal-actions">
+              <button className="sp-btn" onClick={() => setConfirm(null)}>Cancel</button>
+              <button className="sp-btn danger" onClick={() => { confirm.action(); setConfirm(null); }}>Confirm</button>
             </div>
           </div>
         </div>
