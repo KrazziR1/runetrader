@@ -7819,19 +7819,23 @@ RULES:
                 const allDone = questsLoaded && doneQuests === dailyQuests.length && dailyQuests.length > 0;
                 const initial = (user.user_metadata?.username || user.email?.split("@")[0] || "?")[0].toUpperCase();
                 return (
-                  <button className="level-btn"
-                    onClick={() => { setShowPlayerCard(v => !v); setShowProfileMenu(v => !v); }}
-                    style={{ borderColor: allDone ? "var(--green-dim)" : "rgba(201,168,76,0.3)", background: allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.07)", color: allDone ? "var(--green)" : "var(--gold)", gap: "6px" }}>
-                    {emoji} Lv.{level}
-                    <span style={{ color: "var(--text-dim)", fontSize: "10px" }}>·</span>
-                    <span>📋</span>
-                    <span style={{ background: allDone ? "var(--green)" : "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
-                      {questsLoaded ? `${doneQuests}/${dailyQuests.length}` : "…"}
-                    </span>
-                    <span style={{ width: "22px", height: "22px", borderRadius: "50%", background: "var(--bg4)", border: "1px solid var(--border-bright)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "var(--text-dim)", fontFamily: "'Cinzel', serif", flexShrink: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0" }}>
+                    <button className="level-btn"
+                      onClick={() => setShowPlayerCard(v => !v)}
+                      style={{ borderColor: allDone ? "var(--green-dim)" : "rgba(201,168,76,0.3)", background: allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.07)", color: allDone ? "var(--green)" : "var(--gold)", gap: "6px", borderRadius: "8px 0 0 8px", borderRight: "none" }}>
+                      {emoji} Lv.{level}
+                      <span style={{ color: "var(--text-dim)", fontSize: "10px" }}>·</span>
+                      <span>📋</span>
+                      <span style={{ background: allDone ? "var(--green)" : "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
+                        {questsLoaded ? `${doneQuests}/${dailyQuests.length}` : "…"}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setShowProfileMenu(v => !v)}
+                      style={{ width: "30px", height: "30px", borderRadius: "0 8px 8px 0", background: allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.07)", border: `1px solid ${allDone ? "var(--green-dim)" : "rgba(201,168,76,0.3)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "var(--text-dim)", fontFamily: "'Cinzel', serif", cursor: "pointer", flexShrink: 0 }}>
                       {initial}
-                    </span>
-                  </button>
+                    </button>
+                  </div>
                 );
               })()}
 
