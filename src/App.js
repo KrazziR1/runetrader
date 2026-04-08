@@ -113,13 +113,13 @@ const STYLES = `
   .app { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 
   /* HEADER */
-  .header { display: flex; flex-direction: column; background: var(--bg2); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 0 var(--border-gold), 0 4px 24px rgba(0,0,0,0.5); }
-  .header-top { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 62px; gap: 8px; }
-  .header-bottom { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 40px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.25); }
+  .header { display: flex; flex-direction: column; background: var(--bg2); border-bottom: 1px solid rgba(201,168,76,0.18); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 0 rgba(201,168,76,0.08), 0 4px 32px rgba(0,0,0,0.6); }
+  .header-top { display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 68px; gap: 10px; }
+  .header-bottom { display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 46px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.3); }
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon { width: 36px; height: 36px; }
-  .logo-text { font-family: 'Cinzel Decorative', serif; font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 1px; }
-  .logo-dot { font-family: 'Cinzel Decorative', serif; font-size: 18px; font-weight: 700; margin-left: 1px; -webkit-text-fill-color: transparent; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; background-clip: text; }
+  .logo-text { font-family: 'Cinzel Decorative', serif; font-size: 26px; font-weight: 700; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 1px; }
+  .logo-dot { font-family: 'Cinzel Decorative', serif; font-size: 20px; font-weight: 700; margin-left: 1px; -webkit-text-fill-color: transparent; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; background-clip: text; }
   .header-right { display: flex; align-items: center; gap: 8px; }
   .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(46,204,113,0.07); border: 1px solid rgba(46,204,113,0.2); border-radius: 20px; padding: 3px 10px; font-size: 12px; color: var(--green); }
   .paused-pill { display: flex; align-items: center; gap: 6px; background: rgba(243,156,18,0.08); border: 1px solid rgba(243,156,18,0.25); border-radius: 20px; padding: 3px 10px; font-size: 12px; color: #f39c12; }
@@ -133,12 +133,12 @@ const STYLES = `
   .sync-paused-resume-btn:hover { background: rgba(243,156,18,0.1); }
   .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.35;transform:scale(0.75)} }
-  .nav-tabs { display: flex; gap: 2px; }
-  .nav-tab { padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; background: transparent; color: #9ab0c0; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.1px; }
-  .nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
-  .nav-tab.active { background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.22); }
-  .terminal-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; letter-spacing: 0.3px; white-space: nowrap; }
-  .level-btn { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.22); background: rgba(201,168,76,0.06); color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap; }
+  .nav-tabs { display: flex; gap: 3px; }
+  .nav-tab { padding: 7px 16px; border-radius: 7px; border: 1px solid transparent; cursor: pointer; font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif; background: transparent; color: #9ab0c0; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.2px; }
+  .nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.05); border-color: var(--border); }
+  .nav-tab.active { background: rgba(201,168,76,0.12); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); box-shadow: 0 0 10px rgba(201,168,76,0.08); }
+  .terminal-btn { display: flex; align-items: center; gap: 7px; padding: 8px 18px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; letter-spacing: 0.3px; white-space: nowrap; }
+  .level-btn { display: flex; align-items: center; gap: 7px; padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.25); background: rgba(201,168,76,0.07); color: var(--gold); font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap; }
   .level-btn:hover { background: rgba(201,168,76,0.11); border-color: rgba(201,168,76,0.38); }
   .profile-wrap { position: relative; }
   .profile-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--bg4); border: 1px solid var(--border-bright); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--text-dim); cursor: pointer; font-family: 'Cinzel', serif; transition: all 0.2s; }
@@ -208,7 +208,7 @@ const STYLES = `
   .filter-label { font-size: 13px; color: var(--text-dim); white-space: nowrap; }
   .filter-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--text); font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
   .filter-input:focus { border-color: var(--gold-dim); box-shadow: 0 0 0 3px rgba(201,168,76,0.08); }
-  .adv-filters-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); font-size: 14px; font-weight: 600; padding: 5px 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .adv-filters-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); border-radius: 7px; color: var(--text-dim); font-size: 14px; font-weight: 600; padding: 7px 14px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
   .adv-filters-btn:hover, .adv-filters-btn.active { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.05); }
   .adv-filter-badge { background: var(--gold); color: #000; border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 700; }
   .adv-filter-panel { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 4px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px 24px; }
@@ -224,9 +224,9 @@ const STYLES = `
   .adv-filter-toggle.active { color: var(--gold); }
   .adv-filter-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-dim); }
   .filter-input::placeholder { color: var(--text-dim); }
-  .filter-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .filter-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
   .filter-btn:hover { color: var(--text); border-color: var(--border-bright); background: var(--bg4); }
-  .filter-btn.active { background: rgba(201,168,76,0.1); color: var(--gold); border-color: rgba(201,168,76,0.35); font-weight: 600; box-shadow: 0 0 10px rgba(201,168,76,0.08); }
+  .filter-btn.active { background: rgba(201,168,76,0.12); color: var(--gold); border-color: rgba(201,168,76,0.4); font-weight: 700; box-shadow: 0 0 12px rgba(201,168,76,0.1); }
 
   /* FLIPS TABLE */
   .section-title { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
@@ -1056,9 +1056,9 @@ const STYLES = `
   .toast.info { background: #0f1218; border: 1px solid var(--gold-dim); color: var(--gold); }
 
   /* ALPHA BANNER */
-  .alpha-banner { background: linear-gradient(90deg, rgba(201,168,76,0.08), rgba(201,168,76,0.04)); border-bottom: 1px solid rgba(201,168,76,0.2); padding: 7px 32px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 12px; color: var(--text-dim); }
-  .alpha-badge { background: rgba(201,168,76,0.15); border: 1px solid var(--gold-dim); color: var(--gold); border-radius: 20px; padding: 2px 10px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-  .feedback-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px; padding: 3px 12px; font-size: 11px; cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+  .alpha-banner { background: #0a0d08; border-bottom: 1px solid rgba(46,204,113,0.15); padding: 5px 32px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 12px; color: var(--text-dim); }
+  .alpha-badge { background: rgba(46,204,113,0.12); border: 1px solid rgba(46,204,113,0.3); color: var(--green); border-radius: 20px; padding: 2px 10px; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+  .feedback-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px; padding: 2px 10px; font-size: 11px; cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
   .feedback-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
 
   /* MOBILE */
@@ -8304,31 +8304,22 @@ RULES:
                 ))}
               </div>
 
-              {/* Secondary nav — right side */}
-              <div className="nav-tabs">
-                {user && [["settings","Settings"],["referral","Refer & Earn"]].map(([t, label]) => (
-                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)}>
-                    {label}
-                  </button>
-                ))}
-                <a
-                  href="https://buymeacoffee.com/runetrader"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: "5px",
-                    padding: "5px 11px", borderRadius: "6px",
-                    background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)",
-                    color: "#c9a84c", fontSize: "13px", fontWeight: 600,
-                    textDecoration: "none", fontFamily: "'DM Sans', sans-serif",
-                    transition: "background 0.15s, border-color 0.15s",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,0.18)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.45)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(201,168,76,0.1)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.25)"; }}
-                >
-                  ☕ Support Development
-                </a>
-              </div>
+              {/* Secondary nav — right side: feedback link only, rest in profile dropdown */}
+              <a
+                href="mailto:feedback@runetrader.gg"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "5px",
+                  padding: "7px 14px", borderRadius: "7px",
+                  background: "transparent", border: "1px solid var(--border)",
+                  color: "var(--text-dim)", fontSize: "13px", fontWeight: 600,
+                  textDecoration: "none", fontFamily: "'DM Sans', sans-serif",
+                  transition: "all 0.15s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
+              >
+                💬 Feedback
+              </a>
             </div>
           )}
         </header>
@@ -9087,7 +9078,7 @@ RULES:
                         {CATS.map(c => (
                           <button key={c.id}
                             onClick={() => { setRecipeCategory(c.id); setRecipeDirection("all"); setRecipeRowsShown(100); setRecipeExpandedPotions(new Set()); }}
-                            style={{ padding: "6px 16px", borderRadius: "6px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", border: recipeCategory === c.id ? "1px solid var(--gold)" : "1px solid var(--border)", background: recipeCategory === c.id ? "rgba(201,168,76,0.12)" : "transparent", color: recipeCategory === c.id ? "var(--gold)" : "var(--text-dim)" }}>
+                            style={{ padding: "5px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", border: recipeCategory === c.id ? "1px solid var(--gold)" : "1px solid var(--border)", background: recipeCategory === c.id ? "rgba(201,168,76,0.12)" : "transparent", color: recipeCategory === c.id ? "var(--gold)" : "var(--text-dim)" }}>
                             {c.label}
                           </button>
                         ))}
@@ -9098,7 +9089,7 @@ RULES:
                             <span style={{ color: "var(--border)", fontSize: "16px", lineHeight: 1 }}>|</span>
                             {DIR_OPTS.filter(d => d.id !== "all").map(d => (
                               <button key={d.id} onClick={() => { setRecipeDirection(recipeDirection === d.id ? "all" : d.id); setRecipeRowsShown(100); }}
-                                style={{ padding: "6px 14px", borderRadius: "5px", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: recipeDirection === d.id ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: recipeDirection === d.id ? "rgba(52,152,219,0.1)" : "transparent", color: recipeDirection === d.id ? "#3498db" : "var(--text-dim)" }}>
+                                style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: recipeDirection === d.id ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: recipeDirection === d.id ? "rgba(52,152,219,0.1)" : "transparent", color: recipeDirection === d.id ? "#3498db" : "var(--text-dim)" }}>
                                 {d.label}
                               </button>
                             ))}
@@ -9106,14 +9097,14 @@ RULES:
                         )}
 
                         {/* Profitable only toggle */}
-                        <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "13px", color: recipeHideLosses ? "var(--gold)" : "var(--text-dim)", cursor: "pointer", userSelect: "none", padding: "6px 14px", borderRadius: "5px", border: recipeHideLosses ? "1px solid rgba(201,168,76,0.4)" : "1px solid var(--border)", background: recipeHideLosses ? "rgba(201,168,76,0.08)" : "transparent", marginLeft: "4px" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: recipeHideLosses ? "var(--gold)" : "var(--text-dim)", cursor: "pointer", userSelect: "none", padding: "4px 10px", borderRadius: "5px", border: recipeHideLosses ? "1px solid rgba(201,168,76,0.4)" : "1px solid var(--border)", background: recipeHideLosses ? "rgba(201,168,76,0.08)" : "transparent", marginLeft: "4px" }}>
                           <input type="checkbox" checked={recipeHideLosses} onChange={e => { setRecipeHideLosses(e.target.checked); setRecipeRowsShown(100); }} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
                           Profitable only
                         </label>
 
                         {/* ⚙ Filters button */}
                         <button onClick={() => setShowRecipeFilters(v => !v)}
-                          style={{ padding: "6px 14px", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: showRecipeFilters || advRecipeFilterCount > 0 ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: showRecipeFilters || advRecipeFilterCount > 0 ? "rgba(52,152,219,0.1)" : "transparent", color: showRecipeFilters || advRecipeFilterCount > 0 ? "#3498db" : "var(--text-dim)", display: "flex", alignItems: "center", gap: "5px" }}>
+                          style={{ padding: "4px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: showRecipeFilters || advRecipeFilterCount > 0 ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: showRecipeFilters || advRecipeFilterCount > 0 ? "rgba(52,152,219,0.1)" : "transparent", color: showRecipeFilters || advRecipeFilterCount > 0 ? "#3498db" : "var(--text-dim)", display: "flex", alignItems: "center", gap: "5px" }}>
                           ⚙ Filters {advRecipeFilterCount > 0 && <span style={{ background: "#3498db", color: "#fff", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>{advRecipeFilterCount}</span>}
                         </button>
 
@@ -9168,8 +9159,8 @@ RULES:
                       )}
 
                       {/* Data disclaimer */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: "rgba(52,152,219,0.06)", border: "1px solid rgba(52,152,219,0.15)", borderRadius: "8px", fontSize: "14px", color: "var(--text-dim)" }}>
-                        <span style={{ color: "#3498db", flexShrink: 0, fontSize: "15px" }}>ℹ</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", background: "rgba(52,152,219,0.06)", border: "1px solid rgba(52,152,219,0.15)", borderRadius: "8px", fontSize: "12px", color: "var(--text-dim)" }}>
+                        <span style={{ color: "#3498db", flexShrink: 0 }}>ℹ</span>
                         <span>Only recipes where all items have recent GE trades are shown. Items that haven't traded in 24–48hrs are excluded — actual opportunities may be higher. Prices update every 60 seconds.</span>
                       </div>
 
@@ -9212,7 +9203,7 @@ RULES:
                                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                           <span style={{ fontSize: "11px", color: "var(--text-dim)", transition: "transform 0.15s", display: "inline-block", transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
                                           <span style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{potionName}</span>
-                                          <span style={{ fontSize: "12px", color: "var(--text-dim)", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "4px", padding: "2px 7px", fontWeight: 500 }}>{recipes.length} combos</span>
+                                          <span style={{ fontSize: "10px", color: "var(--text-dim)", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 5px" }}>{recipes.length} combos</span>
                                         </div>
                                         <span /><span />
                                         <span />
@@ -9291,7 +9282,7 @@ RULES:
                                           )}
                                         </div>
                                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px", flexWrap: "wrap", paddingLeft: "16px" }}>
-                                          {r.skill && r.skill !== "Grand Exchange" && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
+                                          {r.skill && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
                                           {r.isMembersOnly && <span style={{ fontSize: "10px", color: "#c9a84c", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "3px", padding: "0 4px" }}>P2P</span>}
                                         </div>
                                       </div>
@@ -9775,9 +9766,9 @@ RULES:
                   ))}
                   <button
                     onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }}
-                    style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 12px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.35)", background: picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
-                    onMouseOver={e => { e.currentTarget.style.background = "rgba(201,168,76,0.14)"; }}
-                    onMouseOut={e => { e.currentTarget.style.background = picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)"; }}>
+                    style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.5)", background: picksMode ? "linear-gradient(135deg,rgba(201,168,76,0.22),rgba(201,168,76,0.12))" : "linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.06))", color: "var(--gold)", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap", boxShadow: picksMode ? "0 0 14px rgba(201,168,76,0.2)" : "none" }}
+                    onMouseOver={e => { e.currentTarget.style.background = "linear-gradient(135deg,rgba(201,168,76,0.22),rgba(201,168,76,0.12))"; e.currentTarget.style.boxShadow = "0 0 14px rgba(201,168,76,0.18)"; }}
+                    onMouseOut={e => { e.currentTarget.style.background = picksMode ? "linear-gradient(135deg,rgba(201,168,76,0.22),rgba(201,168,76,0.12))" : "linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.06))"; e.currentTarget.style.boxShadow = picksMode ? "0 0 14px rgba(201,168,76,0.2)" : "none"; }}>
                     ✨ Help me decide{picksMode ? " ●" : ""}
                   </button>
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
