@@ -144,12 +144,12 @@ const STYLES = `
   .profile-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--bg4); border: 1px solid var(--border-bright); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--text-dim); cursor: pointer; font-family: 'Cinzel', serif; transition: all 0.2s; }
   .profile-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
   .profile-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg2); border: 1px solid var(--border-bright); border-radius: 12px; min-width: 190px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.7); z-index: 200; }
-  .profile-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; color: var(--text-dim); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.1s; border: none; background: none; width: 100%; text-align: left; }
+  .profile-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 15px; color: var(--text-dim); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.1s; border: none; background: none; width: 100%; text-align: left; font-weight: 500; }
   .profile-dropdown-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
   .profile-dropdown-item.danger:hover { color: var(--red); }
   .market-dropdown-wrap { position: relative; }
   .market-dropdown { position: absolute; top: calc(100% + 6px); left: 0; background: var(--bg2); border: 1px solid var(--border-bright); border-radius: 10px; min-width: 220px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.7); z-index: 400; }
-  .market-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; color: var(--text-dim); cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: 'DM Sans', sans-serif; transition: background 0.1s; }
+  .market-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 15px; color: var(--text-dim); cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: 'DM Sans', sans-serif; transition: background 0.1s; font-weight: 500; }
   .market-dropdown-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
   .market-dropdown-item.active { color: var(--gold); background: rgba(201,168,76,0.06); }
   .picks-toggle-btn { display: flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(201,168,76,0.28); background: rgba(201,168,76,0.07); color: var(--gold); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
@@ -8285,7 +8285,7 @@ RULES:
                             { v: "alerts",      label: "Alerts", badge: alerts.filter(a => a.triggered).length + smartEvents.length },
                           ].map(item => (
                             <button key={item.v}
-                              style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "9px 14px", background: marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none", border: "none", color: marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)", fontSize: "12px", fontFamily: "DM Sans, sans-serif", cursor: "pointer", transition: "background 0.1s", textAlign: "left" }}
+                              style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "9px 14px", background: marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none", border: "none", color: marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)", fontSize: "15px", fontFamily: "DM Sans, sans-serif", cursor: "pointer", transition: "background 0.1s", textAlign: "left", fontWeight: 500 }}
                               onMouseOver={e => { e.currentTarget.style.background = "var(--bg3)"; e.currentTarget.style.color = "var(--text)"; }}
                               onMouseOut={e => { e.currentTarget.style.background = marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none"; e.currentTarget.style.color = marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)"; }}
                               onClick={e => { e.stopPropagation(); handleSetActiveTab("market"); setMarketSubTab("flips"); setMarketInnerView(item.v); if (item.v !== "items") setPicksMode(false); setMarketDropdownOpen(false); }}>
@@ -8304,22 +8304,7 @@ RULES:
                 ))}
               </div>
 
-              {/* Secondary nav — right side: feedback link only, rest in profile dropdown */}
-              <a
-                href="mailto:feedback@runetrader.gg"
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "5px",
-                  padding: "7px 14px", borderRadius: "7px",
-                  background: "transparent", border: "1px solid var(--border)",
-                  color: "var(--text-dim)", fontSize: "13px", fontWeight: 600,
-                  textDecoration: "none", fontFamily: "'DM Sans', sans-serif",
-                  transition: "all 0.15s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
-              >
-                💬 Feedback
-              </a>
+
             </div>
           )}
         </header>
