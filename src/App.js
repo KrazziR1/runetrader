@@ -252,7 +252,7 @@ const STYLES = `
   .mwatch-row:hover { background: var(--bg4); }
   .mwatch-row.crash-row { background: rgba(231,76,60,0.03); }
   .mwatch-row.warn-row  { background: rgba(243,156,18,0.02); }
-  .mwatch-verdict { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; white-space: nowrap; display: inline-flex; align-items: center; }
+  .mwatch-verdict { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; white-space: nowrap; display: inline-flex; align-items: center; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .mwatch-verdict.avoid   { background: rgba(231,76,60,0.12); color: #e74c3c; border: 1px solid rgba(231,76,60,0.25); }
   .mwatch-verdict.caution { background: rgba(243,156,18,0.1); color: #f39c12; border: 1px solid rgba(243,156,18,0.25); }
   .mwatch-verdict.recover { background: rgba(52,152,219,0.1); color: #3498db; border: 1px solid rgba(52,152,219,0.25); }
@@ -7822,16 +7822,18 @@ RULES:
                   <div style={{ display: "flex", alignItems: "center", gap: "0" }}>
                     <button className="level-btn"
                       onClick={() => setShowPlayerCard(v => !v)}
+                      title="Player Card & Quests"
                       style={{ borderColor: allDone ? "var(--green-dim)" : "rgba(201,168,76,0.3)", background: allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.07)", color: allDone ? "var(--green)" : "var(--gold)", gap: "6px", borderRadius: "8px 0 0 8px", borderRight: "none" }}>
                       {emoji} Lv.{level}
-                      <span style={{ color: "var(--text-dim)", fontSize: "10px" }}>·</span>
-                      <span>📋</span>
+                      <span style={{ width: "1px", height: "12px", background: "rgba(201,168,76,0.2)", flexShrink: 0 }} />
+                      <span style={{ fontSize: "11px", opacity: 0.8 }}>Quests</span>
                       <span style={{ background: allDone ? "var(--green)" : "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
                         {questsLoaded ? `${doneQuests}/${dailyQuests.length}` : "…"}
                       </span>
                     </button>
                     <button
                       onClick={() => setShowProfileMenu(v => !v)}
+                      title="Profile & Settings"
                       style={{ width: "30px", height: "30px", borderRadius: "0 8px 8px 0", background: allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.07)", border: `1px solid ${allDone ? "var(--green-dim)" : "rgba(201,168,76,0.3)"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "var(--text-dim)", fontFamily: "'Cinzel', serif", cursor: "pointer", flexShrink: 0 }}>
                       {initial}
                     </button>
@@ -8745,7 +8747,7 @@ RULES:
                   const groups = orderMap[mwatchOrder].filter(g => g.items.length > 0);
                   const totalFlagged = crashed.length + warn.length;
 
-                  const COL = "1.6fr 0.8fr 0.8fr 0.8fr 0.7fr 0.7fr 90px 120px";
+                  const COL = "1.6fr 0.8fr 0.8fr 0.8fr 0.7fr 0.7fr 90px 140px";
 
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>

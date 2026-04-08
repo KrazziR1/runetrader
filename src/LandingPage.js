@@ -244,14 +244,14 @@ const STYLES = `
   /* LIVE TICKER */
   .ticker-wrap {
     width: 100%; overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-    background: var(--bg2); padding: 12px 0; display: flex; align-items: center; justify-content: center;
+    background: var(--bg2); padding: 0;
   }
   .ticker {
-    display: flex; gap: 64px; white-space: nowrap;
+    display: inline-flex; gap: 64px; white-space: nowrap;
     animation: ticker 30s linear infinite;
-    align-items: center;
+    align-items: center; padding: 12px 0;
   }
-  .ticker-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-dim); }
+  .ticker-item { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-dim); }
   .ticker-item .name { color: var(--text); font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 0.5px; }
   .ticker-item .up { color: var(--green); }
   .ticker-item .down { color: var(--red); }

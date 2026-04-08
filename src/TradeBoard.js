@@ -203,7 +203,7 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
           </button>
           {user ? (
             <button onClick={() => setShowPostForm(true)}
-              style={{ padding: "7px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Cinzel, serif", letterSpacing: "0.5px" }}>
+              style={{ padding: "7px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #c9a84c, #e8c96a)", color: "#0a0e14", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Cinzel, serif", letterSpacing: "0.5px", boxShadow: "0 2px 8px rgba(201,168,76,0.3)" }}>
               + Post Listing
             </button>
           ) : (
@@ -417,7 +417,7 @@ Player-to-player trades. All transactions occur in-game — RuneTrader does not 
                 Cancel
               </button>
               <button onClick={submitListing} disabled={posting}
-                style={{ flex: 2, padding: "12px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "14px", fontWeight: 700, cursor: posting ? "wait" : "pointer", fontFamily: "Cinzel, serif", letterSpacing: "0.5px", opacity: posting ? 0.7 : 1 }}>
+                style={{ flex: 2, padding: "12px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #c9a84c, #e8c96a)", color: "#0a0e14", fontSize: "14px", fontWeight: 700, cursor: posting ? "wait" : "pointer", fontFamily: "Cinzel, serif", letterSpacing: "0.5px", opacity: posting ? 0.7 : 1, boxShadow: "0 2px 8px rgba(201,168,76,0.3)" }}>
                 {posting ? "Posting..." : "Post Listing →"}
               </button>
             </div>
