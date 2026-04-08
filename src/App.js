@@ -7288,6 +7288,7 @@ RULES:
         <div className="alpha-banner">
           <span className="alpha-badge">Alpha</span>
           <span>RuneTrader is in early access — features are actively being built.</span>
+          <button className="feedback-btn" onClick={() => setActiveTab("changelog")} style={{ marginLeft: "4px" }}>🆕 What's New</button>
           <a className="feedback-btn" href="mailto:feedback@runetrader.gg">💬 Send Feedback</a>
         </div>
 
