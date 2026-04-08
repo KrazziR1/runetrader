@@ -42,14 +42,14 @@ const STYLES = `
   }
   .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
   .nav-logo-icon { width: 36px; height: 36px; border-radius: 8px; }
-  .nav-logo-text { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 800; background: linear-gradient(135deg,#b8922e,#e8c96a,#c9a84c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing: 2px; }
-  .nav-logo-tld { color: var(--text-dim); font-size: 14px; -webkit-text-fill-color: var(--text-dim); }
+  .nav-logo-text { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 900; background: linear-gradient(135deg,#b8922e,#e8c96a,#c9a84c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing: 3px; text-transform: uppercase; }
+  .nav-logo-tld { font-size: 16px; -webkit-text-fill-color: transparent; background: linear-gradient(135deg,#b8922e,#e8c96a,#c9a84c); -webkit-background-clip:text; background-clip:text; }
   .nav-links { display: flex; align-items: center; gap: 28px; }
   .nav-link { color: var(--text-dim); font-size: 14px; text-decoration: none; transition: color 0.2s; letter-spacing: 0.3px; font-family: 'Inter', sans-serif; font-weight: 500; }
   .nav-link:hover { color: var(--gold); }
   .nav-cta {
-    padding: 9px 22px; border-radius: 7px; font-size: 13px; letter-spacing: 0.5px;
-    font-family: 'Cinzel', serif; font-weight: 700; cursor: pointer; text-decoration: none;
+    padding: 10px 26px; border-radius: 7px; font-size: 15px; letter-spacing: 1px;
+    font-family: 'Cinzel', serif; font-weight: 800; cursor: pointer; text-decoration: none;
     background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.3); color: var(--gold);
     transition: all 0.2s;
   }
@@ -106,16 +106,16 @@ const STYLES = `
     animation: fadeInUp 0.8s ease 0.3s both;
   }
   .btn-primary {
-    padding: 15px 36px; border-radius: 8px; font-family: 'Cinzel', serif;
-    font-size: 15px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    padding: 17px 40px; border-radius: 8px; font-family: 'Cinzel', serif;
+    font-size: 17px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
     background: linear-gradient(135deg, var(--gold-dim), var(--gold));
     color: var(--bg); border: none; cursor: pointer; text-decoration: none;
     transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
   }
   .btn-primary:hover { transform: translateY(-2px); opacity: 0.9; }
   .btn-secondary {
-    padding: 15px 36px; border-radius: 8px; font-family: 'Cinzel', serif;
-    font-size: 15px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    padding: 17px 40px; border-radius: 8px; font-family: 'Cinzel', serif;
+    font-size: 17px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
     background: transparent; color: var(--text-dim); border: 1px solid var(--border-solid);
     cursor: pointer; text-decoration: none; transition: all 0.25s;
   }
@@ -196,7 +196,7 @@ const STYLES = `
     font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
     padding: 4px 14px; border-radius: 20px;
   }
-  .pricing-name { font-family: 'Cinzel', serif; font-size: 14px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); }
+  .pricing-name { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--text); margin-bottom: 4px; }
   .pricing-price { font-family: 'Cinzel', serif; font-size: 52px; font-weight: 700; color: var(--gold); margin: 12px 0 4px; }
   .pricing-period { font-size: 13px; color: var(--text-dim); }
   .pricing-features { list-style: none; margin: 24px 0; text-align: left; display: flex; flex-direction: column; gap: 10px; }
@@ -204,13 +204,13 @@ const STYLES = `
   .pricing-features li::before { content: '◆'; color: var(--gold); font-size: 8px; flex-shrink: 0; }
   .pricing-features li.active { color: var(--text); }
   .pricing-btn {
-    width: 100%; padding: 13px; border-radius: 8px; font-family: 'Cinzel', serif;
-    font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    width: 100%; padding: 15px; border-radius: 8px; font-family: 'Cinzel', serif;
+    font-size: 15px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
     cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-solid);
-    background: transparent; color: var(--text-dim);
+    background: transparent; color: var(--text);
   }
-  .pricing-btn:hover { border-color: rgba(201,168,76,0.3); color: var(--gold); }
-  .pricing-btn.featured-btn { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: var(--bg); border: none; }
+  .pricing-btn:hover { border-color: rgba(201,168,76,0.4); color: var(--gold); }
+  .pricing-btn.featured-btn { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: var(--bg); border: none; font-size: 15px; font-weight: 800; }
   .pricing-btn.featured-btn:hover { opacity: 0.88; }
 
   /* CTA */
@@ -255,7 +255,7 @@ const STYLES = `
   .ticker-item .name { color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; }
   .ticker-item .up { color: var(--green); font-size: 13px; }
   .ticker-item .down { color: var(--red); font-size: 13px; }
-  @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+  @keyframes ticker { 0%{transform:translateX(-25%)} 100%{transform:translateX(-75%)} }
 
   /* DIVIDER */
   .divider { display: flex; align-items: center; gap: 16px; margin: 0 48px; opacity: 0.3; }
@@ -375,7 +375,7 @@ export default function LandingPage({ onEnterApp }) {
       <div style={{ paddingTop: "64px" }}>
         <div style={{ width: "100%", overflow: "hidden", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--bg2)", height: "40px", display: "flex", alignItems: "center" }}>
           <div style={{ display: "inline-flex", gap: "48px", whiteSpace: "nowrap", animation: "ticker 30s linear infinite", alignItems: "center", flexShrink: 0 }}>
-            {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+            {[...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
               <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "13px", fontFamily: "Inter, sans-serif", lineHeight: "40px" }}>
                 <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "13px" }}>{item.name}</span>
                 <span style={{ color: item.up ? "var(--green)" : "var(--red)", fontSize: "13px" }}>{item.margin}</span>
@@ -425,8 +425,8 @@ export default function LandingPage({ onEnterApp }) {
               <div className="hero-stat-label">To Start</div>
             </div>
             <div className="hero-stat">
-              <div className="hero-stat-value">📈</div>
-              <div className="hero-stat-label">Merchant Mode</div>
+              <div className="hero-stat-value" style={{ fontSize: "18px", letterSpacing: "1px" }}>Trading Terminal</div>
+              <div className="hero-stat-label">Pro Feature</div>
             </div>
           </div>
         </div>
