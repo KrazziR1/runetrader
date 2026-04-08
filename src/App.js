@@ -369,7 +369,9 @@ const STYLES = `
   .stat-help { display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; border-radius: 50%; background: var(--bg4); border: 1px solid var(--border); color: var(--text-dim); font-size: 9px; cursor: default; flex-shrink: 0; font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: 0; text-transform: none; }
   .stat-tooltip-wrap { position: relative; display: inline-flex; }
   .stat-tooltip-wrap:hover .stat-tooltip { opacity: 1; pointer-events: none; }
-  .stat-tooltip { opacity: 0; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1a1a1a; border: 1px solid var(--gold-dim); border-radius: 8px; padding: 10px 13px; width: 240px; font-size: 12px; color: var(--text); line-height: 1.5; z-index: 9999; pointer-events: none; transition: opacity 0.15s; box-shadow: 0 8px 32px rgba(0,0,0,0.85); white-space: normal; font-family: 'Inter', sans-serif; font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .stat-tooltip { opacity: 0; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1a1a1a; border: 1px solid var(--gold-dim); border-radius: 8px; padding: 10px 13px; width: 240px; font-size: 12px; color: var(--text); line-height: 1.5; z-index: 9999; pointer-events: none; transition: opacity 0.15s; box-shadow: 0 8px 32px rgba(0,0,0,0.85); white-space: normal; font-family: 'Inter', sans-serif; font-weight: 400; text-transform: none; letter-spacing: 0; max-width: calc(100vw - 32px); }
+  .stat-tooltip-wrap:last-child .stat-tooltip, .stat-tooltip-wrap.anchor-right .stat-tooltip { left: auto; right: 0; transform: none; }
+  .stat-tooltip-wrap:last-child .stat-tooltip::after, .stat-tooltip-wrap.anchor-right .stat-tooltip::after { left: auto; right: 12px; transform: none; }
   .stat-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--gold-dim); }
   .chart-section { padding: 24px 28px; }
   .time-tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -8745,9 +8747,9 @@ RULES:
                     ["inputs",      "Inputs",       "Items required."],
                     ["outputs",     "Outputs",      "Items received."],
                     ["inputCost",   "Input Cost",   "Total GE buy price of all inputs."],
-                    ["outputValue", "Output Value", "Total GE sell value of outputs after tax."],
-                    ["profit",      "Profit",       "Output Value minus Input Cost after GE tax."],
-                    ["roi",         "ROI",          "Return on investment as a percentage."],
+                    ["outputValue", "Output Value", "Total GE sell value of outputs after 2% GE tax (max 5M per item)."],
+                    ["profit",      "Profit",       "Output Value minus Input Cost. GE tax is already deducted from the output value."],
+                    ["roi",         "ROI",          "Return on investment after GE tax. Higher is better."],
                   ];
 
                   return (
@@ -8764,10 +8766,10 @@ RULES:
                         <>
                           <div className="recipe-table">
                             <div className="recipe-header" style={{ gridTemplateColumns: RECIPE_COLS }}>
-                              {COLS_DEF.map(([col, label, tip]) => (
+                              {COLS_DEF.map(([col, label, tip], idx) => (
                                 <button key={col} className={`sort-btn ${recipeSortCol === col ? "active" : ""}`} onClick={() => handleRecipeSort(col)}>
                                   {label} {recipeSortCol === col && <span className="sort-arrow">{recipeSortDir === "desc" ? "▼" : "▲"}</span>}
-                                  <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
+                                  <span className={`stat-tooltip-wrap${idx === COLS_DEF.length - 1 ? " anchor-right" : ""}`} onClick={e => e.stopPropagation()}>
                                     <span className="stat-help">?</span>
                                     <span className="stat-tooltip">{tip}</span>
                                   </span>
