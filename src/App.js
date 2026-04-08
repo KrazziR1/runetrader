@@ -5258,7 +5258,6 @@ export default function RuneTrader() {
   const POTION_RECIPES = POTION_NAMES.flatMap(name => {
     const r3 = { name: `${name}(3)` };
     const r4 = { name: `${name}(4)` };
-    const r1 = { name: `${name}(1)` };
     const r2 = { name: `${name}(2)` };
     return [
       // 4×(3-dose) → 3×(4-dose): buy cheap 3-dose, sell as 4-dose
