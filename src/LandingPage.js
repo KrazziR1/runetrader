@@ -640,7 +640,7 @@ export default function LandingPage({ onEnterApp }) {
       </nav>
 
       {/* TICKER */}
-      <div style={{ marginTop: "110px", width: "100%", overflow: "hidden", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--bg2)", height: "44px", display: "flex", alignItems: "center" }}>
+      <div style={{ marginTop: "120px", width: "100%", overflow: "hidden", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--bg2)", height: "44px", display: "flex", alignItems: "center" }}>
         <div style={{ display: "inline-flex", gap: "48px", whiteSpace: "nowrap", animation: "ticker 30s linear infinite", alignItems: "center", flexShrink: 0 }}>
           {[...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
             <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontFamily: "Inter, sans-serif" }}>
