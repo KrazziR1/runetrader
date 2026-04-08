@@ -8801,26 +8801,31 @@ RULES:
                   const priceByName = {};
                   (allItems || []).forEach(item => { priceByName[item.name?.toLowerCase().trim()] = item; });
                   const lookupItem = (inp) => priceByName[inp.name?.toLowerCase().trim()];
+                  // Get best available price — use low for buying, high for selling, fall back to either
+                  const getBuyPrice = (item) => item?.low || item?.high || 0;
+                  const getSellPrice = (item) => item?.high || item?.low || 0;
 
                   const processedRecipes = STATIC_RECIPES.map(r => {
                     let inputCost = 0; let inputsOk = true;
                     (r.inputs || []).forEach(inp => {
                       const item = lookupItem(inp);
-                      if (!item?.low) { inputsOk = false; return; }
-                      inputCost += item.low * (inp.quantity || 1);
+                      const price = getBuyPrice(item);
+                      if (!price) { inputsOk = false; return; }
+                      inputCost += price * (inp.quantity || 1);
                     });
                     let outputValue = 0; let outputsOk = true;
                     (r.outputs || []).forEach(out => {
                       const item = lookupItem(out);
-                      if (!item?.high) { outputsOk = false; return; }
-                      const tax = item.high < 50 ? 0 : Math.min(Math.floor(item.high * 0.02), 5_000_000);
-                      outputValue += (item.high - tax) * (out.quantity || 1);
+                      const price = getSellPrice(item);
+                      if (!price) { outputsOk = false; return; }
+                      const tax = price < 50 ? 0 : Math.min(Math.floor(price * 0.02), 5_000_000);
+                      outputValue += (price - tax) * (out.quantity || 1);
                     });
                     const profit = outputValue - inputCost;
                     const roi = inputCost > 0 ? parseFloat(((profit / inputCost) * 100).toFixed(1)) : 0;
                     return { ...r, inputCost, outputValue, profit, roi, resolvable: inputsOk && outputsOk };
                   })
-                  .filter(r => r.resolvable && r.inputCost > 0 && r.profit !== 0)
+                  .filter(r => r.resolvable && r.inputCost > 0)
                   .filter(r => recipeCategory === "all" || r.category === recipeCategory)
                   .filter(r => !recipeSearch || r.name.toLowerCase().includes(recipeSearch.toLowerCase()))
                   .sort((a, b) => {
