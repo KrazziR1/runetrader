@@ -480,18 +480,6 @@ const FEATURES = [
   { icon: "🧪", title: "Recipes & Arbitrage", desc: "GE set exchange, potion decanting, alching, death's coffer — every conversion arbitrage in one place with live profit, ROI, and volume.", tag: "Free" },
 ];
 
-const COMPARISON_ROWS = [
-  { feature: "Live GE price data — real-time", us: "✅", them: "Varies" },
-  { feature: "RuneLite plugin — live slot sync", us: "✅", them: "Some" },
-  { feature: "AI advisor with live position context", us: "✅", them: "❌" },
-  { feature: "Ask questions in plain English", us: "✅", them: "❌" },
-  { feature: "Trading Terminal", us: "✅", them: "❌" },
-  { feature: "Filter flips by your cash stack", us: "✅", them: "Rarely" },
-  { feature: "Smart alerts — dumps, spikes, crashes", us: "✅", them: "Rarely" },
-  { feature: "Transparent flip scoring & reasoning", us: "✅", them: "❌" },
-  { feature: "Free tier with real value", us: "✅", them: "Limited" },
-];
-
 // Animated counter hook
 function useCounter(target, duration = 1800, start = false) {
   const [value, setValue] = useState(0);
