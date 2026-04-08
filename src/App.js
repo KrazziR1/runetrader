@@ -9032,7 +9032,7 @@ RULES:
                     ["profit",      "Profit",       "Output Value minus Input Cost after GE tax."],
                     ["roi",         "ROI",          "Return on investment after GE tax."],
                     ["volume",      "Vol/Day",      "Daily trade volume of the lowest-volume item in this recipe (the bottleneck). The item name is shown in the cell. Higher = easier to fill your offers."],
-                    ["lastUpdated", "Updated",      "How recently the most stale item in this recipe last traded. Old data = less reliable pricing."],
+                    ["lastUpdated", "Last Trade",    "How recently the most stale item in this recipe last traded. Old data = less reliable pricing."],
                   ];
 
                   const resetFilters = () => {
@@ -9297,7 +9297,7 @@ RULES:
                                               <span>{label === "buy" ? "Total Cost" : "After-Tax Value"}</span>
                                               <span>GE Limit</span>
                                               <span>Vol/Day</span>
-                                              <span>Last Traded</span>
+                                              <span>Last Trade</span>
                                             </div>
                                           );
                                           return (
