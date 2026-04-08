@@ -247,12 +247,12 @@ const STYLES = `
     background: var(--bg2); height: 40px; display: flex; align-items: center;
   }
   .ticker {
-    display: inline-flex; gap: 48px; white-space: nowrap;
+    display: inline-flex; gap: 32px; white-space: nowrap;
     animation: ticker 30s linear infinite;
-    align-items: center; flex-shrink: 0;
+    align-items: center; flex-shrink: 0; height: 40px;
   }
-  .ticker-item { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-dim); font-family: 'Inter', sans-serif; }
-  .ticker-item .name { color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.2px; }
+  .ticker-item { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); font-family: 'Inter', sans-serif; height: 40px; vertical-align: middle; }
+  .ticker-item .name { color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; }
   .ticker-item .up { color: var(--green); font-size: 13px; }
   .ticker-item .down { color: var(--red); font-size: 13px; }
   @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
@@ -376,10 +376,11 @@ export default function LandingPage({ onEnterApp }) {
         <div className="ticker-wrap">
           <div className="ticker">
             {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-              <div key={i} className="ticker-item">
+              <span key={i} className="ticker-item">
                 <span className="name">{item.name}</span>
                 <span className={item.up ? "up" : "down"}>{item.margin}</span>
-              </div>
+                <span style={{ color: "var(--border)", fontSize: "13px" }}>·</span>
+              </span>
             ))}
           </div>
         </div>

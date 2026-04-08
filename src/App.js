@@ -5085,6 +5085,21 @@ export default function RuneTrader() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   useEffect(() => { setMarketRowsShown(200); }, [categoryFilter]);
 
+  // ── Recipe fetch — triggered when recipes tab is first visited ──
+  useEffect(() => {
+    if (marketSubTab !== "recipes") return;
+    if (recipeData.length > 0 || recipeLoading) return;
+    setRecipeLoading(true);
+    fetch("/api/prices?type=recipes")
+      .then(r => r.json())
+      .then(json => {
+        const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+        setRecipeData(arr);
+      })
+      .catch(() => {})
+      .finally(() => setRecipeLoading(false));
+  }, [marketSubTab]); // eslint-disable-line
+
   // ── Advanced filters ──
   const [showAdvFilters, setShowAdvFilters] = useState(false);
   const [advFilters, setAdvFilters] = useState({
@@ -5667,20 +5682,6 @@ export default function RuneTrader() {
       const natureRuneData = latestData.data["561"];
       if (natureRuneData && natureRuneData.low) setNatureRunePrice(natureRuneData.low);
       else if (natureRunePrice === 0) setNatureRunePrice(200); // fallback if no live data
-
-      // Fetch recipe data once prices are loaded
-      if (recipeData.length === 0 && !recipeLoading) {
-        setRecipeLoading(true);
-        fetch("/api/prices?type=recipes")
-          .then(r => r.json())
-          .then(json => {
-            // Wiki returns { data: [...] } or bare array
-            const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
-            setRecipeData(arr);
-          })
-          .catch(() => {})
-          .finally(() => setRecipeLoading(false));
-      }
 
       const flips = [];
 
