@@ -99,17 +99,17 @@ const CHANGELOG = [
 ];
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700;800;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
     --gold: #c9a84c; --gold-light: #e8c96a; --gold-dim: #8a6f2e;
     --bg: #070a0d; --bg2: #0c1018; --bg3: #111620; --bg4: #182030;
     --border: #1c2a3a; --border-bright: #28394d; --border-gold: rgba(201,168,76,0.15);
-    --text: #e8e8e8; --text-dim: #99aabb;
+    --text: #eef0f2; --text-dim: #a8bccb;
     --green: #2ecc71; --green-dim: #1a7a44; --red: #e74c3c; --red-dim: #7a1f1a; --blue: #3498db;
     --glow-gold: rgba(201,168,76,0.15);
   }
-  body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: 15px; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif; font-size: 15px; }
   .app { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
 
   /* HEADER */
@@ -118,7 +118,7 @@ const STYLES = `
   .header-bottom { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 40px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.25); }
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon { width: 36px; height: 36px; }
-  .logo-text { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 800; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 2px; }
+  .logo-text { font-family: 'Cinzel Decorative', serif; font-size: 22px; font-weight: 700; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 2px; }
   .logo-dot { color: var(--text-dim); font-size: 15px; margin-left: 2px; }
   .header-right { display: flex; align-items: center; gap: 8px; }
   .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(46,204,113,0.07); border: 1px solid rgba(46,204,113,0.2); border-radius: 20px; padding: 3px 10px; font-size: 12px; color: var(--green); }
@@ -129,30 +129,30 @@ const STYLES = `
   .sync-paused-banner-icon { width: 20px; height: 20px; border-radius: 50%; background: rgba(243,156,18,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .sync-paused-banner-text { font-size: 13px; color: #f39c12; font-weight: 600; }
   .sync-paused-banner-sub { font-size: 12px; color: rgba(243,156,18,0.65); margin-top: 1px; }
-  .sync-paused-resume-btn { padding: 5px 14px; border-radius: 6px; border: 1px solid rgba(243,156,18,0.35); background: transparent; color: #f39c12; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .sync-paused-resume-btn { padding: 5px 14px; border-radius: 6px; border: 1px solid rgba(243,156,18,0.35); background: transparent; color: #f39c12; font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
   .sync-paused-resume-btn:hover { background: rgba(243,156,18,0.1); }
   .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.35;transform:scale(0.75)} }
   .nav-tabs { display: flex; gap: 2px; }
-  .nav-tab { padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: #8fa0b0; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.2px; }
+  .nav-tab { padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; background: transparent; color: #8fa0b0; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.2px; }
   .nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
   .nav-tab.active { background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.22); }
-  .terminal-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; letter-spacing: 0.3px; white-space: nowrap; }
-  .level-btn { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.22); background: rgba(201,168,76,0.06); color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
+  .terminal-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; letter-spacing: 0.3px; white-space: nowrap; }
+  .level-btn { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.22); background: rgba(201,168,76,0.06); color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap; }
   .level-btn:hover { background: rgba(201,168,76,0.11); border-color: rgba(201,168,76,0.38); }
   .profile-wrap { position: relative; }
   .profile-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--bg4); border: 1px solid var(--border-bright); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--text-dim); cursor: pointer; font-family: 'Cinzel', serif; transition: all 0.2s; }
   .profile-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
   .profile-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg2); border: 1px solid var(--border-bright); border-radius: 12px; min-width: 190px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.7); z-index: 200; }
-  .profile-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; color: var(--text-dim); cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.1s; border: none; background: none; width: 100%; text-align: left; }
+  .profile-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; color: var(--text-dim); cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.1s; border: none; background: none; width: 100%; text-align: left; }
   .profile-dropdown-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
   .profile-dropdown-item.danger:hover { color: var(--red); }
   .market-dropdown-wrap { position: relative; }
   .market-dropdown { position: absolute; top: calc(100% + 6px); left: 0; background: var(--bg2); border: 1px solid var(--border-bright); border-radius: 10px; min-width: 220px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.7); z-index: 400; }
-  .market-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; color: var(--text-dim); cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: 'Inter', sans-serif; transition: background 0.1s; }
+  .market-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 13px; color: var(--text-dim); cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: 'DM Sans', sans-serif; transition: background 0.1s; }
   .market-dropdown-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
   .market-dropdown-item.active { color: var(--gold); background: rgba(201,168,76,0.06); }
-  .picks-toggle-btn { display: flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(201,168,76,0.28); background: rgba(201,168,76,0.07); color: var(--gold); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .picks-toggle-btn { display: flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(201,168,76,0.28); background: rgba(201,168,76,0.07); color: var(--gold); font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
   .picks-toggle-btn.off { border-color: var(--border); background: transparent; color: var(--text-dim); border-radius: 20px; }
   .picks-toggle-btn:hover { border-color: rgba(201,168,76,0.45); color: var(--gold); background: rgba(201,168,76,0.1); }
 
@@ -174,7 +174,7 @@ const STYLES = `
 
   /* MARKET SUB-TABS */
   .market-sub-tabs { display: flex; gap: 4px; padding: 0 0 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
-  .market-sub-tab { padding: 6px 18px; border-radius: 20px; border: 1px solid transparent; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.15s; letter-spacing: 0.2px; }
+  .market-sub-tab { padding: 6px 18px; border-radius: 20px; border: 1px solid transparent; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.15s; letter-spacing: 0.2px; }
   .market-sub-tab:hover { color: var(--text); background: rgba(255,255,255,0.04); border-color: var(--border); }
   .market-sub-tab.active { background: rgba(201,168,76,0.1); color: var(--gold); border-color: rgba(201,168,76,0.25); font-weight: 600; }
   .market-sub-tab .sub-tab-badge { display: inline-block; background: rgba(52,152,219,0.15); color: var(--blue); border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
@@ -199,23 +199,23 @@ const STYLES = `
   .coffer-efficiency-poor { display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; background: rgba(231,76,60,0.12); color: var(--red); }
   .coffer-target-bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; }
   .coffer-target-label { font-size: 13px; color: var(--text-dim); white-space: nowrap; }
-  .coffer-target-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; width: 160px; }
+  .coffer-target-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 6px 12px; color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s; width: 160px; }
   .coffer-target-input:focus { border-color: var(--gold-dim); }
   .coffer-target-summary { font-size: 12px; color: var(--gold); font-weight: 600; }
 
   /* FILTER BAR */
   .filter-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .filter-label { font-size: 13px; color: var(--text-dim); white-space: nowrap; }
-  .filter-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .filter-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
   .filter-input:focus { border-color: var(--gold-dim); box-shadow: 0 0 0 3px rgba(201,168,76,0.08); }
-  .adv-filters-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); font-size: 13px; padding: 5px 12px; cursor: pointer; font-family: Inter, sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .adv-filters-btn { display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); font-size: 13px; padding: 5px 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
   .adv-filters-btn:hover, .adv-filters-btn.active { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.05); }
   .adv-filter-badge { background: var(--gold); color: #000; border-radius: 10px; padding: 1px 7px; font-size: 10px; font-weight: 700; }
   .adv-filter-panel { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 4px; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px 24px; }
   .adv-filter-group { display: flex; flex-direction: column; gap: 7px; padding: 12px 14px; background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; }
   .adv-filter-label { font-size: 11px; color: #8899aa; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 2px; }
   .adv-filter-row { display: flex; gap: 6px; align-items: center; }
-  .adv-filter-input { background: var(--bg2); border: 1px solid var(--border-bright); border-radius: 5px; color: var(--text); font-size: 13px; padding: 6px 8px; width: 100%; font-family: Inter, sans-serif; transition: border-color 0.15s; }
+  .adv-filter-input { background: var(--bg2); border: 1px solid var(--border-bright); border-radius: 5px; color: var(--text); font-size: 13px; padding: 6px 8px; width: 100%; font-family: 'DM Sans', sans-serif; transition: border-color 0.15s; }
   .adv-filter-input:focus { outline: none; border-color: var(--gold-dim); box-shadow: 0 0 0 2px rgba(201,168,76,0.08); }
   .adv-filter-input::placeholder { color: #3d5060; }
   .adv-filter-sep { font-size: 12px; color: #3d5060; flex-shrink: 0; font-weight: 600; }
@@ -224,7 +224,7 @@ const STYLES = `
   .adv-filter-toggle.active { color: var(--gold); }
   .adv-filter-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-dim); }
   .filter-input::placeholder { color: var(--text-dim); }
-  .filter-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: 'Inter', sans-serif; }
+  .filter-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
   .filter-btn:hover { color: var(--text); border-color: var(--border-bright); background: var(--bg4); }
   .filter-btn.active { background: rgba(201,168,76,0.1); color: var(--gold); border-color: rgba(201,168,76,0.35); font-weight: 600; box-shadow: 0 0 10px rgba(201,168,76,0.08); }
 
@@ -233,7 +233,7 @@ const STYLES = `
   .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border-bright), transparent); }
   .flips-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; overflow: visible; box-shadow: 0 2px 16px rgba(0,0,0,0.3); }
   .table-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 90px 80px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: #8899aa; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); border-radius: 12px 12px 0 0; }
-  .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-family: "Inter", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; font-weight: 600; }
+  .sort-btn { background: none; border: none; cursor: pointer; color: inherit; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-family: "DM Sans", sans-serif; padding: 0; display: flex; align-items: center; gap: 4px; transition: color 0.15s; font-weight: 600; }
   .sort-btn:hover { color: var(--gold); }
   .sort-btn.active { color: var(--gold); }
   .sort-arrow { font-size: 9px; opacity: 0.7; }
@@ -259,7 +259,7 @@ const STYLES = `
   .market-nav-dropdown-wrap::after { content: ''; position: absolute; top: 100%; left: 0; right: 0; height: 8px; } 
   .market-nav-dropdown { display: none; position: absolute; top: calc(100% + 2px); left: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; min-width: 160px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 200; padding-top: 4px; }
   .market-nav-dropdown-wrap:hover .market-nav-dropdown { display: block; }
-  .market-nav-dropdown-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 14px; background: none; border: none; color: var(--text-dim); font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.1s; text-align: left; }
+  .market-nav-dropdown-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 14px; background: none; border: none; color: var(--text-dim); font-size: 12px; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: background 0.1s; text-align: left; }
   .market-nav-dropdown-item:hover { background: var(--bg3); color: var(--text); }
   .compress-pill { display: inline-flex; align-items: center; gap: 2px; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 6px; cursor: pointer; white-space: nowrap; position: relative; vertical-align: middle; text-decoration: none; }
   .compress-pill.crash { background: rgba(231,76,60,0.15); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
@@ -288,7 +288,7 @@ const STYLES = `
   .flip-card-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); }
   .flip-card-image { width: 100%; border-radius: 8px; border: 1px solid var(--border); }
   .flip-card-actions { display: flex; gap: 10px; }
-  .flip-card-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+  .flip-card-btn { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
   .flip-card-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
   .flip-card-btn.primary { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; border: none; font-weight: 700; }
 
@@ -319,11 +319,11 @@ const STYLES = `
   .upgrade-feature-row .check { color: var(--gold); font-size: 12px; flex-shrink: 0; }
   .upgrade-cta { width: 100%; padding: 14px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 18px; font-weight: 700; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 1px; transition: all 0.2s; }
   .upgrade-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(201,168,76,0.4); }
-  .upgrade-dismiss { font-size: 12px; color: var(--text-dim); cursor: pointer; background: none; border: none; font-family: 'Inter', sans-serif; transition: color 0.15s; }
+  .upgrade-dismiss { font-size: 12px; color: var(--text-dim); cursor: pointer; background: none; border: none; font-family: 'DM Sans', sans-serif; transition: color 0.15s; }
   .upgrade-dismiss:hover { color: var(--text); }
 
   /* REFRESH BUTTON */
-  .refresh-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
+  .refresh-btn { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: "DM Sans", sans-serif; }
   .refresh-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
   .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .refresh-spin { display: inline-block; animation: spin 0.8s linear infinite; }
@@ -358,7 +358,7 @@ const STYLES = `
   .chat-float-input { position: absolute; bottom: 12px; left: 12px; right: 12px; z-index: 10; display: flex; flex-direction: column; gap: 6px; }
   .chat-input-row { display: flex; gap: 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 6px 6px 6px 14px; align-items: center; box-shadow: 0 4px 24px rgba(0,0,0,0.5); transition: border-color 0.2s; }
   .chat-input-row:focus-within { border-color: var(--gold-dim); }
-  .chat-input { flex: 1; background: transparent; border: none; color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; outline: none; resize: none; height: 24px; max-height: 80px; line-height: 1.5; padding: 0; overflow-y: hidden; }
+  .chat-input { flex: 1; background: transparent; border: none; color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; resize: none; height: 24px; max-height: 80px; line-height: 1.5; padding: 0; overflow-y: hidden; }
   .chat-input::placeholder { color: var(--text-dim); }
   .send-btn { width: 34px; height: 34px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; flex-shrink: 0; }
   .send-btn:hover { opacity: 0.85; }
@@ -366,7 +366,7 @@ const STYLES = `
 
   /* Quick prompts */
   .quick-prompts-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-  .quick-prompt { padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); transition: all 0.2s; font-family: 'Inter', sans-serif; white-space: nowrap; }
+  .quick-prompt { padding: 4px 10px; border-radius: 20px; font-size: 12px; cursor: pointer; background: var(--bg2); border: 1px solid var(--border); color: var(--text-dim); transition: all 0.2s; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
   .quick-prompt:hover { border-color: var(--gold-dim); color: var(--gold); background: var(--bg3); }
 
   /* CHART MODAL */
@@ -383,24 +383,24 @@ const STYLES = `
   .modal-stat { background: var(--bg3); padding: 16px 20px; position: relative; }
   .modal-stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; }
   .modal-stat-value { font-size: 20px; font-weight: 600; margin-top: 4px; font-family: 'Cinzel', serif; }
-  .stat-help { display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; border-radius: 50%; background: var(--bg4); border: 1px solid var(--border); color: var(--text-dim); font-size: 9px; cursor: default; flex-shrink: 0; font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: 0; text-transform: none; }
+  .stat-help { display: inline-flex; align-items: center; justify-content: center; width: 13px; height: 13px; border-radius: 50%; background: var(--bg4); border: 1px solid var(--border); color: var(--text-dim); font-size: 9px; cursor: default; flex-shrink: 0; font-family: 'DM Sans', sans-serif; font-weight: 600; letter-spacing: 0; text-transform: none; }
   .stat-tooltip-wrap { position: relative; display: inline-flex; }
   .stat-tooltip-wrap:hover .stat-tooltip { opacity: 1; pointer-events: none; }
-  .stat-tooltip { opacity: 0; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1a1a1a; border: 1px solid var(--gold-dim); border-radius: 8px; padding: 10px 13px; width: 240px; font-size: 12px; color: var(--text); line-height: 1.5; z-index: 9999; pointer-events: none; transition: opacity 0.15s; box-shadow: 0 8px 32px rgba(0,0,0,0.85); white-space: normal; font-family: 'Inter', sans-serif; font-weight: 400; text-transform: none; letter-spacing: 0; max-width: calc(100vw - 32px); }
+  .stat-tooltip { opacity: 0; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1a1a1a; border: 1px solid var(--gold-dim); border-radius: 8px; padding: 10px 13px; width: 240px; font-size: 12px; color: var(--text); line-height: 1.5; z-index: 9999; pointer-events: none; transition: opacity 0.15s; box-shadow: 0 8px 32px rgba(0,0,0,0.85); white-space: normal; font-family: 'DM Sans', sans-serif; font-weight: 400; text-transform: none; letter-spacing: 0; max-width: calc(100vw - 32px); }
   .stat-tooltip-wrap:last-child .stat-tooltip, .stat-tooltip-wrap.anchor-right .stat-tooltip { left: auto; right: 0; transform: none; }
   .stat-tooltip-wrap:last-child .stat-tooltip::after, .stat-tooltip-wrap.anchor-right .stat-tooltip::after { left: auto; right: 12px; transform: none; }
   .stat-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--gold-dim); }
   .chart-section { padding: 24px 28px; }
   .time-tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
-  .time-tab { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; font-weight: 500; }
+  .time-tab { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; font-weight: 500; }
   .time-tab:hover { color: var(--text); border-color: var(--text-dim); }
   .time-tab.active { background: var(--bg4); color: var(--gold); border-color: var(--gold-dim); }
   .chart-container { width: 100%; height: 280px; position: relative; }
   .chart-loading { display: flex; align-items: center; justify-content: center; height: 280px; color: var(--text-dim); font-size: 14px; }
   .modal-body { padding: 0 28px 24px; display: flex; flex-direction: column; gap: 16px; }
-  .modal-ask-btn { padding: 10px 20px; border-radius: 8px; border: 1px solid var(--gold-dim); background: rgba(201,168,76,0.08); color: var(--gold); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 8px; }
+  .modal-ask-btn { padding: 10px 20px; border-radius: 8px; border: 1px solid var(--gold-dim); background: rgba(201,168,76,0.08); color: var(--gold); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 8px; }
   .modal-ask-btn:hover { background: rgba(201,168,76,0.15); }
-  .modal-flip-btn { padding: 10px 20px; border-radius: 8px; border: 1px solid var(--green-dim); background: rgba(46,204,113,0.08); color: var(--green); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 8px; }
+  .modal-flip-btn { padding: 10px 20px; border-radius: 8px; border: 1px solid var(--green-dim); background: rgba(46,204,113,0.08); color: var(--green); font-size: 13px; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; display: flex; align-items: center; gap: 8px; }
   .modal-flip-btn:hover { background: rgba(46,204,113,0.15); }
 
   /* PREFS BAR */
@@ -409,10 +409,10 @@ const STYLES = `
   .pref-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
   .pref-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--gold); font-size: 18px; font-family: "Cinzel", serif; outline: none; width: 100%; transition: border-color 0.2s; }
   .pref-input:focus { border-color: var(--gold-dim); }
-  .pref-input::placeholder { color: var(--text-dim); font-family: "Inter", sans-serif; font-size: 13px; }
+  .pref-input::placeholder { color: var(--text-dim); font-family: "DM Sans", sans-serif; font-size: 13px; }
   .pref-sub { font-size: 11px; color: var(--text-dim); }
   .toggle-group { display: flex; gap: 4px; }
-  .toggle-btn { flex: 1; padding: 7px 4px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; font-weight: 500; text-align: center; }
+  .toggle-btn { flex: 1; padding: 7px 4px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: "DM Sans", sans-serif; font-weight: 500; text-align: center; }
   .toggle-btn:hover { color: var(--text); border-color: var(--text-dim); }
   .toggle-btn.active-low { background: rgba(46,204,113,0.15); color: var(--green); border-color: var(--green-dim); }
   .toggle-btn.active-med { background: rgba(201,168,76,0.15); color: var(--gold); border-color: var(--gold-dim); }
@@ -429,13 +429,13 @@ const STYLES = `
   .tracker-form-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
   .tracker-field { display: flex; flex-direction: column; gap: 6px; position: relative; }
   .tracker-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-  .tracker-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: "Inter", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
+  .tracker-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: "DM Sans", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
   .tracker-input:focus { border-color: var(--gold-dim); }
   .tracker-input::placeholder { color: var(--text-dim); }
   .tracker-input.optional-field { border-style: dashed; }
   .tracker-input.optional-field:focus { border-style: solid; border-color: var(--gold-dim); }
   .optional-hint { font-size: 10px; color: var(--text-dim); opacity: 0.7; font-style: italic; }
-  .log-btn { padding: 9px 20px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 600; font-family: "Inter", sans-serif; white-space: nowrap; transition: opacity 0.2s; height: 38px; }
+  .log-btn { padding: 9px 20px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 600; font-family: "DM Sans", sans-serif; white-space: nowrap; transition: opacity 0.2s; height: 38px; }
   .log-btn:hover { opacity: 0.85; }
   .log-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -461,7 +461,7 @@ const STYLES = `
   .roi-pos { color: var(--green); font-size: 12px; }
   .roi-neg { color: var(--red); font-size: 12px; }
   .roi-neu { color: var(--text-dim); font-size: 12px; }
-  .clear-btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
+  .clear-btn { padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: "DM Sans", sans-serif; }
   .clear-btn:hover { border-color: var(--red); color: var(--red); }
   .tracker-empty { padding: 60px 20px; text-align: center; color: var(--text-dim); }
   .tracker-empty .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
@@ -470,7 +470,7 @@ const STYLES = `
 
   /* OPEN FLIP BADGE + CLOSE BUTTON */
   .open-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid var(--gold-dim); letter-spacing: 0.5px; text-transform: uppercase; }
-  .close-flip-btn { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--gold-dim); background: rgba(201,168,76,0.08); color: var(--gold); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; white-space: nowrap; }
+  .close-flip-btn { padding: 5px 10px; border-radius: 6px; border: 1px solid var(--gold-dim); background: rgba(201,168,76,0.08); color: var(--gold); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: "DM Sans", sans-serif; white-space: nowrap; }
   .close-flip-btn:hover { background: rgba(201,168,76,0.18); }
 
   /* CLOSE FLIP MODAL */
@@ -479,7 +479,7 @@ const STYLES = `
   .close-flip-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); }
   .close-flip-subtitle { font-size: 13px; color: var(--text-dim); margin-top: -8px; }
   .close-flip-options { display: flex; flex-direction: column; gap: 10px; }
-  .close-flip-option-btn { padding: 14px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; font-family: "Inter", sans-serif; transition: all 0.2s; text-align: left; display: flex; flex-direction: column; gap: 3px; }
+  .close-flip-option-btn { padding: 14px 18px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg3); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.2s; text-align: left; display: flex; flex-direction: column; gap: 3px; }
   .close-flip-option-btn:hover { border-color: var(--gold-dim); background: var(--bg4); }
   .close-flip-option-btn.sold:hover { border-color: var(--green-dim); }
   .close-flip-option-btn .opt-title { font-weight: 600; font-size: 13px; }
@@ -487,14 +487,14 @@ const STYLES = `
   .close-flip-sold-form { display: flex; flex-direction: column; gap: 14px; }
   .close-flip-field { display: flex; flex-direction: column; gap: 6px; }
   .close-flip-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-  .close-flip-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: "Inter", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
+  .close-flip-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: "DM Sans", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
   .close-flip-input:focus { border-color: var(--gold-dim); }
   .close-flip-preview { background: var(--bg4); border-radius: 8px; padding: 12px 14px; font-size: 13px; }
   .close-flip-btns { display: flex; gap: 10px; justify-content: flex-end; }
-  .close-flip-cancel { padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: "Inter", sans-serif; }
-  .close-flip-confirm { padding: 9px 18px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 600; cursor: pointer; font-family: "Inter", sans-serif; }
+  .close-flip-cancel { padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: "DM Sans", sans-serif; }
+  .close-flip-confirm { padding: 9px 18px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 600; cursor: pointer; font-family: "DM Sans", sans-serif; }
   .close-flip-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
-  .back-link { background: none; border: none; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: "Inter", sans-serif; padding: 0; text-decoration: underline; }
+  .back-link { background: none; border: none; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: "DM Sans", sans-serif; padding: 0; text-decoration: underline; }
   .back-link:hover { color: var(--text); }
 
   /* PROFIT CHART */
@@ -531,9 +531,9 @@ const STYLES = `
   .smart-badge-crash { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid var(--gold-dim); }
   .smart-empty { padding: 40px 20px; text-align: center; color: var(--text-dim); font-size: 13px; }
   .smart-feed-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .smart-feed-select { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--text); font-size: 12px; font-family: "Inter", sans-serif; outline: none; cursor: pointer; transition: border-color 0.2s; }
+  .smart-feed-select { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--text); font-size: 12px; font-family: "DM Sans", sans-serif; outline: none; cursor: pointer; transition: border-color 0.2s; }
   .smart-feed-select:focus { border-color: var(--gold-dim); }
-  .smart-refresh-btn { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; white-space: nowrap; }
+  .smart-refresh-btn { display: flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: "DM Sans", sans-serif; white-space: nowrap; }
   .smart-refresh-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
   .smart-refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -546,18 +546,18 @@ const STYLES = `
   .threshold-popover-label { font-size: 12px; color: var(--text); margin-bottom: 6px; }
   .threshold-row { display: flex; align-items: center; gap: 8px; }
   .threshold-slider { flex: 1; accent-color: var(--gold); cursor: pointer; height: 4px; }
-  .threshold-number { width: 52px; background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; color: var(--text); font-size: 12px; font-family: "Inter", sans-serif; text-align: center; outline: none; transition: border-color 0.2s; }
+  .threshold-number { width: 52px; background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; color: var(--text); font-size: 12px; font-family: "DM Sans", sans-serif; text-align: center; outline: none; transition: border-color 0.2s; }
   .threshold-number:focus { border-color: var(--gold-dim); }
   .threshold-unit { font-size: 11px; color: var(--text-dim); width: 16px; flex-shrink: 0; }
   .threshold-default { font-size: 10px; color: var(--text-dim); }
-  .threshold-reset { background: none; border: none; color: var(--gold-dim); font-size: 11px; cursor: pointer; font-family: "Inter", sans-serif; padding: 0; text-decoration: underline; }
+  .threshold-reset { background: none; border: none; color: var(--gold-dim); font-size: 11px; cursor: pointer; font-family: "DM Sans", sans-serif; padding: 0; text-decoration: underline; }
   .threshold-reset:hover { color: var(--gold); }
 
   /* MERCHANT MODE */
   .merchant-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; width: 100%; }
   .merchant-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: var(--bg2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .merchant-header-pills { display: flex; gap: 4px; }
-  .merchant-nav-pill { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+  .merchant-nav-pill { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 12px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
   .merchant-nav-pill:hover { border-color: var(--gold-dim); color: var(--gold); }
   .merchant-nav-pill.active { background: rgba(201,168,76,0.15); border-color: var(--gold); color: var(--gold); font-weight: 600; }
   .merchant-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
@@ -608,26 +608,26 @@ const STYLES = `
   .op-row.op-row-danger::before { background: var(--red); animation: pulse 1s infinite; }
   .op-item-name { font-weight: 500; font-size: 13px; color: var(--text); }
   .op-item-sub { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-  .pos-status-select { background: var(--bg4); border: 1px solid var(--border); border-radius: 5px; padding: 3px 6px; font-size: 11px; font-family: 'Inter', sans-serif; cursor: pointer; outline: none; font-weight: 600; }
+  .pos-status-select { background: var(--bg4); border: 1px solid var(--border); border-radius: 5px; padding: 3px 6px; font-size: 11px; font-family: 'DM Sans', sans-serif; cursor: pointer; outline: none; font-weight: 600; }
   .health-bar-wrap { display: flex; flex-direction: column; gap: 3px; }
   .health-track { height: 5px; background: var(--bg4); border-radius: 2px; overflow: hidden; width: 80px; }
   .health-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
   .health-label { font-size: 10px; }
-  .op-action-btn { padding: 6px 12px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
+  .op-action-btn { padding: 6px 12px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; white-space: nowrap; }
   .op-action-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
   .op-action-btn.danger-btn { border-color: rgba(231,76,60,0.4); color: var(--red); }
   .op-action-btn.danger-btn:hover { background: rgba(231,76,60,0.1); }
   .add-pos-row { display: grid; grid-template-columns: 2fr 100px 1fr 0.7fr 1fr 1fr 1fr 110px 80px; padding: 10px 16px; border-top: 1px solid var(--gold-dim); align-items: center; background: rgba(201,168,76,0.04); }
-  .add-pos-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: 'Inter', sans-serif; outline: none; width: 100%; transition: border-color 0.2s; }
+  .add-pos-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: 'DM Sans', sans-serif; outline: none; width: 100%; transition: border-color 0.2s; }
   .add-pos-input:focus { border-color: var(--gold-dim); }
   .add-pos-input::placeholder { color: var(--text-dim); font-size: 11px; }
   .add-pos-input.readonly { background: var(--bg3); color: var(--text-dim); cursor: not-allowed; border-color: transparent; }
-  .add-pos-confirm { padding: 6px 10px; border-radius: 5px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: opacity 0.2s; width: 100%; }
+  .add-pos-confirm { padding: 6px 10px; border-radius: 5px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; width: 100%; }
   .add-pos-confirm:hover { opacity: 0.85; }
   .add-pos-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
-  .add-pos-cancel { padding: 6px 8px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; width: 100%; margin-top: 4px; }
+  .add-pos-cancel { padding: 6px 8px; border-radius: 5px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 11px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; width: 100%; margin-top: 4px; }
   .add-pos-cancel:hover { border-color: var(--red); color: var(--red); }
-  .ops-add-btn { padding: 6px 12px; border-radius: 6px; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+  .ops-add-btn { padding: 6px 12px; border-radius: 6px; border: 1px dashed var(--border); background: transparent; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
   .ops-add-btn:hover { border-color: var(--gold-dim); color: var(--gold); background: rgba(201,168,76,0.05); }
   .merchant-ac-wrap { position: relative; width: 100%; }
   .merchant-ac-list { position: absolute; top: calc(100% + 2px); left: 0; min-width: 280px; background: var(--bg3); border: 1px solid var(--gold-dim); border-radius: 6px; z-index: 9999; max-height: 200px; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
@@ -668,7 +668,7 @@ const STYLES = `
   .capital-setup-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 420px; padding: 32px; display: flex; flex-direction: column; gap: 20px; }
   .capital-setup-title { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); }
   .capital-setup-sub { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-top: -8px; }
-  .capital-setup-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: var(--text); font-size: 16px; font-family: 'Inter', sans-serif; outline: none; width: 100%; transition: border-color 0.2s; }
+  .capital-setup-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; color: var(--text); font-size: 16px; font-family: 'DM Sans', sans-serif; outline: none; width: 100%; transition: border-color 0.2s; }
   .capital-setup-input:focus { border-color: var(--gold-dim); }
   .capital-setup-btn { padding: 12px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 18px; font-weight: 700; cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: 0.5px; transition: opacity 0.2s; }
   .capital-setup-btn:hover { opacity: 0.85; }
@@ -708,12 +708,12 @@ const STYLES = `
   .merchant-ai-modal-header p { margin: 0; font-size: 11px; color: var(--text-dim); }
   .merchant-ai-modal-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
   .merchant-ai-modal-input { padding: 10px 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0; background: var(--bg2); }
-  .merchant-ai-modal-input textarea { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; padding: 8px 10px; resize: none; font-family: Inter, sans-serif; height: 36px; }
+  .merchant-ai-modal-input textarea { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; padding: 8px 10px; resize: none; font-family: 'DM Sans', sans-serif; height: 36px; }
   .merchant-ai-modal-input textarea:focus { outline: none; border-color: var(--gold-dim); }
   .merchant-ai-close { margin-left: auto; background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 18px; padding: 0 4px; line-height: 1; }
   .merchant-ai-close:hover { color: var(--text); }
   .merchant-shutdown-overlay { position: fixed; inset: 0; z-index: 99999; background: #0a0a0a; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; animation: merchantFadeIn 0.3s ease; }
-  .merchant-shutdown-title { font-size: 48px; font-weight: 800; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; font-family: Inter, sans-serif; animation: fadeInUp 0.5s ease 0.2s both; text-shadow: 0 0 40px rgba(201,168,76,0.3); }
+  .merchant-shutdown-title { font-size: 48px; font-weight: 800; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; font-family: 'DM Sans', sans-serif; animation: fadeInUp 0.5s ease 0.2s both; text-shadow: 0 0 40px rgba(201,168,76,0.3); }
   .merchant-shutdown-sub { font-size: 15px; letter-spacing: 5px; color: var(--text-dim); text-transform: uppercase; animation: fadeInUp 0.5s ease 0.5s both; }
   .merchant-shutdown-bars { display: flex; gap: 8px; align-items: flex-end; height: 40px; animation: fadeInUp 0.5s ease 0.7s both; }
   .merchant-shutdown-bar { width: 5px; background: var(--gold); border-radius: 2px; animation: barDown 0.6s ease-in-out forwards; }
@@ -728,10 +728,10 @@ const STYLES = `
   .alert-form-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end; }
   .alert-field { display: flex; flex-direction: column; gap: 6px; position: relative; }
   .alert-label { font-size: 12px; color: #8fa0b0; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 4px; display: block; }
-  .alert-input { background: #0c1018; border: 1px solid #28394d; border-radius: 8px; padding: 10px 13px; color: var(--text); font-size: 14px; font-family: "Inter", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
+  .alert-input { background: #0c1018; border: 1px solid #28394d; border-radius: 8px; padding: 10px 13px; color: var(--text); font-size: 14px; font-family: "DM Sans", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
   .alert-input:focus { border-color: rgba(201,168,76,0.4); }
   .alert-input::placeholder { color: #3d5060; }
-  .alert-select { background: #0c1018; border: 1px solid #28394d; border-radius: 8px; padding: 10px 13px; color: var(--text); font-size: 14px; font-family: "Inter", sans-serif; outline: none; width: 100%; cursor: pointer; }
+  .alert-select { background: #0c1018; border: 1px solid #28394d; border-radius: 8px; padding: 10px 13px; color: var(--text); font-size: 14px; font-family: "DM Sans", sans-serif; outline: none; width: 100%; cursor: pointer; }
   .add-alert-btn { padding: 10px 22px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 14px; font-weight: 700; font-family: "Cinzel", sans-serif; white-space: nowrap; transition: opacity 0.2s; }
   .add-alert-btn:hover { opacity: 0.85; }
   .add-alert-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -754,7 +754,7 @@ const STYLES = `
   .notif-banner-icon { font-size: 24px; flex-shrink: 0; }
   .notif-banner-title { font-size: 15px; font-weight: 600; color: var(--gold); margin-bottom: 3px; }
   .notif-banner-sub { font-size: 13px; color: #8fa0b0; }
-  .notif-enable-btn { padding: 10px 20px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); background: rgba(201,168,76,0.08); color: var(--gold); font-size: 14px; font-weight: 600; cursor: pointer; font-family: Inter, sans-serif; white-space: nowrap; flex-shrink: 0; transition: background 0.15s; }
+  .notif-enable-btn { padding: 10px 20px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); background: rgba(201,168,76,0.08); color: var(--gold); font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; flex-shrink: 0; transition: background 0.15s; }
   .notif-enable-btn:hover:not(:disabled) { background: rgba(201,168,76,0.16); }
   .notif-enable-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   .notif-active-banner { display: flex; align-items: center; gap: 8px; background: rgba(46,204,113,0.07); border: 1px solid rgba(46,204,113,0.2); border-radius: 10px; padding: 12px 16px; font-size: 14px; color: var(--green); }
@@ -762,7 +762,7 @@ const STYLES = `
   /* DEMO BANNER */
   .demo-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 24px; background: rgba(52,152,219,0.12); border-bottom: 1px solid rgba(52,152,219,0.3); font-size: 13px; color: #4fc3f7; flex-shrink: 0; }
   .demo-banner-text { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
-  .demo-cta-btn { padding: 7px 18px; border-radius: 6px; border: 1px solid rgba(201,168,76,0.5); background: rgba(201,168,76,0.1); color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; font-family: Inter, sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .demo-cta-btn { padding: 7px 18px; border-radius: 6px; border: 1px solid rgba(201,168,76,0.5); background: rgba(201,168,76,0.1); color: var(--gold); font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; white-space: nowrap; }
   .demo-cta-btn:hover { background: rgba(201,168,76,0.2); }
 
   /* WATCHLIST */
@@ -777,7 +777,7 @@ const STYLES = `
   .watchlist-remove-btn { background: none; border: none; cursor: pointer; color: var(--text-dim); font-size: 15px; padding: 0 4px; transition: color 0.15s; line-height: 1; }
   .watchlist-remove-btn:hover { color: var(--red); }
   .watchlist-add-row { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--bg4); position: relative; }
-  .watchlist-add-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--text); font-size: 13px; font-family: Inter, sans-serif; outline: none; flex: 1; transition: border-color 0.15s; }
+  .watchlist-add-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; color: var(--text); font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none; flex: 1; transition: border-color 0.15s; }
   .watchlist-add-input:focus { border-color: var(--gold-dim); }
   .watchlist-alert-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; white-space: nowrap; max-width: 136px; overflow: hidden; text-overflow: ellipsis; }
   .watchlist-alert-badge.set { background: rgba(201,168,76,0.12); color: var(--gold); border-color: var(--gold-dim); }
@@ -785,9 +785,9 @@ const STYLES = `
   .watchlist-alert-badge:hover { border-color: var(--gold-dim); color: var(--gold); }
   .watchlist-alert-popover { position: absolute; z-index: 200; background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; width: 230px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
   .watchlist-alert-popover-title { font-size: 18px; font-weight: 600; color: var(--gold); font-family: Cinzel, serif; text-transform: uppercase; letter-spacing: 0.5px; }
-  .watchlist-alert-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: Inter, sans-serif; outline: none; width: 100%; transition: border-color 0.15s; }
+  .watchlist-alert-input { background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: 'DM Sans', sans-serif; outline: none; width: 100%; transition: border-color 0.15s; }
   .watchlist-alert-input:focus { border-color: var(--gold-dim); }
-  .watchlist-alert-set-btn { padding: 6px 12px; border-radius: 6px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: Inter, sans-serif; }
+  .watchlist-alert-set-btn { padding: 6px 12px; border-radius: 6px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; font-family: 'DM Sans', sans-serif; }
   .watchlist-pro-tip { display: flex; align-items: center; gap: 8px; background: rgba(201,168,76,0.05); border: 1px solid rgba(201,168,76,0.12); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--text-dim); }
 
   /* DEMO TOUR */
@@ -811,16 +811,16 @@ const STYLES = `
   .demo-tour-dots { display: flex; gap: 5px; align-items: center; }
   .demo-tour-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
   .demo-tour-dot.active { background: var(--gold); }
-  .demo-tour-skip { background: none; border: none; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: Inter, sans-serif; padding: 0; transition: color 0.15s; }
+  .demo-tour-skip { background: none; border: none; color: var(--text-dim); font-size: 12px; cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 0; transition: color 0.15s; }
   .demo-tour-skip:hover { color: var(--text); }
-  .demo-tour-next { padding: 9px 22px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 700; cursor: pointer; font-family: Inter, sans-serif; transition: opacity 0.2s; white-space: nowrap; }
+  .demo-tour-next { padding: 9px 22px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; white-space: nowrap; }
   .demo-tour-next:hover { opacity: 0.85; }
   .demo-tour-end-overlay { position: fixed; inset: 0; z-index: 9500; background: rgba(6,8,11,0.97); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 28px; text-align: center; padding: 40px; animation: fadeInUp 0.5s ease both; }
   .demo-tour-end-title { font-family: "Cinzel", serif; font-size: clamp(36px, 5vw, 60px); font-weight: 900; color: var(--gold); line-height: 1.2; }
   .demo-tour-end-sub { font-size: 18px; color: var(--text-dim); max-width: 480px; line-height: 1.7; }
   .demo-tour-end-cta { padding: 16px 48px; border-radius: 6px; font-family: Cinzel, serif; font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; border: none; cursor: pointer; box-shadow: 0 0 40px rgba(201,168,76,0.3); transition: all 0.3s; }
   .demo-tour-end-cta:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(201,168,76,0.5); }
-  .demo-tour-end-dismiss { background: none; border: none; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: Inter, sans-serif; padding: 0; transition: color 0.15s; text-decoration: underline; }
+  .demo-tour-end-dismiss { background: none; border: none; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: 'DM Sans', sans-serif; padding: 0; transition: color 0.15s; text-decoration: underline; }
   .demo-tour-end-dismiss:hover { color: var(--text); }
 
   /* DEMO MERCHANT INTRO OVERLAY */
@@ -853,7 +853,7 @@ const STYLES = `
   }
   .demo-merchant-title {
     font-size: clamp(48px, 8vw, 96px); font-weight: 900; letter-spacing: 4px;
-    color: var(--gold); text-transform: uppercase; font-family: Inter, sans-serif;
+    color: var(--gold); text-transform: uppercase; font-family: 'DM Sans', sans-serif;
     text-shadow: 0 0 60px rgba(201,168,76,0.5), 0 0 120px rgba(201,168,76,0.2);
     animation: fadeInUp 0.7s ease 0.9s both;
     position: relative; z-index: 1;
@@ -921,7 +921,7 @@ const STYLES = `
   .position-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 120px; padding: 12px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 13px; transition: background 0.15s; }
   .position-row:last-child { border-bottom: none; }
   .position-row:hover { background: var(--bg4); }
-  .close-pos-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--green-dim); background: rgba(46,204,113,0.08); color: var(--green); font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: "Inter", sans-serif; }
+  .close-pos-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--green-dim); background: rgba(46,204,113,0.08); color: var(--green); font-size: 11px; cursor: pointer; transition: all 0.2s; font-family: "DM Sans", sans-serif; }
   .close-pos-btn:hover { background: rgba(46,204,113,0.18); }
   .open-pos-form { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
   .open-pos-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
@@ -930,18 +930,18 @@ const STYLES = `
   .portfolio-login-prompt .icon { font-size: 48px; opacity: 0.4; }
   .portfolio-login-prompt p { font-size: 16px; color: #e8e8e8; }
   .portfolio-login-prompt small { font-size: 13px; color: #8fa0b0; }
-  .portfolio-signin-btn { padding: 11px 28px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); background: rgba(201,168,76,0.08); color: var(--gold); font-size: 14px; font-weight: 600; cursor: pointer; font-family: "Inter", sans-serif; transition: all 0.2s; }
+  .portfolio-signin-btn { padding: 11px 28px; border-radius: 8px; border: 1px solid rgba(201,168,76,0.3); background: rgba(201,168,76,0.08); color: var(--gold); font-size: 14px; font-weight: 600; cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.2s; }
   .portfolio-signin-btn:hover { background: rgba(201,168,76,0.15); }
   .close-pos-modal { position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 24px; }
   .close-pos-inner { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 420px; padding: 28px; display: flex; flex-direction: column; gap: 16px; }
   .close-pos-title { font-family: "Cinzel", serif; font-size: 18px; font-weight: 700; color: var(--gold); }
   .close-pos-field { display: flex; flex-direction: column; gap: 6px; }
   .close-pos-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-  .close-pos-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: "Inter", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
+  .close-pos-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: "DM Sans", sans-serif; outline: none; transition: border-color 0.2s; width: 100%; }
   .close-pos-input:focus { border-color: var(--gold-dim); }
   .close-pos-btns { display: flex; gap: 10px; justify-content: flex-end; }
-  .close-pos-cancel { padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: "Inter", sans-serif; }
-  .close-pos-confirm { padding: 9px 18px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 600; cursor: pointer; font-family: "Inter", sans-serif; }
+  .close-pos-cancel { padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: "DM Sans", sans-serif; }
+  .close-pos-confirm { padding: 9px 18px; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 13px; font-weight: 600; cursor: pointer; font-family: "DM Sans", sans-serif; }
   .unrealised-pnl { font-size: 11px; }
   .unrealised-pnl.pos { color: var(--green); }
   .unrealised-pnl.neg { color: var(--red); }
@@ -972,9 +972,9 @@ const STYLES = `
   .tour-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
   .tour-dot.active { background: var(--gold); }
   .tour-btn-row { display: flex; gap: 8px; }
-  .tour-skip { background: none; border: none; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: "Inter", sans-serif; padding: 0; transition: color 0.2s; }
+  .tour-skip { background: none; border: none; color: var(--text-dim); font-size: 13px; cursor: pointer; font-family: "DM Sans", sans-serif; padding: 0; transition: color 0.2s; }
   .tour-skip:hover { color: var(--text); }
-  .tour-next { padding: 10px 22px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 14px; font-weight: 600; font-family: "Inter", sans-serif; transition: opacity 0.2s; }
+  .tour-next { padding: 10px 22px; border-radius: 8px; border: none; cursor: pointer; background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: #000; font-size: 14px; font-weight: 600; font-family: "DM Sans", sans-serif; transition: opacity 0.2s; }
   .tour-next:hover { opacity: 0.85; }
 
   /* TOAST */
@@ -1049,7 +1049,7 @@ const STYLES = `
   .achievement-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; transition: all 0.2s; }
   .achievement-card.unlocked { border-color: var(--gold-dim); background: rgba(201,168,76,0.05); }
   .achievement-card.locked { opacity: 0.45; filter: grayscale(1); }
-  .toast { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; font-family: "Inter", sans-serif; box-shadow: 0 8px 32px rgba(0,0,0,0.5); pointer-events: all; animation: toastIn 0.3s cubic-bezier(0.4,0,0.2,1); max-width: 320px; }
+  .toast { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; font-family: "DM Sans", sans-serif; box-shadow: 0 8px 32px rgba(0,0,0,0.5); pointer-events: all; animation: toastIn 0.3s cubic-bezier(0.4,0,0.2,1); max-width: 320px; }
   @keyframes toastIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
   .toast.success { background: #0f1218; border: 1px solid var(--green-dim); color: var(--green); }
   .toast.error { background: #0f1218; border: 1px solid var(--red-dim); color: var(--red); }
@@ -1058,7 +1058,7 @@ const STYLES = `
   /* ALPHA BANNER */
   .alpha-banner { background: linear-gradient(90deg, rgba(201,168,76,0.08), rgba(201,168,76,0.04)); border-bottom: 1px solid rgba(201,168,76,0.2); padding: 7px 32px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 12px; color: var(--text-dim); }
   .alpha-badge { background: rgba(201,168,76,0.15); border: 1px solid var(--gold-dim); color: var(--gold); border-radius: 20px; padding: 2px 10px; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-  .feedback-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px; padding: 3px 12px; font-size: 11px; cursor: pointer; font-family: "Inter", sans-serif; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+  .feedback-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px; padding: 3px 12px; font-size: 11px; cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
   .feedback-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
 
   /* MOBILE */
@@ -1839,7 +1839,7 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
         {[["week","This Week"],["month","This Month"],["all","All Time"]].map(([v,l]) => (
           <button key={v}
             onClick={() => setPortPeriod(v)}
-            style={{ padding: "6px 18px", borderRadius: "20px", border: `1px solid ${portPeriod === v ? "rgba(201,168,76,0.4)" : "#1c2a3a"}`, background: portPeriod === v ? "rgba(201,168,76,0.1)" : "transparent", color: portPeriod === v ? "var(--gold)" : "#8fa0b0", fontSize: "13px", fontWeight: portPeriod === v ? 600 : 400, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+            style={{ padding: "6px 18px", borderRadius: "20px", border: `1px solid ${portPeriod === v ? "rgba(201,168,76,0.4)" : "#1c2a3a"}`, background: portPeriod === v ? "rgba(201,168,76,0.1)" : "transparent", color: portPeriod === v ? "var(--gold)" : "#8fa0b0", fontSize: "13px", fontWeight: portPeriod === v ? 600 : 400, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}
           >{l}</button>
         ))}
         <span style={{ marginLeft: "auto", fontSize: "13px", color: "#8fa0b0" }}>
@@ -1921,7 +1921,7 @@ const PortfolioPage = React.memo(function PortfolioPage({ user, flipsLog, autoFl
                         strokeDasharray={`${lossDash} ${circ - lossDash}`}
                         strokeDashoffset={circ / 4 - winDash} strokeLinecap="butt" />}
                       <text x={cx} y={cy - 4} textAnchor="middle" fill="var(--text)" fontSize="18" fontWeight="700" fontFamily="Cinzel, serif">{periodWinRate}%</text>
-                      <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--text-dim)" fontSize="9" fontFamily="Inter, sans-serif">WIN RATE</text>
+                      <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--text-dim)" fontSize="9" fontFamily="DM Sans, sans-serif">WIN RATE</text>
                     </>
                   );
                 })()}
@@ -2384,10 +2384,10 @@ const WatchlistPage = React.memo(function WatchlistPage({
             </div>
             <div style={{ display: "flex", gap: "8px" }}>
               <button className="watchlist-alert-set-btn" style={{ flex: 1 }} onClick={() => saveAlerts(watchlistAlertOpen)}>Save</button>
-              <button onClick={() => { setWatchlistAlertOpen(null); setPopoverPos(null); }} style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>Cancel</button>
+              <button onClick={() => { setWatchlistAlertOpen(null); setPopoverPos(null); }} style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif" }}>Cancel</button>
             </div>
             {hasAlertFor(watchlistAlertOpen) && (
-              <button onClick={() => { clearWatchlistAlert(watchlistAlertOpen, "above"); clearWatchlistAlert(watchlistAlertOpen, "below"); setWatchlistAlertOpen(null); setPopoverPos(null); }} style={{ background: "none", border: "none", color: "var(--red)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0 }}>
+              <button onClick={() => { clearWatchlistAlert(watchlistAlertOpen, "above"); clearWatchlistAlert(watchlistAlertOpen, "below"); setWatchlistAlertOpen(null); setPopoverPos(null); }} style={{ background: "none", border: "none", color: "var(--red)", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", padding: 0 }}>
                 Clear all alerts for this item
               </button>
             )}
@@ -3021,7 +3021,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               <div id="tour-daily-goal" className="m-panel-section">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                   <div className="m-panel-title" style={{ marginBottom: 0 }}>🎯 Daily Goal</div>
-                  <button style={{ background: "transparent", border: "none", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+                  <button style={{ background: "transparent", border: "none", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif" }}
                     onClick={() => { setShowGoalInput(true); setGoalInput(dailyGoal > 0 ? String(dailyGoal) : ""); }}>
                     {dailyGoal > 0 ? "Edit" : "Set Goal"}
                   </button>
@@ -3303,7 +3303,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               <div className="m-panel-section">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                   <div className="m-panel-title" style={{ marginBottom: 0 }}>🎯 Daily Goal</div>
-                  <button style={{ background: "transparent", border: "none", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+                  <button style={{ background: "transparent", border: "none", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif" }}
                     onClick={() => { setShowGoalInput(true); setGoalInput(dailyGoal > 0 ? String(dailyGoal) : ""); }}>
                     {dailyGoal > 0 ? "Edit" : "Set Goal"}
                   </button>
@@ -3392,7 +3392,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     )}
                   </div>
                   {smartEvents?.length > 0 && (
-                    <button style={{ background: "transparent", border: "1px solid var(--border)", borderRadius: "5px", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", padding: "3px 8px", fontFamily: "Inter, sans-serif" }}
+                    <button style={{ background: "transparent", border: "1px solid var(--border)", borderRadius: "5px", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", padding: "3px 8px", fontFamily: "DM Sans, sans-serif" }}
                       onClick={() => setSmartEvents?.([])}>Clear</button>
                   )}
                 </div>
@@ -3401,7 +3401,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
                       {[["all","All"],["spike","📈 Margin"],["surge","🔥 Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"],["autopilot","🤖 Autopilot"]].map(([v,l]) => (
                         <button key={v} onClick={() => setMerchantFeedFilter(v)}
-                          style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                          style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}>
                           {l}
                         </button>
                       ))}
@@ -3410,7 +3410,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                       <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>Sort:</span>
                       {[["recent","Recent"],["change","% Change"],["margin","Margin"]].map(([v,l]) => (
                         <button key={v} onClick={() => { if (merchantFeedSort === v) { setMerchantFeedSortDir(d => d === "desc" ? "asc" : "desc"); } else { setMerchantFeedSort(v); setMerchantFeedSortDir("desc"); } }}
-                          style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "3px" }}>
+                          style={{ padding: "3px 10px", borderRadius: "12px", border: "1px solid var(--border)", background: merchantFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: merchantFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "3px" }}>
                           {l}{merchantFeedSort === v && <span style={{ fontSize: "9px" }}>{merchantFeedSortDir === "desc" ? "▼" : "▲"}</span>}
                         </button>
                       ))}
@@ -3603,7 +3603,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
             )}
 
             {/* Table */}
-            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
+            <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "DM Sans, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
             <div className="flips-table">
               <div className="table-header">
                 {[
@@ -3660,7 +3660,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
               <div style={{ textAlign: "center", padding: "16px 0" }}>
                 <button
                   onClick={() => setMarketRowsShown(n => n + 200)}
-                  style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                  style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}
                   onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
                   onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
                 >
@@ -3800,7 +3800,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
       {/* Open flips */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
-          📈 Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "Inter", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{openFlips.length} active</span>
+          📈 Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "DM Sans", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{openFlips.length} active</span>
         </div>
         {loading ? <div style={{ color: "var(--text-dim)", fontSize: "13px" }}>Loading...</div>
         : openFlips.length === 0 ? (
@@ -4453,7 +4453,7 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0a0c0f", color: "#e8e8e8", fontFamily: "Inter, sans-serif", gap: "16px", padding: "24px", textAlign: "center" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0a0c0f", color: "#e8e8e8", fontFamily: "DM Sans, sans-serif", gap: "16px", padding: "24px", textAlign: "center" }}>
           <div style={{ fontSize: "40px" }}>📉</div>
           <div style={{ fontFamily: "Cinzel, serif", fontSize: "20px", color: "#c9a84c" }}>Something went wrong</div>
           <div style={{ fontSize: "13px", color: "#7a8a9a", maxWidth: "400px", lineHeight: 1.6 }}>
@@ -7157,7 +7157,7 @@ RULES:
                   { label: "Sell Price", val: quickAlert.item.high, type: "above" },
                 ].map(s => (
                   <button key={s.label} onClick={() => { setQuickAlertPrice(String(s.val)); setQuickAlertType(s.type); }}
-                    style={{ flex: 1, padding: "8px", borderRadius: "8px", border: `1px solid ${quickAlertPrice === String(s.val) ? "var(--gold-dim)" : "var(--border)"}`, background: quickAlertPrice === String(s.val) ? "rgba(201,168,76,0.1)" : "var(--bg3)", color: quickAlertPrice === String(s.val) ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                    style={{ flex: 1, padding: "8px", borderRadius: "8px", border: `1px solid ${quickAlertPrice === String(s.val) ? "var(--gold-dim)" : "var(--border)"}`, background: quickAlertPrice === String(s.val) ? "rgba(201,168,76,0.1)" : "var(--bg3)", color: quickAlertPrice === String(s.val) ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif" }}>
                     <div style={{ fontWeight: 600, marginBottom: "2px" }}>{s.label}</div>
                     <div style={{ fontSize: "13px", color: "var(--text)" }}>{formatGP(s.val)}</div>
                   </button>
@@ -7166,7 +7166,7 @@ RULES:
             )}
             <div style={{ display: "flex", gap: "8px" }}>
               <select value={quickAlertType} onChange={e => setQuickAlertType(e.target.value)}
-                style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", fontSize: "13px", padding: "8px 10px", fontFamily: "Inter, sans-serif", flexShrink: 0 }}>
+                style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", color: "var(--text)", fontSize: "13px", padding: "8px 10px", fontFamily: "DM Sans, sans-serif", flexShrink: 0 }}>
                 <option value="above">Price goes above</option>
                 <option value="below">Price goes below</option>
               </select>
@@ -7175,7 +7175,7 @@ RULES:
                 value={quickAlertPrice}
                 onChange={e => setQuickAlertPrice(e.target.value)}
                 placeholder="Target price (gp)"
-                style={{ flex: 1, background: "var(--bg3)", border: "1px solid var(--gold-dim)", borderRadius: "8px", color: "var(--text)", fontSize: "13px", padding: "8px 12px", fontFamily: "Inter, sans-serif", outline: "none" }}
+                style={{ flex: 1, background: "var(--bg3)", border: "1px solid var(--gold-dim)", borderRadius: "8px", color: "var(--text)", fontSize: "13px", padding: "8px 12px", fontFamily: "DM Sans, sans-serif", outline: "none" }}
                 onKeyDown={e => {
                   if (e.key === "Enter" && quickAlertPrice) {
                     const price = parseInt(quickAlertPrice.replace(/,/g, ""));
@@ -7191,7 +7191,7 @@ RULES:
               />
             </div>
             <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-              <button onClick={() => setQuickAlert(null)} style={{ padding: "9px 18px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>Cancel</button>
+              <button onClick={() => setQuickAlert(null)} style={{ padding: "9px 18px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "DM Sans, sans-serif" }}>Cancel</button>
               <button
                 disabled={!quickAlertPrice}
                 onClick={() => {
@@ -7203,7 +7203,7 @@ RULES:
                   showToast(`Alert set for ${quickAlert.item.name} 🔔`, "success");
                   setQuickAlert(null);
                 }}
-                style={{ padding: "9px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif", opacity: quickAlertPrice ? 1 : 0.4 }}>
+                style={{ padding: "9px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "DM Sans, sans-serif", opacity: quickAlertPrice ? 1 : 0.4 }}>
                 Set Alert
               </button>
             </div>
@@ -7404,7 +7404,7 @@ RULES:
                       { v: "high",   emoji: "🔥", label: "High Risk",   desc: "Items 50M+. Bigger margins, slower fills." },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, risk: opt.v }))}
-                        style={{ padding: "14px 18px", borderRadius: "10px", border: `1px solid ${customizePrefs.risk === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.risk === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                        style={{ padding: "14px 18px", borderRadius: "10px", border: `1px solid ${customizePrefs.risk === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.risk === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}>
                         <span style={{ fontSize: "24px", flexShrink: 0 }}>{opt.emoji}</span>
                         <div>
                           <div style={{ fontSize: "14px", fontWeight: 600, color: customizePrefs.risk === opt.v ? "var(--gold)" : "var(--text)", marginBottom: "2px" }}>{opt.label}</div>
@@ -7432,7 +7432,7 @@ RULES:
                       { v: "any",    emoji: "🌐", label: "Show everything",        desc: "No filter on flip speed." },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, flipSpeed: opt.v }))}
-                        style={{ padding: "12px 16px", borderRadius: "10px", border: `1px solid ${customizePrefs.flipSpeed === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.flipSpeed === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", textAlign: "left", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                        style={{ padding: "12px 16px", borderRadius: "10px", border: `1px solid ${customizePrefs.flipSpeed === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.flipSpeed === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", textAlign: "left", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}>
                         <span style={{ fontSize: "20px", flexShrink: 0 }}>{opt.emoji}</span>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
@@ -7461,7 +7461,7 @@ RULES:
                       { v: "f2p",     emoji: "🆓", label: "F2P Only", desc: "Free-to-play items only" },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, membership: opt.v }))}
-                        style={{ flex: 1, padding: "20px 16px", borderRadius: "12px", border: `2px solid ${customizePrefs.membership === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.membership === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", textAlign: "center", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                        style={{ flex: 1, padding: "20px 16px", borderRadius: "12px", border: `2px solid ${customizePrefs.membership === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.membership === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", textAlign: "center", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}>
                         <div style={{ fontSize: "28px", marginBottom: "8px" }}>{opt.emoji}</div>
                         <div style={{ fontSize: "14px", fontWeight: 600, color: customizePrefs.membership === opt.v ? "var(--gold)" : "var(--text)", marginBottom: "4px" }}>{opt.label}</div>
                         <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{opt.desc}</div>
@@ -7474,12 +7474,12 @@ RULES:
               {/* Navigation buttons */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <button onClick={() => customizeStep > 0 ? setCustomizeStep(s => s - 1) : setShowCustomizeModal(false)}
-                  style={{ padding: "10px 20px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                  style={{ padding: "10px 20px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "DM Sans, sans-serif" }}>
                   {customizeStep === 0 ? "Cancel" : "← Back"}
                 </button>
                 {customizeStep < 3 ? (
                   <button onClick={() => setCustomizeStep(s => s + 1)}
-                    style={{ padding: "10px 28px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #1a6fa0, #3498db)", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                    style={{ padding: "10px 28px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #1a6fa0, #3498db)", color: "#fff", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "DM Sans, sans-serif" }}>
                     Next →
                   </button>
                 ) : (
@@ -7553,7 +7553,7 @@ RULES:
                       if (opt.value === "learn") { handleSetActiveTab("market"); setTimeout(() => setShowMarketWizard(true), 400); }
                       if (opt.value === "track") handleSetActiveTab("tracker");
                     }}
-                    style={{ padding: "14px 18px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", transition: "all 0.15s", fontFamily: "Inter, sans-serif" }}
+                    style={{ padding: "14px 18px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", transition: "all 0.15s", fontFamily: "DM Sans, sans-serif" }}
                     onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)"; e.currentTarget.style.background = "rgba(201,168,76,0.07)"; }}
                     onMouseOut={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
                   >
@@ -7565,7 +7565,7 @@ RULES:
                   </button>
                 ))}
               </div>
-              <button onClick={() => { setShowFirstLoginGoal(false); localStorage.setItem("rt_first_goal_set", "skipped"); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Skip for now</button>
+              <button onClick={() => { setShowFirstLoginGoal(false); localStorage.setItem("rt_first_goal_set", "skipped"); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>Skip for now</button>
             </div>
           </div>
         )}
@@ -7631,10 +7631,10 @@ RULES:
                     setShowDailyGoalPrompt(false);
                     showToast(`Goal set: ${label} GP today 🎯`, "success");
                   }}
-                  style={{ padding: "10px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap" }}
+                  style={{ padding: "10px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, var(--gold-dim), var(--gold))", color: "#000", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "DM Sans, sans-serif", whiteSpace: "nowrap" }}
                 >Set →</button>
               </div>
-              <button onClick={() => setShowDailyGoalPrompt(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Skip — no goal today</button>
+              <button onClick={() => setShowDailyGoalPrompt(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>Skip — no goal today</button>
             </div>
           </div>
         )}
@@ -7664,7 +7664,7 @@ RULES:
                       else if (opt.value === "alch") setMarketSubTab("alch");
                       else setMarketSubTab("flips");
                     }}
-                    style={{ padding: "14px 18px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", transition: "all 0.15s", fontFamily: "Inter, sans-serif" }}
+                    style={{ padding: "14px 18px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", transition: "all 0.15s", fontFamily: "DM Sans, sans-serif" }}
                     onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)"; e.currentTarget.style.background = "rgba(201,168,76,0.07)"; }}
                     onMouseOut={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
                   >
@@ -7676,7 +7676,7 @@ RULES:
                   </button>
                 ))}
               </div>
-              <button onClick={() => { localStorage.setItem("rt_market_wizard_seen", "1"); setShowMarketWizard(false); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Skip</button>
+              <button onClick={() => { localStorage.setItem("rt_market_wizard_seen", "1"); setShowMarketWizard(false); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>Skip</button>
             </div>
           </div>
         )}
@@ -7703,7 +7703,7 @@ RULES:
                       setShowTrackerWizard(false);
                       if (opt.value === "no") setTimeout(() => showToast("Log a flip using the Close button on any open offer — or use the RuneLite plugin to auto-track.", "info", 7000), 300);
                     }}
-                    style={{ padding: "14px 18px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", transition: "all 0.15s", fontFamily: "Inter, sans-serif" }}
+                    style={{ padding: "14px 18px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", transition: "all 0.15s", fontFamily: "DM Sans, sans-serif" }}
                     onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)"; e.currentTarget.style.background = "rgba(201,168,76,0.07)"; }}
                     onMouseOut={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)"; }}
                   >
@@ -7715,7 +7715,7 @@ RULES:
                   </button>
                 ))}
               </div>
-              <button onClick={() => { localStorage.setItem("rt_tracker_wizard_seen", "1"); setShowTrackerWizard(false); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", textAlign: "center" }}>Skip</button>
+              <button onClick={() => { localStorage.setItem("rt_tracker_wizard_seen", "1"); setShowTrackerWizard(false); }} style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", textAlign: "center" }}>Skip</button>
             </div>
           </div>
         )}
@@ -7784,7 +7784,7 @@ RULES:
                     <div key={i} style={{ width: "8px", height: "8px", borderRadius: "50%", background: color, opacity: 0.6 + i * 0.04 }} />
                   ))}
                 </div>
-                <button onClick={() => setShowLevelUp(null)} style={{ padding: "10px 28px", borderRadius: "8px", border: `1px solid ${color}`, background: "transparent", color, fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                <button onClick={() => setShowLevelUp(null)} style={{ padding: "10px 28px", borderRadius: "8px", border: `1px solid ${color}`, background: "transparent", color, fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif" }}>
                   Keep flipping →
                 </button>
               </div>
@@ -7929,7 +7929,7 @@ RULES:
                                   <button
                                     onClick={() => rerollQuest(q.id)}
                                     title={canAffordReroll ? `Reroll for ${REROLL_COST} coins` : `Need ${REROLL_COST} coins`}
-                                    style={{ padding: "1px 6px", borderRadius: "4px", border: `1px solid ${canAffordReroll ? "rgba(201,168,76,0.3)" : "var(--border)"}`, background: "transparent", color: canAffordReroll ? "var(--gold)" : "var(--text-dim)", fontSize: "9px", cursor: canAffordReroll ? "pointer" : "not-allowed", fontFamily: "Inter, sans-serif", opacity: canAffordReroll ? 1 : 0.5 }}>
+                                    style={{ padding: "1px 6px", borderRadius: "4px", border: `1px solid ${canAffordReroll ? "rgba(201,168,76,0.3)" : "var(--border)"}`, background: "transparent", color: canAffordReroll ? "var(--gold)" : "var(--text-dim)", fontSize: "9px", cursor: canAffordReroll ? "pointer" : "not-allowed", fontFamily: "DM Sans, sans-serif", opacity: canAffordReroll ? 1 : 0.5 }}>
                                     🎲{REROLL_COST}
                                   </button>
                                 )}
@@ -7975,7 +7975,7 @@ RULES:
               {/* Portfolio link */}
               <div style={{ padding: "14px 20px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
                 <button onClick={() => { setShowPlayerCard(false); setActiveTab("portfolio"); }}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg3)", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg3)", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}
                   onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
                   onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}>
                   📊 View Full Portfolio →
@@ -8028,7 +8028,7 @@ RULES:
                           <button
                             onClick={() => rerollQuest(q.id)}
                             title={canAffordReroll ? `Reroll this quest for ${REROLL_COST} coins` : `Need ${REROLL_COST} coins to reroll`}
-                            style={{ marginLeft: q.target > 1 ? "0" : "auto", padding: "2px 7px", borderRadius: "5px", border: `1px solid ${canAffordReroll ? "rgba(201,168,76,0.3)" : "var(--border)"}`, background: "transparent", color: canAffordReroll ? "var(--gold)" : "var(--text-dim)", fontSize: "10px", cursor: canAffordReroll ? "pointer" : "not-allowed", fontFamily: "Inter, sans-serif", opacity: canAffordReroll ? 1 : 0.5, transition: "all 0.15s", whiteSpace: "nowrap" }}>
+                            style={{ marginLeft: q.target > 1 ? "0" : "auto", padding: "2px 7px", borderRadius: "5px", border: `1px solid ${canAffordReroll ? "rgba(201,168,76,0.3)" : "var(--border)"}`, background: "transparent", color: canAffordReroll ? "var(--gold)" : "var(--text-dim)", fontSize: "10px", cursor: canAffordReroll ? "pointer" : "not-allowed", fontFamily: "DM Sans, sans-serif", opacity: canAffordReroll ? 1 : 0.5, transition: "all 0.15s", whiteSpace: "nowrap" }}>
                             🎲 {REROLL_COST}🪙
                           </button>
                         )}
@@ -8126,7 +8126,7 @@ RULES:
                   Sign Up Free &rarr;
                 </button>
               )}
-              <button onClick={() => { setDemoMode(false); endDemoTour(); }} style={{ padding: "6px 14px", borderRadius: "6px", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", whiteSpace: "nowrap", transition: "all 0.15s" }}>
+              <button onClick={() => { setDemoMode(false); endDemoTour(); }} style={{ padding: "6px 14px", borderRadius: "6px", border: "1px solid rgba(201,168,76,0.4)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", whiteSpace: "nowrap", transition: "all 0.15s" }}>
                 Exit Demo
               </button>
             </div>
@@ -8242,7 +8242,7 @@ RULES:
                 </div>
               )}
               {!user && (
-                <button onClick={() => setShowAuth(true)} style={{ padding: "7px 18px", borderRadius: "8px", border: "1px solid var(--gold-dim)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+                <button onClick={() => setShowAuth(true)} style={{ padding: "7px 18px", borderRadius: "8px", border: "1px solid var(--gold-dim)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "DM Sans, sans-serif" }}
                   onMouseOver={e => e.target.style.background = "rgba(201,168,76,0.15)"} onMouseOut={e => e.target.style.background = "rgba(201,168,76,0.08)"}>Log In</button>
               )}
             </div>
@@ -8285,7 +8285,7 @@ RULES:
                             { v: "alerts",      label: "Alerts", badge: alerts.filter(a => a.triggered).length + smartEvents.length },
                           ].map(item => (
                             <button key={item.v}
-                              style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "9px 14px", background: marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none", border: "none", color: marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)", fontSize: "12px", fontFamily: "Inter, sans-serif", cursor: "pointer", transition: "background 0.1s", textAlign: "left" }}
+                              style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "9px 14px", background: marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none", border: "none", color: marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)", fontSize: "12px", fontFamily: "DM Sans, sans-serif", cursor: "pointer", transition: "background 0.1s", textAlign: "left" }}
                               onMouseOver={e => { e.currentTarget.style.background = "var(--bg3)"; e.currentTarget.style.color = "var(--text)"; }}
                               onMouseOut={e => { e.currentTarget.style.background = marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none"; e.currentTarget.style.color = marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)"; }}
                               onClick={e => { e.stopPropagation(); handleSetActiveTab("market"); setMarketSubTab("flips"); setMarketInnerView(item.v); if (item.v !== "items") setPicksMode(false); setMarketDropdownOpen(false); }}>
@@ -8588,7 +8588,7 @@ RULES:
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         {merchantMode
                           ? <ThresholdPopover alertKey={key} label={label} unit={unit} min={min} max={max} step={step} thresholds={thresholds} openPopover={openPopover} setOpenPopover={setOpenPopover} saveThreshold={saveThreshold} />
-                          : <button title="Custom thresholds — Merchant Mode feature" onClick={() => setUpgradeModal({ feature: "Custom Alert Thresholds", description: "Fine-tune exactly when each alert fires — set your own percentage triggers per alert type.", bullets: ["Adjust margin spike sensitivity (5–200%)", "Set dump & crash detection thresholds", "Tune volume surge multiplier", "Per-alert granular control"] })} style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", padding: "3px 8px", cursor: "pointer", fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", gap: "4px" }}>🔒 ⚙</button>
+                          : <button title="Custom thresholds — Merchant Mode feature" onClick={() => setUpgradeModal({ feature: "Custom Alert Thresholds", description: "Fine-tune exactly when each alert fires — set your own percentage triggers per alert type.", bullets: ["Adjust margin spike sensitivity (5–200%)", "Set dump & crash detection thresholds", "Tune volume surge multiplier", "Per-alert granular control"] })} style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", padding: "3px 8px", cursor: "pointer", fontSize: "12px", color: "var(--text-dim)", fontFamily: "DM Sans, sans-serif", display: "flex", alignItems: "center", gap: "4px" }}>🔒 ⚙</button>
                         }
                         <label className="toggle-switch">
                           <input type="checkbox" checked={smartAlertSettings[key]} onChange={e => saveSmartAlertSettings(key, e.target.checked)} />
@@ -8705,7 +8705,7 @@ RULES:
                       <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
                         {[["all","All"],["spike","📈 Margin"],["surge","🔥 Volume"],["dump","⚠️ Dump"],["crash","💥 Crash"]].map(([v,l]) => (
                           <button key={v} onClick={() => setSmartFeedFilter(v)}
-                            style={{ padding: "4px 11px", borderRadius: "12px", border: "1px solid var(--border)", background: smartFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: smartFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                            style={{ padding: "4px 11px", borderRadius: "12px", border: "1px solid var(--border)", background: smartFeedFilter === v ? "rgba(201,168,76,0.15)" : "transparent", color: smartFeedFilter === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}>
                             {l}
                           </button>
                         ))}
@@ -8714,7 +8714,7 @@ RULES:
                         <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>Sort:</span>
                         {[["recent","Recent"],["change","% Change"],["margin","Margin"]].map(([v,l]) => (
                           <button key={v} onClick={() => { if (smartFeedSort === v) { setSmartFeedSortDir(d => d === "desc" ? "asc" : "desc"); } else { setSmartFeedSort(v); setSmartFeedSortDir("desc"); } }}
-                            style={{ padding: "4px 11px", borderRadius: "12px", border: "1px solid var(--border)", background: smartFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: smartFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "4px" }}>
+                            style={{ padding: "4px 11px", borderRadius: "12px", border: "1px solid var(--border)", background: smartFeedSort === v ? "rgba(201,168,76,0.15)" : "transparent", color: smartFeedSort === v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", display: "flex", alignItems: "center", gap: "4px" }}>
                             {l}{smartFeedSort === v && <span style={{ fontSize: "9px" }}>{smartFeedSortDir === "desc" ? "▼" : "▲"}</span>}
                           </button>
                         ))}
@@ -8809,9 +8809,9 @@ RULES:
                       <span style={{ color: "var(--text-dim)" }}> — </span>
                       <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong>
                       <span style={{ color: "var(--text-dim)" }}> items match your preferences</span>
-                      <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ marginLeft: "10px", background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>Edit prefs</button>
+                      <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ marginLeft: "10px", background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", padding: 0, textDecoration: "underline" }}>Edit prefs</button>
                       <span style={{ color: "var(--border)", margin: "0 6px" }}>·</span>
-                      <button onClick={() => { setPicksMode(false); setFilter("all"); setSearch(""); setCategoryFilter("All"); }} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>Show all items</button>
+                      <button onClick={() => { setPicksMode(false); setFilter("all"); setSearch(""); setCategoryFilter("All"); }} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", padding: 0, textDecoration: "underline" }}>Show all items</button>
                       {filtered.length < 20 && (
                         <span style={{ marginLeft: "10px", fontSize: "12px", color: "var(--text-dim)" }}>· Few results? Try broadening your preferences.</span>
                       )}
@@ -8867,7 +8867,7 @@ RULES:
                         <div style={{ display: "flex", gap: "4px" }}>
                           {[{id:"all",label:"All"},{id:"f2p",label:"F2P"},{id:"members",label:"Members"}].map(m => (
                             <button key={m.id} onClick={() => setAlchMembersFilter(m.id)}
-                              style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: alchMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: alchMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "transparent", color: alchMembersFilter === m.id ? "var(--green)" : "var(--text-dim)" }}>
+                              style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: alchMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: alchMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "transparent", color: alchMembersFilter === m.id ? "var(--green)" : "var(--text-dim)" }}>
                               {m.label}
                             </button>
                           ))}
@@ -8882,9 +8882,9 @@ RULES:
                             value={customNatureRunePrice !== "" ? customNatureRunePrice : natureRunePrice}
                             onChange={e => setCustomNatureRunePrice(e.target.value)}
                             onFocus={() => { if (customNatureRunePrice === "") setCustomNatureRunePrice(String(natureRunePrice)); }}
-                            style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "60px", fontFamily: "Inter, sans-serif" }} />
+                            style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "60px", fontFamily: "DM Sans, sans-serif" }} />
                           <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>gp</span>
-                          {isCustomPrice && <button onClick={() => setCustomNatureRunePrice("")} title="Reset to live price" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "11px", padding: "0 2px", fontFamily: "Inter, sans-serif" }} onMouseOver={e => e.currentTarget.style.color = "var(--gold)"} onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>↺ live</button>}
+                          {isCustomPrice && <button onClick={() => setCustomNatureRunePrice("")} title="Reset to live price" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "11px", padding: "0 2px", fontFamily: "DM Sans, sans-serif" }} onMouseOver={e => e.currentTarget.style.color = "var(--gold)"} onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>↺ live</button>}
                           {!isCustomPrice && natureRunePrice === 200 && <span style={{ color: "var(--red)", fontSize: "10px" }}>(fallback)</span>}
                         </div>
                         {isCustomPrice && <span style={{ fontSize: "11px", color: "var(--gold-dim)" }}>Custom · Live: {natureRunePrice.toLocaleString()}gp</span>}
@@ -8943,7 +8943,7 @@ RULES:
                         <div style={{ textAlign: "center", padding: "8px 0" }}>
                           <button
                             onClick={() => setAlchRowsShown(n => n + 200)}
-                            style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                            style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}
                             onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
                             onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
                           >
@@ -9087,7 +9087,7 @@ RULES:
                         {CATS.map(c => (
                           <button key={c.id}
                             onClick={() => { setRecipeCategory(c.id); setRecipeDirection("all"); setRecipeRowsShown(100); setRecipeExpandedPotions(new Set()); }}
-                            style={{ padding: "5px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", border: recipeCategory === c.id ? "1px solid var(--gold)" : "1px solid var(--border)", background: recipeCategory === c.id ? "rgba(201,168,76,0.12)" : "transparent", color: recipeCategory === c.id ? "var(--gold)" : "var(--text-dim)" }}>
+                            style={{ padding: "5px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", border: recipeCategory === c.id ? "1px solid var(--gold)" : "1px solid var(--border)", background: recipeCategory === c.id ? "rgba(201,168,76,0.12)" : "transparent", color: recipeCategory === c.id ? "var(--gold)" : "var(--text-dim)" }}>
                             {c.label}
                           </button>
                         ))}
@@ -9098,7 +9098,7 @@ RULES:
                             <span style={{ color: "var(--border)", fontSize: "16px", lineHeight: 1 }}>|</span>
                             {DIR_OPTS.filter(d => d.id !== "all").map(d => (
                               <button key={d.id} onClick={() => { setRecipeDirection(recipeDirection === d.id ? "all" : d.id); setRecipeRowsShown(100); }}
-                                style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: recipeDirection === d.id ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: recipeDirection === d.id ? "rgba(52,152,219,0.1)" : "transparent", color: recipeDirection === d.id ? "#3498db" : "var(--text-dim)" }}>
+                                style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: recipeDirection === d.id ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: recipeDirection === d.id ? "rgba(52,152,219,0.1)" : "transparent", color: recipeDirection === d.id ? "#3498db" : "var(--text-dim)" }}>
                                 {d.label}
                               </button>
                             ))}
@@ -9113,13 +9113,13 @@ RULES:
 
                         {/* ⚙ Filters button */}
                         <button onClick={() => setShowRecipeFilters(v => !v)}
-                          style={{ padding: "4px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: showRecipeFilters || advRecipeFilterCount > 0 ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: showRecipeFilters || advRecipeFilterCount > 0 ? "rgba(52,152,219,0.1)" : "transparent", color: showRecipeFilters || advRecipeFilterCount > 0 ? "#3498db" : "var(--text-dim)", display: "flex", alignItems: "center", gap: "5px" }}>
+                          style={{ padding: "4px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: showRecipeFilters || advRecipeFilterCount > 0 ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: showRecipeFilters || advRecipeFilterCount > 0 ? "rgba(52,152,219,0.1)" : "transparent", color: showRecipeFilters || advRecipeFilterCount > 0 ? "#3498db" : "var(--text-dim)", display: "flex", alignItems: "center", gap: "5px" }}>
                           ⚙ Filters {advRecipeFilterCount > 0 && <span style={{ background: "#3498db", color: "#fff", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>{advRecipeFilterCount}</span>}
                         </button>
 
                         {/* Reset */}
                         {(recipeDirection !== "all" || advRecipeFilterCount > 0 || !recipeHideLosses || !recipeHideNoVolume || recipeSearch) && (
-                          <button onClick={resetFilters} style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)" }}>↺ Reset</button>
+                          <button onClick={resetFilters} style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)" }}>↺ Reset</button>
                         )}
 
                         {/* Search — far right */}
@@ -9136,7 +9136,7 @@ RULES:
                           <div style={{ display: "flex", gap: "4px" }}>
                             {[{id:"all",label:"All"},{id:"f2p",label:"F2P"},{id:"members",label:"Members"}].map(m => (
                               <button key={m.id} onClick={() => { setRecipeMembersFilter(m.id); setRecipeRowsShown(100); }}
-                                style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: recipeMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: recipeMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "transparent", color: recipeMembersFilter === m.id ? "var(--green)" : "var(--text-dim)" }}>
+                                style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: recipeMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: recipeMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "transparent", color: recipeMembersFilter === m.id ? "var(--green)" : "var(--text-dim)" }}>
                                 {m.label}
                               </button>
                             ))}
@@ -9151,18 +9151,18 @@ RULES:
                           {/* Min profit */}
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min profit</span>
-                            <input type="text" value={recipeMinProfit} onChange={e => { setRecipeMinProfit(e.target.value); setRecipeRowsShown(100); }} placeholder="e.g. 10k" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "65px", padding: "3px 7px", fontFamily: "Inter, sans-serif" }} />
+                            <input type="text" value={recipeMinProfit} onChange={e => { setRecipeMinProfit(e.target.value); setRecipeRowsShown(100); }} placeholder="e.g. 10k" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "65px", padding: "3px 7px", fontFamily: "DM Sans, sans-serif" }} />
                           </div>
                           {/* Min ROI */}
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min ROI</span>
-                            <input type="number" value={recipeMinRoi} onChange={e => { setRecipeMinRoi(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "50px", padding: "3px 7px", fontFamily: "Inter, sans-serif" }} />
+                            <input type="number" value={recipeMinRoi} onChange={e => { setRecipeMinRoi(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "50px", padding: "3px 7px", fontFamily: "DM Sans, sans-serif" }} />
                             <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>%</span>
                           </div>
                           {/* Min volume */}
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min vol</span>
-                            <input type="number" value={recipeMinVolume} onChange={e => { setRecipeMinVolume(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "65px", padding: "3px 7px", fontFamily: "Inter, sans-serif" }} />
+                            <input type="number" value={recipeMinVolume} onChange={e => { setRecipeMinVolume(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "65px", padding: "3px 7px", fontFamily: "DM Sans, sans-serif" }} />
                           </div>
                         </div>
                       )}
@@ -9417,7 +9417,7 @@ RULES:
                                         <div style={{ marginTop: "14px", paddingTop: "10px", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                                           {r.category === "sets" && (
                                             <button onClick={e => { e.stopPropagation(); const setItem = lookupItem({ name: r.outputs?.[0]?.name }) || lookupItem({ name: r.inputs?.[0]?.name }); if (setItem) setSelectedItem(setItem); }}
-                                              style={{ padding: "4px 12px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", flexShrink: 0 }}>
+                                              style={{ padding: "4px 12px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", flexShrink: 0 }}>
                                               View price chart →
                                             </button>
                                           )}
@@ -9439,7 +9439,7 @@ RULES:
                           {processedRecipes.length > recipeRowsShown && (
                             <div style={{ textAlign: "center", padding: "8px 0" }}>
                               <button onClick={() => setRecipeRowsShown(n => n + 100)}
-                                style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
+                                style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "DM Sans, sans-serif" }}
                                 onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
                                 onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}>
                                 Load more ({processedRecipes.length - recipeRowsShown} remaining)
@@ -9566,7 +9566,7 @@ RULES:
                         <div style={{ textAlign: "center", padding: "8px 0" }}>
                           <button
                             onClick={() => setCofferRowsShown(n => n + 200)}
-                            style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                            style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}
                             onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
                             onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
                           >
@@ -9672,7 +9672,7 @@ RULES:
                             { v: "recover-first",    label: "Recovering" },
                           ].map(o => (
                             <button key={o.v} onClick={() => setMwatchOrder(o.v)}
-                              style={{ padding: "3px 10px", borderRadius: "12px", border: `1px solid ${mwatchOrder === o.v ? "var(--gold-dim)" : "var(--border)"}`, background: mwatchOrder === o.v ? "rgba(201,168,76,0.1)" : "transparent", color: mwatchOrder === o.v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}>
+                              style={{ padding: "3px 10px", borderRadius: "12px", border: `1px solid ${mwatchOrder === o.v ? "var(--gold-dim)" : "var(--border)"}`, background: mwatchOrder === o.v ? "rgba(201,168,76,0.1)" : "transparent", color: mwatchOrder === o.v ? "var(--gold)" : "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}>
                               {o.label}
                             </button>
                           ))}
@@ -9775,7 +9775,7 @@ RULES:
                   ))}
                   <button
                     onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }}
-                    style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 12px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.35)", background: picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
+                    style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 12px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.35)", background: picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
                     onMouseOver={e => { e.currentTarget.style.background = "rgba(201,168,76,0.14)"; }}
                     onMouseOut={e => { e.currentTarget.style.background = picksMode ? "rgba(201,168,76,0.12)" : "rgba(201,168,76,0.06)"; }}>
                     ✨ Help me decide{picksMode ? " ●" : ""}
@@ -9850,7 +9850,7 @@ RULES:
                             padding: "4px 12px", borderRadius: "20px", border: `1px solid ${categoryFilter === cat ? "rgba(201,168,76,0.5)" : "var(--border-bright)"}`,
                             background: categoryFilter === cat ? "rgba(201,168,76,0.12)" : "var(--bg2)",
                             color: categoryFilter === cat ? "var(--gold)" : "#8fa0b0",
-                            fontSize: "11px", fontWeight: categoryFilter === cat ? 600 : 400, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s"
+                            fontSize: "11px", fontWeight: categoryFilter === cat ? 600 : 400, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s"
                           }}>{cat}</button>
                         ))}
                       </div>
@@ -9922,7 +9922,7 @@ RULES:
                 )}
 
                 <div>
-                  <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "Inter, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
+                  <div className="section-title">All Items <span style={{ fontSize: "12px", color: "var(--text-dim)", fontFamily: "DM Sans, sans-serif", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{loading && !filtered.length ? "loading…" : `${filtered.length.toLocaleString()} items`}</span></div>
                   <div className="flips-table">
                     <div className="table-header">
                       {[
@@ -9978,7 +9978,7 @@ RULES:
                     <div style={{ textAlign: "center", padding: "16px 0" }}>
                       <button
                         onClick={() => setMarketRowsShown(n => n + 200)}
-                        style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                        style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}
                         onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
                         onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
                       >
