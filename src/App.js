@@ -3629,7 +3629,6 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     formatGP={formatGP}
                     timeAgo={timeAgo}
                     itemIconUrl={itemIconUrl}
-                    isNew={!!newItemDates[String(item.id)]}
                   />
                 ))
               )}
