@@ -5364,26 +5364,20 @@ export default function RuneTrader() {
     { name: "Red topaz: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut red topaz"}], outputs: [{name:"Red topaz"}] },
     { name: "Jade: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut jade"}], outputs: [{name:"Jade"}] },
     { name: "Opal: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut opal"}], outputs: [{name:"Opal"}] },
-    // ── Cannonballs — buy steel bars, sell cannonballs ──
-    { name: "Cannonball: steel bar → 4 cannonballs", category: "misc", skill: "Smithing", inputs: [{name:"Steel bar"}], outputs: [{name:"Cannonball", quantity:4}] },
     // ── Crafting supplies — flax → bow string ──
     { name: "Flax → bow string", category: "misc", skill: "Crafting", inputs: [{name:"Flax"}], outputs: [{name:"Bow string"}] },
-    { name: "Sinew → bow string", category: "misc", skill: "Crafting", inputs: [{name:"Sinew"}], outputs: [{name:"Bow string"}] },
+    // ── Cannonballs — steel bar → 4 cannonballs ──
+    { name: "Steel bar → cannonballs (×4)", category: "misc", skill: "Smithing", inputs: [{name:"Steel bar"}], outputs: [{name:"Cannonball", quantity:4}] },
     // ── Broad bolts — buy unfinished, sell finished ──
     { name: "Broad bolts: unfinished → finished", category: "misc", skill: "Fletching", inputs: [{name:"Unfinished broad bolts", quantity:10}], outputs: [{name:"Broad bolts", quantity:10}] },
-    // ── Bolt tips — gems → bolt tips ──
-    { name: "Sapphire bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Sapphire"}], outputs: [{name:"Sapphire bolt tips", quantity:12}] },
-    { name: "Emerald bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Emerald"}], outputs: [{name:"Emerald bolt tips", quantity:12}] },
-    { name: "Ruby bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Ruby"}], outputs: [{name:"Ruby bolt tips", quantity:12}] },
-    { name: "Diamond bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Diamond"}], outputs: [{name:"Diamond bolt tips", quantity:12}] },
-    { name: "Dragonstone bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Dragonstone"}], outputs: [{name:"Dragonstone bolt tips", quantity:12}] },
-    { name: "Onyx bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Onyx"}], outputs: [{name:"Onyx bolt tips", quantity:12}] },
-    { name: "Zenyte shard → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Zenyte shard"}], outputs: [{name:"Zenyte", quantity:1}] },
-    // ── Noted item arbitrage — buy noted, sell unnoted (or vice versa) ──
-    { name: "Pure essence: noted → unnoted", category: "misc", skill: "Grand Exchange", inputs: [{name:"Pure essence"}], outputs: [{name:"Pure essence"}] },
-    // ── Seed packs ──
-    { name: "Herb seed pack → seeds", category: "misc", skill: "Grand Exchange", inputs: [{name:"Herb seed pack"}], outputs: [{name:"Ranarr seed", quantity:3}] },
-    { name: "Cactus seed pack", category: "misc", skill: "Grand Exchange", inputs: [{name:"Cactus seed pack"}], outputs: [{name:"Cactus seed", quantity:10}] },
+    // ── Bolt tips — gems → bolt tips (12 per gem) ──
+    { name: "Sapphire → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Sapphire"}], outputs: [{name:"Sapphire bolt tips", quantity:12}] },
+    { name: "Emerald → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Emerald"}], outputs: [{name:"Emerald bolt tips", quantity:12}] },
+    { name: "Ruby → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Ruby"}], outputs: [{name:"Ruby bolt tips", quantity:12}] },
+    { name: "Diamond → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Diamond"}], outputs: [{name:"Diamond bolt tips", quantity:12}] },
+    { name: "Dragonstone → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Dragonstone"}], outputs: [{name:"Dragonstone bolt tips", quantity:12}] },
+    { name: "Onyx → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Onyx"}], outputs: [{name:"Onyx bolt tips", quantity:12}] },
+    { name: "Zenyte → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Zenyte"}], outputs: [{name:"Zenyte bolt tips", quantity:12}] },
   ];
 
   const STATIC_RECIPES = [...SET_RECIPES, ...POTION_RECIPES, ...MISC_RECIPES];
@@ -8923,7 +8917,7 @@ RULES:
 
                 {/* ── RECIPES TAB ── */}
                 {marketSubTab === "recipes" && (() => {
-                  const RECIPE_COLS = "2.2fr 1.3fr 1.3fr 1fr 1fr 0.8fr 0.9fr 1fr";
+                  const RECIPE_COLS = "2fr 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr";
                   const recipeSortCol = recipeSortState.col;
                   const recipeSortDir = recipeSortState.dir;
                   const handleRecipeSort = col => setRecipeSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
