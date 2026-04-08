@@ -118,8 +118,8 @@ const STYLES = `
   .header-bottom { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; height: 40px; border-top: 1px solid var(--border); background: rgba(0,0,0,0.25); }
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon { width: 36px; height: 36px; }
-  .logo-text { font-family: 'Cinzel Decorative', serif; font-size: 22px; font-weight: 700; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 2px; }
-  .logo-dot { color: var(--text-dim); font-size: 15px; margin-left: 2px; }
+  .logo-text { font-family: 'Cinzel Decorative', serif; font-size: 20px; font-weight: 700; background: linear-gradient(135deg, #b8922e, #e8c96a, #c9a84c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: 1px; }
+  .logo-dot { font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 700; margin-left: 1px; -webkit-text-fill-color: var(--gold-dim); color: var(--gold-dim); }
   .header-right { display: flex; align-items: center; gap: 8px; }
   .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(46,204,113,0.07); border: 1px solid rgba(46,204,113,0.2); border-radius: 20px; padding: 3px 10px; font-size: 12px; color: var(--green); }
   .paused-pill { display: flex; align-items: center; gap: 6px; background: rgba(243,156,18,0.08); border: 1px solid rgba(243,156,18,0.25); border-radius: 20px; padding: 3px 10px; font-size: 12px; color: #f39c12; }
@@ -134,7 +134,7 @@ const STYLES = `
   .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.35;transform:scale(0.75)} }
   .nav-tabs { display: flex; gap: 2px; }
-  .nav-tab { padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; background: transparent; color: #8fa0b0; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.2px; }
+  .nav-tab { padding: 5px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; background: transparent; color: #9ab0c0; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.1px; }
   .nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
   .nav-tab.active { background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.22); }
   .terminal-btn { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; letter-spacing: 0.3px; white-space: nowrap; }
@@ -174,7 +174,7 @@ const STYLES = `
 
   /* MARKET SUB-TABS */
   .market-sub-tabs { display: flex; gap: 4px; padding: 0 0 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
-  .market-sub-tab { padding: 6px 18px; border-radius: 20px; border: 1px solid transparent; cursor: pointer; font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.15s; letter-spacing: 0.2px; }
+  .market-sub-tab { padding: 6px 18px; border-radius: 20px; border: 1px solid transparent; cursor: pointer; font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif; background: transparent; color: var(--text-dim); transition: all 0.15s; }
   .market-sub-tab:hover { color: var(--text); background: rgba(255,255,255,0.04); border-color: var(--border); }
   .market-sub-tab.active { background: rgba(201,168,76,0.1); color: var(--gold); border-color: rgba(201,168,76,0.25); font-weight: 600; }
   .market-sub-tab .sub-tab-badge { display: inline-block; background: rgba(52,152,219,0.15); color: var(--blue); border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-left: 6px; vertical-align: middle; }
@@ -224,7 +224,7 @@ const STYLES = `
   .adv-filter-toggle.active { color: var(--gold); }
   .adv-filter-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-dim); }
   .filter-input::placeholder { color: var(--text-dim); }
-  .filter-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .filter-btn { padding: 7px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
   .filter-btn:hover { color: var(--text); border-color: var(--border-bright); background: var(--bg4); }
   .filter-btn.active { background: rgba(201,168,76,0.1); color: var(--gold); border-color: rgba(201,168,76,0.35); font-weight: 600; box-shadow: 0 0 10px rgba(201,168,76,0.08); }
 
@@ -8307,7 +8307,7 @@ RULES:
               {/* Secondary nav — right side */}
               <div className="nav-tabs">
                 {user && [["settings","Settings"],["referral","Refer & Earn"]].map(([t, label]) => (
-                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)} style={{ fontSize: "12px", color: activeTab === t ? undefined : "#aabbcc" }}>
+                  <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)}>
                     {label}
                   </button>
                 ))}
@@ -8319,8 +8319,8 @@ RULES:
                     display: "inline-flex", alignItems: "center", gap: "5px",
                     padding: "5px 11px", borderRadius: "6px",
                     background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.25)",
-                    color: "#c9a84c", fontSize: "12px", fontWeight: 600,
-                    textDecoration: "none", letterSpacing: "0.2px",
+                    color: "#c9a84c", fontSize: "13px", fontWeight: 600,
+                    textDecoration: "none", fontFamily: "'DM Sans', sans-serif",
                     transition: "background 0.15s, border-color 0.15s",
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,0.18)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.45)"; }}
