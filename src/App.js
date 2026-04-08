@@ -8712,6 +8712,14 @@ RULES:
                   (allItems || []).forEach(item => { priceByName[item.name?.toLowerCase().trim()] = item; });
                   const lookupItem = (inp) => priceByName[inp.name?.toLowerCase().trim()];
 
+                  // Debug: find set items in allItems not covered by static list
+                  const coveredSets = new Set(GE_SETS.map(s => s.set.toLowerCase()));
+                  const uncoveredSets = (allItems || []).filter(item =>
+                    item.hasPrice &&
+                    /set \(|armour set|dragonhide set|robes set|d'hide set/.test(item.name?.toLowerCase()) &&
+                    !coveredSets.has(item.name?.toLowerCase())
+                  ).map(i => i.name);
+
                   const processedRecipes = STATIC_RECIPES.map(r => {
                     let inputCost = 0; let inputsOk = true;
                     (r.inputs || []).forEach(inp => {
@@ -8756,7 +8764,10 @@ RULES:
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                       <div className="filter-bar">
                         <input className="filter-input" placeholder="Search recipes..." value={recipeSearch} onChange={e => setRecipeSearch(e.target.value)} />
-                        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>{processedRecipes.length} recipes · GE set exchanges</span>
+                        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>
+                          {processedRecipes.length} recipes · GE set exchanges
+                          {uncoveredSets.length > 0 && <span style={{ color: "rgba(243,156,18,0.7)", marginLeft: "8px" }}>· {uncoveredSets.length} sets not yet mapped</span>}
+                        </span>
                       </div>
                       {processedRecipes.length === 0 ? (
                         <div style={{ padding: "60px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
@@ -8771,7 +8782,7 @@ RULES:
                                   {label} {recipeSortCol === col && <span className="sort-arrow">{recipeSortDir === "desc" ? "▼" : "▲"}</span>}
                                   <span className={`stat-tooltip-wrap${idx === COLS_DEF.length - 1 ? " anchor-right" : ""}`} onClick={e => e.stopPropagation()}>
                                     <span className="stat-help">?</span>
-                                    <span className="stat-tooltip">{tip}</span>
+                                    <span className="stat-tooltip" style={{ bottom: "auto", top: "calc(100% + 6px)" }}>{tip}</span>
                                   </span>
                                 </button>
                               ))}
