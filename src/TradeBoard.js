@@ -5,6 +5,10 @@ const WIKI_MAP = "https://prices.runescape.wiki/api/v1/osrs/mapping";
 const WIKI_IMG = (name) => `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}_detail.png`;
 const CATEGORIES = ["All", "Weapons", "Armour", "3rd Age", "Raids", "Skilling", "Other"];
 const MAX_CASH = 2_147_483_647;
+const DISCORD_SERVER_ID  = "1459412578999599216";
+const DISCORD_CHANNEL_ID = "1491584732025065544";
+const DISCORD_INVITE     = "https://discord.gg/runetrader";
+const DISCORD_TRADE_URL  = `https://discord.com/channels/${DISCORD_SERVER_ID}/${DISCORD_CHANNEL_ID}`;
 
 // ── Parse k/m/b shorthand: "100k" → 100000, "2.5m" → 2500000 ──
 function parseGPInput(raw) {
@@ -202,16 +206,26 @@ export default function TradeBoard({ user, supabase, showToast }) {
     setBumping(null);
   }
 
-  function copyTradeMessage(l) {
-    const contact = l.discord ? l.discord : (l.rsn || "");
-    const totalPrice = l.price * (l.quantity || 1);
-    const priceStr = `${compactGP(l.price)} gp each${l.quantity > 1 ? ` (${compactGP(totalPrice)} total)` : ""}`;
-    const msg = `Hi ${contact} — interested in your ${l.item_name} listing on RuneTrader.gg (${l.type === "WTS" ? "selling" : "buying"} ${l.quantity > 1 ? `×${l.quantity.toLocaleString()} @ ` : ""}${priceStr})`;
-    navigator.clipboard?.writeText(msg).then(() => {
-      setCopied(l.id);
-      setTimeout(() => setCopied(null), 2500);
-      showToast("Trade message copied!", "success");
+  function copyRSN(l) {
+    navigator.clipboard?.writeText(l.rsn).then(() => {
+      setCopied(l.id + "_rsn");
+      setTimeout(() => setCopied(null), 2000);
+      showToast("RSN copied — paste it into OSRS trade chat", "success");
     });
+  }
+
+  function openDiscordTrade(l) {
+    // Build a pre-filled message mentioning the seller if they have a discord tag
+    const mention = l.discord ? `@${l.discord}` : (l.rsn || "seller");
+    const totalPrice = l.price * (l.quantity || 1);
+    const priceStr = l.quantity > 1
+      ? `${compactGP(l.price)} each (${compactGP(totalPrice)} total)`
+      : compactGP(l.price);
+    const msg = `${mention} — interested in your ${l.item_name} listing (${l.type === "WTS" ? "selling" : "buying"} ${l.quantity > 1 ? `×${l.quantity.toLocaleString()} @ ` : ""}${priceStr} gp) — RuneTrader.gg`;
+    // Copy message to clipboard, then open Discord trade channel
+    navigator.clipboard?.writeText(msg).catch(() => {});
+    window.open(DISCORD_TRADE_URL, "_blank", "noopener,noreferrer");
+    showToast("Message copied — paste it in #trade-chat to ping the seller!", "info", 5000);
   }
 
   async function submitReport() {
@@ -392,10 +406,23 @@ export default function TradeBoard({ user, supabase, showToast }) {
                     </div>
 
                     {/* Action buttons */}
-                    <button onClick={() => copyTradeMessage(l)}
-                      style={{ padding: "3px 10px", borderRadius: "5px", border: `1px solid ${copied === l.id ? "rgba(46,204,113,0.4)" : "rgba(255,255,255,0.1)"}`, background: copied === l.id ? "rgba(46,204,113,0.08)" : "transparent", color: copied === l.id ? "var(--green)" : "var(--text-dim)", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}>
-                      {copied === l.id ? "✓ Copied" : "📋 Copy message"}
-                    </button>
+                    {l.rsn && (
+                      <button onClick={() => copyRSN(l)}
+                        title="Copy RSN to paste into OSRS trade chat"
+                        style={{ padding: "3px 10px", borderRadius: "5px", border: `1px solid ${copied === l.id + "_rsn" ? "rgba(46,204,113,0.4)" : "rgba(255,255,255,0.1)"}`, background: copied === l.id + "_rsn" ? "rgba(46,204,113,0.08)" : "transparent", color: copied === l.id + "_rsn" ? "var(--green)" : "var(--text-dim)", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}>
+                        {copied === l.id + "_rsn" ? "✓ RSN copied" : "⚔ Copy RSN"}
+                      </button>
+                    )}
+                    {(l.discord || l.rsn) && (
+                      <button onClick={() => openDiscordTrade(l)}
+                        title="Open RuneTrader Discord trade channel and ping the seller"
+                        style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid rgba(114,137,218,0.35)", background: "rgba(114,137,218,0.08)", color: "#7289da", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: "5px" }}
+                        onMouseOver={e => { e.currentTarget.style.background = "rgba(114,137,218,0.18)"; e.currentTarget.style.borderColor = "rgba(114,137,218,0.6)"; }}
+                        onMouseOut={e => { e.currentTarget.style.background = "rgba(114,137,218,0.08)"; e.currentTarget.style.borderColor = "rgba(114,137,218,0.35)"; }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#7289da"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                        Message in Discord
+                      </button>
+                    )}
 
                     {!isOwn && (
                       <button onClick={() => { setReportModal(l); setReportReason(""); }}
