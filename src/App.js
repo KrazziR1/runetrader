@@ -5368,6 +5368,7 @@ export default function RuneTrader() {
   const [recipeDirection, setRecipeDirection] = useState("all");
   const [recipeMembersFilter, setRecipeMembersFilter] = useState("all");
   const [recipeExpandedPotions, setRecipeExpandedPotions] = useState(new Set());
+  const [expandedRecipeRow, setExpandedRecipeRow] = useState(null);
   const [cofferTarget, setCofferTarget] = useState("");
   const [cofferSearch, setCofferSearch] = useState("");
   const [cofferShowLosses, setCofferShowLosses] = useState(false);
@@ -9214,55 +9215,133 @@ RULES:
                               }
 
                               // Default flat rows for sets and misc
-                              return processedRecipes.slice(0, recipeRowsShown).map((r, i) => (
-                                <div key={i} className="recipe-row" style={{ gridTemplateColumns: RECIPE_COLS, cursor: r.category === "sets" ? "pointer" : "default" }}
-                                  onClick={() => {
-                                    if (r.category === "sets") {
-                                      const setItem = lookupItem({ name: r.outputs?.[0]?.name }) || lookupItem({ name: r.inputs?.[0]?.name });
-                                      if (setItem) setSelectedItem(setItem);
-                                    }
-                                  }}>
-                                  <div>
-                                    <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{r.name}</div>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px", flexWrap: "wrap" }}>
-                                      {r.skill && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
-                                      {r.isMembersOnly && <span style={{ fontSize: "10px", color: "#c9a84c", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "3px", padding: "0 4px" }}>P2P</span>}
-                                      {r.bottleneck && r.category === "sets" && (
-                                        <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
-                                          bottleneck: <span style={{ color: "var(--text)" }}>{r.bottleneck.name.replace(/ \(.*\)$/, "")} ({formatGP(r.bottleneck.price)})</span>
-                                        </span>
-                                      )}
+                              return processedRecipes.slice(0, recipeRowsShown).map((r, i) => {
+                                const rowKey = `${r.name}-${i}`;
+                                const isExpanded = expandedRecipeRow === rowKey;
+                                return (
+                                  <div key={i}>
+                                    {/* Main row */}
+                                    <div className="recipe-row" style={{ gridTemplateColumns: RECIPE_COLS, cursor: "pointer" }}
+                                      onClick={() => setExpandedRecipeRow(isExpanded ? null : rowKey)}>
+                                      <div>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                          <span style={{ fontSize: "10px", color: "var(--text-dim)", transition: "transform 0.15s", display: "inline-block", transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)", flexShrink: 0 }}>▶</span>
+                                          <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{r.name}</div>
+                                        </div>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px", flexWrap: "wrap", paddingLeft: "16px" }}>
+                                          {r.skill && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
+                                          {r.isMembersOnly && <span style={{ fontSize: "10px", color: "#c9a84c", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "3px", padding: "0 4px" }}>P2P</span>}
+                                          {r.bottleneck && r.category === "sets" && (
+                                            <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                                              bottleneck: <span style={{ color: "var(--text)" }}>{r.bottleneck.name.replace(/ \(.*\)$/, "")} ({formatGP(r.bottleneck.price)})</span>
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                        {(r.inputs || []).map((inp, j) => {
+                                          const item = lookupItem(inp); const dose = getDose(inp.name); const qty = inp.quantity || 1;
+                                          return <span key={j} title={inp.name} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                            <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                            <span style={{ fontSize: "11px", color: "var(--text-dim)", fontWeight: 500 }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
+                                          </span>;
+                                        })}
+                                      </div>
+                                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                        <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>→</span>
+                                        {(r.outputs || []).map((out, j) => {
+                                          const item = lookupItem(out); const dose = getDose(out.name); const qty = out.quantity || 1;
+                                          return <span key={j} title={out.name} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                            <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                            <span style={{ fontSize: "11px", color: "var(--text)", fontWeight: 500 }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
+                                          </span>;
+                                        })}
+                                      </div>
+                                      <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.inputCost)}</span>
+                                      <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.outputValue)}</span>
+                                      <span style={{ fontSize: "13px", fontWeight: 600, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>{r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}</span>
+                                      <span style={{ fontSize: "12px", fontWeight: 600, padding: "2px 6px", borderRadius: "5px", display: "inline-flex", alignItems: "center", width: "fit-content", whiteSpace: "nowrap", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>{r.roi >= 0 ? "+" : ""}{r.roi}%</span>
+                                      <span style={{ fontSize: "12px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)" }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume.toLocaleString() : "—"}</span>
+                                      <span style={{ fontSize: "11px", color: r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 300 ? "var(--green)" : r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 3600 ? "var(--gold)" : "var(--text-dim)" }}>
+                                        {r.lastUpdated ? timeAgo(r.lastUpdated) : "—"}
+                                      </span>
                                     </div>
+
+                                    {/* Expanded item breakdown */}
+                                    {isExpanded && (
+                                      <div style={{ background: "#090d12", borderBottom: "1px solid var(--border)", padding: "12px 16px 16px" }}>
+                                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                                          {/* Inputs */}
+                                          <div>
+                                            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>Inputs — buy these</div>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                              {(r.inputs || []).map((inp, j) => {
+                                                const item = lookupItem(inp);
+                                                const qty = inp.quantity || 1;
+                                                const buyPrice = item?.low || item?.high || 0;
+                                                const totalCost = buyPrice * qty;
+                                                const stalenessSec = item?.lastTradeTime ? Date.now()/1000 - item.lastTradeTime : null;
+                                                return (
+                                                  <div key={j} style={{ display: "grid", gridTemplateColumns: "24px 1fr 80px 80px 70px 70px", alignItems: "center", gap: "8px", fontSize: "12px" }}>
+                                                    <img src={item ? itemIconUrl(item.name) : ""} alt="" style={{ width: "24px", height: "24px", objectFit: "contain" }} onError={e => { e.target.style.display = "none"; }} />
+                                                    <span style={{ color: "var(--text)", fontWeight: 500 }}>{inp.name}{qty > 1 ? <span style={{ color: "var(--text-dim)" }}> ×{qty}</span> : ""}</span>
+                                                    <span style={{ color: "var(--text-dim)" }}>{buyPrice ? formatGP(buyPrice) + " ea" : "—"}</span>
+                                                    <span style={{ color: "var(--text-dim)", fontWeight: 600 }}>{totalCost ? formatGP(totalCost) : "—"}</span>
+                                                    <span style={{ color: "var(--text-dim)" }}>lim: {item?.buyLimit ? item.buyLimit.toLocaleString() : "—"}</span>
+                                                    <span style={{ color: stalenessSec && stalenessSec < 300 ? "var(--green)" : stalenessSec && stalenessSec < 3600 ? "var(--gold)" : "var(--text-dim)" }}>
+                                                      {item?.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}
+                                                    </span>
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
+                                          </div>
+                                          {/* Outputs */}
+                                          <div>
+                                            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>Outputs — sell these</div>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                              {(r.outputs || []).map((out, j) => {
+                                                const item = lookupItem(out);
+                                                const qty = out.quantity || 1;
+                                                const sellPrice = item?.high || item?.low || 0;
+                                                const tax = sellPrice < 50 ? 0 : Math.min(Math.floor(sellPrice * 0.02), 5_000_000);
+                                                const netSell = sellPrice - tax;
+                                                const totalValue = netSell * qty;
+                                                const stalenessSec = item?.lastTradeTime ? Date.now()/1000 - item.lastTradeTime : null;
+                                                return (
+                                                  <div key={j} style={{ display: "grid", gridTemplateColumns: "24px 1fr 80px 80px 70px 70px", alignItems: "center", gap: "8px", fontSize: "12px" }}>
+                                                    <img src={item ? itemIconUrl(item.name) : ""} alt="" style={{ width: "24px", height: "24px", objectFit: "contain" }} onError={e => { e.target.style.display = "none"; }} />
+                                                    <span style={{ color: "var(--text)", fontWeight: 500 }}>{out.name}{qty > 1 ? <span style={{ color: "var(--text-dim)" }}> ×{qty}</span> : ""}</span>
+                                                    <span style={{ color: "var(--text-dim)" }}>{netSell ? formatGP(netSell) + " ea" : "—"}<span style={{ fontSize: "10px", opacity: 0.6 }}> (after tax)</span></span>
+                                                    <span style={{ color: "var(--green)", fontWeight: 600 }}>{totalValue ? formatGP(totalValue) : "—"}</span>
+                                                    <span style={{ color: "var(--text-dim)" }}>lim: {item?.buyLimit ? item.buyLimit.toLocaleString() : "—"}</span>
+                                                    <span style={{ color: stalenessSec && stalenessSec < 300 ? "var(--green)" : stalenessSec && stalenessSec < 3600 ? "var(--gold)" : "var(--text-dim)" }}>
+                                                      {item?.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}
+                                                    </span>
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        {/* Summary bar */}
+                                        <div style={{ marginTop: "12px", paddingTop: "10px", borderTop: "1px solid var(--border)", display: "flex", gap: "24px", fontSize: "12px", flexWrap: "wrap" }}>
+                                          <span style={{ color: "var(--text-dim)" }}>Total input cost: <span style={{ color: "var(--text)", fontWeight: 600 }}>{formatGP(r.inputCost)}</span></span>
+                                          <span style={{ color: "var(--text-dim)" }}>Total output value: <span style={{ color: "var(--text)", fontWeight: 600 }}>{formatGP(r.outputValue)}</span></span>
+                                          <span style={{ color: "var(--text-dim)" }}>Net profit: <span style={{ color: r.profit >= 0 ? "var(--green)" : "var(--red)", fontWeight: 700 }}>{r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}</span></span>
+                                          <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)", fontWeight: 600 }}>{r.roi >= 0 ? "+" : ""}{r.roi}%</span></span>
+                                          {r.category === "sets" && (
+                                            <button onClick={e => { e.stopPropagation(); const setItem = lookupItem({ name: r.outputs?.[0]?.name }) || lookupItem({ name: r.inputs?.[0]?.name }); if (setItem) setSelectedItem(setItem); }}
+                                              style={{ marginLeft: "auto", padding: "3px 10px", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                                              View price chart →
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                                    {(r.inputs || []).map((inp, j) => {
-                                      const item = lookupItem(inp); const dose = getDose(inp.name); const qty = inp.quantity || 1;
-                                      return <span key={j} title={inp.name} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                        <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
-                                        <span style={{ fontSize: "11px", color: "var(--text-dim)", fontWeight: 500 }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
-                                      </span>;
-                                    })}
-                                  </div>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                                    <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>→</span>
-                                    {(r.outputs || []).map((out, j) => {
-                                      const item = lookupItem(out); const dose = getDose(out.name); const qty = out.quantity || 1;
-                                      return <span key={j} title={out.name} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                        <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
-                                        <span style={{ fontSize: "11px", color: "var(--text)", fontWeight: 500 }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
-                                      </span>;
-                                    })}
-                                  </div>
-                                  <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.inputCost)}</span>
-                                  <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.outputValue)}</span>
-                                  <span style={{ fontSize: "13px", fontWeight: 600, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>{r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}</span>
-                                  <span style={{ fontSize: "12px", fontWeight: 600, padding: "2px 6px", borderRadius: "5px", display: "inline-flex", alignItems: "center", width: "fit-content", whiteSpace: "nowrap", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>{r.roi >= 0 ? "+" : ""}{r.roi}%</span>
-                                  <span style={{ fontSize: "12px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)" }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume.toLocaleString() : "—"}</span>
-                                  <span style={{ fontSize: "11px", color: r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 300 ? "var(--green)" : r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 3600 ? "var(--gold)" : "var(--text-dim)" }}>
-                                    {r.lastUpdated ? timeAgo(r.lastUpdated) : "—"}
-                                  </span>
-                                </div>
-                              ));
+                                );
+                              });
                             })()}
                           </div>
                           {processedRecipes.length > recipeRowsShown && (
