@@ -770,8 +770,8 @@ const STYLES = `
   .watchlist-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 80px 20px; text-align: center; color: var(--text-dim); }
   .watchlist-empty .icon { font-size: 40px; opacity: 0.4; }
   .watchlist-table { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .watchlist-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 70px 90px 140px 44px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: #8899aa; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); border-radius: 10px 10px 0 0; font-weight: 600; }
-  .watchlist-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 70px 90px 140px 44px; padding: 11px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.1s, box-shadow 0.1s; }
+  .watchlist-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 70px 80px 80px 90px 140px 44px; padding: 10px 16px; background: var(--bg4); font-size: 11px; color: #8899aa; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); border-radius: 10px 10px 0 0; font-weight: 600; }
+  .watchlist-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 70px 80px 80px 90px 140px 44px; padding: 11px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; transition: background 0.1s, box-shadow 0.1s; }
   .watchlist-row:last-child { border-bottom: none; }
   .watchlist-row:hover { background: rgba(201,168,76,0.04); box-shadow: inset 3px 0 0 rgba(201,168,76,0.35); }
   .watchlist-remove-btn { background: none; border: none; cursor: pointer; color: var(--text-dim); font-size: 15px; padding: 0 4px; transition: color 0.15s; line-height: 1; }
@@ -2194,11 +2194,13 @@ const WatchlistPage = React.memo(function WatchlistPage({
     const base = items.filter(i => watchlist.includes(i.id));
     return [...base].sort((a, b) => {
       let av, bv;
-      if (sortCol === "name")   { av = a.name.toLowerCase(); bv = b.name.toLowerCase(); }
-      else if (sortCol === "low")    { av = a.low || 0;    bv = b.low || 0; }
-      else if (sortCol === "high")   { av = a.high || 0;   bv = b.high || 0; }
-      else if (sortCol === "margin") { av = a.margin || 0; bv = b.margin || 0; }
-      else if (sortCol === "roi")    { av = a.roi || 0;    bv = b.roi || 0; }
+      if (sortCol === "name")          { av = a.name.toLowerCase(); bv = b.name.toLowerCase(); }
+      else if (sortCol === "low")    { av = a.low || 0;             bv = b.low || 0; }
+      else if (sortCol === "high")   { av = a.high || 0;            bv = b.high || 0; }
+      else if (sortCol === "margin") { av = a.margin || 0;          bv = b.margin || 0; }
+      else if (sortCol === "roi")    { av = a.roi || 0;             bv = b.roi || 0; }
+      else if (sortCol === "volume") { av = a.volume || 0;          bv = b.volume || 0; }
+      else if (sortCol === "lastTradeTime") { av = a.lastTradeTime || 0; bv = b.lastTradeTime || 0; }
       else { av = 0; bv = 0; }
       if (av < bv) return sortDir === "asc" ? -1 : 1;
       if (av > bv) return sortDir === "asc" ? 1 : -1;
@@ -2254,13 +2256,15 @@ const WatchlistPage = React.memo(function WatchlistPage({
   const hasAlertFor = (itemId) => { const a = watchlistAlerts[itemId]; return a && (a.above || a.below); };
 
   const COLS = [
-    { key: "name",   label: "Item",    tip: null },
-    { key: "low",    label: "Buy",     tip: "Lowest current buy offer on the GE" },
-    { key: "high",   label: "Sell",    tip: "Highest current sell offer on the GE" },
-    { key: "margin", label: "Margin",  tip: "Sell price minus buy price minus GE tax" },
-    { key: "roi",    label: "ROI",     tip: "Margin ÷ buy price. Return per flip." },
-    { key: "trend",  label: "24hr Trend", tip: "Price sparkline over the last 24 hours", noSort: true },
-    { key: "alert",  label: "Alert",   tip: "Set a price alert for this item", noSort: true },
+    { key: "name",          label: "Item",       tip: null },
+    { key: "low",           label: "Buy",        tip: "Lowest current buy offer on the GE" },
+    { key: "high",          label: "Sell",       tip: "Highest current sell offer on the GE" },
+    { key: "margin",        label: "Margin",     tip: "Sell price minus buy price minus GE tax" },
+    { key: "roi",           label: "ROI",        tip: "Margin ÷ buy price. Return per flip." },
+    { key: "volume",        label: "Vol/Day",    tip: "Daily trade volume. Green = high liquidity." },
+    { key: "lastTradeTime", label: "Last Trade", tip: "When this item last traded on the GE." },
+    { key: "trend",         label: "24hr Trend", tip: "Price sparkline over the last 24 hours", noSort: true },
+    { key: "alert",         label: "Alert",      tip: "Set a price alert for this item", noSort: true },
   ];
 
   return (
@@ -2326,6 +2330,12 @@ const WatchlistPage = React.memo(function WatchlistPage({
                   <span style={{ fontSize: "13px", color: "#ccd8e0" }}>{item.hasPrice ? formatGP(item.high) : "—"}</span>
                   <span style={{ fontSize: "13px", fontWeight: 600, color: item.margin > 0 ? "var(--green)" : item.margin < 0 ? "var(--red)" : "var(--text-dim)" }}>{item.hasPrice ? formatGP(item.margin) : "—"}</span>
                   <span style={{ fontSize: "12px", color: item.roi > 4 ? "var(--gold)" : item.roi >= 1 ? "var(--green)" : "#f39c12" }}>{item.hasPrice && item.roi != null ? item.roi + "%" : "—"}</span>
+                  <span style={{ fontSize: "12px", fontWeight: 600, color: (item.volume||0) >= 10000 ? "var(--green)" : (item.volume||0) >= 1000 ? "var(--gold)" : "var(--red)" }}>
+                    {(item.volume||0) >= 1000 ? ((item.volume||0)/1000).toFixed(1)+"k" : (item.volume||0) > 0 ? (item.volume||0).toLocaleString() : "—"}
+                  </span>
+                  <span style={{ fontSize: "11px", color: (() => { if (!item.lastTradeTime) return "var(--text-dim)"; const s = Date.now()/1000 - item.lastTradeTime; return s < 3600 ? "var(--green)" : s < 86400 ? "#f39c12" : "var(--red)"; })() }}>
+                    {item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}
+                  </span>
                   <div onClick={e => e.stopPropagation()}><Sparkline itemId={item.id} width={78} height={28} /></div>
                   <div onClick={e => e.stopPropagation()}>
                     <button className={`watchlist-alert-badge ${alertSet ? "set" : "unset"}`}
@@ -5367,7 +5377,8 @@ export default function RuneTrader() {
   const [customNatureRunePrice, setCustomNatureRunePrice] = useState(""); // empty = use live price
   const [alchShowLosses, setAlchShowLosses] = useState(false);
   const [alchSearch, setAlchSearch] = useState("");
-  const [alchSortState, setAlchSortState] = useState({ col: "alchProfit", dir: "desc" });
+  const [alchMembersFilter, setAlchMembersFilter] = useState("all"); // "all" | "f2p" | "members"
+  const [alchSortState, setAlchSortState] = useState({ col: "maxProfit4hr", dir: "desc" });
   const [alchRowsShown, setAlchRowsShown] = useState(200);
   const [recipeSearch, setRecipeSearch] = useState("");
   const [recipeSortState, setRecipeSortState] = useState({ col: "profit", dir: "desc" });
@@ -5382,6 +5393,7 @@ export default function RuneTrader() {
   const [recipeMembersFilter, setRecipeMembersFilter] = useState("all");
   const [recipeExpandedPotions, setRecipeExpandedPotions] = useState(new Set());
   const [expandedRecipeRow, setExpandedRecipeRow] = useState(null);
+  const [showRecipeFilters, setShowRecipeFilters] = useState(false);
   const [cofferTarget, setCofferTarget] = useState("");
   const [cofferSearch, setCofferSearch] = useState("");
   const [cofferShowLosses, setCofferShowLosses] = useState(false);
@@ -8823,6 +8835,7 @@ RULES:
                       maxProfit4hr: (item.highalch - item.low - effectiveNaturePrice) * (item.buyLimit || 0),
                     }))
                     .filter(item => alchShowLosses || item.alchProfit > 0)
+                    .filter(item => alchMembersFilter === "all" || (alchMembersFilter === "f2p" && !item.members) || (alchMembersFilter === "members" && item.members))
                     .filter(item => !alchSearch || item.name.toLowerCase().includes(alchSearch.toLowerCase()))
                     .sort((a, b) => {
                       const dir = alchSortDir === "asc" ? 1 : -1;
@@ -8832,6 +8845,7 @@ RULES:
                       if (alchSortCol === "alchProfit") return dir * (a.alchProfit - b.alchProfit);
                       if (alchSortCol === "buyLimit") return dir * (a.buyLimit - b.buyLimit);
                       if (alchSortCol === "maxProfit4hr") return dir * (a.maxProfit4hr - b.maxProfit4hr);
+                      if (alchSortCol === "volume") return dir * ((a.volume || 0) - (b.volume || 0));
                       if (alchSortCol === "lastTradeTime") return dir * ((a.lastTradeTime || 0) - (b.lastTradeTime || 0));
                       return dir * (a.maxProfit4hr - b.maxProfit4hr);
                     });
@@ -8839,56 +8853,50 @@ RULES:
                     ["name",          "Item",             "The tradeable item name."],
                     ["low",           "GE Buy Price",     "Current cheapest buy price on the Grand Exchange."],
                     ["highalch",      "Alch Value",       "GP received when casting High Alchemy on this item."],
-                    ["alchProfit",    "Profit / Cast",    "Alch Value minus GE Buy Price minus your nature rune cost. Adjust the nature rune price in the filter bar to match what you actually paid."],
+                    ["alchProfit",    "Profit / Cast",    "Alch Value minus GE Buy Price minus your nature rune cost."],
                     ["buyLimit",      "Buy Limit",        "Max quantity you can buy in a 4-hour GE window."],
-                    ["maxProfit4hr",  "Max Profit / 4hr", "Profit per cast × Buy Limit. Maximum GP you can make in one 4-hour GE window buying at the limit."],
-                    ["lastTradeTime", "Last Updated",     "How recently this item's GE price was recorded. Stale data may not reflect current market."],
+                    ["volume",        "Vol/Day",          "Daily trade volume. Higher = easier to fill your buy offers."],
+                    ["maxProfit4hr",  "Max Profit / 4hr", "Profit per cast × Buy Limit. Maximum GP in one 4-hour window."],
+                    ["lastTradeTime", "Last Trade",       "When this item last traded on the GE."],
                   ];
+                  const ALCH_GRID = "2fr 1fr 1fr 1fr 1fr 0.8fr 1fr 0.8fr";
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                      <div className="filter-bar">
-                        <input className="filter-input" placeholder="Search items..." value={alchSearch} onChange={e => setAlchSearch(e.target.value)} />
+                      <div className="filter-bar" style={{ flexWrap: "wrap", gap: "8px" }}>
+                        {/* F2P / Members */}
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {[{id:"all",label:"All"},{id:"f2p",label:"F2P"},{id:"members",label:"Members"}].map(m => (
+                            <button key={m.id} onClick={() => setAlchMembersFilter(m.id)}
+                              style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: alchMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: alchMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "transparent", color: alchMembersFilter === m.id ? "var(--green)" : "var(--text-dim)" }}>
+                              {m.label}
+                            </button>
+                          ))}
+                        </div>
                         <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
                           <input type="checkbox" checked={alchShowLosses} onChange={e => setAlchShowLosses(e.target.checked)} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
                           Show unprofitable
                         </label>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginLeft: "8px", background: "var(--bg3)", border: `1px solid ${isCustomPrice ? "var(--gold-dim)" : "var(--border)"}`, borderRadius: "8px", padding: "4px 10px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--bg3)", border: `1px solid ${isCustomPrice ? "var(--gold-dim)" : "var(--border)"}`, borderRadius: "8px", padding: "4px 10px" }}>
                           <span style={{ fontSize: "12px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>🌿 Nature rune:</span>
-                          <input
-                            type="number"
-                            min="0"
+                          <input type="number" min="0"
                             value={customNatureRunePrice !== "" ? customNatureRunePrice : natureRunePrice}
                             onChange={e => setCustomNatureRunePrice(e.target.value)}
-                            onFocus={e => { if (customNatureRunePrice === "") setCustomNatureRunePrice(String(natureRunePrice)); }}
-                            style={{ background: "transparent", border: "none", outline: "none", color: isCustomPrice ? "var(--gold)" : "var(--gold)", fontWeight: 600, fontSize: "12px", width: "60px", fontFamily: "Inter, sans-serif" }}
-                          />
+                            onFocus={() => { if (customNatureRunePrice === "") setCustomNatureRunePrice(String(natureRunePrice)); }}
+                            style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "60px", fontFamily: "Inter, sans-serif" }} />
                           <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>gp</span>
-                          {isCustomPrice && (
-                            <button
-                              onClick={() => setCustomNatureRunePrice("")}
-                              title="Reset to live market price"
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "11px", padding: "0 2px", fontFamily: "Inter, sans-serif", transition: "color 0.15s" }}
-                              onMouseOver={e => e.currentTarget.style.color = "var(--gold)"}
-                              onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}
-                            >↺ live</button>
-                          )}
-                          {!isCustomPrice && natureRunePrice === 200 && (
-                            <span style={{ color: "var(--red)", fontSize: "10px" }}>(fallback)</span>
-                          )}
+                          {isCustomPrice && <button onClick={() => setCustomNatureRunePrice("")} title="Reset to live price" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-dim)", fontSize: "11px", padding: "0 2px", fontFamily: "Inter, sans-serif" }} onMouseOver={e => e.currentTarget.style.color = "var(--gold)"} onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>↺ live</button>}
+                          {!isCustomPrice && natureRunePrice === 200 && <span style={{ color: "var(--red)", fontSize: "10px" }}>(fallback)</span>}
                         </div>
-                        {isCustomPrice && (
-                          <span style={{ fontSize: "11px", color: "var(--gold-dim)" }}>
-                            Using custom price · Live: {natureRunePrice.toLocaleString()}gp
-                          </span>
-                        )}
-                        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>{alchItems.length.toLocaleString()} items</span>
+                        {isCustomPrice && <span style={{ fontSize: "11px", color: "var(--gold-dim)" }}>Custom · Live: {natureRunePrice.toLocaleString()}gp</span>}
+                        <input className="filter-input" placeholder="Search items..." value={alchSearch} onChange={e => setAlchSearch(e.target.value)} style={{ marginLeft: "auto" }} />
+                        <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>{alchItems.length.toLocaleString()} items</span>
                       </div>
                       <div className="alch-table">
-                        <div className="alch-header" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr", display: "grid" }}>
-                          {ALCH_COLS.map(([col, label, tip]) => (
+                        <div className="alch-header" style={{ gridTemplateColumns: ALCH_GRID, display: "grid" }}>
+                          {ALCH_COLS.map(([col, label, tip], idx) => (
                             <button key={col} className={`sort-btn ${alchSortCol === col ? "active" : ""}`} onClick={() => handleAlchSort(col)}>
                               {label} {alchSortCol === col && <span className="sort-arrow">{alchSortDir === "desc" ? "▼" : "▲"}</span>}
-                              <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
+                              <span className={`stat-tooltip-wrap${idx >= ALCH_COLS.length - 2 ? " anchor-right" : ""}`} onClick={e => e.stopPropagation()}>
                                 <span className="stat-help">?</span>
                                 <span className="stat-tooltip">{tip}</span>
                               </span>
@@ -8896,11 +8904,9 @@ RULES:
                           ))}
                         </div>
                         {alchItems.length === 0 ? (
-                          <div style={{ padding: "40px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
-                            No profitable alch items found
-                          </div>
+                          <div style={{ padding: "40px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>No items found — try adjusting the filters</div>
                         ) : alchItems.slice(0, alchRowsShown).map(item => (
-                          <div key={item.id} className="alch-row" style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr" }} onClick={() => setSelectedItem(item)}>
+                          <div key={item.id} className="alch-row" style={{ gridTemplateColumns: ALCH_GRID }} onClick={() => setSelectedItem(item)}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                               <div>
@@ -8917,14 +8923,19 @@ RULES:
                               {item.buyLimit ? item.buyLimit.toLocaleString() : (
                                 <span className="stat-tooltip-wrap">
                                   <span style={{ color: "var(--text-dim)", cursor: "help", borderBottom: "1px dashed var(--text-dim)" }}>?</span>
-                                  <span className="stat-tooltip">Buy limit not available for this item. This usually means it's a rarely traded item or the wiki hasn't recorded a limit for it. A default of 500 may apply.</span>
+                                  <span className="stat-tooltip">Buy limit not available for this item. A default of 500 may apply.</span>
                                 </span>
                               )}
+                            </span>
+                            <span style={{ fontSize: "12px", color: (item.volume||0) >= 10000 ? "var(--green)" : (item.volume||0) >= 1000 ? "var(--gold)" : "var(--red)", fontWeight: 600 }}>
+                              {(item.volume||0) >= 1000 ? ((item.volume||0)/1000).toFixed(1)+"k" : (item.volume||0) > 0 ? (item.volume||0).toLocaleString() : "—"}
                             </span>
                             <span style={{ fontSize: "13px", fontWeight: 600, color: item.maxProfit4hr >= 0 ? "var(--green)" : "var(--red)" }}>
                               {item.buyLimit ? formatGP(item.maxProfit4hr) : "—"}
                             </span>
-                            <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
+                            <span style={{ fontSize: "11px", color: (() => { if (!item.lastTradeTime) return "var(--text-dim)"; const s = Date.now()/1000 - item.lastTradeTime; return s < 3600 ? "var(--green)" : s < 86400 ? "#f39c12" : "var(--red)"; })() }}>
+                              {item.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -8977,15 +8988,9 @@ RULES:
                       ...(r.inputs || []).map(inp => ({ item: lookupItem(inp), name: inp.name, side: "input" })),
                       ...(r.outputs || []).map(out => ({ item: lookupItem(out), name: out.name, side: "output" })),
                     ].filter(x => (x.item?.volume || 0) > 0);
-                    const volBottleneck = allVolItems.length > 0 ? allVolItems.reduce((min, x) => (x.item.volume < min.item.volume ? x : min)) : null;
-                    const volume = volBottleneck ? volBottleneck.item.volume : 0;
+                    const volume = allVolItems.length > 0 ? allVolItems.reduce((min, x) => x.item.volume < min ? x.item.volume : min, Infinity) : 0;
                     const profit = outputValue - inputCost;
                     const roi = inputCost > 0 ? parseFloat(((profit / inputCost) * 100).toFixed(1)) : 0;
-                    // Bottleneck piece — input piece with lowest price (for sets)
-                    const bottleneck = r.category === "sets" ? (r.inputs || []).reduce((min, inp) => {
-                      const item = lookupItem(inp); const p = item?.low || 0;
-                      return (!min || p < min.price) ? { name: inp.name, price: p } : min;
-                    }, null) : null;
                     // Members check — if any input/output is members-only
                     const isMembersOnly = [...(r.inputs||[]), ...(r.outputs||[])].some(x => lookupItem(x)?.members);
                     // Last update — oldest lastTradeTime across all items (most stale)
@@ -9000,7 +9005,7 @@ RULES:
                       const item = lookupItem(x);
                       return `${x.name} last traded ${timeAgo(item.lastTradeTime)}`;
                     }) : null;
-                    return { ...r, inputCost, outputValue, profit, roi, volume, volBottleneck, bottleneck, isMembersOnly, lastUpdated, highRisk, resolvable: inputsOk && outputsOk };
+                    return { ...r, inputCost, outputValue, profit, roi, volume, isMembersOnly, lastUpdated, highRisk, resolvable: inputsOk && outputsOk };
                   })
                   .filter(r => r.resolvable && r.inputCost > 0)
                   .filter(r => recipeCategory === "all" || r.category === recipeCategory)
@@ -9061,24 +9066,24 @@ RULES:
                     ["outputValue", "Output Value", "Total GE sell value of outputs after 2% GE tax."],
                     ["profit",      "Profit",       "Output Value minus Input Cost after GE tax."],
                     ["roi",         "ROI",          "Return on investment after GE tax."],
-                    ["volume",      "Vol/Day",      "Daily trade volume of the lowest-volume item in this recipe (the bottleneck). The item name is shown in the cell. Higher = easier to fill your offers."],
+                    ["volume",      "Vol/Day",      "Daily trade volume of the lowest-volume item in this recipe. Higher = easier to fill your GE offers."],
                     ["lastUpdated", "Last Trade",    "How recently the most stale item in this recipe last traded. Old data = less reliable pricing."],
                   ];
 
                   const resetFilters = () => {
                     setRecipeHideLosses(true); setRecipeHideNoVolume(true); setRecipeMinProfit(""); setRecipeMinVolume("");
                     setRecipeMinRoi(""); setRecipeDirection("all"); setRecipeMembersFilter("all");
-                    setRecipeSearch(""); setRecipeRowsShown(100); setRecipeExpandedPotions(new Set());
+                    setRecipeSearch(""); setRecipeRowsShown(100); setRecipeExpandedPotions(new Set()); setShowRecipeFilters(false);
                   };
-                  const activeFilterCount = [recipeHideLosses, recipeHideNoVolume, recipeMinProfit, recipeMinVolume, recipeMinRoi, recipeDirection !== "all", recipeMembersFilter !== "all", recipeSearch].filter(Boolean).length;
-
+                  const advRecipeFilterCount = [recipeMinProfit, recipeMinVolume, recipeMinRoi, recipeMembersFilter !== "all"].filter(Boolean).length;
                   const getDose = (name) => { const m = name?.match(/\((\d+)\)$/); return m ? m[1] : null; };
 
                   return (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
 
-                      {/* Category tabs */}
-                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                      {/* Single filter row */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                        {/* Category tabs */}
                         {CATS.map(c => (
                           <button key={c.id}
                             onClick={() => { setRecipeCategory(c.id); setRecipeDirection("all"); setRecipeRowsShown(100); setRecipeExpandedPotions(new Set()); }}
@@ -9086,66 +9091,81 @@ RULES:
                             {c.label}
                           </button>
                         ))}
-                      </div>
 
-                      {/* Filters row */}
-                      <div className="filter-bar" style={{ flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
-                        {/* Direction filter — only for sets and potions */}
-                        {DIR_OPTS && (
-                          <div style={{ display: "flex", gap: "4px" }}>
-                            {DIR_OPTS.map(d => (
-                              <button key={d.id} onClick={() => { setRecipeDirection(d.id); setRecipeRowsShown(100); }}
+                        {/* Direction sub-filter — only shows when a specific category is selected */}
+                        {DIR_OPTS && DIR_OPTS.length > 1 && recipeCategory !== "all" && (
+                          <>
+                            <span style={{ color: "var(--border)", fontSize: "16px", lineHeight: 1 }}>|</span>
+                            {DIR_OPTS.filter(d => d.id !== "all").map(d => (
+                              <button key={d.id} onClick={() => { setRecipeDirection(recipeDirection === d.id ? "all" : d.id); setRecipeRowsShown(100); }}
                                 style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: recipeDirection === d.id ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: recipeDirection === d.id ? "rgba(52,152,219,0.1)" : "transparent", color: recipeDirection === d.id ? "#3498db" : "var(--text-dim)" }}>
                                 {d.label}
                               </button>
                             ))}
-                          </div>
+                          </>
                         )}
-                        {/* Members filter */}
-                        <div style={{ display: "flex", gap: "4px" }}>
-                          {[{id:"all",label:"All"},{id:"f2p",label:"F2P"},{id:"members",label:"Members"}].map(m => (
-                            <button key={m.id} onClick={() => { setRecipeMembersFilter(m.id); setRecipeRowsShown(100); }}
-                              style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: recipeMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: recipeMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "transparent", color: recipeMembersFilter === m.id ? "var(--green)" : "var(--text-dim)" }}>
-                              {m.label}
-                            </button>
-                          ))}
-                        </div>
-                        {/* Hide losses */}
-                        <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
+
+                        {/* Profitable only toggle */}
+                        <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: recipeHideLosses ? "var(--gold)" : "var(--text-dim)", cursor: "pointer", userSelect: "none", padding: "4px 10px", borderRadius: "5px", border: recipeHideLosses ? "1px solid rgba(201,168,76,0.4)" : "1px solid var(--border)", background: recipeHideLosses ? "rgba(201,168,76,0.08)" : "transparent", marginLeft: "4px" }}>
                           <input type="checkbox" checked={recipeHideLosses} onChange={e => { setRecipeHideLosses(e.target.checked); setRecipeRowsShown(100); }} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
                           Profitable only
                         </label>
-                        {/* Hide no volume */}
-                        <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
-                          <input type="checkbox" checked={recipeHideNoVolume} onChange={e => { setRecipeHideNoVolume(e.target.checked); setRecipeRowsShown(100); }} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
-                          Hide no volume
-                        </label>
-                        {/* Min profit */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", padding: "4px 10px" }}>
-                          <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min profit</span>
-                          <input type="text" value={recipeMinProfit} onChange={e => { setRecipeMinProfit(e.target.value); setRecipeRowsShown(100); }} placeholder="e.g. 10k" style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "55px", fontFamily: "Inter, sans-serif" }} />
-                        </div>
-                        {/* Min ROI */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", padding: "4px 10px" }}>
-                          <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min ROI</span>
-                          <input type="number" value={recipeMinRoi} onChange={e => { setRecipeMinRoi(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "40px", fontFamily: "Inter, sans-serif" }} />
-                          <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>%</span>
-                        </div>
-                        {/* Min volume */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", padding: "4px 10px" }}>
-                          <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min vol</span>
-                          <input type="number" value={recipeMinVolume} onChange={e => { setRecipeMinVolume(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "55px", fontFamily: "Inter, sans-serif" }} />
-                        </div>
+
+                        {/* ⚙ Filters button */}
+                        <button onClick={() => setShowRecipeFilters(v => !v)}
+                          style={{ padding: "4px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: showRecipeFilters || advRecipeFilterCount > 0 ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: showRecipeFilters || advRecipeFilterCount > 0 ? "rgba(52,152,219,0.1)" : "transparent", color: showRecipeFilters || advRecipeFilterCount > 0 ? "#3498db" : "var(--text-dim)", display: "flex", alignItems: "center", gap: "5px" }}>
+                          ⚙ Filters {advRecipeFilterCount > 0 && <span style={{ background: "#3498db", color: "#fff", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>{advRecipeFilterCount}</span>}
+                        </button>
+
                         {/* Reset */}
-                        {activeFilterCount > 1 && (
+                        {(recipeDirection !== "all" || advRecipeFilterCount > 0 || !recipeHideLosses || !recipeHideNoVolume || recipeSearch) && (
                           <button onClick={resetFilters} style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)" }}>↺ Reset</button>
                         )}
-                        {/* Search — far right like market tab */}
+
+                        {/* Search — far right */}
                         <input className="filter-input" placeholder="Search..." value={recipeSearch} onChange={e => { setRecipeSearch(e.target.value); setRecipeRowsShown(100); }} style={{ maxWidth: "160px", marginLeft: "auto" }} />
                         <span style={{ fontSize: "11px", color: "var(--text-dim)", alignSelf: "center", whiteSpace: "nowrap" }}>
                           {processedRecipes.length} results
                         </span>
                       </div>
+
+                      {/* Expandable advanced filters */}
+                      {showRecipeFilters && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", padding: "12px 14px", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", alignItems: "center" }}>
+                          {/* F2P / Members */}
+                          <div style={{ display: "flex", gap: "4px" }}>
+                            {[{id:"all",label:"All"},{id:"f2p",label:"F2P"},{id:"members",label:"Members"}].map(m => (
+                              <button key={m.id} onClick={() => { setRecipeMembersFilter(m.id); setRecipeRowsShown(100); }}
+                                style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: recipeMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: recipeMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "transparent", color: recipeMembersFilter === m.id ? "var(--green)" : "var(--text-dim)" }}>
+                                {m.label}
+                              </button>
+                            ))}
+                          </div>
+                          <div style={{ width: "1px", height: "20px", background: "var(--border)" }} />
+                          {/* Hide no volume */}
+                          <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
+                            <input type="checkbox" checked={recipeHideNoVolume} onChange={e => { setRecipeHideNoVolume(e.target.checked); setRecipeRowsShown(100); }} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
+                            Hide no volume
+                          </label>
+                          <div style={{ width: "1px", height: "20px", background: "var(--border)" }} />
+                          {/* Min profit */}
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min profit</span>
+                            <input type="text" value={recipeMinProfit} onChange={e => { setRecipeMinProfit(e.target.value); setRecipeRowsShown(100); }} placeholder="e.g. 10k" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "65px", padding: "3px 7px", fontFamily: "Inter, sans-serif" }} />
+                          </div>
+                          {/* Min ROI */}
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min ROI</span>
+                            <input type="number" value={recipeMinRoi} onChange={e => { setRecipeMinRoi(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "50px", padding: "3px 7px", fontFamily: "Inter, sans-serif" }} />
+                            <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>%</span>
+                          </div>
+                          {/* Min volume */}
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min vol</span>
+                            <input type="number" value={recipeMinVolume} onChange={e => { setRecipeMinVolume(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "65px", padding: "3px 7px", fontFamily: "Inter, sans-serif" }} />
+                          </div>
+                        </div>
+                      )}
 
                       {/* Data disclaimer */}
                       <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", background: "rgba(52,152,219,0.06)", border: "1px solid rgba(52,152,219,0.15)", borderRadius: "8px", fontSize: "12px", color: "var(--text-dim)" }}>
@@ -9236,8 +9256,7 @@ RULES:
                                           <span style={{ fontSize: "12px", fontWeight: 600, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>{r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}</span>
                                           <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 5px", borderRadius: "4px", display: "inline-flex", width: "fit-content", whiteSpace: "nowrap", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>{r.roi >= 0 ? "+" : ""}{r.roi}%</span>
                                           <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
-                                            <span style={{ fontSize: "11px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)", fontWeight: 600 }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume : "—"}</span>
-                                            {r.volBottleneck && <span style={{ fontSize: "9px", color: "var(--text-dim)" }}>{r.volBottleneck.name.replace(/\(\d+\)/, "").trim()}</span>}
+                                            <span style={{ fontSize: "11px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--red)", fontWeight: 600 }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume : "—"}</span>
                                           </div>
                                           <span style={{ fontSize: "11px", color: (() => { if (!r.lastUpdated) return "var(--text-dim)"; const sec = Date.now()/1000 - r.lastUpdated; return sec < 3600 ? "var(--green)" : sec < 86400 ? "#f39c12" : "var(--red)"; })() }}>
                                             {r.lastUpdated ? timeAgo(r.lastUpdated) : "—"}
@@ -9274,16 +9293,6 @@ RULES:
                                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px", flexWrap: "wrap", paddingLeft: "16px" }}>
                                           {r.skill && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
                                           {r.isMembersOnly && <span style={{ fontSize: "10px", color: "#c9a84c", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "3px", padding: "0 4px" }}>P2P</span>}
-                                          {r.bottleneck && r.category === "sets" && (
-                                            <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
-                                              <span style={{ fontSize: "10px", color: "var(--text-dim)", cursor: "help" }}>
-                                                bottleneck: <span style={{ color: "var(--text)" }}>{r.bottleneck.name.replace(/ \(.*\)$/, "")} ({formatGP(r.bottleneck.price)})</span>
-                                              </span>
-                                              <span className="stat-tooltip" style={{ bottom: "auto", top: "calc(100% + 4px)", left: 0, minWidth: "200px", whiteSpace: "normal" }}>
-                                                The bottleneck is the cheapest input piece — it's the item most likely to limit how many sets you can make or break, since it has the lowest GE value and may be hardest to source in volume.
-                                              </span>
-                                            </span>
-                                          )}
                                         </div>
                                       </div>
                                       <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
@@ -9310,8 +9319,7 @@ RULES:
                                       <span style={{ fontSize: "13px", fontWeight: 600, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>{r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}</span>
                                       <span style={{ fontSize: "12px", fontWeight: 600, padding: "2px 6px", borderRadius: "5px", display: "inline-flex", alignItems: "center", width: "fit-content", whiteSpace: "nowrap", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>{r.roi >= 0 ? "+" : ""}{r.roi}%</span>
                                       <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
-                                        <span style={{ fontSize: "12px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)", fontWeight: 600 }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume.toLocaleString() : "—"}</span>
-                                        {r.volBottleneck && <span style={{ fontSize: "10px", color: "var(--text-dim)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.volBottleneck.name.replace(/ \(.*\)$/, "").replace(/ armour set.*/, " set")}</span>}
+                                        <span style={{ fontSize: "12px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--red)", fontWeight: 600 }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume.toLocaleString() : "—"}</span>
                                       </div>
                                       <span style={{ fontSize: "11px", color: (() => { if (!r.lastUpdated) return "var(--text-dim)"; const sec = Date.now()/1000 - r.lastUpdated; return sec < 3600 ? "var(--green)" : sec < 86400 ? "#f39c12" : "var(--red)"; })() }}>
                                         {r.lastUpdated ? timeAgo(r.lastUpdated) : "—"}
@@ -9456,17 +9464,17 @@ RULES:
                   const cofferItems = (allItems || [])
                     .filter(item => item.hasPrice && item.low > 0 && item.volume > 10 && (item.buyLimit || 0) > 0)
                     .map(item => {
-                      // Coffer value: use store price if > 1, else highalch/0.6, else GE price * 0.75 (estimate)
-      const effectiveValue = item.itemValue > 1
-        ? item.itemValue
-        : item.highalch > 0
-          ? Math.round(item.highalch / 0.6)
-          : Math.round((item.low || 0) * 0.75);
-      const savings = effectiveValue - item.low;
+                      const effectiveValue = item.itemValue > 1
+                        ? item.itemValue
+                        : item.highalch > 0
+                          ? Math.round(item.highalch / 0.6)
+                          : Math.round((item.low || 0) * 0.75);
+                      const savings = effectiveValue - item.low;
                       const potentialSavings = savings * (item.buyLimit || 0);
+                      const valueScore = savings > 0 ? savings * Math.min(item.volume || 0, item.buyLimit || 0) : 0;
                       const qtyNeeded = targetGP > 0 ? Math.ceil(targetGP / effectiveValue) : null;
                       const totalCost = qtyNeeded ? qtyNeeded * item.low : null;
-                      return { ...item, savings, potentialSavings, qtyNeeded, totalCost, effectiveValue };
+                      return { ...item, savings, potentialSavings, qtyNeeded, totalCost, effectiveValue, valueScore };
                     })
                     .filter(item => cofferShowLosses || item.savings > 0)
                     .filter(item => !cofferSearch || item.name.toLowerCase().includes(cofferSearch.toLowerCase()))
@@ -9477,15 +9485,18 @@ RULES:
                       if (cofferSortCol === "high") return dir * (a.itemValue - b.itemValue);
                       if (cofferSortCol === "savings") return dir * (a.savings - b.savings);
                       if (cofferSortCol === "buyLimit") return dir * (a.buyLimit - b.buyLimit);
+                      if (cofferSortCol === "volume") return dir * ((a.volume||0) - (b.volume||0));
                       if (cofferSortCol === "potentialSavings") return dir * (a.potentialSavings - b.potentialSavings);
+                      if (cofferSortCol === "valueScore") return dir * (a.valueScore - b.valueScore);
                       return dir * (a.potentialSavings - b.potentialSavings);
                     });
                   const COFFER_COLS = [
                     ["name",             "Item",              "The tradeable item you sacrifice to Death's Coffer."],
                     ["low",              "GE Buy Price",      "What you pay on the Grand Exchange to acquire this item."],
-                    ["high",             "Coffer Value",      "The fixed base value Jagex credits to your Death's Coffer when you sacrifice this item. This is the game's internal item value, not the GE price."],
+                    ["high",             "Coffer Value",      "The fixed base value Jagex credits to your Death's Coffer when you sacrifice this item."],
                     ["savings",          "Margin",            "Coffer Value minus GE Buy Price. Positive means you're funding your coffer for less than face value."],
                     ["buyLimit",         "Buy Limit",         "Max quantity you can buy in a 4-hour GE window."],
+                    ["volume",           "Vol/Day",           "Daily trade volume. Higher = easier to fill your buy offers."],
                     ["potentialSavings", "Max Savings / 4hr", "Margin × Buy Limit. Maximum GP saved in one 4-hour buying window."],
                   ];
                   return (
@@ -9507,7 +9518,7 @@ RULES:
                         <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>{cofferItems.length.toLocaleString()} items</span>
                       </div>
                       <div className="alch-table">
-                        <div className="alch-header" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 1fr", display: "grid" }}>
+                        <div className="alch-header" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 0.8fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 0.8fr 1fr", display: "grid" }}>
                           {COFFER_COLS.map(([col, label, tip]) => (
                             <button key={col} className={`sort-btn ${cofferSortCol === col ? "active" : ""}`} onClick={() => handleCofferSort(col)}>
                               {label} {cofferSortCol === col && <span className="sort-arrow">{cofferSortDir === "desc" ? "▼" : "▲"}</span>}
@@ -9522,7 +9533,7 @@ RULES:
                         {cofferItems.length === 0 ? (
                           <div style={{ padding: "40px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>No items found</div>
                         ) : cofferItems.slice(0, cofferRowsShown).map(item => (
-                          <div key={item.id} className="alch-row" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 1fr" }} onClick={() => setSelectedItem(item)}>
+                          <div key={item.id} className="alch-row" style={{ gridTemplateColumns: targetGP > 0 ? "2fr 1fr 1fr 1fr 1fr 0.8fr 1fr 1fr" : "2fr 1fr 1fr 1fr 1fr 0.8fr 1fr" }} onClick={() => setSelectedItem(item)}>
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                               <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
                               <div>
@@ -9536,6 +9547,9 @@ RULES:
                               {item.savings >= 0 ? "+" : ""}{formatGP(item.savings)}
                             </span>
                             <span className="price" style={{ color: "var(--text-dim)" }}>{item.buyLimit.toLocaleString()}</span>
+                            <span style={{ fontSize: "12px", color: (item.volume||0) >= 10000 ? "var(--green)" : (item.volume||0) >= 1000 ? "var(--gold)" : "var(--red)", fontWeight: 600 }}>
+                              {(item.volume||0) >= 1000 ? ((item.volume||0)/1000).toFixed(1)+"k" : (item.volume||0) > 0 ? (item.volume||0).toLocaleString() : "—"}
+                            </span>
                             <span style={{ fontSize: "13px", fontWeight: 600, color: item.potentialSavings >= 1_000_000 ? "var(--green)" : item.potentialSavings >= 100_000 ? "var(--gold)" : "var(--text-dim)" }}>
                               {formatGP(item.potentialSavings)}
                             </span>
