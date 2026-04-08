@@ -8190,7 +8190,6 @@ RULES:
                 const allDone = questsLoaded && doneQuests === dailyQuests.length && dailyQuests.length > 0;
                 const initial = (user.user_metadata?.username || user.email?.split("@")[0] || "?")[0].toUpperCase();
                 return (
-                  {/* Unified player card button */}
                   <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                     <button
                       onClick={() => setShowPlayerCard(v => !v)}
