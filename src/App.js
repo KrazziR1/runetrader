@@ -5063,11 +5063,9 @@ export default function RuneTrader() {
   const [alchSearch, setAlchSearch] = useState("");
   const [alchSortState, setAlchSortState] = useState({ col: "alchProfit", dir: "desc" });
   const [alchRowsShown, setAlchRowsShown] = useState(200);
-  const [recipeData, setRecipeData] = useState([]);
   const [recipeSearch, setRecipeSearch] = useState("");
   const [recipeSortState, setRecipeSortState] = useState({ col: "profit", dir: "desc" });
   const [recipeRowsShown, setRecipeRowsShown] = useState(100);
-  const [recipeLoading, setRecipeLoading] = useState(false);
   const [cofferTarget, setCofferTarget] = useState("");
   const [cofferSearch, setCofferSearch] = useState("");
   const [cofferShowLosses, setCofferShowLosses] = useState(false);
@@ -5085,20 +5083,116 @@ export default function RuneTrader() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   useEffect(() => { setMarketRowsShown(200); }, [categoryFilter]);
 
-  // ── Recipe fetch — triggered when recipes tab is first visited ──
-  useEffect(() => {
-    if (marketSubTab !== "recipes") return;
-    if (recipeData.length > 0 || recipeLoading) return;
-    setRecipeLoading(true);
-    fetch("/api/prices?type=recipes")
-      .then(r => r.json())
-      .then(json => {
-        const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
-        setRecipeData(arr);
-      })
-      .catch(() => {})
-      .finally(() => setRecipeLoading(false));
-  }, [marketSubTab]); // eslint-disable-line
+  // ── Static GE set exchange data — all known sets ──
+  const GE_SETS = [
+    // Bronze
+    { set: "Bronze armour set (lg)", pieces: ["Bronze full helm","Bronze platebody","Bronze platelegs","Bronze kiteshield"] },
+    { set: "Bronze armour set (sk)", pieces: ["Bronze full helm","Bronze platebody","Bronze plateskirt","Bronze kiteshield"] },
+    // Iron
+    { set: "Iron armour set (lg)", pieces: ["Iron full helm","Iron platebody","Iron platelegs","Iron kiteshield"] },
+    { set: "Iron armour set (sk)", pieces: ["Iron full helm","Iron platebody","Iron plateskirt","Iron kiteshield"] },
+    // Steel
+    { set: "Steel armour set (lg)", pieces: ["Steel full helm","Steel platebody","Steel platelegs","Steel kiteshield"] },
+    { set: "Steel armour set (sk)", pieces: ["Steel full helm","Steel platebody","Steel plateskirt","Steel kiteshield"] },
+    // Black
+    { set: "Black armour set (lg)", pieces: ["Black full helm","Black platebody","Black platelegs","Black kiteshield"] },
+    { set: "Black armour set (sk)", pieces: ["Black full helm","Black platebody","Black plateskirt","Black kiteshield"] },
+    // Black trimmed
+    { set: "Black armour set (t) (lg)", pieces: ["Black full helm (t)","Black platebody (t)","Black platelegs (t)","Black kiteshield (t)"] },
+    { set: "Black armour set (t) (sk)", pieces: ["Black full helm (t)","Black platebody (t)","Black plateskirt (t)","Black kiteshield (t)"] },
+    // Black gold-trimmed
+    { set: "Black armour set (g) (lg)", pieces: ["Black full helm (g)","Black platebody (g)","Black platelegs (g)","Black kiteshield (g)"] },
+    { set: "Black armour set (g) (sk)", pieces: ["Black full helm (g)","Black platebody (g)","Black plateskirt (g)","Black kiteshield (g)"] },
+    // Mithril
+    { set: "Mithril armour set (lg)", pieces: ["Mithril full helm","Mithril platebody","Mithril platelegs","Mithril kiteshield"] },
+    { set: "Mithril armour set (sk)", pieces: ["Mithril full helm","Mithril platebody","Mithril plateskirt","Mithril kiteshield"] },
+    // Mithril trimmed
+    { set: "Mithril armour set (t) (lg)", pieces: ["Mithril full helm (t)","Mithril platebody (t)","Mithril platelegs (t)","Mithril kiteshield (t)"] },
+    { set: "Mithril armour set (t) (sk)", pieces: ["Mithril full helm (t)","Mithril platebody (t)","Mithril plateskirt (t)","Mithril kiteshield (t)"] },
+    { set: "Mithril armour set (g) (lg)", pieces: ["Mithril full helm (g)","Mithril platebody (g)","Mithril platelegs (g)","Mithril kiteshield (g)"] },
+    { set: "Mithril armour set (g) (sk)", pieces: ["Mithril full helm (g)","Mithril platebody (g)","Mithril plateskirt (g)","Mithril kiteshield (g)"] },
+    // Adamant
+    { set: "Adamant armour set (lg)", pieces: ["Adamant full helm","Adamant platebody","Adamant platelegs","Adamant kiteshield"] },
+    { set: "Adamant armour set (sk)", pieces: ["Adamant full helm","Adamant platebody","Adamant plateskirt","Adamant kiteshield"] },
+    // Adamant trimmed
+    { set: "Adamant armour set (t) (lg)", pieces: ["Adamant full helm (t)","Adamant platebody (t)","Adamant platelegs (t)","Adamant kiteshield (t)"] },
+    { set: "Adamant armour set (t) (sk)", pieces: ["Adamant full helm (t)","Adamant platebody (t)","Adamant plateskirt (t)","Adamant kiteshield (t)"] },
+    { set: "Adamant armour set (g) (lg)", pieces: ["Adamant full helm (g)","Adamant platebody (g)","Adamant platelegs (g)","Adamant kiteshield (g)"] },
+    { set: "Adamant armour set (g) (sk)", pieces: ["Adamant full helm (g)","Adamant platebody (g)","Adamant plateskirt (g)","Adamant kiteshield (g)"] },
+    // Rune
+    { set: "Rune armour set (lg)", pieces: ["Rune full helm","Rune platebody","Rune platelegs","Rune kiteshield"] },
+    { set: "Rune armour set (sk)", pieces: ["Rune full helm","Rune platebody","Rune plateskirt","Rune kiteshield"] },
+    // Rune trimmed
+    { set: "Rune armour set (t) (lg)", pieces: ["Rune full helm (t)","Rune platebody (t)","Rune platelegs (t)","Rune kiteshield (t)"] },
+    { set: "Rune armour set (t) (sk)", pieces: ["Rune full helm (t)","Rune platebody (t)","Rune plateskirt (t)","Rune kiteshield (t)"] },
+    { set: "Rune armour set (g) (lg)", pieces: ["Rune full helm (g)","Rune platebody (g)","Rune platelegs (g)","Rune kiteshield (g)"] },
+    { set: "Rune armour set (g) (sk)", pieces: ["Rune full helm (g)","Rune platebody (g)","Rune plateskirt (g)","Rune kiteshield (g)"] },
+    // Gilded
+    { set: "Gilded armour set (lg)", pieces: ["Gilded full helm","Gilded platebody","Gilded platelegs","Gilded kiteshield"] },
+    { set: "Gilded armour set (sk)", pieces: ["Gilded full helm","Gilded platebody","Gilded plateskirt","Gilded kiteshield"] },
+    // God armour
+    { set: "Bandos armour set", pieces: ["Bandos chestplate","Bandos tassets","Bandos boots"] },
+    { set: "Armadyl armour set", pieces: ["Armadyl helmet","Armadyl chestplate","Armadyl chainskirt"] },
+    { set: "Justiciar armour set", pieces: ["Justiciar faceguard","Justiciar chestguard","Justiciar legguards"] },
+    { set: "Inquisitor's armour set", pieces: ["Inquisitor's great helm","Inquisitor's hauberk","Inquisitor's plateskirt"] },
+    { set: "Ancestral robes set", pieces: ["Ancestral hat","Ancestral robe top","Ancestral robe bottom"] },
+    { set: "Torva armour set", pieces: ["Torva full helm","Torva platebody","Torva platelegs"] },
+    { set: "Void knight set", pieces: ["Void knight top","Void knight robe","Void knight gloves","Void knight mace"] },
+    // Ranger sets
+    { set: "Robin Hood set", pieces: ["Robin hood hat","Ranger's tunic","Ranger boots","Green d'hide chaps"] },
+    // Dragonhide
+    { set: "Green dragonhide set", pieces: ["Green d'hide body","Green d'hide chaps","Green d'hide vambraces"] },
+    { set: "Blue dragonhide set", pieces: ["Blue d'hide body","Blue d'hide chaps","Blue d'hide vambraces"] },
+    { set: "Red dragonhide set", pieces: ["Red d'hide body","Red d'hide chaps","Red d'hide vambraces"] },
+    { set: "Black dragonhide set", pieces: ["Black d'hide body","Black d'hide chaps","Black d'hide vambraces"] },
+    // Blessed dragonhide
+    { set: "Guthix d'hide set", pieces: ["Guthix coif","Guthix d'hide body","Guthix chaps","Guthix bracers","Guthix d'hide boots"] },
+    { set: "Saradomin d'hide set", pieces: ["Saradomin coif","Saradomin d'hide body","Saradomin chaps","Saradomin bracers","Saradomin d'hide boots"] },
+    { set: "Zamorak d'hide set", pieces: ["Zamorak coif","Zamorak d'hide body","Zamorak chaps","Zamorak bracers","Zamorak d'hide boots"] },
+    { set: "Zaros d'hide set", pieces: ["Zaros coif","Zaros d'hide body","Zaros chaps","Zaros bracers","Zaros d'hide boots"] },
+    { set: "Armadyl d'hide set", pieces: ["Armadyl coif","Armadyl d'hide body","Armadyl chaps","Armadyl bracers","Armadyl d'hide boots"] },
+    { set: "Ancient d'hide set", pieces: ["Ancient coif","Ancient d'hide body","Ancient chaps","Ancient bracers","Ancient d'hide boots"] },
+    { set: "Bandos d'hide set", pieces: ["Bandos coif","Bandos d'hide body","Bandos chaps","Bandos bracers","Bandos d'hide boots"] },
+    // Mystic robes
+    { set: "Mystic robes set (blue)", pieces: ["Mystic hat","Mystic robe top","Mystic robe bottom","Mystic gloves","Mystic boots"] },
+    { set: "Mystic robes set (light)", pieces: ["Mystic hat (light)","Mystic robe top (light)","Mystic robe bottom (light)","Mystic gloves (light)","Mystic boots (light)"] },
+    { set: "Mystic robes set (dark)", pieces: ["Mystic hat (dark)","Mystic robe top (dark)","Mystic robe bottom (dark)","Mystic gloves (dark)","Mystic boots (dark)"] },
+    { set: "Mystic robes set (dusk)", pieces: ["Mystic hat (dusk)","Mystic robe top (dusk)","Mystic robe bottom (dusk)","Mystic gloves (dusk)","Mystic boots (dusk)"] },
+    // Infinity robes
+    { set: "Infinity robes set", pieces: ["Infinity hat","Infinity top","Infinity bottoms","Infinity gloves","Infinity boots"] },
+    // Splitbark
+    { set: "Splitbark armour set", pieces: ["Splitbark helm","Splitbark body","Splitbark legs","Splitbark gauntlets","Splitbark boots"] },
+    // Skeletal
+    { set: "Skeletal armour set", pieces: ["Skeletal helm","Skeletal body","Skeletal bottoms","Skeletal gloves","Skeletal boots"] },
+    // Spined
+    { set: "Spined armour set", pieces: ["Spined helm","Spined body","Spined chaps","Spined gloves","Spined boots"] },
+    // Lunar
+    { set: "Lunar equipment set", pieces: ["Lunar helm","Lunar torso","Lunar legs","Lunar gloves","Lunar boots","Lunar amulet","Lunar ring","Lunar cape","Lunar staff"] },
+    // 3rd age
+    { set: "3rd age melee set", pieces: ["3rd age full helmet","3rd age platebody","3rd age platelegs","3rd age kiteshield"] },
+    { set: "3rd age range set", pieces: ["3rd age range coif","3rd age range top","3rd age range legs","3rd age vambraces"] },
+    { set: "3rd age mage set", pieces: ["3rd age mage hat","3rd age robe top","3rd age robe","3rd age amulet"] },
+    // Initiate/Proselyte
+    { set: "Initiate armour set (lg)", pieces: ["Initiate sallet","Initiate hauberk","Initiate cuisse"] },
+    { set: "Proselyte armour set (lg)", pieces: ["Proselyte sallet","Proselyte hauberk","Proselyte cuisse"] },
+    { set: "Proselyte armour set (sk)", pieces: ["Proselyte sallet","Proselyte hauberk","Proselyte tasset"] },
+    // Shayzien
+    { set: "Shayzien armour set (1)", pieces: ["Shayzien helm (1)","Shayzien body (1)","Shayzien legs (1)","Shayzien gloves (1)","Shayzien boots (1)"] },
+    { set: "Shayzien armour set (5)", pieces: ["Shayzien helm (5)","Shayzien body (5)","Shayzien legs (5)","Shayzien gloves (5)","Shayzien boots (5)"] },
+    // Xerician
+    { set: "Xerician set", pieces: ["Xerician hat","Xerician top","Xerician bottom"] },
+    // Obsidian
+    { set: "Obsidian armour set", pieces: ["Obsidian helmet","Obsidian platebody","Obsidian platelegs"] },
+    // Granite
+    { set: "Granite armour set", pieces: ["Granite helm","Granite platebody","Granite platelegs"] },
+    // Fremennik
+    { set: "Dagannoth hide set", pieces: ["Dagannoth helm","Dagannoth chest","Dagannoth legs","Dagannoth boots","Dagannoth ring"] },
+  ];
+  // Auto-generate making + breaking for each set
+  const STATIC_RECIPES = GE_SETS.flatMap(({ set, pieces }) => [
+    { name: `Making ${set}`, skill: "Grand Exchange", inputs: pieces.map(p => ({ name: p })), outputs: [{ name: set }] },
+    { name: `Breaking ${set}`, skill: "Grand Exchange", inputs: [{ name: set }], outputs: pieces.map(p => ({ name: p })) },
+  ]);
 
   // ── Advanced filters ──
   const [showAdvFilters, setShowAdvFilters] = useState(false);
@@ -8607,64 +8701,51 @@ RULES:
 
                 {/* ── RECIPES TAB ── */}
                 {marketSubTab === "recipes" && (() => {
-                  const RECIPE_COLS = "3fr 1.2fr 1.2fr 1fr 1fr 0.8fr 0.8fr";
+                  const RECIPE_COLS = "3fr 1.4fr 1.4fr 1fr 1fr 0.9fr 0.8fr";
                   const recipeSortCol = recipeSortState.col;
                   const recipeSortDir = recipeSortState.dir;
                   const handleRecipeSort = col => setRecipeSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
 
-                  // Build price lookup from allItems
-                  const priceById = {};
                   const priceByName = {};
-                  (allItems || []).forEach(item => {
-                    priceById[item.id] = item;
-                    priceByName[item.name?.toLowerCase()] = item;
-                  });
-                  const lookupItem = (inp) => priceById[inp.id] || priceByName[inp.name?.toLowerCase()];
+                  (allItems || []).forEach(item => { priceByName[item.name?.toLowerCase().trim()] = item; });
+                  const lookupItem = (inp) => priceByName[inp.name?.toLowerCase().trim()];
 
-                  // Process recipes
-                  const processedRecipes = recipeData.map(r => {
-                    let inputCost = 0;
-                    let inputsResolvable = true;
+                  const processedRecipes = STATIC_RECIPES.map(r => {
+                    let inputCost = 0; let inputsOk = true;
                     (r.inputs || []).forEach(inp => {
                       const item = lookupItem(inp);
-                      if (!item || !item.low) { inputsResolvable = false; return; }
-                      inputCost += (item.low || 0) * (inp.quantity || 1);
+                      if (!item?.low) { inputsOk = false; return; }
+                      inputCost += item.low * (inp.quantity || 1);
                     });
-
-                    let outputValue = 0;
-                    let outputsResolvable = true;
+                    let outputValue = 0; let outputsOk = true;
                     (r.outputs || []).forEach(out => {
                       const item = lookupItem(out);
-                      if (!item || !item.high) { outputsResolvable = false; return; }
-                      const rawVal = (item.high || 0) * (out.quantity || 1);
-                      const tax = item.high < 50 ? 0 : Math.min(Math.floor(item.high * 0.02), 5_000_000) * (out.quantity || 1);
-                      outputValue += rawVal - tax;
+                      if (!item?.high) { outputsOk = false; return; }
+                      const tax = item.high < 50 ? 0 : Math.min(Math.floor(item.high * 0.02), 5_000_000);
+                      outputValue += (item.high - tax) * (out.quantity || 1);
                     });
-
                     const profit = outputValue - inputCost;
                     const roi = inputCost > 0 ? parseFloat(((profit / inputCost) * 100).toFixed(1)) : 0;
-                    const resolvable = inputsResolvable && outputsResolvable;
-
-                    return { ...r, inputCost, outputValue, profit, roi, resolvable };
+                    return { ...r, inputCost, outputValue, profit, roi, resolvable: inputsOk && outputsOk };
                   })
                   .filter(r => r.resolvable && r.inputCost > 0)
                   .filter(r => !recipeSearch || r.name.toLowerCase().includes(recipeSearch.toLowerCase()))
                   .sort((a, b) => {
                     const dir = recipeSortDir === "asc" ? 1 : -1;
-                    if (recipeSortCol === "name") return dir * a.name.localeCompare(b.name);
-                    if (recipeSortCol === "inputCost") return dir * (a.inputCost - b.inputCost);
+                    if (recipeSortCol === "name")        return dir * a.name.localeCompare(b.name);
+                    if (recipeSortCol === "inputCost")   return dir * (a.inputCost - b.inputCost);
                     if (recipeSortCol === "outputValue") return dir * (a.outputValue - b.outputValue);
-                    if (recipeSortCol === "profit") return dir * (a.profit - b.profit);
-                    if (recipeSortCol === "roi") return dir * (a.roi - b.roi);
+                    if (recipeSortCol === "profit")      return dir * (a.profit - b.profit);
+                    if (recipeSortCol === "roi")         return dir * (a.roi - b.roi);
                     return dir * (a.profit - b.profit);
                   });
 
                   const COLS_DEF = [
-                    ["name",        "Recipe",       "The recipe name."],
-                    ["inputs",      "Inputs",       "Items required to perform this recipe."],
-                    ["outputs",     "Outputs",      "Items received from this recipe."],
-                    ["inputCost",   "Input Cost",   "Total GE buy price of all required inputs."],
-                    ["outputValue", "Output Value", "Total GE sell value of all outputs after GE tax."],
+                    ["name",        "Recipe",       "The exchange recipe name."],
+                    ["inputs",      "Inputs",       "Items required."],
+                    ["outputs",     "Outputs",      "Items received."],
+                    ["inputCost",   "Input Cost",   "Total GE buy price of all inputs."],
+                    ["outputValue", "Output Value", "Total GE sell value of outputs after tax."],
                     ["profit",      "Profit",       "Output Value minus Input Cost after GE tax."],
                     ["roi",         "ROI",          "Return on investment as a percentage."],
                   ];
@@ -8673,14 +8754,12 @@ RULES:
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                       <div className="filter-bar">
                         <input className="filter-input" placeholder="Search recipes..." value={recipeSearch} onChange={e => setRecipeSearch(e.target.value)} />
-                        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>
-                          {recipeLoading ? "Loading recipes..." : `${processedRecipes.length.toLocaleString()} recipes`}
-                        </span>
+                        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)" }}>{processedRecipes.length} recipes · GE set exchanges</span>
                       </div>
-                      {recipeLoading ? (
-                        <div style={{ padding: "60px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>Loading recipe data...</div>
-                      ) : recipeData.length === 0 ? (
-                        <div style={{ padding: "60px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>No recipe data available</div>
+                      {processedRecipes.length === 0 ? (
+                        <div style={{ padding: "60px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
+                          {allItems.length === 0 ? "Loading prices..." : "No matching recipes found"}
+                        </div>
                       ) : (
                         <>
                           <div className="recipe-table">
@@ -8697,45 +8776,38 @@ RULES:
                             </div>
                             {processedRecipes.slice(0, recipeRowsShown).map((r, i) => (
                               <div key={i} className="recipe-row" style={{ gridTemplateColumns: RECIPE_COLS }}>
-                                {/* Recipe name */}
                                 <div>
                                   <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{r.name}</div>
-                                  {r.skill && <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>{r.skill}{r.level ? ` (lv. ${r.level})` : ""}</div>}
+                                  {r.skill && <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>{r.skill}</div>}
                                 </div>
-                                {/* Inputs */}
                                 <div className="recipe-icons">
                                   {(r.inputs || []).map((inp, j) => {
                                     const item = lookupItem(inp);
                                     return (
-                                      <span key={j} title={`${item?.name || inp.name || inp.id} ×${inp.quantity || 1}`} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
-                                        <img src={item ? itemIconUrl(item.name) : ""} alt={item?.name || ""} className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
-                                        {(inp.quantity || 1) > 1 && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700, marginLeft: "1px" }}>×{inp.quantity}</span>}
+                                      <span key={j} title={`${inp.name}${inp.quantity > 1 ? ` ×${inp.quantity}` : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: "1px" }}>
+                                        <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                        {(inp.quantity || 1) > 1 && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700 }}>×{inp.quantity}</span>}
                                       </span>
                                     );
                                   })}
                                 </div>
-                                {/* Outputs */}
                                 <div className="recipe-icons">
-                                  <span className="recipe-arrow">→</span>
+                                  <span style={{ color: "var(--text-dim)", fontSize: "11px", marginRight: "2px" }}>→</span>
                                   {(r.outputs || []).map((out, j) => {
                                     const item = lookupItem(out);
                                     return (
-                                      <span key={j} title={`${item?.name || out.name || out.id} ×${out.quantity || 1}`} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
-                                        <img src={item ? itemIconUrl(item.name) : ""} alt={item?.name || ""} className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
-                                        {(out.quantity || 1) > 1 && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700, marginLeft: "1px" }}>×{out.quantity}</span>}
+                                      <span key={j} title={`${out.name}${out.quantity > 1 ? ` ×${out.quantity}` : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: "1px" }}>
+                                        <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                        {(out.quantity || 1) > 1 && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700 }}>×{out.quantity}</span>}
                                       </span>
                                     );
                                   })}
                                 </div>
-                                {/* Input Cost */}
                                 <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.inputCost)}</span>
-                                {/* Output Value */}
                                 <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.outputValue)}</span>
-                                {/* Profit */}
                                 <span style={{ fontSize: "13px", fontWeight: 600, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>
                                   {r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}
                                 </span>
-                                {/* ROI */}
                                 <span style={{ fontSize: "12px", fontWeight: 600, padding: "2px 7px", borderRadius: "5px", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>
                                   {r.roi >= 0 ? "+" : ""}{r.roi}%
                                 </span>
@@ -8744,12 +8816,10 @@ RULES:
                           </div>
                           {processedRecipes.length > recipeRowsShown && (
                             <div style={{ textAlign: "center", padding: "8px 0" }}>
-                              <button
-                                onClick={() => setRecipeRowsShown(n => n + 100)}
-                                style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s" }}
+                              <button onClick={() => setRecipeRowsShown(n => n + 100)}
+                                style={{ background: "var(--bg3)", border: "1px solid var(--border)", color: "var(--text-dim)", borderRadius: "8px", padding: "8px 24px", fontSize: "13px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
                                 onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
-                                onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}
-                              >
+                                onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}>
                                 Load more ({processedRecipes.length - recipeRowsShown} remaining)
                               </button>
                             </div>

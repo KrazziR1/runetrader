@@ -373,13 +373,13 @@ export default function LandingPage({ onEnterApp }) {
 
       {/* TICKER */}
       <div style={{ paddingTop: "64px" }}>
-        <div className="ticker-wrap">
-          <div className="ticker">
+        <div style={{ width: "100%", overflow: "hidden", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--bg2)", height: "40px", display: "flex", alignItems: "center" }}>
+          <div style={{ display: "inline-flex", gap: "48px", whiteSpace: "nowrap", animation: "ticker 30s linear infinite", alignItems: "center", flexShrink: 0 }}>
             {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-              <span key={i} className="ticker-item">
-                <span className="name">{item.name}</span>
-                <span className={item.up ? "up" : "down"}>{item.margin}</span>
-                <span style={{ color: "var(--border)", fontSize: "13px" }}>·</span>
+              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "13px", fontFamily: "Inter, sans-serif", lineHeight: "40px" }}>
+                <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "13px" }}>{item.name}</span>
+                <span style={{ color: item.up ? "var(--green)" : "var(--red)", fontSize: "13px" }}>{item.margin}</span>
+                <span style={{ color: "var(--border)" }}>·</span>
               </span>
             ))}
           </div>
