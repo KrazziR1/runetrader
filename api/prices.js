@@ -25,6 +25,7 @@ const TTL = {
   latest:  60 * 1000,        // 60s — wiki updates every ~60s
   mapping: 24 * 60 * 60 * 1000, // 24h — item metadata never changes
   volumes: 10 * 60 * 1000,   // 10m — volumes update daily but no need to hammer
+  recipes: 24 * 60 * 60 * 1000, // 24h — recipes rarely change
 };
 
 module.exports = async function handler(req, res) {
@@ -35,8 +36,8 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const type = req.query.type;
-  if (!['latest', 'mapping', 'volumes'].includes(type)) {
-    return res.status(400).json({ error: 'type must be latest, mapping, or volumes' });
+  if (!['latest', 'mapping', 'volumes', 'recipes'].includes(type)) {
+    return res.status(400).json({ error: 'type must be latest, mapping, volumes, or recipes' });
   }
 
   try {

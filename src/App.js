@@ -5671,9 +5671,13 @@ export default function RuneTrader() {
       // Fetch recipe data once prices are loaded
       if (recipeData.length === 0 && !recipeLoading) {
         setRecipeLoading(true);
-        fetch("https://prices.runescape.wiki/api/v1/osrs/recipes", { headers: { "User-Agent": "RuneTrader/1.0" } })
+        fetch("/api/prices?type=recipes")
           .then(r => r.json())
-          .then(json => { if (Array.isArray(json)) setRecipeData(json); })
+          .then(json => {
+            // Wiki returns { data: [...] } or bare array
+            const arr = Array.isArray(json) ? json : (Array.isArray(json?.data) ? json.data : []);
+            setRecipeData(arr);
+          })
           .catch(() => {})
           .finally(() => setRecipeLoading(false));
       }
@@ -8609,26 +8613,28 @@ RULES:
 
                   // Build price lookup from allItems
                   const priceById = {};
-                  (allItems || []).forEach(item => { priceById[item.id] = item; });
+                  const priceByName = {};
+                  (allItems || []).forEach(item => {
+                    priceById[item.id] = item;
+                    priceByName[item.name?.toLowerCase()] = item;
+                  });
+                  const lookupItem = (inp) => priceById[inp.id] || priceByName[inp.name?.toLowerCase()];
 
                   // Process recipes
                   const processedRecipes = recipeData.map(r => {
-                    // Calculate input cost
                     let inputCost = 0;
                     let inputsResolvable = true;
                     (r.inputs || []).forEach(inp => {
-                      const item = priceById[inp.id];
+                      const item = lookupItem(inp);
                       if (!item || !item.low) { inputsResolvable = false; return; }
                       inputCost += (item.low || 0) * (inp.quantity || 1);
                     });
 
-                    // Calculate output value
                     let outputValue = 0;
                     let outputsResolvable = true;
                     (r.outputs || []).forEach(out => {
-                      const item = priceById[out.id];
+                      const item = lookupItem(out);
                       if (!item || !item.high) { outputsResolvable = false; return; }
-                      // Apply GE tax (2%, max 5M)
                       const rawVal = (item.high || 0) * (out.quantity || 1);
                       const tax = item.high < 50 ? 0 : Math.min(Math.floor(item.high * 0.02), 5_000_000) * (out.quantity || 1);
                       outputValue += rawVal - tax;
@@ -8698,9 +8704,9 @@ RULES:
                                 {/* Inputs */}
                                 <div className="recipe-icons">
                                   {(r.inputs || []).map((inp, j) => {
-                                    const item = priceById[inp.id];
+                                    const item = lookupItem(inp);
                                     return (
-                                      <span key={j} title={`${item?.name || inp.id} ×${inp.quantity || 1}`} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                                      <span key={j} title={`${item?.name || inp.name || inp.id} ×${inp.quantity || 1}`} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
                                         <img src={item ? itemIconUrl(item.name) : ""} alt={item?.name || ""} className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
                                         {(inp.quantity || 1) > 1 && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700, marginLeft: "1px" }}>×{inp.quantity}</span>}
                                       </span>
@@ -8711,9 +8717,9 @@ RULES:
                                 <div className="recipe-icons">
                                   <span className="recipe-arrow">→</span>
                                   {(r.outputs || []).map((out, j) => {
-                                    const item = priceById[out.id];
+                                    const item = lookupItem(out);
                                     return (
-                                      <span key={j} title={`${item?.name || out.id} ×${out.quantity || 1}`} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                                      <span key={j} title={`${item?.name || out.name || out.id} ×${out.quantity || 1}`} style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
                                         <img src={item ? itemIconUrl(item.name) : ""} alt={item?.name || ""} className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
                                         {(out.quantity || 1) > 1 && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700, marginLeft: "1px" }}>×{out.quantity}</span>}
                                       </span>
