@@ -6469,6 +6469,7 @@ export default function RuneTrader() {
   }
 
   // ── Flip exclusion toggle ──
+  // eslint-disable-next-line no-unused-vars
   function toggleFlipExclude(id) {
     const updated = flipsLog.map(f => {
       if (f.id !== id) return f;
