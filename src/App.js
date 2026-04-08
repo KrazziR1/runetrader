@@ -7983,13 +7983,19 @@ RULES:
                 </div>
               </div>
 
-              {/* Portfolio link */}
-              <div style={{ padding: "14px 20px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
+              {/* Footer buttons */}
+              <div style={{ padding: "14px 20px", borderTop: "1px solid var(--border)", flexShrink: 0, display: "flex", gap: "8px" }}>
                 <button onClick={() => { setShowPlayerCard(false); setActiveTab("portfolio"); }}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg3)", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}
+                  style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg3)", color: "var(--text-dim)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}
                   onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
                   onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}>
-                  📊 View Full Portfolio →
+                  📊 Portfolio →
+                </button>
+                <button onClick={() => { setShowPlayerCard(false); handleSetActiveTab("settings"); }}
+                  style={{ padding: "10px 16px", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--bg3)", color: "var(--text-dim)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
+                  onMouseOver={e => { e.currentTarget.style.borderColor = "var(--gold-dim)"; e.currentTarget.style.color = "var(--gold)"; }}
+                  onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}>
+                  ⚙️ Settings
                 </button>
               </div>
             </div>
