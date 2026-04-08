@@ -8203,15 +8203,19 @@ RULES:
                       }}
                       onMouseOver={e => { e.currentTarget.style.borderColor = allDone ? "rgba(46,204,113,0.65)" : "rgba(201,168,76,0.5)"; e.currentTarget.style.background = allDone ? "rgba(46,204,113,0.11)" : "rgba(201,168,76,0.1)"; }}
                       onMouseOut={e => { e.currentTarget.style.borderColor = allDone ? "rgba(46,204,113,0.45)" : "rgba(201,168,76,0.3)"; e.currentTarget.style.background = allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.06)"; }}>
-                      {/* Avatar circle */}
-                      <div style={{
-                        width: "30px", height: "30px", borderRadius: "50%", flexShrink: 0,
-                        background: allDone ? "linear-gradient(135deg, rgba(46,204,113,0.25), rgba(46,204,113,0.1))" : "linear-gradient(135deg, rgba(201,168,76,0.3), rgba(201,168,76,0.1))",
-                        border: `1.5px solid ${allDone ? "rgba(46,204,113,0.6)" : "rgba(201,168,76,0.5)"}`,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: "13px", fontWeight: 900, fontFamily: "'Cinzel', serif",
-                        color: allDone ? "var(--green)" : "var(--gold)", letterSpacing: "0.5px",
-                      }}>
+                      {/* Avatar circle — click opens profile dropdown */}
+                      <div
+                        onClick={e => { e.stopPropagation(); setShowProfileMenu(v => !v); }}
+                        title="Profile & Settings"
+                        style={{
+                          width: "30px", height: "30px", borderRadius: "50%", flexShrink: 0,
+                          background: allDone ? "linear-gradient(135deg, rgba(46,204,113,0.25), rgba(46,204,113,0.1))" : "linear-gradient(135deg, rgba(201,168,76,0.3), rgba(201,168,76,0.1))",
+                          border: `1.5px solid ${allDone ? "rgba(46,204,113,0.6)" : "rgba(201,168,76,0.5)"}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: "13px", fontWeight: 900, fontFamily: "'Cinzel', serif",
+                          color: allDone ? "var(--green)" : "var(--gold)", letterSpacing: "0.5px",
+                          cursor: "pointer",
+                        }}>
                         {initial}
                       </div>
                       {/* Level + XP bar + quests */}
@@ -8230,15 +8234,7 @@ RULES:
                         </div>
                       </div>
                     </button>
-                    {/* Profile / settings caret */}
-                    <button
-                      onClick={() => setShowProfileMenu(v => !v)}
-                      title="Profile & Settings"
-                      style={{ width: "28px", height: "28px", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", transition: "all 0.15s", flexShrink: 0 }}
-                      onMouseOver={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.4)"; e.currentTarget.style.color = "var(--gold)"; }}
-                      onMouseOut={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; }}>
-                      ▾
-                    </button>
+
                   </div>
                 );
               })()}
