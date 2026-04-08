@@ -67,7 +67,7 @@ const STYLES = `
   /* HERO */
   .hero {
     min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; padding: 120px 24px 80px; position: relative; overflow: hidden;
+    text-align: center; padding: 60px 24px 60px; position: relative; overflow: hidden;
   }
   .hero-bg {
     position: absolute; inset: 0; z-index: 0;
@@ -206,7 +206,7 @@ const STYLES = `
 
   .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 64px; }
   .feature-card {
-    background: var(--bg2); padding: 36px 28px;
+    background: var(--bg2); padding: 40px 32px;
     border: 1px solid var(--border-solid); position: relative; overflow: hidden;
     transition: all 0.25s;
   }
@@ -217,9 +217,9 @@ const STYLES = `
   }
   .feature-card:hover::before { opacity: 1; }
   .feature-card:hover { border-color: rgba(201,168,76,0.3); transform: translateY(-2px); }
-  .feature-icon { font-size: 28px; margin-bottom: 16px; display: block; }
-  .feature-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
-  .feature-desc { font-size: 15px; color: #9ab0c0; line-height: 1.75; }
+  .feature-icon { font-size: 32px; margin-bottom: 18px; display: block; }
+  .feature-title { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+  .feature-desc { font-size: 15px; color: #aec4d4; line-height: 1.8; }
   .feature-tag {
     display: inline-block; margin-top: 14px; padding: 3px 10px; border-radius: 4px;
     font-size: 12px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600;
@@ -332,30 +332,26 @@ const STYLES = `
   .comparison-vs-pill.us { background: linear-gradient(135deg, #c9940a, #f0c030); color: #07090c; }
   .comparison-vs-pill.them { background: var(--bg3); color: var(--text-dim); border: 1px solid var(--border-solid); }
   .comparison-vs-divider { color: var(--text-dim); font-size: 13px; font-weight: 600; }
-  .cmp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .cmp-card {
-    background: var(--bg2); border: 1px solid var(--border-solid); border-radius: 12px;
-    padding: 22px 20px; position: relative; overflow: hidden; transition: all 0.25s;
+  .cmp-list { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+  .cmp-row {
+    display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 16px;
+    background: var(--bg2); border: 1px solid var(--border-solid); border-radius: 10px;
+    padding: 16px 20px; transition: all 0.2s;
   }
-  .cmp-card:hover { border-color: rgba(201,168,76,0.25); transform: translateY(-2px); }
-  .cmp-card.exclusive {
-    background: linear-gradient(145deg, rgba(201,168,76,0.07), rgba(201,168,76,0.02), var(--bg2));
-    border-color: rgba(201,168,76,0.22);
-  }
-  .cmp-card.exclusive::after {
-    content: 'ONLY US'; position: absolute; top: 12px; right: 12px;
-    font-size: 9px; font-weight: 800; letter-spacing: 1.5px; color: var(--gold);
-    background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.2);
-    padding: 2px 7px; border-radius: 4px;
-  }
-  .cmp-icon { font-size: 22px; margin-bottom: 10px; display: block; }
-  .cmp-title { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-  .cmp-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
-  .cmp-status { display: flex; align-items: center; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-solid); }
-  .cmp-check { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; }
-  .cmp-check.yes { color: var(--green); }
-  .cmp-check.no { color: rgba(231,76,60,0.7); }
-  .cmp-check.partial { color: var(--text-dim); }
+  .cmp-row:hover { border-color: rgba(201,168,76,0.2); background: rgba(201,168,76,0.02); }
+  .cmp-row.exclusive { border-color: rgba(201,168,76,0.2); background: linear-gradient(90deg, rgba(201,168,76,0.05), var(--bg2)); }
+  .cmp-row-left { display: flex; align-items: center; gap: 14px; }
+  .cmp-row-icon { font-size: 20px; flex-shrink: 0; width: 36px; text-align: center; }
+  .cmp-row-text {}
+  .cmp-row-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .cmp-row-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+  .cmp-col { text-align: center; min-width: 90px; }
+  .cmp-col-head { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
+  .cmp-badge { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 5px; display: inline-block; }
+  .cmp-badge.yes { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.2); }
+  .cmp-badge.no { background: rgba(231,76,60,0.1); color: #e74c3c; border: 1px solid rgba(231,76,60,0.2); }
+  .cmp-badge.partial { background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border-solid); }
+  .cmp-exclusive-tag { font-size: 9px; font-weight: 800; letter-spacing: 1.5px; color: var(--gold); background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.2); padding: 2px 7px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
 
   /* PRICING */
   .pricing { padding: 120px 48px; background: var(--bg2); position: relative; overflow: hidden; }
@@ -364,10 +360,10 @@ const STYLES = `
     width: 800px; height: 400px; border-radius: 50%; pointer-events: none;
     background: radial-gradient(ellipse at center, rgba(201,168,76,0.05) 0%, transparent 65%);
   }
-  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 680px; margin: 48px auto 0; position: relative; }
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; max-width: 760px; margin: 56px auto 0; position: relative; }
   .pricing-card {
     background: var(--bg3); border: 1px solid var(--border-solid); border-radius: 16px;
-    padding: 36px 32px; text-align: left; position: relative; transition: all 0.3s;
+    padding: 44px 40px; text-align: left; position: relative; transition: all 0.3s;
   }
   .pricing-card:hover { transform: translateY(-3px); border-color: rgba(201,168,76,0.2); }
   .pricing-card.featured {
@@ -376,19 +372,19 @@ const STYLES = `
     box-shadow: 0 0 0 1px rgba(201,168,76,0.08), 0 20px 60px rgba(0,0,0,0.4), 0 0 60px rgba(201,168,76,0.08);
   }
   .pricing-badge {
-    position: absolute; top: -13px; left: 24px;
-    background: linear-gradient(135deg, #7a5a1a, var(--gold)); color: #070a0d; font-family: 'Cinzel', serif;
-    font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
-    padding: 4px 14px; border-radius: 20px;
+    position: absolute; top: -14px; left: 28px;
+    background: linear-gradient(135deg, #c9940a, #f0c030); color: #07090c; font-family: 'Cinzel', serif;
+    font-size: 12px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 5px 18px; border-radius: 20px;
   }
-  .pricing-name { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
+  .pricing-name { font-family: 'Cinzel', serif; font-size: 17px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--text); margin-bottom: 10px; }
   .pricing-price { font-family: 'Cinzel', serif; font-size: 56px; font-weight: 900; color: var(--gold); line-height: 1; }
   .pricing-price-free { font-family: 'Cinzel', serif; font-size: 56px; font-weight: 900; color: var(--text); line-height: 1; }
-  .pricing-period { font-size: 15px; color: var(--text-dim); margin-top: 6px; margin-bottom: 24px; }
+  .pricing-period { font-size: 16px; color: #8fa0b0; margin-top: 8px; margin-bottom: 28px; }
   .pricing-divider { height: 1px; background: var(--border-solid); margin: 0 0 20px; }
   .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 11px; margin-bottom: 28px; }
-  .pricing-features li { font-size: 16px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
-  .pricing-features li.active { color: var(--text); }
+  .pricing-features li { font-size: 16px; color: #c0d0dc; display: flex; align-items: center; gap: 10px; }
+  .pricing-features li.active { color: #eef0f2; }
   .pricing-features li.active::before { content: '✓'; color: var(--green); font-size: 13px; font-weight: 700; flex-shrink: 0; }
   .pricing-features li:not(.active)::before { content: '✓'; color: var(--text-dim); opacity: 0.3; font-size: 13px; flex-shrink: 0; }
   .pricing-btn {
@@ -839,7 +835,7 @@ export default function LandingPage({ onEnterApp }) {
               { num: "03", title: "Open the GE and flip", desc: "Your GE slots sync in real time. Open the Trading Terminal, check the AI advisor, and start stacking gold.", icon: "📈" },
             ].map((step, i) => (
               <div key={i} className="feature-card" style={{ textAlign: "left" }}>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", letterSpacing: "3px", color: "var(--gold)", marginBottom: "16px", fontWeight: 700 }}>{step.num}</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "26px", letterSpacing: "4px", color: "var(--gold)", marginBottom: "20px", fontWeight: 800 }}>{step.num}</div>
                 <span className="feature-icon">{step.icon}</span>
                 <div className="feature-title">{step.title}</div>
                 <div className="feature-desc">{step.desc}</div>
@@ -848,7 +844,7 @@ export default function LandingPage({ onEnterApp }) {
           </div>
           <div style={{ marginTop: "48px" }}>
             <a href="https://github.com/runelite/plugin-hub/pull/11028" target="_blank" rel="noreferrer" className="btn-secondary" style={{ fontSize: "15px", padding: "13px 32px", display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none", color: "var(--text)", borderColor: "rgba(255,255,255,0.2)" }}>
-              View Plugin Hub PR #11114 →
+              View Plugin Hub PR #11028 →
             </a>
           </div>
         </div>
@@ -869,25 +865,36 @@ export default function LandingPage({ onEnterApp }) {
               <div className="comparison-vs-pill them">Other Tools</div>
             </div>
           </div>
-          <div className="cmp-grid">
+          {/* Column headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 110px 110px", gap: "16px", padding: "0 20px 12px", marginTop: "20px" }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1.5px" }}>Feature</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1.5px", textAlign: "center" }}>RuneTrader</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1.5px", textAlign: "center" }}>Others</span>
+          </div>
+          <div className="cmp-list">
             {[
-              { icon:"📡", title:"Live GE Slot Sync",       desc:"Your active offers sync in real time via the RuneLite plugin. P&L, fill status and drift alerts update live.",           us:"✅ Yes", them:"⚠ Some",    exclusive:false },
-              { icon:"🤖", title:"AI with Live Context",    desc:"Ask questions in plain English with your current GE positions as context. No other tool does this.",                    us:"✅ Yes", them:"❌ No",     exclusive:true  },
-              { icon:"📊", title:"Trading Terminal",        desc:"A self-contained command centre for managing active flips — operations, analytics, alerts and picks in one screen.",    us:"✅ Yes", them:"❌ No",     exclusive:true  },
-              { icon:"⚡", title:"Drift Alerts",            desc:"Per-slot warnings when your offer price falls behind the market with exact relist prices to beat the queue.",           us:"✅ Yes", them:"❌ No",     exclusive:true  },
-              { icon:"🔔", title:"Smart Alerts",            desc:"Margin spikes, volume surges, dump detection and price crashes fired instantly — not just price crossing a threshold.",us:"✅ Yes", them:"⚠ Rarely", exclusive:false },
-              { icon:"📈", title:"Real-Time Margin Engine", desc:"4,525 items with GE tax already factored into every margin, ROI and GP/hr figure. Updated every 60 seconds.",         us:"✅ Yes", them:"⚠ Varies", exclusive:false },
-              { icon:"💬", title:"Plain English Questions", desc:"'I have 5M gp, what should I flip right now?' — answered with your live data, not generic advice.",                    us:"✅ Yes", them:"❌ No",     exclusive:true  },
-              { icon:"🆓", title:"Free Tier with Real Value",desc:"The free tier includes full market access, AI advisor, flip tracker and smart alerts. Not a trial — genuinely free.", us:"✅ Yes", them:"⚠ Limited", exclusive:false },
-              { icon:"🧪", title:"Recipes & Arbitrage",     desc:"GE sets, potion decanting, high alch, death's coffer — every conversion route with live profit and volume.",          us:"✅ Yes", them:"❌ No",     exclusive:true  },
+              { icon:"📡", title:"Live GE Slot Sync",        desc:"Real-time offer sync via RuneLite. P&L, fill status and drift alerts update live.",             us:"Yes",     them:"Some",    thType:"partial", exclusive:false },
+              { icon:"🤖", title:"AI with Live GE Context",  desc:"Ask questions in plain English with your actual positions as context. No other tool does this.", us:"Yes",     them:"No",      thType:"no",      exclusive:true  },
+              { icon:"📊", title:"Trading Terminal",         desc:"A full command centre for managing active flips — operations, analytics, alerts and picks.",      us:"Yes",     them:"No",      thType:"no",      exclusive:true  },
+              { icon:"⚡", title:"Per-Slot Drift Alerts",    desc:"Warns when your offer falls behind market with exact relist prices to beat the queue.",           us:"Yes",     them:"No",      thType:"no",      exclusive:true  },
+              { icon:"🔔", title:"Smart Alerts",             desc:"Margin spikes, volume surges, dump detection and crashes — not just basic price alerts.",         us:"Yes",     them:"Rarely",  thType:"partial", exclusive:false },
+              { icon:"💬", title:"Plain English Questions",  desc:"'I have 5M gp, what should I flip?' — answered with your live data, not generic advice.",        us:"Yes",     them:"No",      thType:"no",      exclusive:true  },
+              { icon:"🧪", title:"Recipes & Arbitrage",      desc:"GE sets, potions, high alch, death's coffer — every conversion with live profit and volume.",    us:"Yes",     them:"No",      thType:"no",      exclusive:true  },
+              { icon:"🆓", title:"Free Tier with Real Value",desc:"Full market access, AI advisor, flip tracker and smart alerts. Not a trial — genuinely free.",   us:"Yes",     them:"Limited", thType:"partial", exclusive:false },
             ].map((c, i) => (
-              <div key={i} className={`cmp-card${c.exclusive ? " exclusive" : ""}`}>
-                <span className="cmp-icon">{c.icon}</span>
-                <div className="cmp-title">{c.title}</div>
-                <div className="cmp-desc">{c.desc}</div>
-                <div className="cmp-status">
-                  <span className="cmp-check yes">✓ {c.us.replace("✅ ","")}</span>
-                  <span className={`cmp-check ${c.them.startsWith("❌") ? "no" : "partial"}`}>{c.them.startsWith("❌") ? "✗" : "~"} Others: {c.them.replace("❌ ","").replace("✅ ","").replace("⚠ ","")}</span>
+              <div key={i} className={`cmp-row${c.exclusive ? " exclusive" : ""}`}>
+                <div className="cmp-row-left">
+                  <span className="cmp-row-icon">{c.icon}</span>
+                  <div className="cmp-row-text">
+                    <div className="cmp-row-title">{c.title}{c.exclusive && <span className="cmp-exclusive-tag">ONLY US</span>}</div>
+                    <div className="cmp-row-desc">{c.desc}</div>
+                  </div>
+                </div>
+                <div className="cmp-col">
+                  <span className="cmp-badge yes">✓ {c.us}</span>
+                </div>
+                <div className="cmp-col">
+                  <span className={`cmp-badge ${c.thType}`}>{c.thType === "no" ? "✗" : "~"} {c.them}</span>
                 </div>
               </div>
             ))}
