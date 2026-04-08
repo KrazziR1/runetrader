@@ -8899,7 +8899,10 @@ RULES:
                                 </button>
                               ))}
                             </div>
-                            {processedRecipes.slice(0, recipeRowsShown).map((r, i) => (
+                            {processedRecipes.slice(0, recipeRowsShown).map((r, i) => {
+                              // Extract dose number from item name e.g. "Prayer potion(3)" → "3"
+                              const getDose = (name) => { const m = name?.match(/\((\d+)\)$/); return m ? m[1] : null; };
+                              return (
                               <div key={i} className="recipe-row" style={{ gridTemplateColumns: RECIPE_COLS }}>
                                 <div>
                                   <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{r.name}</div>
@@ -8908,22 +8911,30 @@ RULES:
                                 <div className="recipe-icons">
                                   {(r.inputs || []).map((inp, j) => {
                                     const item = lookupItem(inp);
+                                    const dose = getDose(inp.name);
                                     return (
-                                      <span key={j} title={`${inp.name}${inp.quantity > 1 ? ` ×${inp.quantity}` : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: "1px" }}>
-                                        <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
-                                        {(inp.quantity || 1) > 1 && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700 }}>×{inp.quantity}</span>}
+                                      <span key={j} title={`${inp.name}${inp.quantity > 1 ? ` ×${inp.quantity}` : ""}`} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "1px", position: "relative" }}>
+                                        <span style={{ display: "inline-flex", alignItems: "center", gap: "1px" }}>
+                                          {(inp.quantity || 1) > 1 && <span style={{ fontSize: "10px", color: "var(--text-dim)", fontWeight: 600 }}>{inp.quantity}×</span>}
+                                          <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                        </span>
+                                        {dose && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700, lineHeight: 1 }}>({dose})</span>}
                                       </span>
                                     );
                                   })}
                                 </div>
                                 <div className="recipe-icons">
-                                  <span style={{ color: "var(--text-dim)", fontSize: "11px", marginRight: "2px" }}>→</span>
+                                  <span style={{ color: "var(--text-dim)", fontSize: "13px", marginRight: "4px" }}>→</span>
                                   {(r.outputs || []).map((out, j) => {
                                     const item = lookupItem(out);
+                                    const dose = getDose(out.name);
                                     return (
-                                      <span key={j} title={`${out.name}${out.quantity > 1 ? ` ×${out.quantity}` : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: "1px" }}>
-                                        <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
-                                        {(out.quantity || 1) > 1 && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700 }}>×{out.quantity}</span>}
+                                      <span key={j} title={`${out.name}${out.quantity > 1 ? ` ×${out.quantity}` : ""}`} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "1px", position: "relative" }}>
+                                        <span style={{ display: "inline-flex", alignItems: "center", gap: "1px" }}>
+                                          {(out.quantity || 1) > 1 && <span style={{ fontSize: "10px", color: "var(--text-dim)", fontWeight: 600 }}>{out.quantity}×</span>}
+                                          <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                        </span>
+                                        {dose && <span style={{ fontSize: "9px", color: "var(--green)", fontWeight: 700, lineHeight: 1 }}>({dose})</span>}
                                       </span>
                                     );
                                   })}
@@ -8937,7 +8948,8 @@ RULES:
                                   {r.roi >= 0 ? "+" : ""}{r.roi}%
                                 </span>
                               </div>
-                            ))}
+                              );
+                            })}
                           </div>
                           {processedRecipes.length > recipeRowsShown && (
                             <div style={{ textAlign: "center", padding: "8px 0" }}>
