@@ -712,7 +712,7 @@ const STYLES = `
   .merchant-ai-bubble .bubble-ping { position: absolute; inset: -4px; border-radius: 50%; border: 2px solid var(--gold); animation: bubblePing 2s ease-out infinite; opacity: 0; }
   @keyframes bubblePing { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.6); opacity: 0; } }
   @keyframes bubblePop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  .merchant-ai-modal { position: fixed; bottom: 92px; right: 28px; z-index: 9001; width: 380px; height: 520px; background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 16px; display: flex; flex-direction: column; box-shadow: 0 8px 40px rgba(0,0,0,0.6); animation: modalSlideUp 0.3s cubic-bezier(0.34,1.56,0.64,1) both; overflow: hidden; }
+  .merchant-ai-modal { position: fixed; bottom: 92px; right: 28px; transition: right 0.25s ease; z-index: 9001; width: 380px; height: 520px; background: var(--bg2); border: 1px solid var(--gold-dim); border-radius: 16px; display: flex; flex-direction: column; box-shadow: 0 8px 40px rgba(0,0,0,0.6); animation: modalSlideUp 0.3s cubic-bezier(0.34,1.56,0.64,1) both; overflow: hidden; }
   @keyframes modalSlideUp { from { transform: translateY(20px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
   .merchant-ai-modal-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); background: rgba(201,168,76,0.06); flex-shrink: 0; }
   .merchant-ai-modal-header h4 { margin: 0; font-size: 14px; color: var(--gold); font-weight: 700; }
@@ -10192,7 +10192,7 @@ RULES:
 
         {/* ── GLOBAL AI BUBBLE (all pages) ── */}
         {!merchantAIOpen && (
-          <div className="merchant-ai-bubble" onClick={() => {
+          <div className="merchant-ai-bubble" style={{ right: showPlayerCard ? "408px" : "28px" }} onClick={() => {
             // Refresh welcome if this is the first open (only 1 message = the welcome)
             if (messages.length === 1) setMessages([getWelcomeMsg()]);
             setMerchantAIOpen(true);
@@ -10202,7 +10202,7 @@ RULES:
           </div>
         )}
         {merchantAIOpen && (
-          <div className="merchant-ai-modal">
+          <div className="merchant-ai-modal" style={{ right: showPlayerCard ? "408px" : "28px" }}>
             <div className="merchant-ai-modal-header">
               <span style={{ fontSize: 20 }}>📈</span>
               <div><h4>AI Advisor</h4><p>Live GE data · Powered by Claude</p></div>
