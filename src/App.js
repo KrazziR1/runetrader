@@ -9087,7 +9087,7 @@ RULES:
                         {CATS.map(c => (
                           <button key={c.id}
                             onClick={() => { setRecipeCategory(c.id); setRecipeDirection("all"); setRecipeRowsShown(100); setRecipeExpandedPotions(new Set()); }}
-                            style={{ padding: "5px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", border: recipeCategory === c.id ? "1px solid var(--gold)" : "1px solid var(--border)", background: recipeCategory === c.id ? "rgba(201,168,76,0.12)" : "transparent", color: recipeCategory === c.id ? "var(--gold)" : "var(--text-dim)" }}>
+                            style={{ padding: "6px 16px", borderRadius: "6px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", border: recipeCategory === c.id ? "1px solid var(--gold)" : "1px solid var(--border)", background: recipeCategory === c.id ? "rgba(201,168,76,0.12)" : "transparent", color: recipeCategory === c.id ? "var(--gold)" : "var(--text-dim)" }}>
                             {c.label}
                           </button>
                         ))}
@@ -9098,7 +9098,7 @@ RULES:
                             <span style={{ color: "var(--border)", fontSize: "16px", lineHeight: 1 }}>|</span>
                             {DIR_OPTS.filter(d => d.id !== "all").map(d => (
                               <button key={d.id} onClick={() => { setRecipeDirection(recipeDirection === d.id ? "all" : d.id); setRecipeRowsShown(100); }}
-                                style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: recipeDirection === d.id ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: recipeDirection === d.id ? "rgba(52,152,219,0.1)" : "transparent", color: recipeDirection === d.id ? "#3498db" : "var(--text-dim)" }}>
+                                style={{ padding: "6px 14px", borderRadius: "5px", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: recipeDirection === d.id ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: recipeDirection === d.id ? "rgba(52,152,219,0.1)" : "transparent", color: recipeDirection === d.id ? "#3498db" : "var(--text-dim)" }}>
                                 {d.label}
                               </button>
                             ))}
@@ -9106,14 +9106,14 @@ RULES:
                         )}
 
                         {/* Profitable only toggle */}
-                        <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: recipeHideLosses ? "var(--gold)" : "var(--text-dim)", cursor: "pointer", userSelect: "none", padding: "4px 10px", borderRadius: "5px", border: recipeHideLosses ? "1px solid rgba(201,168,76,0.4)" : "1px solid var(--border)", background: recipeHideLosses ? "rgba(201,168,76,0.08)" : "transparent", marginLeft: "4px" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "13px", color: recipeHideLosses ? "var(--gold)" : "var(--text-dim)", cursor: "pointer", userSelect: "none", padding: "6px 14px", borderRadius: "5px", border: recipeHideLosses ? "1px solid rgba(201,168,76,0.4)" : "1px solid var(--border)", background: recipeHideLosses ? "rgba(201,168,76,0.08)" : "transparent", marginLeft: "4px" }}>
                           <input type="checkbox" checked={recipeHideLosses} onChange={e => { setRecipeHideLosses(e.target.checked); setRecipeRowsShown(100); }} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
                           Profitable only
                         </label>
 
                         {/* ⚙ Filters button */}
                         <button onClick={() => setShowRecipeFilters(v => !v)}
-                          style={{ padding: "4px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: showRecipeFilters || advRecipeFilterCount > 0 ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: showRecipeFilters || advRecipeFilterCount > 0 ? "rgba(52,152,219,0.1)" : "transparent", color: showRecipeFilters || advRecipeFilterCount > 0 ? "#3498db" : "var(--text-dim)", display: "flex", alignItems: "center", gap: "5px" }}>
+                          style={{ padding: "6px 14px", borderRadius: "6px", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: showRecipeFilters || advRecipeFilterCount > 0 ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: showRecipeFilters || advRecipeFilterCount > 0 ? "rgba(52,152,219,0.1)" : "transparent", color: showRecipeFilters || advRecipeFilterCount > 0 ? "#3498db" : "var(--text-dim)", display: "flex", alignItems: "center", gap: "5px" }}>
                           ⚙ Filters {advRecipeFilterCount > 0 && <span style={{ background: "#3498db", color: "#fff", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>{advRecipeFilterCount}</span>}
                         </button>
 
@@ -9168,8 +9168,8 @@ RULES:
                       )}
 
                       {/* Data disclaimer */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", background: "rgba(52,152,219,0.06)", border: "1px solid rgba(52,152,219,0.15)", borderRadius: "8px", fontSize: "12px", color: "var(--text-dim)" }}>
-                        <span style={{ color: "#3498db", flexShrink: 0 }}>ℹ</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: "rgba(52,152,219,0.06)", border: "1px solid rgba(52,152,219,0.15)", borderRadius: "8px", fontSize: "14px", color: "var(--text-dim)" }}>
+                        <span style={{ color: "#3498db", flexShrink: 0, fontSize: "15px" }}>ℹ</span>
                         <span>Only recipes where all items have recent GE trades are shown. Items that haven't traded in 24–48hrs are excluded — actual opportunities may be higher. Prices update every 60 seconds.</span>
                       </div>
 
@@ -9212,7 +9212,7 @@ RULES:
                                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                           <span style={{ fontSize: "11px", color: "var(--text-dim)", transition: "transform 0.15s", display: "inline-block", transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
                                           <span style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{potionName}</span>
-                                          <span style={{ fontSize: "10px", color: "var(--text-dim)", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 5px" }}>{recipes.length} combos</span>
+                                          <span style={{ fontSize: "12px", color: "var(--text-dim)", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "4px", padding: "2px 7px", fontWeight: 500 }}>{recipes.length} combos</span>
                                         </div>
                                         <span /><span />
                                         <span />
@@ -9291,7 +9291,7 @@ RULES:
                                           )}
                                         </div>
                                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px", flexWrap: "wrap", paddingLeft: "16px" }}>
-                                          {r.skill && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
+                                          {r.skill && r.skill !== "Grand Exchange" && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
                                           {r.isMembersOnly && <span style={{ fontSize: "10px", color: "#c9a84c", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "3px", padding: "0 4px" }}>P2P</span>}
                                         </div>
                                       </div>
