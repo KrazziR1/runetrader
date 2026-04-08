@@ -7,7 +7,7 @@ const CATEGORIES = ["All", "Weapons", "Armour", "3rd Age", "Raids", "Skilling", 
 const MAX_CASH = 2_147_483_647;
 const DISCORD_SERVER_ID  = "1459412578999599216";
 const DISCORD_CHANNEL_ID = "1491584732025065544";
-const DISCORD_INVITE     = "https://discord.gg/runetrader";
+// const DISCORD_INVITE  = "https://discord.gg/runetrader"; // reserved for future join prompt
 const DISCORD_TRADE_URL  = `https://discord.com/channels/${DISCORD_SERVER_ID}/${DISCORD_CHANNEL_ID}`;
 
 // ── Parse k/m/b shorthand: "100k" → 100000, "2.5m" → 2500000 ──
