@@ -5085,110 +5085,151 @@ export default function RuneTrader() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   useEffect(() => { setMarketRowsShown(200); }, [categoryFilter]);
 
-  // ── Static GE set exchange data — all known sets ──
+  // ── GE set exchange data — sourced from wiki mapping ──
   const GE_SETS = [
     // Bronze
-    { set: "Bronze armour set (lg)", pieces: ["Bronze full helm","Bronze platebody","Bronze platelegs","Bronze kiteshield"] },
-    { set: "Bronze armour set (sk)", pieces: ["Bronze full helm","Bronze platebody","Bronze plateskirt","Bronze kiteshield"] },
+    { set: "Bronze set (lg)", pieces: ["Bronze full helm","Bronze platebody","Bronze platelegs","Bronze kiteshield"] },
+    { set: "Bronze set (sk)", pieces: ["Bronze full helm","Bronze platebody","Bronze plateskirt","Bronze kiteshield"] },
+    { set: "Bronze trimmed set (lg)", pieces: ["Bronze full helm (t)","Bronze platebody (t)","Bronze platelegs (t)","Bronze kiteshield (t)"] },
+    { set: "Bronze trimmed set (sk)", pieces: ["Bronze full helm (t)","Bronze platebody (t)","Bronze plateskirt (t)","Bronze kiteshield (t)"] },
+    { set: "Bronze gold-trimmed set (lg)", pieces: ["Bronze full helm (g)","Bronze platebody (g)","Bronze platelegs (g)","Bronze kiteshield (g)"] },
+    { set: "Bronze gold-trimmed set (sk)", pieces: ["Bronze full helm (g)","Bronze platebody (g)","Bronze plateskirt (g)","Bronze kiteshield (g)"] },
     // Iron
-    { set: "Iron armour set (lg)", pieces: ["Iron full helm","Iron platebody","Iron platelegs","Iron kiteshield"] },
-    { set: "Iron armour set (sk)", pieces: ["Iron full helm","Iron platebody","Iron plateskirt","Iron kiteshield"] },
+    { set: "Iron set (lg)", pieces: ["Iron full helm","Iron platebody","Iron platelegs","Iron kiteshield"] },
+    { set: "Iron set (sk)", pieces: ["Iron full helm","Iron platebody","Iron plateskirt","Iron kiteshield"] },
+    { set: "Iron trimmed set (lg)", pieces: ["Iron full helm (t)","Iron platebody (t)","Iron platelegs (t)","Iron kiteshield (t)"] },
+    { set: "Iron trimmed set (sk)", pieces: ["Iron full helm (t)","Iron platebody (t)","Iron plateskirt (t)","Iron kiteshield (t)"] },
+    { set: "Iron gold-trimmed set (lg)", pieces: ["Iron full helm (g)","Iron platebody (g)","Iron platelegs (g)","Iron kiteshield (g)"] },
+    { set: "Iron gold-trimmed set (sk)", pieces: ["Iron full helm (g)","Iron platebody (g)","Iron plateskirt (g)","Iron kiteshield (g)"] },
     // Steel
-    { set: "Steel armour set (lg)", pieces: ["Steel full helm","Steel platebody","Steel platelegs","Steel kiteshield"] },
-    { set: "Steel armour set (sk)", pieces: ["Steel full helm","Steel platebody","Steel plateskirt","Steel kiteshield"] },
+    { set: "Steel set (lg)", pieces: ["Steel full helm","Steel platebody","Steel platelegs","Steel kiteshield"] },
+    { set: "Steel set (sk)", pieces: ["Steel full helm","Steel platebody","Steel plateskirt","Steel kiteshield"] },
+    { set: "Steel trimmed set (lg)", pieces: ["Steel full helm (t)","Steel platebody (t)","Steel platelegs (t)","Steel kiteshield (t)"] },
+    { set: "Steel trimmed set (sk)", pieces: ["Steel full helm (t)","Steel platebody (t)","Steel plateskirt (t)","Steel kiteshield (t)"] },
+    { set: "Steel gold-trimmed set (lg)", pieces: ["Steel full helm (g)","Steel platebody (g)","Steel platelegs (g)","Steel kiteshield (g)"] },
+    { set: "Steel gold-trimmed set (sk)", pieces: ["Steel full helm (g)","Steel platebody (g)","Steel plateskirt (g)","Steel kiteshield (g)"] },
     // Black
-    { set: "Black armour set (lg)", pieces: ["Black full helm","Black platebody","Black platelegs","Black kiteshield"] },
-    { set: "Black armour set (sk)", pieces: ["Black full helm","Black platebody","Black plateskirt","Black kiteshield"] },
-    // Black trimmed
-    { set: "Black armour set (t) (lg)", pieces: ["Black full helm (t)","Black platebody (t)","Black platelegs (t)","Black kiteshield (t)"] },
-    { set: "Black armour set (t) (sk)", pieces: ["Black full helm (t)","Black platebody (t)","Black plateskirt (t)","Black kiteshield (t)"] },
-    // Black gold-trimmed
-    { set: "Black armour set (g) (lg)", pieces: ["Black full helm (g)","Black platebody (g)","Black platelegs (g)","Black kiteshield (g)"] },
-    { set: "Black armour set (g) (sk)", pieces: ["Black full helm (g)","Black platebody (g)","Black plateskirt (g)","Black kiteshield (g)"] },
+    { set: "Black set (lg)", pieces: ["Black full helm","Black platebody","Black platelegs","Black kiteshield"] },
+    { set: "Black set (sk)", pieces: ["Black full helm","Black platebody","Black plateskirt","Black kiteshield"] },
+    { set: "Black trimmed set (lg)", pieces: ["Black full helm (t)","Black platebody (t)","Black platelegs (t)","Black kiteshield (t)"] },
+    { set: "Black trimmed set (sk)", pieces: ["Black full helm (t)","Black platebody (t)","Black plateskirt (t)","Black kiteshield (t)"] },
+    { set: "Black gold-trimmed set (lg)", pieces: ["Black full helm (g)","Black platebody (g)","Black platelegs (g)","Black kiteshield (g)"] },
+    { set: "Black gold-trimmed set (sk)", pieces: ["Black full helm (g)","Black platebody (g)","Black plateskirt (g)","Black kiteshield (g)"] },
     // Mithril
-    { set: "Mithril armour set (lg)", pieces: ["Mithril full helm","Mithril platebody","Mithril platelegs","Mithril kiteshield"] },
-    { set: "Mithril armour set (sk)", pieces: ["Mithril full helm","Mithril platebody","Mithril plateskirt","Mithril kiteshield"] },
-    // Mithril trimmed
-    { set: "Mithril armour set (t) (lg)", pieces: ["Mithril full helm (t)","Mithril platebody (t)","Mithril platelegs (t)","Mithril kiteshield (t)"] },
-    { set: "Mithril armour set (t) (sk)", pieces: ["Mithril full helm (t)","Mithril platebody (t)","Mithril plateskirt (t)","Mithril kiteshield (t)"] },
-    { set: "Mithril armour set (g) (lg)", pieces: ["Mithril full helm (g)","Mithril platebody (g)","Mithril platelegs (g)","Mithril kiteshield (g)"] },
-    { set: "Mithril armour set (g) (sk)", pieces: ["Mithril full helm (g)","Mithril platebody (g)","Mithril plateskirt (g)","Mithril kiteshield (g)"] },
+    { set: "Mithril set (lg)", pieces: ["Mithril full helm","Mithril platebody","Mithril platelegs","Mithril kiteshield"] },
+    { set: "Mithril set (sk)", pieces: ["Mithril full helm","Mithril platebody","Mithril plateskirt","Mithril kiteshield"] },
+    { set: "Mithril trimmed set (lg)", pieces: ["Mithril full helm (t)","Mithril platebody (t)","Mithril platelegs (t)","Mithril kiteshield (t)"] },
+    { set: "Mithril trimmed set (sk)", pieces: ["Mithril full helm (t)","Mithril platebody (t)","Mithril plateskirt (t)","Mithril kiteshield (t)"] },
+    { set: "Mithril gold-trimmed set (lg)", pieces: ["Mithril full helm (g)","Mithril platebody (g)","Mithril platelegs (g)","Mithril kiteshield (g)"] },
+    { set: "Mithril gold-trimmed set (sk)", pieces: ["Mithril full helm (g)","Mithril platebody (g)","Mithril plateskirt (g)","Mithril kiteshield (g)"] },
     // Adamant
-    { set: "Adamant armour set (lg)", pieces: ["Adamant full helm","Adamant platebody","Adamant platelegs","Adamant kiteshield"] },
-    { set: "Adamant armour set (sk)", pieces: ["Adamant full helm","Adamant platebody","Adamant plateskirt","Adamant kiteshield"] },
-    // Adamant trimmed
-    { set: "Adamant armour set (t) (lg)", pieces: ["Adamant full helm (t)","Adamant platebody (t)","Adamant platelegs (t)","Adamant kiteshield (t)"] },
-    { set: "Adamant armour set (t) (sk)", pieces: ["Adamant full helm (t)","Adamant platebody (t)","Adamant plateskirt (t)","Adamant kiteshield (t)"] },
-    { set: "Adamant armour set (g) (lg)", pieces: ["Adamant full helm (g)","Adamant platebody (g)","Adamant platelegs (g)","Adamant kiteshield (g)"] },
-    { set: "Adamant armour set (g) (sk)", pieces: ["Adamant full helm (g)","Adamant platebody (g)","Adamant plateskirt (g)","Adamant kiteshield (g)"] },
+    { set: "Adamant set (lg)", pieces: ["Adamant full helm","Adamant platebody","Adamant platelegs","Adamant kiteshield"] },
+    { set: "Adamant set (sk)", pieces: ["Adamant full helm","Adamant platebody","Adamant plateskirt","Adamant kiteshield"] },
+    { set: "Adamant trimmed set (lg)", pieces: ["Adamant full helm (t)","Adamant platebody (t)","Adamant platelegs (t)","Adamant kiteshield (t)"] },
+    { set: "Adamant trimmed set (sk)", pieces: ["Adamant full helm (t)","Adamant platebody (t)","Adamant plateskirt (t)","Adamant kiteshield (t)"] },
+    { set: "Adamant gold-trimmed set (lg)", pieces: ["Adamant full helm (g)","Adamant platebody (g)","Adamant platelegs (g)","Adamant kiteshield (g)"] },
+    { set: "Adamant gold-trimmed set (sk)", pieces: ["Adamant full helm (g)","Adamant platebody (g)","Adamant plateskirt (g)","Adamant kiteshield (g)"] },
     // Rune
     { set: "Rune armour set (lg)", pieces: ["Rune full helm","Rune platebody","Rune platelegs","Rune kiteshield"] },
     { set: "Rune armour set (sk)", pieces: ["Rune full helm","Rune platebody","Rune plateskirt","Rune kiteshield"] },
-    // Rune trimmed
-    { set: "Rune armour set (t) (lg)", pieces: ["Rune full helm (t)","Rune platebody (t)","Rune platelegs (t)","Rune kiteshield (t)"] },
-    { set: "Rune armour set (t) (sk)", pieces: ["Rune full helm (t)","Rune platebody (t)","Rune plateskirt (t)","Rune kiteshield (t)"] },
-    { set: "Rune armour set (g) (lg)", pieces: ["Rune full helm (g)","Rune platebody (g)","Rune platelegs (g)","Rune kiteshield (g)"] },
-    { set: "Rune armour set (g) (sk)", pieces: ["Rune full helm (g)","Rune platebody (g)","Rune plateskirt (g)","Rune kiteshield (g)"] },
+    { set: "Rune trimmed set (lg)", pieces: ["Rune full helm (t)","Rune platebody (t)","Rune platelegs (t)","Rune kiteshield (t)"] },
+    { set: "Rune trimmed set (sk)", pieces: ["Rune full helm (t)","Rune platebody (t)","Rune plateskirt (t)","Rune kiteshield (t)"] },
+    { set: "Rune gold-trimmed set (lg)", pieces: ["Rune full helm (g)","Rune platebody (g)","Rune platelegs (g)","Rune kiteshield (g)"] },
+    { set: "Rune gold-trimmed set (sk)", pieces: ["Rune full helm (g)","Rune platebody (g)","Rune plateskirt (g)","Rune kiteshield (g)"] },
     // Gilded
     { set: "Gilded armour set (lg)", pieces: ["Gilded full helm","Gilded platebody","Gilded platelegs","Gilded kiteshield"] },
     { set: "Gilded armour set (sk)", pieces: ["Gilded full helm","Gilded platebody","Gilded plateskirt","Gilded kiteshield"] },
-    // God armour
+    { set: "Gilded dragonhide set", pieces: ["Gilded coif","Gilded d'hide body","Gilded chaps","Gilded vambraces","Gilded d'hide boots"] },
+    // Dragon
+    { set: "Dragon armour set (lg)", pieces: ["Dragon full helm","Dragon platebody","Dragon platelegs","Dragon kiteshield"] },
+    { set: "Dragon armour set (sk)", pieces: ["Dragon full helm","Dragon platebody","Dragon plateskirt","Dragon kiteshield"] },
+    // God rune sets
+    { set: "Guthix armour set (lg)", pieces: ["Guthix full helm","Guthix platebody","Guthix platelegs","Guthix kiteshield"] },
+    { set: "Guthix armour set (sk)", pieces: ["Guthix full helm","Guthix platebody","Guthix plateskirt","Guthix kiteshield"] },
+    { set: "Saradomin armour set (lg)", pieces: ["Saradomin full helm","Saradomin platebody","Saradomin platelegs","Saradomin kiteshield"] },
+    { set: "Saradomin armour set (sk)", pieces: ["Saradomin full helm","Saradomin platebody","Saradomin plateskirt","Saradomin kiteshield"] },
+    { set: "Zamorak armour set (lg)", pieces: ["Zamorak full helm","Zamorak platebody","Zamorak platelegs","Zamorak kiteshield"] },
+    { set: "Zamorak armour set (sk)", pieces: ["Zamorak full helm","Zamorak platebody","Zamorak plateskirt","Zamorak kiteshield"] },
+    { set: "Armadyl rune armour set (lg)", pieces: ["Armadyl full helm","Armadyl platebody","Armadyl platelegs","Armadyl kiteshield"] },
+    { set: "Armadyl rune armour set (sk)", pieces: ["Armadyl full helm","Armadyl platebody","Armadyl plateskirt","Armadyl kiteshield"] },
+    { set: "Bandos rune armour set (lg)", pieces: ["Bandos full helm","Bandos platebody","Bandos platelegs","Bandos kiteshield"] },
+    { set: "Bandos rune armour set (sk)", pieces: ["Bandos full helm","Bandos platebody","Bandos plateskirt","Bandos kiteshield"] },
+    { set: "Ancient rune armour set (lg)", pieces: ["Ancient full helm","Ancient platebody","Ancient platelegs","Ancient kiteshield"] },
+    { set: "Ancient rune armour set (sk)", pieces: ["Ancient full helm","Ancient platebody","Ancient plateskirt","Ancient kiteshield"] },
+    // High-level god armour
     { set: "Bandos armour set", pieces: ["Bandos chestplate","Bandos tassets","Bandos boots"] },
     { set: "Armadyl armour set", pieces: ["Armadyl helmet","Armadyl chestplate","Armadyl chainskirt"] },
     { set: "Justiciar armour set", pieces: ["Justiciar faceguard","Justiciar chestguard","Justiciar legguards"] },
     { set: "Inquisitor's armour set", pieces: ["Inquisitor's great helm","Inquisitor's hauberk","Inquisitor's plateskirt"] },
     { set: "Ancestral robes set", pieces: ["Ancestral hat","Ancestral robe top","Ancestral robe bottom"] },
     { set: "Torva armour set", pieces: ["Torva full helm","Torva platebody","Torva platelegs"] },
-    { set: "Void knight set", pieces: ["Void knight top","Void knight robe","Void knight gloves","Void knight mace"] },
-    // Ranger sets
-    { set: "Robin Hood set", pieces: ["Robin hood hat","Ranger's tunic","Ranger boots","Green d'hide chaps"] },
+    { set: "Virtus armour set", pieces: ["Virtus mask","Virtus robe top","Virtus robe bottom"] },
+    { set: "Masori armour set (f)", pieces: ["Masori mask (f)","Masori body (f)","Masori chaps (f)"] },
+    // Barrows
+    { set: "Ahrim's armour set", pieces: ["Ahrim's hood","Ahrim's robetop","Ahrim's robeskirt","Ahrim's staff"] },
+    { set: "Dharok's armour set", pieces: ["Dharok's helm","Dharok's platebody","Dharok's platelegs","Dharok's greataxe"] },
+    { set: "Guthan's armour set", pieces: ["Guthan's helm","Guthan's platebody","Guthan's chainskirt","Guthan's warspear"] },
+    { set: "Karil's armour set", pieces: ["Karil's coif","Karil's leathertop","Karil's leatherskirt","Karil's crossbow"] },
+    { set: "Torag's armour set", pieces: ["Torag's helm","Torag's platebody","Torag's platelegs","Torag's hammers"] },
+    { set: "Verac's armour set", pieces: ["Verac's helm","Verac's brassard","Verac's plateskirt","Verac's flail"] },
     // Dragonhide
     { set: "Green dragonhide set", pieces: ["Green d'hide body","Green d'hide chaps","Green d'hide vambraces"] },
     { set: "Blue dragonhide set", pieces: ["Blue d'hide body","Blue d'hide chaps","Blue d'hide vambraces"] },
     { set: "Red dragonhide set", pieces: ["Red d'hide body","Red d'hide chaps","Red d'hide vambraces"] },
     { set: "Black dragonhide set", pieces: ["Black d'hide body","Black d'hide chaps","Black d'hide vambraces"] },
     // Blessed dragonhide
-    { set: "Guthix d'hide set", pieces: ["Guthix coif","Guthix d'hide body","Guthix chaps","Guthix bracers","Guthix d'hide boots"] },
-    { set: "Saradomin d'hide set", pieces: ["Saradomin coif","Saradomin d'hide body","Saradomin chaps","Saradomin bracers","Saradomin d'hide boots"] },
-    { set: "Zamorak d'hide set", pieces: ["Zamorak coif","Zamorak d'hide body","Zamorak chaps","Zamorak bracers","Zamorak d'hide boots"] },
-    { set: "Zaros d'hide set", pieces: ["Zaros coif","Zaros d'hide body","Zaros chaps","Zaros bracers","Zaros d'hide boots"] },
-    { set: "Armadyl d'hide set", pieces: ["Armadyl coif","Armadyl d'hide body","Armadyl chaps","Armadyl bracers","Armadyl d'hide boots"] },
-    { set: "Ancient d'hide set", pieces: ["Ancient coif","Ancient d'hide body","Ancient chaps","Ancient bracers","Ancient d'hide boots"] },
-    { set: "Bandos d'hide set", pieces: ["Bandos coif","Bandos d'hide body","Bandos chaps","Bandos bracers","Bandos d'hide boots"] },
-    // Mystic robes
-    { set: "Mystic robes set (blue)", pieces: ["Mystic hat","Mystic robe top","Mystic robe bottom","Mystic gloves","Mystic boots"] },
-    { set: "Mystic robes set (light)", pieces: ["Mystic hat (light)","Mystic robe top (light)","Mystic robe bottom (light)","Mystic gloves (light)","Mystic boots (light)"] },
-    { set: "Mystic robes set (dark)", pieces: ["Mystic hat (dark)","Mystic robe top (dark)","Mystic robe bottom (dark)","Mystic gloves (dark)","Mystic boots (dark)"] },
-    { set: "Mystic robes set (dusk)", pieces: ["Mystic hat (dusk)","Mystic robe top (dusk)","Mystic robe bottom (dusk)","Mystic gloves (dusk)","Mystic boots (dusk)"] },
-    // Infinity robes
-    { set: "Infinity robes set", pieces: ["Infinity hat","Infinity top","Infinity bottoms","Infinity gloves","Infinity boots"] },
-    // Splitbark
-    { set: "Splitbark armour set", pieces: ["Splitbark helm","Splitbark body","Splitbark legs","Splitbark gauntlets","Splitbark boots"] },
-    // Skeletal
+    { set: "Guthix dragonhide set", pieces: ["Guthix coif","Guthix d'hide body","Guthix chaps","Guthix bracers","Guthix d'hide boots"] },
+    { set: "Saradomin dragonhide set", pieces: ["Saradomin coif","Saradomin d'hide body","Saradomin chaps","Saradomin bracers","Saradomin d'hide boots"] },
+    { set: "Zamorak dragonhide set", pieces: ["Zamorak coif","Zamorak d'hide body","Zamorak chaps","Zamorak bracers","Zamorak d'hide boots"] },
+    { set: "Armadyl dragonhide set", pieces: ["Armadyl coif","Armadyl d'hide body","Armadyl chaps","Armadyl bracers","Armadyl d'hide boots"] },
+    { set: "Bandos dragonhide set", pieces: ["Bandos coif","Bandos d'hide body","Bandos chaps","Bandos bracers","Bandos d'hide boots"] },
+    { set: "Ancient dragonhide set", pieces: ["Ancient coif","Ancient d'hide body","Ancient chaps","Ancient bracers","Ancient d'hide boots"] },
+    // Mystic
+    { set: "Mystic set (blue)", pieces: ["Mystic hat","Mystic robe top","Mystic robe bottom","Mystic gloves","Mystic boots"] },
+    { set: "Mystic set (light)", pieces: ["Mystic hat (light)","Mystic robe top (light)","Mystic robe bottom (light)","Mystic gloves (light)","Mystic boots (light)"] },
+    { set: "Mystic set (dark)", pieces: ["Mystic hat (dark)","Mystic robe top (dark)","Mystic robe bottom (dark)","Mystic gloves (dark)","Mystic boots (dark)"] },
+    { set: "Mystic set (dusk)", pieces: ["Mystic hat (dusk)","Mystic robe top (dusk)","Mystic robe bottom (dusk)","Mystic gloves (dusk)","Mystic boots (dusk)"] },
+    // Skeletal / Spined / Rock-shell (Fremennik)
     { set: "Skeletal armour set", pieces: ["Skeletal helm","Skeletal body","Skeletal bottoms","Skeletal gloves","Skeletal boots"] },
-    // Spined
     { set: "Spined armour set", pieces: ["Spined helm","Spined body","Spined chaps","Spined gloves","Spined boots"] },
-    // Lunar
-    { set: "Lunar equipment set", pieces: ["Lunar helm","Lunar torso","Lunar legs","Lunar gloves","Lunar boots","Lunar amulet","Lunar ring","Lunar cape","Lunar staff"] },
-    // 3rd age
-    { set: "3rd age melee set", pieces: ["3rd age full helmet","3rd age platebody","3rd age platelegs","3rd age kiteshield"] },
-    { set: "3rd age range set", pieces: ["3rd age range coif","3rd age range top","3rd age range legs","3rd age vambraces"] },
-    { set: "3rd age mage set", pieces: ["3rd age mage hat","3rd age robe top","3rd age robe","3rd age amulet"] },
-    // Initiate/Proselyte
-    { set: "Initiate armour set (lg)", pieces: ["Initiate sallet","Initiate hauberk","Initiate cuisse"] },
-    { set: "Proselyte armour set (lg)", pieces: ["Proselyte sallet","Proselyte hauberk","Proselyte cuisse"] },
-    { set: "Proselyte armour set (sk)", pieces: ["Proselyte sallet","Proselyte hauberk","Proselyte tasset"] },
-    // Shayzien
-    { set: "Shayzien armour set (1)", pieces: ["Shayzien helm (1)","Shayzien body (1)","Shayzien legs (1)","Shayzien gloves (1)","Shayzien boots (1)"] },
-    { set: "Shayzien armour set (5)", pieces: ["Shayzien helm (5)","Shayzien body (5)","Shayzien legs (5)","Shayzien gloves (5)","Shayzien boots (5)"] },
-    // Xerician
-    { set: "Xerician set", pieces: ["Xerician hat","Xerician top","Xerician bottom"] },
+    { set: "Rock-shell armour set", pieces: ["Rock-shell helm","Rock-shell plate","Rock-shell legs","Rock-shell gloves","Rock-shell boots"] },
     // Obsidian
     { set: "Obsidian armour set", pieces: ["Obsidian helmet","Obsidian platebody","Obsidian platelegs"] },
-    // Granite
-    { set: "Granite armour set", pieces: ["Granite helm","Granite platebody","Granite platelegs"] },
-    // Fremennik
-    { set: "Dagannoth hide set", pieces: ["Dagannoth helm","Dagannoth chest","Dagannoth legs","Dagannoth boots","Dagannoth ring"] },
+    // Bloodbark / Swampbark
+    { set: "Bloodbark armour set", pieces: ["Bloodbark helm","Bloodbark body","Bloodbark legs","Bloodbark gauntlets","Bloodbark boots"] },
+    { set: "Swampbark armour set", pieces: ["Swampbark helm","Swampbark body","Swampbark legs","Swampbark gauntlets","Swampbark boots"] },
+    // Dagon'hai
+    { set: "Dagon'hai robes set", pieces: ["Dagon'hai hat","Dagon'hai robe top","Dagon'hai robe bottom"] },
+    // Dragonstone
+    { set: "Dragonstone armour set", pieces: ["Dragonstone helm","Dragonstone platebody","Dragonstone platelegs","Dragonstone gauntlets","Dragonstone boots"] },
+    // Moon armour
+    { set: "Blood moon armour set", pieces: ["Blood moon helm","Blood moon chestplate","Blood moon tassets"] },
+    { set: "Blue moon armour set", pieces: ["Blue moon helm","Blue moon chestplate","Blue moon tassets"] },
+    { set: "Eclipse moon armour set", pieces: ["Eclipse moon helm","Eclipse moon chestplate","Eclipse moon tassets"] },
+    // Sunfire fanatic
+    { set: "Sunfire fanatic armour set", pieces: ["Sunfire fanatic helm","Sunfire fanatic cuirass","Sunfire fanatic chausses"] },
+    // Oathplate
+    { set: "Oathplate armour set", pieces: ["Oathplate helm","Oathplate body","Oathplate legs"] },
+    // Hueycoatl
+    { set: "Hueycoatl hide armour set", pieces: ["Hueycoatl hide coif","Hueycoatl hide body","Hueycoatl hide chaps","Hueycoatl hide vambraces"] },
+    // Mixed hide
+    { set: "Mixed hide armour set", pieces: ["Mixed hide coif","Mixed hide top","Mixed hide trousers","Mixed hide vambraces","Mixed hide boots"] },
+    // Relic hunter sets (Trailblazer, Shattered, Twisted, Raging echoes, Trailblazer reloaded)
+    { set: "Trailblazer relic hunter (t1) armour set", pieces: ["Trailblazer relic hunter (t1) helm","Trailblazer relic hunter (t1) top","Trailblazer relic hunter (t1) trousers"] },
+    { set: "Trailblazer relic hunter (t2) armour set", pieces: ["Trailblazer relic hunter (t2) helm","Trailblazer relic hunter (t2) top","Trailblazer relic hunter (t2) trousers"] },
+    { set: "Trailblazer relic hunter (t3) armour set", pieces: ["Trailblazer relic hunter (t3) helm","Trailblazer relic hunter (t3) top","Trailblazer relic hunter (t3) trousers"] },
+    { set: "Trailblazer reloaded relic hunter (t1) armour set", pieces: ["Trailblazer reloaded relic hunter (t1) helm","Trailblazer reloaded relic hunter (t1) top","Trailblazer reloaded relic hunter (t1) trousers"] },
+    { set: "Trailblazer reloaded relic hunter (t2) armour set", pieces: ["Trailblazer reloaded relic hunter (t2) helm","Trailblazer reloaded relic hunter (t2) top","Trailblazer reloaded relic hunter (t2) trousers"] },
+    { set: "Trailblazer reloaded relic hunter (t3) armour set", pieces: ["Trailblazer reloaded relic hunter (t3) helm","Trailblazer reloaded relic hunter (t3) top","Trailblazer reloaded relic hunter (t3) trousers"] },
+    { set: "Shattered relic hunter (t1) armour set", pieces: ["Shattered relic hunter (t1) helm","Shattered relic hunter (t1) top","Shattered relic hunter (t1) trousers"] },
+    { set: "Shattered relic hunter (t2) armour set", pieces: ["Shattered relic hunter (t2) helm","Shattered relic hunter (t2) top","Shattered relic hunter (t2) trousers"] },
+    { set: "Shattered relic hunter (t3) armour set", pieces: ["Shattered relic hunter (t3) helm","Shattered relic hunter (t3) top","Shattered relic hunter (t3) trousers"] },
+    { set: "Twisted relic hunter (t1) armour set", pieces: ["Twisted relic hunter (t1) helm","Twisted relic hunter (t1) top","Twisted relic hunter (t1) trousers"] },
+    { set: "Twisted relic hunter (t2) armour set", pieces: ["Twisted relic hunter (t2) helm","Twisted relic hunter (t2) top","Twisted relic hunter (t2) trousers"] },
+    { set: "Twisted relic hunter (t3) armour set", pieces: ["Twisted relic hunter (t3) helm","Twisted relic hunter (t3) top","Twisted relic hunter (t3) trousers"] },
+    { set: "Raging echoes relic hunter (t1) armour set", pieces: ["Raging echoes relic hunter (t1) helm","Raging echoes relic hunter (t1) top","Raging echoes relic hunter (t1) trousers"] },
+    { set: "Raging echoes relic hunter (t2) armour set", pieces: ["Raging echoes relic hunter (t2) helm","Raging echoes relic hunter (t2) top","Raging echoes relic hunter (t2) trousers"] },
+    { set: "Raging echoes relic hunter (t3) armour set", pieces: ["Raging echoes relic hunter (t3) helm","Raging echoes relic hunter (t3) top","Raging echoes relic hunter (t3) trousers"] },
   ];
   // Auto-generate making + breaking for each set
   const STATIC_RECIPES = GE_SETS.flatMap(({ set, pieces }) => [
