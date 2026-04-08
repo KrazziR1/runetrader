@@ -4638,6 +4638,7 @@ export default function RuneTrader() {
   const mappingCacheRef = useRef(null);   // static — only fetched once
   const volumeCacheRef = useRef(null);    // daily — refetched every 10 min
   const [error, setError] = useState(null);
+  // eslint-disable-next-line no-unused-vars
   const [lastUpdate, setLastUpdate] = useState(null);
   const [allItemsMap, setAllItemsMap] = useState({});
 
