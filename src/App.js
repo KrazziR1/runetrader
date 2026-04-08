@@ -4449,6 +4449,276 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// ── Static GE recipe data (outside component for performance) ──
+// ── GE set exchange data — sourced from wiki mapping ──
+const GE_SETS = [
+  // Bronze
+  { set: "Bronze set (lg)", pieces: ["Bronze full helm","Bronze platebody","Bronze platelegs","Bronze kiteshield"] },
+  { set: "Bronze set (sk)", pieces: ["Bronze full helm","Bronze platebody","Bronze plateskirt","Bronze kiteshield"] },
+  { set: "Bronze trimmed set (lg)", pieces: ["Bronze full helm (t)","Bronze platebody (t)","Bronze platelegs (t)","Bronze kiteshield (t)"] },
+  { set: "Bronze trimmed set (sk)", pieces: ["Bronze full helm (t)","Bronze platebody (t)","Bronze plateskirt (t)","Bronze kiteshield (t)"] },
+  { set: "Bronze gold-trimmed set (lg)", pieces: ["Bronze full helm (g)","Bronze platebody (g)","Bronze platelegs (g)","Bronze kiteshield (g)"] },
+  { set: "Bronze gold-trimmed set (sk)", pieces: ["Bronze full helm (g)","Bronze platebody (g)","Bronze plateskirt (g)","Bronze kiteshield (g)"] },
+  // Iron
+  { set: "Iron set (lg)", pieces: ["Iron full helm","Iron platebody","Iron platelegs","Iron kiteshield"] },
+  { set: "Iron set (sk)", pieces: ["Iron full helm","Iron platebody","Iron plateskirt","Iron kiteshield"] },
+  { set: "Iron trimmed set (lg)", pieces: ["Iron full helm (t)","Iron platebody (t)","Iron platelegs (t)","Iron kiteshield (t)"] },
+  { set: "Iron trimmed set (sk)", pieces: ["Iron full helm (t)","Iron platebody (t)","Iron plateskirt (t)","Iron kiteshield (t)"] },
+  { set: "Iron gold-trimmed set (lg)", pieces: ["Iron full helm (g)","Iron platebody (g)","Iron platelegs (g)","Iron kiteshield (g)"] },
+  { set: "Iron gold-trimmed set (sk)", pieces: ["Iron full helm (g)","Iron platebody (g)","Iron plateskirt (g)","Iron kiteshield (g)"] },
+  // Steel
+  { set: "Steel set (lg)", pieces: ["Steel full helm","Steel platebody","Steel platelegs","Steel kiteshield"] },
+  { set: "Steel set (sk)", pieces: ["Steel full helm","Steel platebody","Steel plateskirt","Steel kiteshield"] },
+  { set: "Steel trimmed set (lg)", pieces: ["Steel full helm (t)","Steel platebody (t)","Steel platelegs (t)","Steel kiteshield (t)"] },
+  { set: "Steel trimmed set (sk)", pieces: ["Steel full helm (t)","Steel platebody (t)","Steel plateskirt (t)","Steel kiteshield (t)"] },
+  { set: "Steel gold-trimmed set (lg)", pieces: ["Steel full helm (g)","Steel platebody (g)","Steel platelegs (g)","Steel kiteshield (g)"] },
+  { set: "Steel gold-trimmed set (sk)", pieces: ["Steel full helm (g)","Steel platebody (g)","Steel plateskirt (g)","Steel kiteshield (g)"] },
+  // Black
+  { set: "Black set (lg)", pieces: ["Black full helm","Black platebody","Black platelegs","Black kiteshield"] },
+  { set: "Black set (sk)", pieces: ["Black full helm","Black platebody","Black plateskirt","Black kiteshield"] },
+  { set: "Black trimmed set (lg)", pieces: ["Black full helm (t)","Black platebody (t)","Black platelegs (t)","Black kiteshield (t)"] },
+  { set: "Black trimmed set (sk)", pieces: ["Black full helm (t)","Black platebody (t)","Black plateskirt (t)","Black kiteshield (t)"] },
+  { set: "Black gold-trimmed set (lg)", pieces: ["Black full helm (g)","Black platebody (g)","Black platelegs (g)","Black kiteshield (g)"] },
+  { set: "Black gold-trimmed set (sk)", pieces: ["Black full helm (g)","Black platebody (g)","Black plateskirt (g)","Black kiteshield (g)"] },
+  // Mithril
+  { set: "Mithril set (lg)", pieces: ["Mithril full helm","Mithril platebody","Mithril platelegs","Mithril kiteshield"] },
+  { set: "Mithril set (sk)", pieces: ["Mithril full helm","Mithril platebody","Mithril plateskirt","Mithril kiteshield"] },
+  { set: "Mithril trimmed set (lg)", pieces: ["Mithril full helm (t)","Mithril platebody (t)","Mithril platelegs (t)","Mithril kiteshield (t)"] },
+  { set: "Mithril trimmed set (sk)", pieces: ["Mithril full helm (t)","Mithril platebody (t)","Mithril plateskirt (t)","Mithril kiteshield (t)"] },
+  { set: "Mithril gold-trimmed set (lg)", pieces: ["Mithril full helm (g)","Mithril platebody (g)","Mithril platelegs (g)","Mithril kiteshield (g)"] },
+  { set: "Mithril gold-trimmed set (sk)", pieces: ["Mithril full helm (g)","Mithril platebody (g)","Mithril plateskirt (g)","Mithril kiteshield (g)"] },
+  // Adamant
+  { set: "Adamant set (lg)", pieces: ["Adamant full helm","Adamant platebody","Adamant platelegs","Adamant kiteshield"] },
+  { set: "Adamant set (sk)", pieces: ["Adamant full helm","Adamant platebody","Adamant plateskirt","Adamant kiteshield"] },
+  { set: "Adamant trimmed set (lg)", pieces: ["Adamant full helm (t)","Adamant platebody (t)","Adamant platelegs (t)","Adamant kiteshield (t)"] },
+  { set: "Adamant trimmed set (sk)", pieces: ["Adamant full helm (t)","Adamant platebody (t)","Adamant plateskirt (t)","Adamant kiteshield (t)"] },
+  { set: "Adamant gold-trimmed set (lg)", pieces: ["Adamant full helm (g)","Adamant platebody (g)","Adamant platelegs (g)","Adamant kiteshield (g)"] },
+  { set: "Adamant gold-trimmed set (sk)", pieces: ["Adamant full helm (g)","Adamant platebody (g)","Adamant plateskirt (g)","Adamant kiteshield (g)"] },
+  // Rune
+  { set: "Rune armour set (lg)", pieces: ["Rune full helm","Rune platebody","Rune platelegs","Rune kiteshield"] },
+  { set: "Rune armour set (sk)", pieces: ["Rune full helm","Rune platebody","Rune plateskirt","Rune kiteshield"] },
+  { set: "Rune trimmed set (lg)", pieces: ["Rune full helm (t)","Rune platebody (t)","Rune platelegs (t)","Rune kiteshield (t)"] },
+  { set: "Rune trimmed set (sk)", pieces: ["Rune full helm (t)","Rune platebody (t)","Rune plateskirt (t)","Rune kiteshield (t)"] },
+  { set: "Rune gold-trimmed set (lg)", pieces: ["Rune full helm (g)","Rune platebody (g)","Rune platelegs (g)","Rune kiteshield (g)"] },
+  { set: "Rune gold-trimmed set (sk)", pieces: ["Rune full helm (g)","Rune platebody (g)","Rune plateskirt (g)","Rune kiteshield (g)"] },
+  // Gilded
+  { set: "Gilded armour set (lg)", pieces: ["Gilded full helm","Gilded platebody","Gilded platelegs","Gilded kiteshield"] },
+  { set: "Gilded armour set (sk)", pieces: ["Gilded full helm","Gilded platebody","Gilded plateskirt","Gilded kiteshield"] },
+  { set: "Gilded dragonhide set", pieces: ["Gilded coif","Gilded d'hide body","Gilded chaps","Gilded vambraces","Gilded d'hide boots"] },
+  // Dragon
+  { set: "Dragon armour set (lg)", pieces: ["Dragon full helm","Dragon platebody","Dragon platelegs","Dragon kiteshield"] },
+  { set: "Dragon armour set (sk)", pieces: ["Dragon full helm","Dragon platebody","Dragon plateskirt","Dragon kiteshield"] },
+  // God rune sets
+  { set: "Guthix armour set (lg)", pieces: ["Guthix full helm","Guthix platebody","Guthix platelegs","Guthix kiteshield"] },
+  { set: "Guthix armour set (sk)", pieces: ["Guthix full helm","Guthix platebody","Guthix plateskirt","Guthix kiteshield"] },
+  { set: "Saradomin armour set (lg)", pieces: ["Saradomin full helm","Saradomin platebody","Saradomin platelegs","Saradomin kiteshield"] },
+  { set: "Saradomin armour set (sk)", pieces: ["Saradomin full helm","Saradomin platebody","Saradomin plateskirt","Saradomin kiteshield"] },
+  { set: "Zamorak armour set (lg)", pieces: ["Zamorak full helm","Zamorak platebody","Zamorak platelegs","Zamorak kiteshield"] },
+  { set: "Zamorak armour set (sk)", pieces: ["Zamorak full helm","Zamorak platebody","Zamorak plateskirt","Zamorak kiteshield"] },
+  { set: "Armadyl rune armour set (lg)", pieces: ["Armadyl full helm","Armadyl platebody","Armadyl platelegs","Armadyl kiteshield"] },
+  { set: "Armadyl rune armour set (sk)", pieces: ["Armadyl full helm","Armadyl platebody","Armadyl plateskirt","Armadyl kiteshield"] },
+  { set: "Bandos rune armour set (lg)", pieces: ["Bandos full helm","Bandos platebody","Bandos platelegs","Bandos kiteshield"] },
+  { set: "Bandos rune armour set (sk)", pieces: ["Bandos full helm","Bandos platebody","Bandos plateskirt","Bandos kiteshield"] },
+  { set: "Ancient rune armour set (lg)", pieces: ["Ancient full helm","Ancient platebody","Ancient platelegs","Ancient kiteshield"] },
+  { set: "Ancient rune armour set (sk)", pieces: ["Ancient full helm","Ancient platebody","Ancient plateskirt","Ancient kiteshield"] },
+  // High-level god armour
+  { set: "Bandos armour set", pieces: ["Bandos chestplate","Bandos tassets","Bandos boots"] },
+  { set: "Armadyl armour set", pieces: ["Armadyl helmet","Armadyl chestplate","Armadyl chainskirt"] },
+  { set: "Justiciar armour set", pieces: ["Justiciar faceguard","Justiciar chestguard","Justiciar legguards"] },
+  { set: "Inquisitor's armour set", pieces: ["Inquisitor's great helm","Inquisitor's hauberk","Inquisitor's plateskirt"] },
+  { set: "Ancestral robes set", pieces: ["Ancestral hat","Ancestral robe top","Ancestral robe bottom"] },
+  { set: "Torva armour set", pieces: ["Torva full helm","Torva platebody","Torva platelegs"] },
+  { set: "Virtus armour set", pieces: ["Virtus mask","Virtus robe top","Virtus robe bottom"] },
+  { set: "Masori armour set (f)", pieces: ["Masori mask (f)","Masori body (f)","Masori chaps (f)"] },
+  // Barrows
+  { set: "Ahrim's armour set", pieces: ["Ahrim's hood","Ahrim's robetop","Ahrim's robeskirt","Ahrim's staff"] },
+  { set: "Dharok's armour set", pieces: ["Dharok's helm","Dharok's platebody","Dharok's platelegs","Dharok's greataxe"] },
+  { set: "Guthan's armour set", pieces: ["Guthan's helm","Guthan's platebody","Guthan's chainskirt","Guthan's warspear"] },
+  { set: "Karil's armour set", pieces: ["Karil's coif","Karil's leathertop","Karil's leatherskirt","Karil's crossbow"] },
+  { set: "Torag's armour set", pieces: ["Torag's helm","Torag's platebody","Torag's platelegs","Torag's hammers"] },
+  { set: "Verac's armour set", pieces: ["Verac's helm","Verac's brassard","Verac's plateskirt","Verac's flail"] },
+  // Dragonhide
+  { set: "Green dragonhide set", pieces: ["Green d'hide body","Green d'hide chaps","Green d'hide vambraces"] },
+  { set: "Blue dragonhide set", pieces: ["Blue d'hide body","Blue d'hide chaps","Blue d'hide vambraces"] },
+  { set: "Red dragonhide set", pieces: ["Red d'hide body","Red d'hide chaps","Red d'hide vambraces"] },
+  { set: "Black dragonhide set", pieces: ["Black d'hide body","Black d'hide chaps","Black d'hide vambraces"] },
+  // Blessed dragonhide
+  { set: "Guthix dragonhide set", pieces: ["Guthix coif","Guthix d'hide body","Guthix chaps","Guthix bracers","Guthix d'hide boots"] },
+  { set: "Saradomin dragonhide set", pieces: ["Saradomin coif","Saradomin d'hide body","Saradomin chaps","Saradomin bracers","Saradomin d'hide boots"] },
+  { set: "Zamorak dragonhide set", pieces: ["Zamorak coif","Zamorak d'hide body","Zamorak chaps","Zamorak bracers","Zamorak d'hide boots"] },
+  { set: "Armadyl dragonhide set", pieces: ["Armadyl coif","Armadyl d'hide body","Armadyl chaps","Armadyl bracers","Armadyl d'hide boots"] },
+  { set: "Bandos dragonhide set", pieces: ["Bandos coif","Bandos d'hide body","Bandos chaps","Bandos bracers","Bandos d'hide boots"] },
+  { set: "Ancient dragonhide set", pieces: ["Ancient coif","Ancient d'hide body","Ancient chaps","Ancient bracers","Ancient d'hide boots"] },
+  // Mystic
+  { set: "Mystic set (blue)", pieces: ["Mystic hat","Mystic robe top","Mystic robe bottom","Mystic gloves","Mystic boots"] },
+  { set: "Mystic set (light)", pieces: ["Mystic hat (light)","Mystic robe top (light)","Mystic robe bottom (light)","Mystic gloves (light)","Mystic boots (light)"] },
+  { set: "Mystic set (dark)", pieces: ["Mystic hat (dark)","Mystic robe top (dark)","Mystic robe bottom (dark)","Mystic gloves (dark)","Mystic boots (dark)"] },
+  { set: "Mystic set (dusk)", pieces: ["Mystic hat (dusk)","Mystic robe top (dusk)","Mystic robe bottom (dusk)","Mystic gloves (dusk)","Mystic boots (dusk)"] },
+  // Skeletal / Spined / Rock-shell (Fremennik)
+  { set: "Skeletal armour set", pieces: ["Skeletal helm","Skeletal body","Skeletal bottoms","Skeletal gloves","Skeletal boots"] },
+  { set: "Spined armour set", pieces: ["Spined helm","Spined body","Spined chaps","Spined gloves","Spined boots"] },
+  { set: "Rock-shell armour set", pieces: ["Rock-shell helm","Rock-shell plate","Rock-shell legs","Rock-shell gloves","Rock-shell boots"] },
+  // Obsidian
+  { set: "Obsidian armour set", pieces: ["Obsidian helmet","Obsidian platebody","Obsidian platelegs"] },
+  // Bloodbark / Swampbark
+  { set: "Bloodbark armour set", pieces: ["Bloodbark helm","Bloodbark body","Bloodbark legs","Bloodbark gauntlets","Bloodbark boots"] },
+  { set: "Swampbark armour set", pieces: ["Swampbark helm","Swampbark body","Swampbark legs","Swampbark gauntlets","Swampbark boots"] },
+  // Dagon'hai
+  { set: "Dagon'hai robes set", pieces: ["Dagon'hai hat","Dagon'hai robe top","Dagon'hai robe bottom"] },
+  // Dragonstone
+  { set: "Dragonstone armour set", pieces: ["Dragonstone helm","Dragonstone platebody","Dragonstone platelegs","Dragonstone gauntlets","Dragonstone boots"] },
+  // Moon armour
+  { set: "Blood moon armour set", pieces: ["Blood moon helm","Blood moon chestplate","Blood moon tassets"] },
+  { set: "Blue moon armour set", pieces: ["Blue moon helm","Blue moon chestplate","Blue moon tassets"] },
+  { set: "Eclipse moon armour set", pieces: ["Eclipse moon helm","Eclipse moon chestplate","Eclipse moon tassets"] },
+  // Sunfire fanatic
+  { set: "Sunfire fanatic armour set", pieces: ["Sunfire fanatic helm","Sunfire fanatic cuirass","Sunfire fanatic chausses"] },
+  // Oathplate
+  { set: "Oathplate armour set", pieces: ["Oathplate helm","Oathplate body","Oathplate legs"] },
+  // Hueycoatl
+  { set: "Hueycoatl hide armour set", pieces: ["Hueycoatl hide coif","Hueycoatl hide body","Hueycoatl hide chaps","Hueycoatl hide vambraces"] },
+  // Mixed hide
+  { set: "Mixed hide armour set", pieces: ["Mixed hide coif","Mixed hide top","Mixed hide trousers","Mixed hide vambraces","Mixed hide boots"] },
+  // Relic hunter sets (Trailblazer, Shattered, Twisted, Raging echoes, Trailblazer reloaded)
+  { set: "Trailblazer relic hunter (t1) armour set", pieces: ["Trailblazer relic hunter (t1) helm","Trailblazer relic hunter (t1) top","Trailblazer relic hunter (t1) trousers"] },
+  { set: "Trailblazer relic hunter (t2) armour set", pieces: ["Trailblazer relic hunter (t2) helm","Trailblazer relic hunter (t2) top","Trailblazer relic hunter (t2) trousers"] },
+  { set: "Trailblazer relic hunter (t3) armour set", pieces: ["Trailblazer relic hunter (t3) helm","Trailblazer relic hunter (t3) top","Trailblazer relic hunter (t3) trousers"] },
+  { set: "Trailblazer reloaded relic hunter (t1) armour set", pieces: ["Trailblazer reloaded relic hunter (t1) helm","Trailblazer reloaded relic hunter (t1) top","Trailblazer reloaded relic hunter (t1) trousers"] },
+  { set: "Trailblazer reloaded relic hunter (t2) armour set", pieces: ["Trailblazer reloaded relic hunter (t2) helm","Trailblazer reloaded relic hunter (t2) top","Trailblazer reloaded relic hunter (t2) trousers"] },
+  { set: "Trailblazer reloaded relic hunter (t3) armour set", pieces: ["Trailblazer reloaded relic hunter (t3) helm","Trailblazer reloaded relic hunter (t3) top","Trailblazer reloaded relic hunter (t3) trousers"] },
+  { set: "Shattered relic hunter (t1) armour set", pieces: ["Shattered relic hunter (t1) helm","Shattered relic hunter (t1) top","Shattered relic hunter (t1) trousers"] },
+  { set: "Shattered relic hunter (t2) armour set", pieces: ["Shattered relic hunter (t2) helm","Shattered relic hunter (t2) top","Shattered relic hunter (t2) trousers"] },
+  { set: "Shattered relic hunter (t3) armour set", pieces: ["Shattered relic hunter (t3) helm","Shattered relic hunter (t3) top","Shattered relic hunter (t3) trousers"] },
+  { set: "Twisted relic hunter (t1) armour set", pieces: ["Twisted relic hunter (t1) helm","Twisted relic hunter (t1) top","Twisted relic hunter (t1) trousers"] },
+  { set: "Twisted relic hunter (t2) armour set", pieces: ["Twisted relic hunter (t2) helm","Twisted relic hunter (t2) top","Twisted relic hunter (t2) trousers"] },
+  { set: "Twisted relic hunter (t3) armour set", pieces: ["Twisted relic hunter (t3) helm","Twisted relic hunter (t3) top","Twisted relic hunter (t3) trousers"] },
+  { set: "Raging echoes relic hunter (t1) armour set", pieces: ["Raging echoes relic hunter (t1) helm","Raging echoes relic hunter (t1) top","Raging echoes relic hunter (t1) trousers"] },
+  { set: "Raging echoes relic hunter (t2) armour set", pieces: ["Raging echoes relic hunter (t2) helm","Raging echoes relic hunter (t2) top","Raging echoes relic hunter (t2) trousers"] },
+  { set: "Raging echoes relic hunter (t3) armour set", pieces: ["Raging echoes relic hunter (t3) helm","Raging echoes relic hunter (t3) top","Raging echoes relic hunter (t3) trousers"] },
+];
+// Auto-generate making + breaking for each set
+const SET_RECIPES = GE_SETS.flatMap(({ set, pieces }) => [
+  { name: `Making ${set}`, category: "sets", skill: "Grand Exchange", inputs: pieces.map(p => ({ name: p })), outputs: [{ name: set }] },
+  { name: `Breaking ${set}`, category: "sets", skill: "Grand Exchange", inputs: [{ name: set }], outputs: pieces.map(p => ({ name: p })) },
+]);
+
+// ── Potion decanting — only using dose variants confirmed to have wiki prices ──
+// Wiki prices exist primarily for (1) and (3) dose variants
+// 4x(1-dose) → 1x(4-dose) equivalent: use 3x(1) → 1x(3) which are both priced
+const POTION_NAMES = [
+  "Agility potion","Ancient brew","Anti-venom","Anti-venom+","Antidote+","Antidote++",
+  "Antifire potion","Antipoison","Armadyl brew","Attack potion","Bastion potion",
+  "Battlemage potion","Blighted overload","Combat potion","Compost potion",
+  "Defence potion","Divine bastion potion","Divine battlemage potion","Divine magic potion",
+  "Divine ranging potion","Divine super attack potion","Divine super combat potion",
+  "Divine super defence potion","Divine super strength potion","Energy potion",
+  "Extended anti-venom+","Extended antifire","Extended stamina potion","Extended super antifire",
+  "Extreme energy potion","Fishing potion","Forgotten brew","Goading potion","Guthix balance",
+  "Guthix rest","Hunter potion","Magic potion","Menaphite remedy",
+  "Prayer potion","Prayer regeneration potion","Ranging potion","Relicym's balm",
+  "Restore potion","Sacred oil","Sanfew serum","Saradomin brew",
+  "Stamina potion","Strength potion","Super antifire potion","Super attack","Super combat potion",
+  "Super defence","Super energy","Super fishing potion","Super hunter potion","Super restore",
+  "Super strength","Superantipoison","Zamorak brew",
+];
+const POTION_RECIPES = POTION_NAMES.flatMap(name => {
+  const r1 = { name: `${name}(1)` };
+  const r2 = { name: `${name}(2)` };
+  const r3 = { name: `${name}(3)` };
+  const r4 = { name: `${name}(4)` };
+  return [
+    // 3→4: buy 4x(3-dose), sell 3x(4-dose)
+    { name: `Decant ${name}: (3)→(4)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r3, quantity:4}], outputs: [{...r4, quantity:3}] },
+    // 4→3: buy 3x(4-dose), sell 4x(3-dose)
+    { name: `Decant ${name}: (4)→(3)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r4, quantity:3}], outputs: [{...r3, quantity:4}] },
+    // 1→3: buy 3x(1-dose), sell 1x(3-dose)
+    { name: `Decant ${name}: (1)→(3)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r1, quantity:3}], outputs: [{...r3, quantity:1}] },
+    // 3→1: buy 1x(3-dose), sell 3x(1-dose)
+    { name: `Decant ${name}: (3)→(1)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r3, quantity:1}], outputs: [{...r1, quantity:3}] },
+    // 2→4: buy 2x(2-dose), sell 1x(4-dose)
+    { name: `Decant ${name}: (2)→(4)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r2, quantity:2}], outputs: [{...r4, quantity:1}] },
+    // 4→2: buy 1x(4-dose), sell 2x(2-dose)
+    { name: `Decant ${name}: (4)→(2)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r4, quantity:1}], outputs: [{...r2, quantity:2}] },
+  ];
+});
+
+// ── Misc GE arbitrage — flatpacks, unstrung bows, gems, cannonballs, crafting ──
+const MISC_RECIPES = [
+  // ── Charged jewelry arbitrage ──
+  { name: "Amulet of glory: uncharged → (6)", category: "misc", skill: "Fountain of Rune", inputs: [{name:"Amulet of glory"}], outputs: [{name:"Amulet of glory(6)"}] },
+  { name: "Amulet of glory: (6) → uncharged", category: "misc", skill: "Grand Exchange", inputs: [{name:"Amulet of glory(6)"}], outputs: [{name:"Amulet of glory"}] },
+  { name: "Combat bracelet: uncharged → (6)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Combat bracelet"}], outputs: [{name:"Combat bracelet(6)"}] },
+  { name: "Combat bracelet: (6) → uncharged", category: "misc", skill: "Grand Exchange", inputs: [{name:"Combat bracelet(6)"}], outputs: [{name:"Combat bracelet"}] },
+  { name: "Necklace of passage: uncharged → (5)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Necklace of passage"}], outputs: [{name:"Necklace of passage(5)"}] },
+  { name: "Games necklace: uncharged → (8)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Games necklace"}], outputs: [{name:"Games necklace(8)"}] },
+  { name: "Ring of dueling: uncharged → (8)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Ring of dueling"}], outputs: [{name:"Ring of dueling(8)"}] },
+  { name: "Ring of wealth: uncharged → (5)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Ring of wealth"}], outputs: [{name:"Ring of wealth (5)"}] },
+  // ── Flatpacks — buy flatpack, sell built item (or vice versa) ──
+  { name: "Oak chair flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak chair (flatpack)"}], outputs: [{name:"Oak chair (flatpack)"}] },
+  { name: "Oak dining table flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak dining table (flatpack)"}], outputs: [{name:"Oak dining table (flatpack)"}] },
+  { name: "Oak bookcase flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak bookcase (flatpack)"}], outputs: [{name:"Oak bookcase (flatpack)"}] },
+  { name: "Oak bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak bench (flatpack)"}], outputs: [{name:"Oak bench (flatpack)"}] },
+  { name: "Oak dresser flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak dresser (flatpack)"}], outputs: [{name:"Oak dresser (flatpack)"}] },
+  { name: "Oak armour case flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak armour case (flatpack)"}], outputs: [{name:"Oak armour case (flatpack)"}] },
+  { name: "Carved teak table flatpack", category: "misc", skill: "Construction", inputs: [{name:"Carved teak table (flatpack)"}], outputs: [{name:"Carved teak table (flatpack)"}] },
+  { name: "Carved teak bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Carved teak bench (flatpack)"}], outputs: [{name:"Carved teak bench (flatpack)"}] },
+  { name: "Mahogany armchair flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany armchair (flatpack)"}], outputs: [{name:"Mahogany armchair (flatpack)"}] },
+  { name: "Mahogany bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany bench (flatpack)"}], outputs: [{name:"Mahogany bench (flatpack)"}] },
+  { name: "Mahogany dresser flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany dresser (flatpack)"}], outputs: [{name:"Mahogany dresser (flatpack)"}] },
+  { name: "Mahogany toy box flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany toy box (flatpack)"}], outputs: [{name:"Mahogany toy box (flatpack)"}] },
+  { name: "Mahogany magic wardrobe flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany magic wardrobe (flatpack)"}], outputs: [{name:"Mahogany magic wardrobe (flatpack)"}] },
+  { name: "Gilded wardrobe flatpack", category: "misc", skill: "Construction", inputs: [{name:"Gilded wardrobe (flatpack)"}], outputs: [{name:"Gilded wardrobe (flatpack)"}] },
+  { name: "Gilded four-poster flatpack", category: "misc", skill: "Construction", inputs: [{name:"Gilded four-poster (flatpack)"}], outputs: [{name:"Gilded four-poster (flatpack)"}] },
+  { name: "Shoe box flatpack", category: "misc", skill: "Construction", inputs: [{name:"Shoe box (flatpack)"}], outputs: [{name:"Shoe box (flatpack)"}] },
+  { name: "Wood dining table flatpack", category: "misc", skill: "Construction", inputs: [{name:"Wood dining table (flatpack)"}], outputs: [{name:"Wood dining table (flatpack)"}] },
+  { name: "Wooden chair flatpack", category: "misc", skill: "Construction", inputs: [{name:"Wooden chair (flatpack)"}], outputs: [{name:"Wooden chair (flatpack)"}] },
+  { name: "Wooden bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Wooden bench (flatpack)"}], outputs: [{name:"Wooden bench (flatpack)"}] },
+  { name: "Crystal of power flatpack", category: "misc", skill: "Construction", inputs: [{name:"Crystal of power (flatpack)"}], outputs: [{name:"Crystal of power (flatpack)"}] },
+  // ── Unstrung bows — buy unstrung, sell strung ──
+  { name: "Shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Shortbow (u)"}], outputs: [{name:"Shortbow"}] },
+  { name: "Longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Longbow (u)"}], outputs: [{name:"Longbow"}] },
+  { name: "Oak shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Oak shortbow (u)"}], outputs: [{name:"Oak shortbow"}] },
+  { name: "Oak longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Oak longbow (u)"}], outputs: [{name:"Oak longbow"}] },
+  { name: "Willow shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Willow shortbow (u)"}], outputs: [{name:"Willow shortbow"}] },
+  { name: "Willow longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Willow longbow (u)"}], outputs: [{name:"Willow longbow"}] },
+  { name: "Maple shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Maple shortbow (u)"}], outputs: [{name:"Maple shortbow"}] },
+  { name: "Maple longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Maple longbow (u)"}], outputs: [{name:"Maple longbow"}] },
+  { name: "Yew shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Yew shortbow (u)"}], outputs: [{name:"Yew shortbow"}] },
+  { name: "Yew longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Yew longbow (u)"}], outputs: [{name:"Yew longbow"}] },
+  { name: "Magic shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Magic shortbow (u)"}], outputs: [{name:"Magic shortbow"}] },
+  { name: "Magic longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Magic longbow (u)"}], outputs: [{name:"Magic longbow"}] },
+  { name: "Adamant crossbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Adamant crossbow (u)"}], outputs: [{name:"Adamant crossbow"}] },
+  { name: "Rune crossbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Rune crossbow (u)"}], outputs: [{name:"Rune crossbow"}] },
+  { name: "Dragon crossbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Dragon crossbow (u)"}], outputs: [{name:"Dragon crossbow"}] },
+  // ── Uncut gems — buy uncut, sell cut ──
+  { name: "Sapphire: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut sapphire"}], outputs: [{name:"Sapphire"}] },
+  { name: "Emerald: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut emerald"}], outputs: [{name:"Emerald"}] },
+  { name: "Ruby: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut ruby"}], outputs: [{name:"Ruby"}] },
+  { name: "Diamond: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut diamond"}], outputs: [{name:"Diamond"}] },
+  { name: "Dragonstone: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut dragonstone"}], outputs: [{name:"Dragonstone"}] },
+  { name: "Onyx: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut onyx"}], outputs: [{name:"Onyx"}] },
+  { name: "Zenyte: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut zenyte"}], outputs: [{name:"Zenyte"}] },
+  { name: "Red topaz: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut red topaz"}], outputs: [{name:"Red topaz"}] },
+  { name: "Jade: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut jade"}], outputs: [{name:"Jade"}] },
+  { name: "Opal: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut opal"}], outputs: [{name:"Opal"}] },
+  // ── Crafting supplies — flax → bow string ──
+  { name: "Flax → bow string", category: "misc", skill: "Crafting", inputs: [{name:"Flax"}], outputs: [{name:"Bow string"}] },
+  // ── Cannonballs — steel bar → 4 cannonballs ──
+  { name: "Steel bar → cannonballs (×4)", category: "misc", skill: "Smithing", inputs: [{name:"Steel bar"}], outputs: [{name:"Cannonball", quantity:4}] },
+  // ── Broad bolts — buy unfinished, sell finished ──
+  { name: "Broad bolts: unfinished → finished", category: "misc", skill: "Fletching", inputs: [{name:"Unfinished broad bolts", quantity:10}], outputs: [{name:"Broad bolts", quantity:10}] },
+  // ── Bolt tips — gems → bolt tips (12 per gem) ──
+  { name: "Sapphire → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Sapphire"}], outputs: [{name:"Sapphire bolt tips", quantity:12}] },
+  { name: "Emerald → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Emerald"}], outputs: [{name:"Emerald bolt tips", quantity:12}] },
+  { name: "Ruby → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Ruby"}], outputs: [{name:"Ruby bolt tips", quantity:12}] },
+  { name: "Diamond → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Diamond"}], outputs: [{name:"Diamond bolt tips", quantity:12}] },
+  { name: "Dragonstone → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Dragonstone"}], outputs: [{name:"Dragonstone bolt tips", quantity:12}] },
+  { name: "Onyx → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Onyx"}], outputs: [{name:"Onyx bolt tips", quantity:12}] },
+  { name: "Zenyte → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Zenyte"}], outputs: [{name:"Zenyte bolt tips", quantity:12}] },
+];
+
+const STATIC_RECIPES = [...SET_RECIPES, ...POTION_RECIPES, ...MISC_RECIPES];
+
 export default function RuneTrader() {
   const [showApp, setShowApp] = useState(() => /^\/item\//.test(window.location.pathname));
   const [user, setUser] = useState(null);
@@ -5091,11 +5361,13 @@ export default function RuneTrader() {
   const [recipeRowsShown, setRecipeRowsShown] = useState(100);
   const [recipeCategory, setRecipeCategory] = useState("all");
   const [recipeHideLosses, setRecipeHideLosses] = useState(true);
+  const [recipeHideNoVolume, setRecipeHideNoVolume] = useState(true);
   const [recipeMinProfit, setRecipeMinProfit] = useState("");
   const [recipeMinVolume, setRecipeMinVolume] = useState("");
   const [recipeMinRoi, setRecipeMinRoi] = useState("");
-  const [recipeDirection, setRecipeDirection] = useState("all"); // "all" | "making" | "breaking" | "decant_up" | "decant_down"
-  const [recipeMembersFilter, setRecipeMembersFilter] = useState("all"); // "all" | "f2p" | "members"
+  const [recipeDirection, setRecipeDirection] = useState("all");
+  const [recipeMembersFilter, setRecipeMembersFilter] = useState("all");
+  const [recipeExpandedPotions, setRecipeExpandedPotions] = useState(new Set());
   const [cofferTarget, setCofferTarget] = useState("");
   const [cofferSearch, setCofferSearch] = useState("");
   const [cofferShowLosses, setCofferShowLosses] = useState(false);
@@ -5113,274 +5385,6 @@ export default function RuneTrader() {
   const [categoryFilter, setCategoryFilter] = useState("All");
   useEffect(() => { setMarketRowsShown(200); }, [categoryFilter]);
 
-  // ── GE set exchange data — sourced from wiki mapping ──
-  const GE_SETS = [
-    // Bronze
-    { set: "Bronze set (lg)", pieces: ["Bronze full helm","Bronze platebody","Bronze platelegs","Bronze kiteshield"] },
-    { set: "Bronze set (sk)", pieces: ["Bronze full helm","Bronze platebody","Bronze plateskirt","Bronze kiteshield"] },
-    { set: "Bronze trimmed set (lg)", pieces: ["Bronze full helm (t)","Bronze platebody (t)","Bronze platelegs (t)","Bronze kiteshield (t)"] },
-    { set: "Bronze trimmed set (sk)", pieces: ["Bronze full helm (t)","Bronze platebody (t)","Bronze plateskirt (t)","Bronze kiteshield (t)"] },
-    { set: "Bronze gold-trimmed set (lg)", pieces: ["Bronze full helm (g)","Bronze platebody (g)","Bronze platelegs (g)","Bronze kiteshield (g)"] },
-    { set: "Bronze gold-trimmed set (sk)", pieces: ["Bronze full helm (g)","Bronze platebody (g)","Bronze plateskirt (g)","Bronze kiteshield (g)"] },
-    // Iron
-    { set: "Iron set (lg)", pieces: ["Iron full helm","Iron platebody","Iron platelegs","Iron kiteshield"] },
-    { set: "Iron set (sk)", pieces: ["Iron full helm","Iron platebody","Iron plateskirt","Iron kiteshield"] },
-    { set: "Iron trimmed set (lg)", pieces: ["Iron full helm (t)","Iron platebody (t)","Iron platelegs (t)","Iron kiteshield (t)"] },
-    { set: "Iron trimmed set (sk)", pieces: ["Iron full helm (t)","Iron platebody (t)","Iron plateskirt (t)","Iron kiteshield (t)"] },
-    { set: "Iron gold-trimmed set (lg)", pieces: ["Iron full helm (g)","Iron platebody (g)","Iron platelegs (g)","Iron kiteshield (g)"] },
-    { set: "Iron gold-trimmed set (sk)", pieces: ["Iron full helm (g)","Iron platebody (g)","Iron plateskirt (g)","Iron kiteshield (g)"] },
-    // Steel
-    { set: "Steel set (lg)", pieces: ["Steel full helm","Steel platebody","Steel platelegs","Steel kiteshield"] },
-    { set: "Steel set (sk)", pieces: ["Steel full helm","Steel platebody","Steel plateskirt","Steel kiteshield"] },
-    { set: "Steel trimmed set (lg)", pieces: ["Steel full helm (t)","Steel platebody (t)","Steel platelegs (t)","Steel kiteshield (t)"] },
-    { set: "Steel trimmed set (sk)", pieces: ["Steel full helm (t)","Steel platebody (t)","Steel plateskirt (t)","Steel kiteshield (t)"] },
-    { set: "Steel gold-trimmed set (lg)", pieces: ["Steel full helm (g)","Steel platebody (g)","Steel platelegs (g)","Steel kiteshield (g)"] },
-    { set: "Steel gold-trimmed set (sk)", pieces: ["Steel full helm (g)","Steel platebody (g)","Steel plateskirt (g)","Steel kiteshield (g)"] },
-    // Black
-    { set: "Black set (lg)", pieces: ["Black full helm","Black platebody","Black platelegs","Black kiteshield"] },
-    { set: "Black set (sk)", pieces: ["Black full helm","Black platebody","Black plateskirt","Black kiteshield"] },
-    { set: "Black trimmed set (lg)", pieces: ["Black full helm (t)","Black platebody (t)","Black platelegs (t)","Black kiteshield (t)"] },
-    { set: "Black trimmed set (sk)", pieces: ["Black full helm (t)","Black platebody (t)","Black plateskirt (t)","Black kiteshield (t)"] },
-    { set: "Black gold-trimmed set (lg)", pieces: ["Black full helm (g)","Black platebody (g)","Black platelegs (g)","Black kiteshield (g)"] },
-    { set: "Black gold-trimmed set (sk)", pieces: ["Black full helm (g)","Black platebody (g)","Black plateskirt (g)","Black kiteshield (g)"] },
-    // Mithril
-    { set: "Mithril set (lg)", pieces: ["Mithril full helm","Mithril platebody","Mithril platelegs","Mithril kiteshield"] },
-    { set: "Mithril set (sk)", pieces: ["Mithril full helm","Mithril platebody","Mithril plateskirt","Mithril kiteshield"] },
-    { set: "Mithril trimmed set (lg)", pieces: ["Mithril full helm (t)","Mithril platebody (t)","Mithril platelegs (t)","Mithril kiteshield (t)"] },
-    { set: "Mithril trimmed set (sk)", pieces: ["Mithril full helm (t)","Mithril platebody (t)","Mithril plateskirt (t)","Mithril kiteshield (t)"] },
-    { set: "Mithril gold-trimmed set (lg)", pieces: ["Mithril full helm (g)","Mithril platebody (g)","Mithril platelegs (g)","Mithril kiteshield (g)"] },
-    { set: "Mithril gold-trimmed set (sk)", pieces: ["Mithril full helm (g)","Mithril platebody (g)","Mithril plateskirt (g)","Mithril kiteshield (g)"] },
-    // Adamant
-    { set: "Adamant set (lg)", pieces: ["Adamant full helm","Adamant platebody","Adamant platelegs","Adamant kiteshield"] },
-    { set: "Adamant set (sk)", pieces: ["Adamant full helm","Adamant platebody","Adamant plateskirt","Adamant kiteshield"] },
-    { set: "Adamant trimmed set (lg)", pieces: ["Adamant full helm (t)","Adamant platebody (t)","Adamant platelegs (t)","Adamant kiteshield (t)"] },
-    { set: "Adamant trimmed set (sk)", pieces: ["Adamant full helm (t)","Adamant platebody (t)","Adamant plateskirt (t)","Adamant kiteshield (t)"] },
-    { set: "Adamant gold-trimmed set (lg)", pieces: ["Adamant full helm (g)","Adamant platebody (g)","Adamant platelegs (g)","Adamant kiteshield (g)"] },
-    { set: "Adamant gold-trimmed set (sk)", pieces: ["Adamant full helm (g)","Adamant platebody (g)","Adamant plateskirt (g)","Adamant kiteshield (g)"] },
-    // Rune
-    { set: "Rune armour set (lg)", pieces: ["Rune full helm","Rune platebody","Rune platelegs","Rune kiteshield"] },
-    { set: "Rune armour set (sk)", pieces: ["Rune full helm","Rune platebody","Rune plateskirt","Rune kiteshield"] },
-    { set: "Rune trimmed set (lg)", pieces: ["Rune full helm (t)","Rune platebody (t)","Rune platelegs (t)","Rune kiteshield (t)"] },
-    { set: "Rune trimmed set (sk)", pieces: ["Rune full helm (t)","Rune platebody (t)","Rune plateskirt (t)","Rune kiteshield (t)"] },
-    { set: "Rune gold-trimmed set (lg)", pieces: ["Rune full helm (g)","Rune platebody (g)","Rune platelegs (g)","Rune kiteshield (g)"] },
-    { set: "Rune gold-trimmed set (sk)", pieces: ["Rune full helm (g)","Rune platebody (g)","Rune plateskirt (g)","Rune kiteshield (g)"] },
-    // Gilded
-    { set: "Gilded armour set (lg)", pieces: ["Gilded full helm","Gilded platebody","Gilded platelegs","Gilded kiteshield"] },
-    { set: "Gilded armour set (sk)", pieces: ["Gilded full helm","Gilded platebody","Gilded plateskirt","Gilded kiteshield"] },
-    { set: "Gilded dragonhide set", pieces: ["Gilded coif","Gilded d'hide body","Gilded chaps","Gilded vambraces","Gilded d'hide boots"] },
-    // Dragon
-    { set: "Dragon armour set (lg)", pieces: ["Dragon full helm","Dragon platebody","Dragon platelegs","Dragon kiteshield"] },
-    { set: "Dragon armour set (sk)", pieces: ["Dragon full helm","Dragon platebody","Dragon plateskirt","Dragon kiteshield"] },
-    // God rune sets
-    { set: "Guthix armour set (lg)", pieces: ["Guthix full helm","Guthix platebody","Guthix platelegs","Guthix kiteshield"] },
-    { set: "Guthix armour set (sk)", pieces: ["Guthix full helm","Guthix platebody","Guthix plateskirt","Guthix kiteshield"] },
-    { set: "Saradomin armour set (lg)", pieces: ["Saradomin full helm","Saradomin platebody","Saradomin platelegs","Saradomin kiteshield"] },
-    { set: "Saradomin armour set (sk)", pieces: ["Saradomin full helm","Saradomin platebody","Saradomin plateskirt","Saradomin kiteshield"] },
-    { set: "Zamorak armour set (lg)", pieces: ["Zamorak full helm","Zamorak platebody","Zamorak platelegs","Zamorak kiteshield"] },
-    { set: "Zamorak armour set (sk)", pieces: ["Zamorak full helm","Zamorak platebody","Zamorak plateskirt","Zamorak kiteshield"] },
-    { set: "Armadyl rune armour set (lg)", pieces: ["Armadyl full helm","Armadyl platebody","Armadyl platelegs","Armadyl kiteshield"] },
-    { set: "Armadyl rune armour set (sk)", pieces: ["Armadyl full helm","Armadyl platebody","Armadyl plateskirt","Armadyl kiteshield"] },
-    { set: "Bandos rune armour set (lg)", pieces: ["Bandos full helm","Bandos platebody","Bandos platelegs","Bandos kiteshield"] },
-    { set: "Bandos rune armour set (sk)", pieces: ["Bandos full helm","Bandos platebody","Bandos plateskirt","Bandos kiteshield"] },
-    { set: "Ancient rune armour set (lg)", pieces: ["Ancient full helm","Ancient platebody","Ancient platelegs","Ancient kiteshield"] },
-    { set: "Ancient rune armour set (sk)", pieces: ["Ancient full helm","Ancient platebody","Ancient plateskirt","Ancient kiteshield"] },
-    // High-level god armour
-    { set: "Bandos armour set", pieces: ["Bandos chestplate","Bandos tassets","Bandos boots"] },
-    { set: "Armadyl armour set", pieces: ["Armadyl helmet","Armadyl chestplate","Armadyl chainskirt"] },
-    { set: "Justiciar armour set", pieces: ["Justiciar faceguard","Justiciar chestguard","Justiciar legguards"] },
-    { set: "Inquisitor's armour set", pieces: ["Inquisitor's great helm","Inquisitor's hauberk","Inquisitor's plateskirt"] },
-    { set: "Ancestral robes set", pieces: ["Ancestral hat","Ancestral robe top","Ancestral robe bottom"] },
-    { set: "Torva armour set", pieces: ["Torva full helm","Torva platebody","Torva platelegs"] },
-    { set: "Virtus armour set", pieces: ["Virtus mask","Virtus robe top","Virtus robe bottom"] },
-    { set: "Masori armour set (f)", pieces: ["Masori mask (f)","Masori body (f)","Masori chaps (f)"] },
-    // Barrows
-    { set: "Ahrim's armour set", pieces: ["Ahrim's hood","Ahrim's robetop","Ahrim's robeskirt","Ahrim's staff"] },
-    { set: "Dharok's armour set", pieces: ["Dharok's helm","Dharok's platebody","Dharok's platelegs","Dharok's greataxe"] },
-    { set: "Guthan's armour set", pieces: ["Guthan's helm","Guthan's platebody","Guthan's chainskirt","Guthan's warspear"] },
-    { set: "Karil's armour set", pieces: ["Karil's coif","Karil's leathertop","Karil's leatherskirt","Karil's crossbow"] },
-    { set: "Torag's armour set", pieces: ["Torag's helm","Torag's platebody","Torag's platelegs","Torag's hammers"] },
-    { set: "Verac's armour set", pieces: ["Verac's helm","Verac's brassard","Verac's plateskirt","Verac's flail"] },
-    // Dragonhide
-    { set: "Green dragonhide set", pieces: ["Green d'hide body","Green d'hide chaps","Green d'hide vambraces"] },
-    { set: "Blue dragonhide set", pieces: ["Blue d'hide body","Blue d'hide chaps","Blue d'hide vambraces"] },
-    { set: "Red dragonhide set", pieces: ["Red d'hide body","Red d'hide chaps","Red d'hide vambraces"] },
-    { set: "Black dragonhide set", pieces: ["Black d'hide body","Black d'hide chaps","Black d'hide vambraces"] },
-    // Blessed dragonhide
-    { set: "Guthix dragonhide set", pieces: ["Guthix coif","Guthix d'hide body","Guthix chaps","Guthix bracers","Guthix d'hide boots"] },
-    { set: "Saradomin dragonhide set", pieces: ["Saradomin coif","Saradomin d'hide body","Saradomin chaps","Saradomin bracers","Saradomin d'hide boots"] },
-    { set: "Zamorak dragonhide set", pieces: ["Zamorak coif","Zamorak d'hide body","Zamorak chaps","Zamorak bracers","Zamorak d'hide boots"] },
-    { set: "Armadyl dragonhide set", pieces: ["Armadyl coif","Armadyl d'hide body","Armadyl chaps","Armadyl bracers","Armadyl d'hide boots"] },
-    { set: "Bandos dragonhide set", pieces: ["Bandos coif","Bandos d'hide body","Bandos chaps","Bandos bracers","Bandos d'hide boots"] },
-    { set: "Ancient dragonhide set", pieces: ["Ancient coif","Ancient d'hide body","Ancient chaps","Ancient bracers","Ancient d'hide boots"] },
-    // Mystic
-    { set: "Mystic set (blue)", pieces: ["Mystic hat","Mystic robe top","Mystic robe bottom","Mystic gloves","Mystic boots"] },
-    { set: "Mystic set (light)", pieces: ["Mystic hat (light)","Mystic robe top (light)","Mystic robe bottom (light)","Mystic gloves (light)","Mystic boots (light)"] },
-    { set: "Mystic set (dark)", pieces: ["Mystic hat (dark)","Mystic robe top (dark)","Mystic robe bottom (dark)","Mystic gloves (dark)","Mystic boots (dark)"] },
-    { set: "Mystic set (dusk)", pieces: ["Mystic hat (dusk)","Mystic robe top (dusk)","Mystic robe bottom (dusk)","Mystic gloves (dusk)","Mystic boots (dusk)"] },
-    // Skeletal / Spined / Rock-shell (Fremennik)
-    { set: "Skeletal armour set", pieces: ["Skeletal helm","Skeletal body","Skeletal bottoms","Skeletal gloves","Skeletal boots"] },
-    { set: "Spined armour set", pieces: ["Spined helm","Spined body","Spined chaps","Spined gloves","Spined boots"] },
-    { set: "Rock-shell armour set", pieces: ["Rock-shell helm","Rock-shell plate","Rock-shell legs","Rock-shell gloves","Rock-shell boots"] },
-    // Obsidian
-    { set: "Obsidian armour set", pieces: ["Obsidian helmet","Obsidian platebody","Obsidian platelegs"] },
-    // Bloodbark / Swampbark
-    { set: "Bloodbark armour set", pieces: ["Bloodbark helm","Bloodbark body","Bloodbark legs","Bloodbark gauntlets","Bloodbark boots"] },
-    { set: "Swampbark armour set", pieces: ["Swampbark helm","Swampbark body","Swampbark legs","Swampbark gauntlets","Swampbark boots"] },
-    // Dagon'hai
-    { set: "Dagon'hai robes set", pieces: ["Dagon'hai hat","Dagon'hai robe top","Dagon'hai robe bottom"] },
-    // Dragonstone
-    { set: "Dragonstone armour set", pieces: ["Dragonstone helm","Dragonstone platebody","Dragonstone platelegs","Dragonstone gauntlets","Dragonstone boots"] },
-    // Moon armour
-    { set: "Blood moon armour set", pieces: ["Blood moon helm","Blood moon chestplate","Blood moon tassets"] },
-    { set: "Blue moon armour set", pieces: ["Blue moon helm","Blue moon chestplate","Blue moon tassets"] },
-    { set: "Eclipse moon armour set", pieces: ["Eclipse moon helm","Eclipse moon chestplate","Eclipse moon tassets"] },
-    // Sunfire fanatic
-    { set: "Sunfire fanatic armour set", pieces: ["Sunfire fanatic helm","Sunfire fanatic cuirass","Sunfire fanatic chausses"] },
-    // Oathplate
-    { set: "Oathplate armour set", pieces: ["Oathplate helm","Oathplate body","Oathplate legs"] },
-    // Hueycoatl
-    { set: "Hueycoatl hide armour set", pieces: ["Hueycoatl hide coif","Hueycoatl hide body","Hueycoatl hide chaps","Hueycoatl hide vambraces"] },
-    // Mixed hide
-    { set: "Mixed hide armour set", pieces: ["Mixed hide coif","Mixed hide top","Mixed hide trousers","Mixed hide vambraces","Mixed hide boots"] },
-    // Relic hunter sets (Trailblazer, Shattered, Twisted, Raging echoes, Trailblazer reloaded)
-    { set: "Trailblazer relic hunter (t1) armour set", pieces: ["Trailblazer relic hunter (t1) helm","Trailblazer relic hunter (t1) top","Trailblazer relic hunter (t1) trousers"] },
-    { set: "Trailblazer relic hunter (t2) armour set", pieces: ["Trailblazer relic hunter (t2) helm","Trailblazer relic hunter (t2) top","Trailblazer relic hunter (t2) trousers"] },
-    { set: "Trailblazer relic hunter (t3) armour set", pieces: ["Trailblazer relic hunter (t3) helm","Trailblazer relic hunter (t3) top","Trailblazer relic hunter (t3) trousers"] },
-    { set: "Trailblazer reloaded relic hunter (t1) armour set", pieces: ["Trailblazer reloaded relic hunter (t1) helm","Trailblazer reloaded relic hunter (t1) top","Trailblazer reloaded relic hunter (t1) trousers"] },
-    { set: "Trailblazer reloaded relic hunter (t2) armour set", pieces: ["Trailblazer reloaded relic hunter (t2) helm","Trailblazer reloaded relic hunter (t2) top","Trailblazer reloaded relic hunter (t2) trousers"] },
-    { set: "Trailblazer reloaded relic hunter (t3) armour set", pieces: ["Trailblazer reloaded relic hunter (t3) helm","Trailblazer reloaded relic hunter (t3) top","Trailblazer reloaded relic hunter (t3) trousers"] },
-    { set: "Shattered relic hunter (t1) armour set", pieces: ["Shattered relic hunter (t1) helm","Shattered relic hunter (t1) top","Shattered relic hunter (t1) trousers"] },
-    { set: "Shattered relic hunter (t2) armour set", pieces: ["Shattered relic hunter (t2) helm","Shattered relic hunter (t2) top","Shattered relic hunter (t2) trousers"] },
-    { set: "Shattered relic hunter (t3) armour set", pieces: ["Shattered relic hunter (t3) helm","Shattered relic hunter (t3) top","Shattered relic hunter (t3) trousers"] },
-    { set: "Twisted relic hunter (t1) armour set", pieces: ["Twisted relic hunter (t1) helm","Twisted relic hunter (t1) top","Twisted relic hunter (t1) trousers"] },
-    { set: "Twisted relic hunter (t2) armour set", pieces: ["Twisted relic hunter (t2) helm","Twisted relic hunter (t2) top","Twisted relic hunter (t2) trousers"] },
-    { set: "Twisted relic hunter (t3) armour set", pieces: ["Twisted relic hunter (t3) helm","Twisted relic hunter (t3) top","Twisted relic hunter (t3) trousers"] },
-    { set: "Raging echoes relic hunter (t1) armour set", pieces: ["Raging echoes relic hunter (t1) helm","Raging echoes relic hunter (t1) top","Raging echoes relic hunter (t1) trousers"] },
-    { set: "Raging echoes relic hunter (t2) armour set", pieces: ["Raging echoes relic hunter (t2) helm","Raging echoes relic hunter (t2) top","Raging echoes relic hunter (t2) trousers"] },
-    { set: "Raging echoes relic hunter (t3) armour set", pieces: ["Raging echoes relic hunter (t3) helm","Raging echoes relic hunter (t3) top","Raging echoes relic hunter (t3) trousers"] },
-  ];
-  // Auto-generate making + breaking for each set
-  const SET_RECIPES = GE_SETS.flatMap(({ set, pieces }) => [
-    { name: `Making ${set}`, category: "sets", skill: "Grand Exchange", inputs: pieces.map(p => ({ name: p })), outputs: [{ name: set }] },
-    { name: `Breaking ${set}`, category: "sets", skill: "Grand Exchange", inputs: [{ name: set }], outputs: pieces.map(p => ({ name: p })) },
-  ]);
-
-  // ── Potion decanting — only using dose variants confirmed to have wiki prices ──
-  // Wiki prices exist primarily for (1) and (3) dose variants
-  // 4x(1-dose) → 1x(4-dose) equivalent: use 3x(1) → 1x(3) which are both priced
-  const POTION_NAMES = [
-    "Agility potion","Ancient brew","Anti-venom","Anti-venom+","Antidote+","Antidote++",
-    "Antifire potion","Antipoison","Armadyl brew","Attack potion","Bastion potion",
-    "Battlemage potion","Blighted overload","Combat potion","Compost potion",
-    "Defence potion","Divine bastion potion","Divine battlemage potion","Divine magic potion",
-    "Divine ranging potion","Divine super attack potion","Divine super combat potion",
-    "Divine super defence potion","Divine super strength potion","Energy potion",
-    "Extended anti-venom+","Extended antifire","Extended stamina potion","Extended super antifire",
-    "Extreme energy potion","Fishing potion","Forgotten brew","Goading potion","Guthix balance",
-    "Guthix rest","Hunter potion","Magic potion","Menaphite remedy",
-    "Prayer potion","Prayer regeneration potion","Ranging potion","Relicym's balm",
-    "Restore potion","Sacred oil","Sanfew serum","Saradomin brew",
-    "Stamina potion","Strength potion","Super antifire potion","Super attack","Super combat potion",
-    "Super defence","Super energy","Super fishing potion","Super hunter potion","Super restore",
-    "Super strength","Superantipoison","Zamorak brew",
-  ];
-  const POTION_RECIPES = POTION_NAMES.flatMap(name => {
-    const r1 = { name: `${name}(1)` };
-    const r2 = { name: `${name}(2)` };
-    const r3 = { name: `${name}(3)` };
-    const r4 = { name: `${name}(4)` };
-    return [
-      // 3→4: buy 4x(3-dose), sell 3x(4-dose)
-      { name: `Decant ${name}: (3)→(4)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r3, quantity:4}], outputs: [{...r4, quantity:3}] },
-      // 4→3: buy 3x(4-dose), sell 4x(3-dose)
-      { name: `Decant ${name}: (4)→(3)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r4, quantity:3}], outputs: [{...r3, quantity:4}] },
-      // 1→3: buy 3x(1-dose), sell 1x(3-dose)
-      { name: `Decant ${name}: (1)→(3)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r1, quantity:3}], outputs: [{...r3, quantity:1}] },
-      // 3→1: buy 1x(3-dose), sell 3x(1-dose)
-      { name: `Decant ${name}: (3)→(1)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r3, quantity:1}], outputs: [{...r1, quantity:3}] },
-      // 2→4: buy 2x(2-dose), sell 1x(4-dose)
-      { name: `Decant ${name}: (2)→(4)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r2, quantity:2}], outputs: [{...r4, quantity:1}] },
-      // 4→2: buy 1x(4-dose), sell 2x(2-dose)
-      { name: `Decant ${name}: (4)→(2)`, category: "potions", skill: "Bob Barter (GE)", inputs: [{...r4, quantity:1}], outputs: [{...r2, quantity:2}] },
-    ];
-  });
-
-  // ── Misc GE arbitrage — flatpacks, unstrung bows, gems, cannonballs, crafting ──
-  const MISC_RECIPES = [
-    // ── Charged jewelry arbitrage ──
-    { name: "Amulet of glory: uncharged → (6)", category: "misc", skill: "Fountain of Rune", inputs: [{name:"Amulet of glory"}], outputs: [{name:"Amulet of glory(6)"}] },
-    { name: "Amulet of glory: (6) → uncharged", category: "misc", skill: "Grand Exchange", inputs: [{name:"Amulet of glory(6)"}], outputs: [{name:"Amulet of glory"}] },
-    { name: "Combat bracelet: uncharged → (6)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Combat bracelet"}], outputs: [{name:"Combat bracelet(6)"}] },
-    { name: "Combat bracelet: (6) → uncharged", category: "misc", skill: "Grand Exchange", inputs: [{name:"Combat bracelet(6)"}], outputs: [{name:"Combat bracelet"}] },
-    { name: "Necklace of passage: uncharged → (5)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Necklace of passage"}], outputs: [{name:"Necklace of passage(5)"}] },
-    { name: "Games necklace: uncharged → (8)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Games necklace"}], outputs: [{name:"Games necklace(8)"}] },
-    { name: "Ring of dueling: uncharged → (8)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Ring of dueling"}], outputs: [{name:"Ring of dueling(8)"}] },
-    { name: "Ring of wealth: uncharged → (5)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Ring of wealth"}], outputs: [{name:"Ring of wealth (5)"}] },
-    // ── Flatpacks — buy flatpack, sell built item (or vice versa) ──
-    { name: "Oak chair flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak chair (flatpack)"}], outputs: [{name:"Oak chair (flatpack)"}] },
-    { name: "Oak dining table flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak dining table (flatpack)"}], outputs: [{name:"Oak dining table (flatpack)"}] },
-    { name: "Oak bookcase flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak bookcase (flatpack)"}], outputs: [{name:"Oak bookcase (flatpack)"}] },
-    { name: "Oak bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak bench (flatpack)"}], outputs: [{name:"Oak bench (flatpack)"}] },
-    { name: "Oak dresser flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak dresser (flatpack)"}], outputs: [{name:"Oak dresser (flatpack)"}] },
-    { name: "Oak armour case flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak armour case (flatpack)"}], outputs: [{name:"Oak armour case (flatpack)"}] },
-    { name: "Carved teak table flatpack", category: "misc", skill: "Construction", inputs: [{name:"Carved teak table (flatpack)"}], outputs: [{name:"Carved teak table (flatpack)"}] },
-    { name: "Carved teak bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Carved teak bench (flatpack)"}], outputs: [{name:"Carved teak bench (flatpack)"}] },
-    { name: "Mahogany armchair flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany armchair (flatpack)"}], outputs: [{name:"Mahogany armchair (flatpack)"}] },
-    { name: "Mahogany bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany bench (flatpack)"}], outputs: [{name:"Mahogany bench (flatpack)"}] },
-    { name: "Mahogany dresser flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany dresser (flatpack)"}], outputs: [{name:"Mahogany dresser (flatpack)"}] },
-    { name: "Mahogany toy box flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany toy box (flatpack)"}], outputs: [{name:"Mahogany toy box (flatpack)"}] },
-    { name: "Mahogany magic wardrobe flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany magic wardrobe (flatpack)"}], outputs: [{name:"Mahogany magic wardrobe (flatpack)"}] },
-    { name: "Gilded wardrobe flatpack", category: "misc", skill: "Construction", inputs: [{name:"Gilded wardrobe (flatpack)"}], outputs: [{name:"Gilded wardrobe (flatpack)"}] },
-    { name: "Gilded four-poster flatpack", category: "misc", skill: "Construction", inputs: [{name:"Gilded four-poster (flatpack)"}], outputs: [{name:"Gilded four-poster (flatpack)"}] },
-    { name: "Shoe box flatpack", category: "misc", skill: "Construction", inputs: [{name:"Shoe box (flatpack)"}], outputs: [{name:"Shoe box (flatpack)"}] },
-    { name: "Wood dining table flatpack", category: "misc", skill: "Construction", inputs: [{name:"Wood dining table (flatpack)"}], outputs: [{name:"Wood dining table (flatpack)"}] },
-    { name: "Wooden chair flatpack", category: "misc", skill: "Construction", inputs: [{name:"Wooden chair (flatpack)"}], outputs: [{name:"Wooden chair (flatpack)"}] },
-    { name: "Wooden bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Wooden bench (flatpack)"}], outputs: [{name:"Wooden bench (flatpack)"}] },
-    { name: "Crystal of power flatpack", category: "misc", skill: "Construction", inputs: [{name:"Crystal of power (flatpack)"}], outputs: [{name:"Crystal of power (flatpack)"}] },
-    // ── Unstrung bows — buy unstrung, sell strung ──
-    { name: "Shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Shortbow (u)"}], outputs: [{name:"Shortbow"}] },
-    { name: "Longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Longbow (u)"}], outputs: [{name:"Longbow"}] },
-    { name: "Oak shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Oak shortbow (u)"}], outputs: [{name:"Oak shortbow"}] },
-    { name: "Oak longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Oak longbow (u)"}], outputs: [{name:"Oak longbow"}] },
-    { name: "Willow shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Willow shortbow (u)"}], outputs: [{name:"Willow shortbow"}] },
-    { name: "Willow longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Willow longbow (u)"}], outputs: [{name:"Willow longbow"}] },
-    { name: "Maple shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Maple shortbow (u)"}], outputs: [{name:"Maple shortbow"}] },
-    { name: "Maple longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Maple longbow (u)"}], outputs: [{name:"Maple longbow"}] },
-    { name: "Yew shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Yew shortbow (u)"}], outputs: [{name:"Yew shortbow"}] },
-    { name: "Yew longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Yew longbow (u)"}], outputs: [{name:"Yew longbow"}] },
-    { name: "Magic shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Magic shortbow (u)"}], outputs: [{name:"Magic shortbow"}] },
-    { name: "Magic longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Magic longbow (u)"}], outputs: [{name:"Magic longbow"}] },
-    { name: "Adamant crossbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Adamant crossbow (u)"}], outputs: [{name:"Adamant crossbow"}] },
-    { name: "Rune crossbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Rune crossbow (u)"}], outputs: [{name:"Rune crossbow"}] },
-    { name: "Dragon crossbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Dragon crossbow (u)"}], outputs: [{name:"Dragon crossbow"}] },
-    // ── Uncut gems — buy uncut, sell cut ──
-    { name: "Sapphire: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut sapphire"}], outputs: [{name:"Sapphire"}] },
-    { name: "Emerald: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut emerald"}], outputs: [{name:"Emerald"}] },
-    { name: "Ruby: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut ruby"}], outputs: [{name:"Ruby"}] },
-    { name: "Diamond: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut diamond"}], outputs: [{name:"Diamond"}] },
-    { name: "Dragonstone: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut dragonstone"}], outputs: [{name:"Dragonstone"}] },
-    { name: "Onyx: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut onyx"}], outputs: [{name:"Onyx"}] },
-    { name: "Zenyte: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut zenyte"}], outputs: [{name:"Zenyte"}] },
-    { name: "Red topaz: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut red topaz"}], outputs: [{name:"Red topaz"}] },
-    { name: "Jade: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut jade"}], outputs: [{name:"Jade"}] },
-    { name: "Opal: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut opal"}], outputs: [{name:"Opal"}] },
-    // ── Crafting supplies — flax → bow string ──
-    { name: "Flax → bow string", category: "misc", skill: "Crafting", inputs: [{name:"Flax"}], outputs: [{name:"Bow string"}] },
-    // ── Cannonballs — steel bar → 4 cannonballs ──
-    { name: "Steel bar → cannonballs (×4)", category: "misc", skill: "Smithing", inputs: [{name:"Steel bar"}], outputs: [{name:"Cannonball", quantity:4}] },
-    // ── Broad bolts — buy unfinished, sell finished ──
-    { name: "Broad bolts: unfinished → finished", category: "misc", skill: "Fletching", inputs: [{name:"Unfinished broad bolts", quantity:10}], outputs: [{name:"Broad bolts", quantity:10}] },
-    // ── Bolt tips — gems → bolt tips (12 per gem) ──
-    { name: "Sapphire → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Sapphire"}], outputs: [{name:"Sapphire bolt tips", quantity:12}] },
-    { name: "Emerald → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Emerald"}], outputs: [{name:"Emerald bolt tips", quantity:12}] },
-    { name: "Ruby → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Ruby"}], outputs: [{name:"Ruby bolt tips", quantity:12}] },
-    { name: "Diamond → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Diamond"}], outputs: [{name:"Diamond bolt tips", quantity:12}] },
-    { name: "Dragonstone → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Dragonstone"}], outputs: [{name:"Dragonstone bolt tips", quantity:12}] },
-    { name: "Onyx → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Onyx"}], outputs: [{name:"Onyx bolt tips", quantity:12}] },
-    { name: "Zenyte → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Zenyte"}], outputs: [{name:"Zenyte bolt tips", quantity:12}] },
-  ];
-
-  const STATIC_RECIPES = [...SET_RECIPES, ...POTION_RECIPES, ...MISC_RECIPES];
 
   // ── Advanced filters ──
   const [showAdvFilters, setShowAdvFilters] = useState(false);
@@ -8183,28 +8187,31 @@ RULES:
               {user && (
                 <div className="profile-wrap" style={{ position: "relative" }}>
                   {showProfileMenu && (
-                    <div className="profile-dropdown" onClick={() => setShowProfileMenu(false)}>
-                      <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid var(--border)" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "6px" }}>
-                          {user.user_metadata?.username || user.email?.split("@")[0]}
-                          {isSupporter && (
-                            <span title="Supporter" style={{ fontSize: "11px", background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "4px", padding: "1px 5px", color: "#c9a84c", fontWeight: 700, letterSpacing: "0.2px" }}>💎</span>
-                          )}
+                    <>
+                      <div style={{ position: "fixed", inset: 0, zIndex: 148 }} onClick={() => setShowProfileMenu(false)} />
+                      <div className="profile-dropdown" style={{ zIndex: 149 }} onClick={() => setShowProfileMenu(false)}>
+                        <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid var(--border)" }}>
+                          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text)", display: "flex", alignItems: "center", gap: "6px" }}>
+                            {user.user_metadata?.username || user.email?.split("@")[0]}
+                            {isSupporter && (
+                              <span title="Supporter" style={{ fontSize: "11px", background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "4px", padding: "1px 5px", color: "#c9a84c", fontWeight: 700, letterSpacing: "0.2px" }}>💎</span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>
+                            {isOnTrial
+                              ? <span style={{ color: "#f39c12" }}>⏳ Pro Trial — {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} left</span>
+                              : isPro ? "✓ Pro member" : "Free plan"}
+                          </div>
                         </div>
-                        <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>
-                          {isOnTrial
-                            ? <span style={{ color: "#f39c12" }}>⏳ Pro Trial — {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} left</span>
-                            : isPro ? "✓ Pro member" : "Free plan"}
-                        </div>
+                        <button className="profile-dropdown-item" onClick={() => { handleSetActiveTab("settings"); }}>⚙️ Settings</button>
+                        <button className="profile-dropdown-item" onClick={() => handleSetActiveTab("referral")}>🔖 Refer & Earn</button>
+                        <button className="profile-dropdown-item" onClick={() => setActiveTab("changelog")}>🆕 What's New</button>
+                        <button className="profile-dropdown-item" onClick={() => setActiveTab("pricing")}>✨ {isPro ? "Pro Plan" : "Upgrade to Pro"}</button>
+                        <button className="profile-dropdown-item" onClick={() => { if (isPro || isOnTrial) { toggleMerchantMode(); setTimeout(startMerchantTour, 600); } else { toggleMerchantMode(); } }}>📖 Terminal Tutorial</button>
+                        <div style={{ borderTop: "1px solid var(--border)", margin: "4px 0" }} />
+                        <button className="profile-dropdown-item danger" onClick={handleSignOut}>Sign Out</button>
                       </div>
-                      <button className="profile-dropdown-item" onClick={() => { handleSetActiveTab("settings"); }}>⚙️ Settings</button>
-                      <button className="profile-dropdown-item" onClick={() => handleSetActiveTab("referral")}>🔖 Refer & Earn</button>
-                      <button className="profile-dropdown-item" onClick={() => setActiveTab("changelog")}>🆕 What's New</button>
-                      <button className="profile-dropdown-item" onClick={() => setActiveTab("pricing")}>✨ {isPro ? "Pro Plan" : "Upgrade to Pro"}</button>
-                      <button className="profile-dropdown-item" onClick={() => { if (isPro || isOnTrial) { toggleMerchantMode(); setTimeout(startMerchantTour, 600); } else { toggleMerchantMode(); } }}>📖 Terminal Tutorial</button>
-                      <div style={{ borderTop: "1px solid var(--border)", margin: "4px 0" }} />
-                      <button className="profile-dropdown-item danger" onClick={handleSignOut}>Sign Out</button>
-                    </div>
+                    </>
                   )}
                 </div>
               )}
@@ -8951,7 +8958,6 @@ RULES:
                     const volume = allVols.length > 0 ? Math.min(...allVols) : 0;
                     const profit = outputValue - inputCost;
                     const roi = inputCost > 0 ? parseFloat(((profit / inputCost) * 100).toFixed(1)) : 0;
-                    const profitPerKDoses = r.category === "potions" ? Math.round(profit * (1000 / ((r.inputs?.[0]?.quantity || 1) * (r.inputs?.[0]?.name?.match(/\((\d+)\)/)?.[1] || 1)))) : null;
                     // Bottleneck piece — input piece with lowest price (for sets)
                     const bottleneck = r.category === "sets" ? (r.inputs || []).reduce((min, inp) => {
                       const item = lookupItem(inp); const p = item?.low || 0;
@@ -8959,13 +8965,17 @@ RULES:
                     }, null) : null;
                     // Members check — if any input/output is members-only
                     const isMembersOnly = [...(r.inputs||[]), ...(r.outputs||[])].some(x => lookupItem(x)?.members);
-                    return { ...r, inputCost, outputValue, profit, roi, volume, profitPerKDoses, bottleneck, isMembersOnly, resolvable: inputsOk && outputsOk };
+                    // Last update — most recent lastTradeTime across all items
+                    const allTimes = [...(r.inputs||[]), ...(r.outputs||[])].map(x => lookupItem(x)?.lastTradeTime || 0).filter(t => t > 0);
+                    const lastUpdated = allTimes.length > 0 ? Math.min(...allTimes) : 0; // use oldest (most stale) as the bottleneck
+                    return { ...r, inputCost, outputValue, profit, roi, volume, bottleneck, isMembersOnly, lastUpdated, resolvable: inputsOk && outputsOk };
                   })
                   .filter(r => r.resolvable && r.inputCost > 0)
                   .filter(r => recipeCategory === "all" || r.category === recipeCategory)
                   .filter(r => !recipeHideLosses || r.profit > 0)
+                  .filter(r => !recipeHideNoVolume || r.volume > 0)
                   .filter(r => !recipeMinProfit || r.profit >= parseInt(recipeMinProfit.replace(/[km]/i, m => m.toLowerCase() === 'k' ? '000' : '000000') || 0))
-                  .filter(r => !recipeMinVolume || r.volume >= parseInt(recipeMinVolume) || 0)
+                  .filter(r => !recipeMinVolume || r.volume >= parseInt(recipeMinVolume || 0))
                   .filter(r => !recipeMinRoi || r.roi >= parseFloat(recipeMinRoi))
                   .filter(r => recipeMembersFilter === "all" || (recipeMembersFilter === "f2p" && !r.isMembersOnly) || (recipeMembersFilter === "members" && r.isMembersOnly))
                   .filter(r => {
@@ -8990,6 +9000,7 @@ RULES:
                     if (recipeSortCol === "profit")      return dir * (a.profit - b.profit);
                     if (recipeSortCol === "roi")         return dir * (a.roi - b.roi);
                     if (recipeSortCol === "volume")      return dir * (a.volume - b.volume);
+                    if (recipeSortCol === "lastUpdated") return dir * (a.lastUpdated - b.lastUpdated);
                     return dir * (a.profit - b.profit);
                   });
 
@@ -9008,6 +9019,8 @@ RULES:
                     ? [{ id:"all",label:"All"},{id:"fletching",label:"Fletching"},{id:"crafting",label:"Crafting"},{id:"construction",label:"Construction"},{id:"smithing",label:"Smithing"},{id:"charge",label:"Charged Items"}]
                     : null;
 
+                  const RECIPE_COLS = "2fr 1.2fr 1.2fr 1fr 1fr 1fr 1fr 0.9fr 0.9fr";
+
                   const COLS_DEF = [
                     ["name",        "Recipe",       "The exchange recipe name."],
                     ["inputs",      "Inputs",       "Items required."],
@@ -9017,14 +9030,15 @@ RULES:
                     ["profit",      "Profit",       "Output Value minus Input Cost after GE tax."],
                     ["roi",         "ROI",          "Return on investment after GE tax."],
                     ["volume",      "Vol/Day",      "Daily trade volume of the bottleneck item. Higher = easier to fill."],
+                    ["lastUpdated", "Updated",      "How recently the most stale item in this recipe last traded. Old data = less reliable pricing."],
                   ];
 
                   const resetFilters = () => {
-                    setRecipeHideLosses(true); setRecipeMinProfit(""); setRecipeMinVolume("");
+                    setRecipeHideLosses(true); setRecipeHideNoVolume(true); setRecipeMinProfit(""); setRecipeMinVolume("");
                     setRecipeMinRoi(""); setRecipeDirection("all"); setRecipeMembersFilter("all");
-                    setRecipeSearch(""); setRecipeRowsShown(100);
+                    setRecipeSearch(""); setRecipeRowsShown(100); setRecipeExpandedPotions(new Set());
                   };
-                  const activeFilterCount = [recipeHideLosses, recipeMinProfit, recipeMinVolume, recipeMinRoi, recipeDirection !== "all", recipeMembersFilter !== "all", recipeSearch].filter(Boolean).length;
+                  const activeFilterCount = [recipeHideLosses, recipeHideNoVolume, recipeMinProfit, recipeMinVolume, recipeMinRoi, recipeDirection !== "all", recipeMembersFilter !== "all", recipeSearch].filter(Boolean).length;
 
                   const getDose = (name) => { const m = name?.match(/\((\d+)\)$/); return m ? m[1] : null; };
 
@@ -9035,7 +9049,7 @@ RULES:
                       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                         {CATS.map(c => (
                           <button key={c.id}
-                            onClick={() => { setRecipeCategory(c.id); setRecipeDirection("all"); setRecipeRowsShown(100); }}
+                            onClick={() => { setRecipeCategory(c.id); setRecipeDirection("all"); setRecipeRowsShown(100); setRecipeExpandedPotions(new Set()); }}
                             style={{ padding: "5px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", border: recipeCategory === c.id ? "1px solid var(--gold)" : "1px solid var(--border)", background: recipeCategory === c.id ? "rgba(201,168,76,0.12)" : "transparent", color: recipeCategory === c.id ? "var(--gold)" : "var(--text-dim)" }}>
                             {c.label}
                           </button>
@@ -9068,6 +9082,11 @@ RULES:
                         <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
                           <input type="checkbox" checked={recipeHideLosses} onChange={e => { setRecipeHideLosses(e.target.checked); setRecipeRowsShown(100); }} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
                           Profitable only
+                        </label>
+                        {/* Hide no volume */}
+                        <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
+                          <input type="checkbox" checked={recipeHideNoVolume} onChange={e => { setRecipeHideNoVolume(e.target.checked); setRecipeRowsShown(100); }} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
+                          Hide no volume
                         </label>
                         {/* Min profit */}
                         <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", padding: "4px 10px" }}>
@@ -9120,72 +9139,132 @@ RULES:
                                 </button>
                               ))}
                             </div>
-                            {processedRecipes.slice(0, recipeRowsShown).map((r, i) => (
-                              <div key={i} className="recipe-row" style={{ gridTemplateColumns: RECIPE_COLS, cursor: r.category === "sets" ? "pointer" : "default" }}
-                                onClick={() => {
-                                  if (r.category === "sets") {
-                                    const setItem = lookupItem({ name: r.outputs?.[0]?.name }) || lookupItem({ name: r.inputs?.[0]?.name });
-                                    if (setItem) setSelectedItem(setItem);
-                                  }
-                                }}>
-                                <div>
-                                  <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{r.name}</div>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px", flexWrap: "wrap" }}>
-                                    {r.skill && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
-                                    {r.isMembersOnly && <span style={{ fontSize: "10px", color: "#c9a84c", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "3px", padding: "0 4px" }}>P2P</span>}
-                                    {r.bottleneck && r.category === "sets" && (
-                                      <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
-                                        bottleneck: <span style={{ color: "var(--text)" }}>{r.bottleneck.name.replace(/ \(.*\)$/, "")} ({formatGP(r.bottleneck.price)})</span>
-                                      </span>
-                                    )}
+                            {(() => {
+                              // For potions — group by base potion name, show header + collapsible rows
+                              if (recipeCategory === "potions") {
+                                const groups = {};
+                                processedRecipes.slice(0, recipeRowsShown).forEach(r => {
+                                  const base = r.name.replace(/: \(.*$/, "").replace("Decant ", "");
+                                  if (!groups[base]) groups[base] = [];
+                                  groups[base].push(r);
+                                });
+                                return Object.entries(groups).map(([potionName, recipes]) => {
+                                  const isExpanded = recipeExpandedPotions.has(potionName);
+                                  const bestProfit = Math.max(...recipes.map(r => r.profit));
+                                  const bestRoi = Math.max(...recipes.map(r => r.roi));
+                                  return (
+                                    <div key={potionName}>
+                                      {/* Group header */}
+                                      <div onClick={() => setRecipeExpandedPotions(prev => { const s = new Set(prev); s.has(potionName) ? s.delete(potionName) : s.add(potionName); return s; })}
+                                        style={{ display: "grid", gridTemplateColumns: RECIPE_COLS, padding: "10px 16px", borderBottom: "1px solid var(--border)", background: "var(--bg4)", cursor: "pointer", alignItems: "center" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                          <span style={{ fontSize: "11px", color: "var(--text-dim)", transition: "transform 0.15s", display: "inline-block", transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>▶</span>
+                                          <span style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{potionName}</span>
+                                          <span style={{ fontSize: "10px", color: "var(--text-dim)", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "4px", padding: "1px 5px" }}>{recipes.length} combos</span>
+                                        </div>
+                                        <span /><span />
+                                        <span />
+                                        <span />
+                                        <span style={{ fontSize: "12px", fontWeight: 600, color: bestProfit > 0 ? "var(--green)" : "var(--text-dim)" }}>
+                                          best: {bestProfit > 0 ? "+" : ""}{formatGP(bestProfit)}
+                                        </span>
+                                        <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+                                          {bestRoi > 0 ? `+${bestRoi}% ROI` : ""}
+                                        </span>
+                                        <span /><span />
+                                      </div>
+                                      {/* Expanded rows */}
+                                      {isExpanded && recipes.map((r, i) => (
+                                        <div key={i} className="recipe-row" style={{ gridTemplateColumns: RECIPE_COLS, paddingLeft: "32px", background: "rgba(0,0,0,0.15)" }}>
+                                          <div>
+                                            <div style={{ fontWeight: 500, color: "var(--text-dim)", fontSize: "12px" }}>{r.name.replace(`Decant ${potionName}: `, "").replace("Decant ", "")}</div>
+                                            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "1px" }}>{r.skill}</div>
+                                          </div>
+                                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                            {(r.inputs || []).map((inp, j) => {
+                                              const item = lookupItem(inp); const dose = getDose(inp.name); const qty = inp.quantity || 1;
+                                              return <span key={j} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }} title={inp.name}>
+                                                <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                                <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
+                                              </span>;
+                                            })}
+                                          </div>
+                                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                            <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>→</span>
+                                            {(r.outputs || []).map((out, j) => {
+                                              const item = lookupItem(out); const dose = getDose(out.name); const qty = out.quantity || 1;
+                                              return <span key={j} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }} title={out.name}>
+                                                <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                                <span style={{ fontSize: "11px", color: "var(--text)" }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
+                                              </span>;
+                                            })}
+                                          </div>
+                                          <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{formatGP(r.inputCost)}</span>
+                                          <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{formatGP(r.outputValue)}</span>
+                                          <span style={{ fontSize: "12px", fontWeight: 600, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>{r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}</span>
+                                          <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 5px", borderRadius: "4px", display: "inline-flex", width: "fit-content", whiteSpace: "nowrap", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>{r.roi >= 0 ? "+" : ""}{r.roi}%</span>
+                                          <span style={{ fontSize: "11px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)" }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume : "—"}</span>
+                                          <span style={{ fontSize: "11px", color: r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 300 ? "var(--green)" : r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 3600 ? "var(--gold)" : "var(--text-dim)" }}>
+                                            {r.lastUpdated ? timeAgo(r.lastUpdated) : "—"}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                });
+                              }
+
+                              // Default flat rows for sets and misc
+                              return processedRecipes.slice(0, recipeRowsShown).map((r, i) => (
+                                <div key={i} className="recipe-row" style={{ gridTemplateColumns: RECIPE_COLS, cursor: r.category === "sets" ? "pointer" : "default" }}
+                                  onClick={() => {
+                                    if (r.category === "sets") {
+                                      const setItem = lookupItem({ name: r.outputs?.[0]?.name }) || lookupItem({ name: r.inputs?.[0]?.name });
+                                      if (setItem) setSelectedItem(setItem);
+                                    }
+                                  }}>
+                                  <div>
+                                    <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{r.name}</div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px", flexWrap: "wrap" }}>
+                                      {r.skill && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
+                                      {r.isMembersOnly && <span style={{ fontSize: "10px", color: "#c9a84c", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "3px", padding: "0 4px" }}>P2P</span>}
+                                      {r.bottleneck && r.category === "sets" && (
+                                        <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                                          bottleneck: <span style={{ color: "var(--text)" }}>{r.bottleneck.name.replace(/ \(.*\)$/, "")} ({formatGP(r.bottleneck.price)})</span>
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
-                                </div>
-                                {/* Inputs */}
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                                  {(r.inputs || []).map((inp, j) => {
-                                    const item = lookupItem(inp);
-                                    const dose = getDose(inp.name);
-                                    const qty = inp.quantity || 1;
-                                    return (
-                                      <span key={j} title={inp.name} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                    {(r.inputs || []).map((inp, j) => {
+                                      const item = lookupItem(inp); const dose = getDose(inp.name); const qty = inp.quantity || 1;
+                                      return <span key={j} title={inp.name} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                                         <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
-                                        <span style={{ fontSize: "11px", color: "var(--text-dim)", fontWeight: 500 }}>
-                                          {dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}
-                                        </span>
-                                      </span>
-                                    );
-                                  })}
-                                </div>
-                                {/* Outputs */}
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                                  <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>→</span>
-                                  {(r.outputs || []).map((out, j) => {
-                                    const item = lookupItem(out);
-                                    const dose = getDose(out.name);
-                                    const qty = out.quantity || 1;
-                                    return (
-                                      <span key={j} title={out.name} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                        <span style={{ fontSize: "11px", color: "var(--text-dim)", fontWeight: 500 }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
+                                      </span>;
+                                    })}
+                                  </div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                    <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>→</span>
+                                    {(r.outputs || []).map((out, j) => {
+                                      const item = lookupItem(out); const dose = getDose(out.name); const qty = out.quantity || 1;
+                                      return <span key={j} title={out.name} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                                         <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
-                                        <span style={{ fontSize: "11px", color: "var(--text)", fontWeight: 500 }}>
-                                          {dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}
-                                        </span>
-                                      </span>
-                                    );
-                                  })}
+                                        <span style={{ fontSize: "11px", color: "var(--text)", fontWeight: 500 }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
+                                      </span>;
+                                    })}
+                                  </div>
+                                  <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.inputCost)}</span>
+                                  <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.outputValue)}</span>
+                                  <span style={{ fontSize: "13px", fontWeight: 600, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>{r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}</span>
+                                  <span style={{ fontSize: "12px", fontWeight: 600, padding: "2px 6px", borderRadius: "5px", display: "inline-flex", alignItems: "center", width: "fit-content", whiteSpace: "nowrap", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>{r.roi >= 0 ? "+" : ""}{r.roi}%</span>
+                                  <span style={{ fontSize: "12px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)" }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume.toLocaleString() : "—"}</span>
+                                  <span style={{ fontSize: "11px", color: r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 300 ? "var(--green)" : r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 3600 ? "var(--gold)" : "var(--text-dim)" }}>
+                                    {r.lastUpdated ? timeAgo(r.lastUpdated) : "—"}
+                                  </span>
                                 </div>
-                                <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.inputCost)}</span>
-                                <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.outputValue)}</span>
-                                <span style={{ fontSize: "13px", fontWeight: 600, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>
-                                  {r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}
-                                </span>
-                                <span style={{ fontSize: "12px", fontWeight: 600, padding: "2px 7px", borderRadius: "5px", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>
-                                  {r.roi >= 0 ? "+" : ""}{r.roi}%
-                                </span>
-                                <span style={{ fontSize: "12px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)" }}>
-                                  {r.volume >= 1000 ? (r.volume / 1000).toFixed(1) + "k" : r.volume > 0 ? r.volume.toLocaleString() : "—"}
-                                </span>
-                              </div>
-                            ))}
+                              ));
+                            })()}
                           </div>
                           {processedRecipes.length > recipeRowsShown && (
                             <div style={{ textAlign: "center", padding: "8px 0" }}>
