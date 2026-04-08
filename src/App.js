@@ -134,8 +134,10 @@ const STYLES = `
   .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.35;transform:scale(0.75)} }
   @keyframes terminalGlow {
-    0%,100% { box-shadow: 0 0 0px rgba(201,168,76,0); border-color: rgba(201,168,76,0.4); }
-    50%      { box-shadow: 0 0 18px rgba(201,168,76,0.45), 0 0 40px rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.8); }
+    0%      { box-shadow: 0 0 0px rgba(201,168,76,0); border-color: rgba(201,168,76,0.35); }
+    7%      { box-shadow: 0 0 14px rgba(201,168,76,0.5), 0 0 28px rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.75); }
+    14%     { box-shadow: 0 0 0px rgba(201,168,76,0); border-color: rgba(201,168,76,0.35); }
+    100%    { box-shadow: 0 0 0px rgba(201,168,76,0); border-color: rgba(201,168,76,0.35); }
   }
   .nav-tabs { display: flex; gap: 3px; }
   .nav-tab { padding: 7px 16px; border-radius: 7px; border: 1px solid transparent; cursor: pointer; font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif; background: transparent; color: #9ab0c0; transition: all 0.15s; white-space: nowrap; letter-spacing: 0.2px; }
@@ -8166,17 +8168,17 @@ RULES:
               {user && (
                 <button onClick={toggleMerchantMode} className="terminal-btn"
                   style={{
-                    border: `1px solid ${merchantMode ? "var(--gold)" : "rgba(201,168,76,0.45)"}`,
-                    background: merchantMode ? "linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.12))" : "rgba(201,168,76,0.08)",
-                    color: "var(--gold)", fontFamily: "'Cinzel', serif", fontWeight: 900, letterSpacing: "0.5px",
-                    animation: merchantMode ? "none" : "terminalGlow 2.5s ease-in-out infinite",
-                    boxShadow: merchantMode ? "0 0 20px rgba(201,168,76,0.25), inset 0 1px 0 rgba(201,168,76,0.2)" : undefined,
+                    border: `1px solid ${merchantMode ? "var(--gold)" : "rgba(201,168,76,0.4)"}`,
+                    background: merchantMode ? "linear-gradient(135deg, rgba(201,168,76,0.22), rgba(201,168,76,0.1))" : "rgba(201,168,76,0.07)",
+                    color: "var(--gold)", fontWeight: 700, letterSpacing: "0.2px",
+                    animation: merchantMode ? "none" : "terminalGlow 15s ease-in-out infinite",
+                    boxShadow: merchantMode ? "0 0 16px rgba(201,168,76,0.2)" : undefined,
                   }}
                   onMouseOver={e => { e.currentTarget.style.animation = "none"; e.currentTarget.style.background = "rgba(201,168,76,0.18)"; e.currentTarget.style.boxShadow = "0 0 20px rgba(201,168,76,0.35)"; }}
-                  onMouseOut={e => { if (!merchantMode) { e.currentTarget.style.animation = "terminalGlow 2.5s ease-in-out infinite"; e.currentTarget.style.background = "rgba(201,168,76,0.08)"; e.currentTarget.style.boxShadow = "none"; } }}>
+                  onMouseOut={e => { if (!merchantMode) { e.currentTarget.style.animation = "terminalGlow 15s ease-in-out infinite"; e.currentTarget.style.background = "rgba(201,168,76,0.08)"; e.currentTarget.style.boxShadow = "none"; } }}>
                   {merchantMode ? <><div className="merchant-dot" style={{ background: "var(--green)" }} /> Exit Terminal</> : <>
                     {!isPro && !isOnTrial && <span style={{ fontSize: "12px", opacity: 0.8 }}>🔒</span>}
-                    📈 Enter Trading Terminal
+                    📈 Trading Terminal
                   </>}
                 </button>
               )}
