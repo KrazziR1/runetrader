@@ -32,7 +32,7 @@ const STYLES = `
 
   /* NAV */
   nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    position: fixed; top: 37px; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
     padding: 18px 48px;
     background: rgba(7,10,13,0.92);
@@ -60,7 +60,7 @@ const STYLES = `
     border-bottom: 1px solid rgba(201,168,76,0.2);
     text-align: center; padding: 9px 24px; font-size: 13px;
     color: var(--gold); font-family: 'Inter', sans-serif; font-weight: 500;
-    letter-spacing: 0.3px; position: relative; z-index: 99;
+    letter-spacing: 0.3px; position: fixed; top: 0; left: 0; right: 0; z-index: 101;
   }
   .urgency-banner a { color: var(--gold-light); text-decoration: underline; text-underline-offset: 3px; }
   .urgency-banner .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 8px; animation: pulse 2s infinite; vertical-align: middle; }
@@ -235,10 +235,11 @@ const STYLES = `
   }
   .terminal-highlight::before {
     content: ''; position: absolute; top: -200px; right: -200px;
-    width: 600px; height: 600px; border-radius: 50%; pointer-events: none;
-    background: radial-gradient(ellipse at center, rgba(201,168,76,0.05) 0%, transparent 65%);
+    width: 700px; height: 700px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(201,168,76,0.06) 0%, transparent 65%);
+    animation: orbPulse 7s ease-in-out infinite;
   }
-  .terminal-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .terminal-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 5fr 7fr; gap: 72px; align-items: start; }
   .terminal-tabs { display: flex; gap: 0; margin-top: 36px; border-bottom: 1px solid var(--border-solid); }
   .terminal-tab {
     padding: 10px 20px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
@@ -251,29 +252,67 @@ const STYLES = `
   .terminal-feature-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.15); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
   .terminal-feature-text { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
   .terminal-feature-text strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 15px; }
-  .terminal-visual {
-    background: var(--bg3); border-radius: 12px; border: 1px solid rgba(201,168,76,0.15);
-    overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(201,168,76,0.04);
+
+  /* GE SLOT TERMINAL WIDGET */
+  .tv {
+    background: var(--bg); border-radius: 14px;
+    border: 1px solid rgba(201,168,76,0.2);
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(201,168,76,0.04), 0 32px 80px rgba(0,0,0,0.6), 0 0 60px rgba(201,168,76,0.07);
   }
-  .terminal-visual-header {
+  .tv-bar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 16px; background: var(--bg2); border-bottom: 1px solid var(--border-solid);
+    padding: 11px 16px; background: var(--bg3); border-bottom: 1px solid var(--border-solid);
   }
-  .terminal-visual-title { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 1.5px; }
-  .terminal-live-dot { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--green); font-weight: 600; }
-  .terminal-live-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
-  .terminal-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border-solid); }
-  .terminal-stat-cell { background: var(--bg3); padding: 14px 16px; }
-  .terminal-stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; }
-  .terminal-stat-value { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-top: 4px; }
-  .terminal-stat-delta { font-size: 11px; color: var(--green); font-weight: 600; margin-top: 2px; }
-  .terminal-ops { padding: 12px; }
-  .terminal-op-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-family: 'Inter', sans-serif; align-items: center; border-bottom: 1px solid var(--border-solid); }
-  .terminal-op-row.head { color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; border-bottom: 1px solid var(--border-solid); }
-  .terminal-op-name { font-weight: 600; color: var(--text); }
-  .terminal-op-profit { color: var(--green); font-weight: 700; }
-  .terminal-op-dim { color: var(--text-dim); }
-  .terminal-op-badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.2); }
+  .tv-title { font-family: 'Cinzel', serif; font-size: 12px; font-weight: 800; color: var(--gold); letter-spacing: 2px; }
+  .tv-live { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--green); font-weight: 700; letter-spacing: 1px; }
+  .tv-live::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.5s infinite; }
+  .tv-stats { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border-solid); }
+  .tv-stat { padding: 12px 14px; border-right: 1px solid var(--border-solid); }
+  .tv-stat:last-child { border-right: none; }
+  .tv-stat-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+  .tv-stat-val { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--gold); margin-top: 3px; transition: color 0.3s; }
+  .tv-stat-delta { font-size: 10px; color: var(--green); font-weight: 600; margin-top: 1px; }
+  .tv-slots { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .tv-slot {
+    border-radius: 8px; border: 1px solid var(--border-solid);
+    background: var(--bg3); overflow: hidden; transition: border-color 0.4s;
+  }
+  .tv-slot.drift { border-color: rgba(231,76,60,0.5); background: rgba(231,76,60,0.03); }
+  .tv-slot.filled { border-color: rgba(46,204,113,0.4); background: rgba(46,204,113,0.03); }
+  .tv-slot.buying { border-color: rgba(52,152,219,0.35); }
+  .tv-slot-top { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; }
+  .tv-slot-name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .tv-slot-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.5px; }
+  .tv-badge-buying { background: rgba(52,152,219,0.15); color: #5dade2; border: 1px solid rgba(52,152,219,0.3); }
+  .tv-badge-selling { background: rgba(201,168,76,0.12); color: var(--gold); border: 1px solid rgba(201,168,76,0.25); }
+  .tv-badge-filled { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.25); }
+  .tv-badge-drift { background: rgba(231,76,60,0.12); color: #e74c3c; border: 1px solid rgba(231,76,60,0.3); }
+  .tv-slot-bar { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; padding: 0 12px 8px; font-size: 11px; }
+  .tv-slot-kv { display: flex; flex-direction: column; gap: 1px; }
+  .tv-kv-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .tv-kv-val { font-size: 12px; font-weight: 700; color: var(--text); transition: color 0.3s; }
+  .tv-kv-val.green { color: var(--green); }
+  .tv-kv-val.red { color: #e74c3c; }
+  .tv-kv-val.gold { color: var(--gold); }
+  .tv-alert {
+    margin: 0 10px 8px; padding: 7px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    display: flex; align-items: center; gap: 8px; animation: fadeInUp 0.3s ease both;
+  }
+  .tv-alert.warn { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.25); color: #e74c3c; }
+  .tv-alert.tip { background: rgba(52,152,219,0.08); border: 1px solid rgba(52,152,219,0.2); color: #5dade2; }
+  .tv-alert.good { background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2); color: var(--green); }
+  .tv-progress { height: 3px; background: var(--border-solid); margin: 0 12px 8px; border-radius: 2px; overflow: hidden; }
+  .tv-progress-fill { height: 100%; border-radius: 2px; transition: width 1s linear; }
+  .tv-ai {
+    margin: 8px 10px 10px; padding: 10px 12px; border-radius: 8px;
+    background: linear-gradient(135deg, rgba(201,168,76,0.06), rgba(52,152,219,0.06));
+    border: 1px solid rgba(201,168,76,0.15);
+  }
+  .tv-ai-label { font-size: 9px; color: var(--gold); text-transform: uppercase; letter-spacing: 2px; font-weight: 800; margin-bottom: 5px; display: flex; align-items: center; gap: 6px; }
+  .tv-ai-label::before { content:'🤖'; font-size: 11px; }
+  .tv-ai-text { font-size: 12px; color: var(--text-dim); line-height: 1.5; transition: opacity 0.5s; }
+  .tv-ai-text span { color: var(--gold); font-weight: 700; }
 
   /* COMPARISON */
   .comparison { padding: 120px 48px; background: var(--bg); }
@@ -431,6 +470,48 @@ export default function LandingPage({ onEnterApp }) {
   const statsRef = useRef(null);
   const itemCount = useCounter(4525, 1800, statsVisible);
 
+  // ── Live GE slot simulation ──
+  const BASE_SLOTS = [
+    { id:0, name:"Bandos chestplate", type:"buying",  qty:1,   filled:0,  offerPrice:95_200_000, wikiPrice:95_450_000, margin:45000,  profit:45000,  limitPct:100, driftPct:-0.26, pnlStr:"+45,000gp" },
+    { id:1, name:"Dragon bones",      type:"selling", qty:200, filled:134, offerPrice:6_100,     wikiPrice:6_050,      margin:2847,   profit:381_498, limitPct:67,  driftPct:0,     pnlStr:"+381,498gp" },
+    { id:2, name:"Abyssal whip",      type:"buying",  qty:3,   filled:1,  offerPrice:2_580_000, wikiPrice:2_592_400,  margin:12400,  profit:12400,  limitPct:33,  driftPct:-0.48, pnlStr:"+12,400gp" },
+    { id:3, name:"Twisted bow",       type:"selling", qty:1,   filled:0,  offerPrice:1_387_000_000, wikiPrice:1_387_000_000, margin:95000, profit:0, limitPct:0, driftPct:0, pnlStr:"Waiting..." },
+  ];
+  const [slots, setSlots] = useState(BASE_SLOTS);
+  const [sessionGP, setSessionGP] = useState(438898);
+  const [gphr, setGphr] = useState(2.4);
+  const [aiTip, setAiTip] = useState({ type:"tip", text: <>"Bandos chestplate drifted <span>-0.26%</span> below Wiki — relist at <span>95,698,000gp</span> to jump the queue."</> });
+  const tickRef = useRef(0);
+
+  useEffect(() => {
+    const tips = [
+      { type:"tip",  text: <>"Bandos chestplate drifted <span>-0.26%</span> below Wiki — relist at <span>95,698,000gp</span> to jump the queue."</> },
+      { type:"good", text: <>"Dragon bones filling fast — <span>134/200</span> sold. Margin holding at <span>+2,847gp</span> per bone."</> },
+      { type:"warn", text: <>"Abyssal whip offer is <span>-0.48%</span> stale. Competition relisted. Suggest <span>2,594,812gp</span>."</> },
+      { type:"tip",  text: <>"Based on your <span>5M budget</span>, Dragon bones ROI of <span>+4.1%</span> is your best active slot today."</> },
+      { type:"good", text: <>"Session running <span>2.4M GP/hr</span> — above your 7-day average of 1.9M. Keep it up."</> },
+    ];
+    let tipIdx = 0;
+    const iv = setInterval(() => {
+      tickRef.current += 1;
+      const t = tickRef.current;
+      setSlots(prev => prev.map(s => {
+        if (s.id === 1 && t % 4 === 0) {
+          const newFilled = Math.min(s.filled + Math.floor(Math.random()*12+3), s.qty);
+          const done = newFilled >= s.qty;
+          return { ...s, filled: newFilled, type: done ? "filled" : s.type, limitPct: Math.round(newFilled/s.qty*100) };
+        }
+        if (s.id === 0 && t % 7 === 0) return { ...s, driftPct: -0.26 - Math.random()*0.1 };
+        if (s.id === 2 && t % 5 === 0) return { ...s, driftPct: -0.48 - Math.random()*0.15 };
+        return s;
+      }));
+      if (t % 3 === 0) setSessionGP(p => p + Math.floor(Math.random()*8000+2000));
+      if (t % 6 === 0) setGphr(+(2.2 + Math.random()*0.5).toFixed(1));
+      if (t % 8 === 0) { tipIdx = (tipIdx+1) % tips.length; setAiTip(tips[tipIdx]); }
+    }, 1800);
+    return () => clearInterval(iv);
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
@@ -464,18 +545,16 @@ export default function LandingPage({ onEnterApp }) {
       <style>{STYLES}</style>
 
       {/* URGENCY BANNER */}
-      <div style={{ paddingTop: "0" }}>
-        <div className="urgency-banner">
+      <div className="urgency-banner">
           <span className="dot" />
           RuneLite Plugin Hub review in progress — plugin not yet publicly listed.{" "}
           <a href="/#" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp(); }}>
             Get early access now →
           </a>
-        </div>
       </div>
 
       {/* NAV */}
-      <nav style={{ background: scrolled ? "rgba(6,8,11,0.97)" : undefined, top: "37px" }}>
+      <nav style={{ background: scrolled ? "rgba(6,8,11,0.97)" : undefined }}>
         <a href="/#" className="nav-logo">
           <svg className="nav-logo-icon" viewBox="0 0 120 120" fill="none">
             <defs>
@@ -526,7 +605,7 @@ export default function LandingPage({ onEnterApp }) {
       </nav>
 
       {/* TICKER */}
-      <div style={{ marginTop: "101px", width: "100%", overflow: "hidden", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--bg2)", height: "44px", display: "flex", alignItems: "center" }}>
+      <div style={{ marginTop: "102px", width: "100%", overflow: "hidden", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--bg2)", height: "44px", display: "flex", alignItems: "center" }}>
         <div style={{ display: "inline-flex", gap: "48px", whiteSpace: "nowrap", animation: "ticker 30s linear infinite", alignItems: "center", flexShrink: 0 }}>
           {[...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
             <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontFamily: "Inter, sans-serif" }}>
@@ -673,40 +752,86 @@ export default function LandingPage({ onEnterApp }) {
               ))}
             </div>
           </div>
-          <div className="terminal-visual">
-            <div className="terminal-visual-header">
-              <span className="terminal-visual-title">TRADING TERMINAL</span>
-              <span className="terminal-live-dot">LIVE</span>
+          {/* ── LIVE GE SLOT WIDGET ── */}
+          <div className="tv">
+            {/* Header */}
+            <div className="tv-bar">
+              <span className="tv-title">TRADING TERMINAL</span>
+              <span className="tv-live">LIVE</span>
             </div>
-            <div className="terminal-stats-grid">
-              {[
-                { label: "Session GP", value: "1.84M", delta: "+284K today" },
-                { label: "GP / Hour", value: "2.4M", delta: "↑ from 1.9M" },
-                { label: "Win Rate", value: "87%", delta: "13 flips" },
-              ].map(s => (
-                <div key={s.label} className="terminal-stat-cell">
-                  <div className="terminal-stat-label">{s.label}</div>
-                  <div className="terminal-stat-value">{s.value}</div>
-                  <div className="terminal-stat-delta">{s.delta}</div>
-                </div>
-              ))}
-            </div>
-            <div className="terminal-ops">
-              <div className="terminal-op-row head">
-                <span>Item</span><span>P&L</span><span>ROI</span><span>Status</span>
+
+            {/* Session stats */}
+            <div className="tv-stats">
+              <div className="tv-stat">
+                <div className="tv-stat-label">Session GP</div>
+                <div className="tv-stat-val">{(sessionGP/1000).toFixed(0)}K</div>
+                <div className="tv-stat-delta">+{((sessionGP-380000)/1000).toFixed(0)}K this hour</div>
               </div>
-              {[
-                { name: "Bandos chestplate", pnl: "+45,000", roi: "+3.2%", status: "Buying" },
-                { name: "Dragon bones", pnl: "+8,541", roi: "+4.1%", status: "Selling" },
-                { name: "Abyssal whip", pnl: "+12,400", roi: "+1.8%", status: "Filled" },
-              ].map((r, i) => (
-                <div key={i} className="terminal-op-row">
-                  <span className="terminal-op-name">{r.name}</span>
-                  <span className="terminal-op-profit">+{r.pnl}gp</span>
-                  <span className="terminal-op-dim">{r.roi}</span>
-                  <span className="terminal-op-badge">{r.status}</span>
-                </div>
-              ))}
+              <div className="tv-stat">
+                <div className="tv-stat-label">GP / Hour</div>
+                <div className="tv-stat-val">{gphr}M</div>
+                <div className="tv-stat-delta">↑ above avg</div>
+              </div>
+              <div className="tv-stat">
+                <div className="tv-stat-label">Active Slots</div>
+                <div className="tv-stat-val">4 / 8</div>
+                <div className="tv-stat-delta">4 slots free</div>
+              </div>
+            </div>
+
+            {/* GE Slots */}
+            <div className="tv-slots">
+              {slots.map(slot => {
+                const isDrift = slot.driftPct < -0.2;
+                const isFilled = slot.type === "filled" || slot.filled >= slot.qty;
+                const cls = isFilled ? "filled" : isDrift ? "drift" : slot.type;
+                const badge = isFilled ? "FILLED ✓" : isDrift ? "⚠ DRIFT" : slot.type === "buying" ? "BUYING" : "SELLING";
+                const badgeCls = isFilled ? "tv-badge-filled" : isDrift ? "tv-badge-drift" : slot.type === "buying" ? "tv-badge-buying" : "tv-badge-selling";
+                const fillPct = slot.qty > 0 ? Math.round(slot.filled/slot.qty*100) : slot.limitPct;
+                const barColor = isFilled ? "var(--green)" : isDrift ? "#e74c3c" : slot.type === "buying" ? "#5dade2" : "var(--gold)";
+                return (
+                  <div key={slot.id} className={`tv-slot ${cls}`}>
+                    <div className="tv-slot-top">
+                      <span className="tv-slot-name">{slot.name}</span>
+                      <span className={`tv-slot-badge ${badgeCls}`}>{badge}</span>
+                    </div>
+                    <div className="tv-progress">
+                      <div className="tv-progress-fill" style={{ width: `${fillPct}%`, background: barColor }} />
+                    </div>
+                    <div className="tv-slot-bar">
+                      <div className="tv-slot-kv">
+                        <span className="tv-kv-label">Offer</span>
+                        <span className="tv-kv-val">{slot.offerPrice >= 1e9 ? (slot.offerPrice/1e9).toFixed(2)+"B" : slot.offerPrice >= 1e6 ? (slot.offerPrice/1e6).toFixed(1)+"M" : slot.offerPrice.toLocaleString()+"gp"}</span>
+                      </div>
+                      <div className="tv-slot-kv">
+                        <span className="tv-kv-label">Margin</span>
+                        <span className={`tv-kv-val ${slot.margin > 0 ? "green" : "red"}`}>+{slot.margin >= 1000 ? (slot.margin/1000).toFixed(0)+"K" : slot.margin}gp</span>
+                      </div>
+                      <div className="tv-slot-kv">
+                        <span className="tv-kv-label">Filled</span>
+                        <span className="tv-kv-val gold">{slot.filled}/{slot.qty}</span>
+                      </div>
+                      <div className="tv-slot-kv">
+                        <span className="tv-kv-label">P&L</span>
+                        <span className={`tv-kv-val ${isFilled || slot.filled > 0 ? "green" : ""}`}>{slot.pnlStr}</span>
+                      </div>
+                    </div>
+                    {isDrift && (
+                      <div className="tv-alert warn">
+                        ⚠ Offer drifted {slot.driftPct.toFixed(2)}% — relist at {(slot.wikiPrice * 1.002).toLocaleString()}gp to beat queue
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* AI tip */}
+            <div className="tv-ai">
+              <div className="tv-ai-label">AI Advisor</div>
+              <div className={`tv-ai-text`} key={aiTip.text.toString().slice(0,20)}>
+                {aiTip.text}
+              </div>
             </div>
           </div>
         </div>
