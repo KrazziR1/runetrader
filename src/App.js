@@ -8231,10 +8231,10 @@ RULES:
                 {[
                   { v: "flips",      label: "Market", dropdown: true },
                   { v: "alch",       label: "High Alch" },
-                  { v: "recipes",    label: "Recipes" },
+                  { v: "recipes",    label: "Recipes", badge: "NEW" },
                   { v: "coffer",     label: "Death's Coffer" },
                   { v: "tradeboard", label: "Trade Board" },
-                ].map(({ v, label, dropdown }) => (
+                ].map(({ v, label, dropdown, badge }) => (
                   <div key={v} style={{ position: "relative" }}>
                     <button
                       className={`nav-tab ${activeTab === "market" && marketSubTab === v ? "active" : ""}`}
@@ -8246,6 +8246,7 @@ RULES:
                       {v === "flips" && activeTab === "market"
                         ? (marketInnerView === "marginwatch" ? "Margin Watch" : marketInnerView === "alerts" ? "Alerts" : "Market")
                         : label}
+                      {badge && <span style={{ fontSize: "9px", fontWeight: 700, color: "#2ecc71", background: "rgba(46,204,113,0.12)", border: "1px solid rgba(46,204,113,0.3)", borderRadius: "3px", padding: "1px 4px", letterSpacing: "0.5px" }}>{badge}</span>}
                       {dropdown && <span style={{ fontSize: "9px", opacity: 0.6, transition: "transform 0.15s", display: "inline-block", transform: marketDropdownOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>}
                     </button>
                     {dropdown && marketDropdownOpen && (
@@ -8967,10 +8968,19 @@ RULES:
                     }, null) : null;
                     // Members check — if any input/output is members-only
                     const isMembersOnly = [...(r.inputs||[]), ...(r.outputs||[])].some(x => lookupItem(x)?.members);
-                    // Last update — most recent lastTradeTime across all items
+                    // Last update — oldest lastTradeTime across all items (most stale)
                     const allTimes = [...(r.inputs||[]), ...(r.outputs||[])].map(x => lookupItem(x)?.lastTradeTime || 0).filter(t => t > 0);
-                    const lastUpdated = allTimes.length > 0 ? Math.min(...allTimes) : 0; // use oldest (most stale) as the bottleneck
-                    return { ...r, inputCost, outputValue, profit, roi, volume, volBottleneck, bottleneck, isMembersOnly, lastUpdated, resolvable: inputsOk && outputsOk };
+                    const lastUpdated = allTimes.length > 0 ? Math.min(...allTimes) : 0;
+                    // High risk — any item last traded > 24hrs ago
+                    const staleItems = [...(r.inputs||[]), ...(r.outputs||[])].filter(x => {
+                      const item = lookupItem(x);
+                      return item?.lastTradeTime && (Date.now()/1000 - item.lastTradeTime) > 86400;
+                    });
+                    const highRisk = staleItems.length > 0 ? staleItems.map(x => {
+                      const item = lookupItem(x);
+                      return `${x.name} last traded ${timeAgo(item.lastTradeTime)}`;
+                    }) : null;
+                    return { ...r, inputCost, outputValue, profit, roi, volume, volBottleneck, bottleneck, isMembersOnly, lastUpdated, highRisk, resolvable: inputsOk && outputsOk };
                   })
                   .filter(r => r.resolvable && r.inputCost > 0)
                   .filter(r => recipeCategory === "all" || r.category === recipeCategory)
@@ -9106,13 +9116,13 @@ RULES:
                           <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min vol</span>
                           <input type="number" value={recipeMinVolume} onChange={e => { setRecipeMinVolume(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "55px", fontFamily: "Inter, sans-serif" }} />
                         </div>
-                        {/* Search */}
-                        <input className="filter-input" placeholder="Search..." value={recipeSearch} onChange={e => { setRecipeSearch(e.target.value); setRecipeRowsShown(100); }} style={{ maxWidth: "160px" }} />
-                        {/* Reset + count */}
+                        {/* Reset */}
                         {activeFilterCount > 1 && (
                           <button onClick={resetFilters} style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)" }}>↺ Reset</button>
                         )}
-                        <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)", alignSelf: "center" }}>
+                        {/* Search — far right like market tab */}
+                        <input className="filter-input" placeholder="Search..." value={recipeSearch} onChange={e => { setRecipeSearch(e.target.value); setRecipeRowsShown(100); }} style={{ maxWidth: "160px", marginLeft: "auto" }} />
+                        <span style={{ fontSize: "11px", color: "var(--text-dim)", alignSelf: "center", whiteSpace: "nowrap" }}>
                           {processedRecipes.length} results
                         </span>
                       </div>
@@ -9232,13 +9242,26 @@ RULES:
                                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                           <span style={{ fontSize: "10px", color: "var(--text-dim)", transition: "transform 0.15s", display: "inline-block", transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)", flexShrink: 0 }}>▶</span>
                                           <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{r.name}</div>
+                                          {r.highRisk && (
+                                            <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
+                                              <span style={{ fontSize: "10px", fontWeight: 700, color: "#e74c3c", background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.3)", borderRadius: "3px", padding: "1px 5px", cursor: "help" }}>⚠ Stale</span>
+                                              <span className="stat-tooltip" style={{ bottom: "auto", top: "calc(100% + 4px)", left: 0, minWidth: "220px", whiteSpace: "normal" }}>
+                                                <strong>Stale price data — trade with caution</strong><br />{r.highRisk.join(" · ")}
+                                              </span>
+                                            </span>
+                                          )}
                                         </div>
                                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px", flexWrap: "wrap", paddingLeft: "16px" }}>
                                           {r.skill && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
                                           {r.isMembersOnly && <span style={{ fontSize: "10px", color: "#c9a84c", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "3px", padding: "0 4px" }}>P2P</span>}
                                           {r.bottleneck && r.category === "sets" && (
-                                            <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
-                                              bottleneck: <span style={{ color: "var(--text)" }}>{r.bottleneck.name.replace(/ \(.*\)$/, "")} ({formatGP(r.bottleneck.price)})</span>
+                                            <span className="stat-tooltip-wrap" onClick={e => e.stopPropagation()}>
+                                              <span style={{ fontSize: "10px", color: "var(--text-dim)", cursor: "help" }}>
+                                                bottleneck: <span style={{ color: "var(--text)" }}>{r.bottleneck.name.replace(/ \(.*\)$/, "")} ({formatGP(r.bottleneck.price)})</span>
+                                              </span>
+                                              <span className="stat-tooltip" style={{ bottom: "auto", top: "calc(100% + 4px)", left: 0, minWidth: "200px", whiteSpace: "normal" }}>
+                                                The bottleneck is the cheapest input piece — it's the item most likely to limit how many sets you can make or break, since it has the lowest GE value and may be hardest to source in volume.
+                                              </span>
                                             </span>
                                           )}
                                         </div>
@@ -9304,7 +9327,10 @@ RULES:
                                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
                                               {/* Inputs */}
                                               <div>
-                                                <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px" }}>Inputs — buy these</div>
+                                                <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "10px", display: "flex", alignItems: "center", gap: "8px" }}>
+                                                  Inputs — buy these
+                                                  <span style={{ fontSize: "10px", fontWeight: 400, color: "var(--text-dim)", opacity: 0.6, textTransform: "none", letterSpacing: 0 }}>click any item to view chart</span>
+                                                </div>
                                                 {HDR("buy")}
                                                 <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
                                                   {(r.inputs || []).map((inp, j) => {
@@ -9312,11 +9338,14 @@ RULES:
                                                     const qty = inp.quantity || 1;
                                                     const buyPrice = item?.low || item?.high || 0;
                                                     return (
-                                                      <div key={j} style={{ display: "grid", gridTemplateColumns: COL, alignItems: "center", gap: "8px", fontSize: "12px" }}>
+                                                      <div key={j} style={{ display: "grid", gridTemplateColumns: COL, alignItems: "center", gap: "8px", fontSize: "12px", cursor: "pointer", borderRadius: "4px", padding: "2px 4px", transition: "background 0.1s" }}
+                                                        onClick={e => { e.stopPropagation(); if (item) setSelectedItem(item); }}
+                                                        onMouseOver={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
+                                                        onMouseOut={e => e.currentTarget.style.background = "transparent"}>
                                                         <img src={item ? itemIconUrl(item.name) : ""} alt="" style={{ width: "24px", height: "24px", objectFit: "contain" }} onError={e => { e.target.style.display = "none"; }} />
                                                         <span style={{ color: "var(--text)", fontWeight: 500 }}>{inp.name}{qty > 1 ? <span style={{ color: "var(--text-dim)", fontWeight: 400 }}> ×{qty}</span> : ""}</span>
                                                         <span style={{ color: "var(--text-dim)" }}>{buyPrice ? formatGP(buyPrice) : "—"}</span>
-                                                        <span style={{ color: "var(--text)", fontWeight: 600 }}>{buyPrice ? formatGP(buyPrice * qty) : "—"}</span>
+                                                        <span style={{ color: "var(--text)", fontWeight: 600 }}>{qty > 1 && buyPrice ? formatGP(buyPrice * qty) : <span style={{ color: "var(--text-dim)" }}>—</span>}</span>
                                                         <span style={{ color: "var(--text-dim)" }}>{item?.buyLimit?.toLocaleString() ?? "—"}</span>
                                                         <span style={{ color: volColor(item?.volume || 0) }}>{fmtVol(item?.volume || 0)}</span>
                                                         <span style={{ color: tradeColor(item?.lastTradeTime) }}>{item?.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
@@ -9337,11 +9366,14 @@ RULES:
                                                     const tax = sellPrice < 50 ? 0 : Math.min(Math.floor(sellPrice * 0.02), 5_000_000);
                                                     const netSell = sellPrice - tax;
                                                     return (
-                                                      <div key={j} style={{ display: "grid", gridTemplateColumns: COL, alignItems: "center", gap: "8px", fontSize: "12px" }}>
+                                                      <div key={j} style={{ display: "grid", gridTemplateColumns: COL, alignItems: "center", gap: "8px", fontSize: "12px", cursor: "pointer", borderRadius: "4px", padding: "2px 4px", transition: "background 0.1s" }}
+                                                        onClick={e => { e.stopPropagation(); if (item) setSelectedItem(item); }}
+                                                        onMouseOver={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}
+                                                        onMouseOut={e => e.currentTarget.style.background = "transparent"}>
                                                         <img src={item ? itemIconUrl(item.name) : ""} alt="" style={{ width: "24px", height: "24px", objectFit: "contain" }} onError={e => { e.target.style.display = "none"; }} />
                                                         <span style={{ color: "var(--text)", fontWeight: 500 }}>{out.name}{qty > 1 ? <span style={{ color: "var(--text-dim)", fontWeight: 400 }}> ×{qty}</span> : ""}</span>
                                                         <span style={{ color: "var(--text-dim)" }}>{sellPrice ? formatGP(sellPrice) : "—"}</span>
-                                                        <span style={{ color: "var(--green)", fontWeight: 600 }}>{netSell ? formatGP(netSell * qty) : "—"}</span>
+                                                        <span style={{ color: "var(--green)", fontWeight: 600 }}>{qty > 1 && netSell ? formatGP(netSell * qty) : <span style={{ color: "var(--text-dim)" }}>—</span>}</span>
                                                         <span style={{ color: "var(--text-dim)" }}>{item?.buyLimit?.toLocaleString() ?? "—"}</span>
                                                         <span style={{ color: volColor(item?.volume || 0) }}>{fmtVol(item?.volume || 0)}</span>
                                                         <span style={{ color: tradeColor(item?.lastTradeTime) }}>{item?.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
@@ -9432,9 +9464,9 @@ RULES:
                     ["name",             "Item",              "The tradeable item you sacrifice to Death's Coffer."],
                     ["low",              "GE Buy Price",      "What you pay on the Grand Exchange to acquire this item."],
                     ["high",             "Coffer Value",      "The fixed base value Jagex credits to your Death's Coffer when you sacrifice this item. This is the game's internal item value, not the GE price."],
-                    ["savings",          "Savings",           "Coffer Value minus GE Buy Price. Positive means you're funding your coffer for less than face value."],
+                    ["savings",          "Margin",            "Coffer Value minus GE Buy Price. Positive means you're funding your coffer for less than face value."],
                     ["buyLimit",         "Buy Limit",         "Max quantity you can buy in a 4-hour GE window."],
-                    ["potentialSavings", "Potential Savings", "Savings per item × Buy Limit. Maximum GP saved in one 4-hour buying window."],
+                    ["potentialSavings", "Max Savings / 4hr", "Margin × Buy Limit. Maximum GP saved in one 4-hour buying window."],
                   ];
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
