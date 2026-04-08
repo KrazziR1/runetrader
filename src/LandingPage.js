@@ -128,15 +128,15 @@ const STYLES = `
   .btn-primary {
     padding: 17px 40px; border-radius: 8px; font-family: 'Cinzel', serif;
     font-size: 17px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
-    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
-    color: var(--bg); border: none; cursor: pointer; text-decoration: none;
-    transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, #c9940a, #f0c030, #e8b820);
+    color: #07090c; border: none; cursor: pointer; text-decoration: none;
+    transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px; font-weight: 900;
   }
   .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(201,168,76,0.25); opacity: 0.95; }
   .btn-secondary {
     padding: 17px 40px; border-radius: 8px; font-family: 'Cinzel', serif;
     font-size: 17px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
-    background: transparent; color: var(--text-dim); border: 1px solid var(--border-solid);
+    background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid rgba(255,255,255,0.18);
     cursor: pointer; text-decoration: none; transition: all 0.25s;
   }
   .btn-secondary:hover { border-color: rgba(201,168,76,0.4); color: var(--gold); }
@@ -197,11 +197,11 @@ const STYLES = `
   /* FEATURES */
   .section { padding: 120px 48px; position: relative; }
   .section-label {
-    font-size: 13px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
-    margin-bottom: 16px; display: flex; align-items: center; gap: 12px; font-weight: 700;
+    font-size: 14px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
+    margin-bottom: 16px; display: flex; align-items: center; gap: 12px; font-weight: 800;
   }
   .section-label::before { content: ''; width: 32px; height: 1px; background: var(--gold); }
-  .section-title { font-family: 'Cinzel', serif; font-size: clamp(28px, 4vw, 48px); font-weight: 700; color: var(--text); line-height: 1.2; }
+  .section-title { font-family: 'Cinzel', serif; font-size: clamp(32px, 4vw, 52px); font-weight: 700; color: var(--text); line-height: 1.2; }
   .section-sub { font-size: 17px; color: var(--text-dim); margin-top: 16px; max-width: 560px; line-height: 1.7; }
 
   .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 64px; }
@@ -219,7 +219,7 @@ const STYLES = `
   .feature-card:hover { border-color: rgba(201,168,76,0.3); transform: translateY(-2px); }
   .feature-icon { font-size: 28px; margin-bottom: 16px; display: block; }
   .feature-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
-  .feature-desc { font-size: 15px; color: var(--text-dim); line-height: 1.7; }
+  .feature-desc { font-size: 15px; color: #9ab0c0; line-height: 1.75; }
   .feature-tag {
     display: inline-block; margin-top: 14px; padding: 3px 10px; border-radius: 4px;
     font-size: 12px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600;
@@ -315,31 +315,47 @@ const STYLES = `
   .tv-ai-text span { color: var(--gold); font-weight: 700; }
 
   /* COMPARISON */
-  .comparison { padding: 120px 48px; background: var(--bg); }
-  .comparison-inner { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 2fr; gap: 80px; align-items: start; }
-  .comparison-table { margin-top: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-solid); }
-  .comparison-header { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; }
-  .comparison-col-header {
-    padding: 16px 24px; text-align: center; font-family: 'Cinzel', serif;
-    font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 800;
+  .comparison { padding: 120px 48px; background: var(--bg); position: relative; overflow: hidden; }
+  .comparison::before {
+    content: ''; position: absolute; bottom: -100px; right: -100px;
+    width: 500px; height: 500px; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(201,168,76,0.04) 0%, transparent 65%);
   }
-  .comparison-col-header.blank { background: var(--bg2); border-bottom: 1px solid var(--border-solid); }
-  .comparison-col-header.us { background: linear-gradient(135deg, #7a5a1a, var(--gold)); color: var(--bg); }
-  .comparison-col-header.them { background: var(--bg3); color: var(--text-dim); border-left: 1px solid var(--border-solid); border-bottom: 1px solid var(--border-solid); }
-  .comparison-row { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; border-bottom: 1px solid var(--border-solid); transition: background 0.15s; }
-  .comparison-row:last-child { border-bottom: none; }
-  .comparison-row:hover { background: rgba(201,168,76,0.03); }
-  .comparison-cell { padding: 14px 20px; font-size: 15px; display: flex; align-items: center; }
-  .comparison-cell.feature-name { color: var(--text); font-weight: 500; }
-  .comparison-cell.check { justify-content: center; font-size: 16px; }
-  .comparison-cell.us-check { background: rgba(201,168,76,0.04); }
-  .comparison-cell.them-check { background: rgba(0,0,0,0.2); border-left: 1px solid var(--border-solid); }
-  .comparison-left { padding-top: 4px; }
-  .comparison-highlight { margin-top: 28px; padding: 20px; border-radius: 10px; background: rgba(201,168,76,0.06); border: 1px solid rgba(201,168,76,0.15); }
-  .comparison-highlight-title { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--gold); margin-bottom: 12px; }
-  .comparison-highlight-item { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--text-dim); padding: 5px 0; border-bottom: 1px solid rgba(201,168,76,0.08); }
-  .comparison-highlight-item:last-child { border-bottom: none; }
-  .comparison-highlight-item::before { content: '✦'; color: var(--gold); font-size: 8px; flex-shrink: 0; }
+  .comparison-wrap { max-width: 1100px; margin: 0 auto; }
+  .comparison-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 60px; }
+  .comparison-header-text { max-width: 480px; }
+  .comparison-vs { display: flex; align-items: center; gap: 12px; }
+  .comparison-vs-pill {
+    padding: 8px 22px; border-radius: 8px; font-family: 'Cinzel', serif;
+    font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+  }
+  .comparison-vs-pill.us { background: linear-gradient(135deg, #c9940a, #f0c030); color: #07090c; }
+  .comparison-vs-pill.them { background: var(--bg3); color: var(--text-dim); border: 1px solid var(--border-solid); }
+  .comparison-vs-divider { color: var(--text-dim); font-size: 13px; font-weight: 600; }
+  .cmp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .cmp-card {
+    background: var(--bg2); border: 1px solid var(--border-solid); border-radius: 12px;
+    padding: 22px 20px; position: relative; overflow: hidden; transition: all 0.25s;
+  }
+  .cmp-card:hover { border-color: rgba(201,168,76,0.25); transform: translateY(-2px); }
+  .cmp-card.exclusive {
+    background: linear-gradient(145deg, rgba(201,168,76,0.07), rgba(201,168,76,0.02), var(--bg2));
+    border-color: rgba(201,168,76,0.22);
+  }
+  .cmp-card.exclusive::after {
+    content: 'ONLY US'; position: absolute; top: 12px; right: 12px;
+    font-size: 9px; font-weight: 800; letter-spacing: 1.5px; color: var(--gold);
+    background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.2);
+    padding: 2px 7px; border-radius: 4px;
+  }
+  .cmp-icon { font-size: 22px; margin-bottom: 10px; display: block; }
+  .cmp-title { font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .cmp-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+  .cmp-status { display: flex; align-items: center; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-solid); }
+  .cmp-check { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; }
+  .cmp-check.yes { color: var(--green); }
+  .cmp-check.no { color: rgba(231,76,60,0.7); }
+  .cmp-check.partial { color: var(--text-dim); }
 
   /* PRICING */
   .pricing { padding: 120px 48px; background: var(--bg2); position: relative; overflow: hidden; }
@@ -365,26 +381,26 @@ const STYLES = `
     font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
     padding: 4px 14px; border-radius: 20px;
   }
-  .pricing-name { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
+  .pricing-name { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px; }
   .pricing-price { font-family: 'Cinzel', serif; font-size: 56px; font-weight: 900; color: var(--gold); line-height: 1; }
   .pricing-price-free { font-family: 'Cinzel', serif; font-size: 56px; font-weight: 900; color: var(--text); line-height: 1; }
-  .pricing-period { font-size: 14px; color: var(--text-dim); margin-top: 6px; margin-bottom: 24px; }
+  .pricing-period { font-size: 15px; color: var(--text-dim); margin-top: 6px; margin-bottom: 24px; }
   .pricing-divider { height: 1px; background: var(--border-solid); margin: 0 0 20px; }
   .pricing-features { list-style: none; display: flex; flex-direction: column; gap: 11px; margin-bottom: 28px; }
-  .pricing-features li { font-size: 15px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
+  .pricing-features li { font-size: 16px; color: var(--text-dim); display: flex; align-items: center; gap: 10px; }
   .pricing-features li.active { color: var(--text); }
   .pricing-features li.active::before { content: '✓'; color: var(--green); font-size: 13px; font-weight: 700; flex-shrink: 0; }
   .pricing-features li:not(.active)::before { content: '✓'; color: var(--text-dim); opacity: 0.3; font-size: 13px; flex-shrink: 0; }
   .pricing-btn {
-    width: 100%; padding: 15px; border-radius: 10px; font-family: 'Cinzel', serif;
-    font-size: 14px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;
-    cursor: pointer; transition: all 0.2s; border: 1px solid rgba(201,168,76,0.25);
-    background: rgba(201,168,76,0.06); color: var(--text-dim);
+    width: 100%; padding: 16px; border-radius: 10px; font-family: 'Cinzel', serif;
+    font-size: 15px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: pointer; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05); color: var(--text);
   }
   .pricing-btn:hover { border-color: rgba(201,168,76,0.4); color: var(--gold); background: rgba(201,168,76,0.1); }
   .pricing-btn.featured-btn {
-    background: linear-gradient(135deg, #7a5a1a, var(--gold)); color: #070a0d; border: none;
-    font-size: 14px; font-weight: 800; box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+    background: linear-gradient(135deg, #c9940a, #f0c030, #e8b820); color: #07090c; border: none;
+    font-size: 15px; font-weight: 900; box-shadow: 0 4px 24px rgba(240,192,48,0.4);
   }
   .pricing-btn.featured-btn:hover { opacity: 0.9; box-shadow: 0 8px 32px rgba(201,168,76,0.35); transform: translateY(-1px); }
 
@@ -835,7 +851,7 @@ export default function LandingPage({ onEnterApp }) {
               { num: "03", title: "Open the GE and flip", desc: "Your GE slots sync in real time. Open the Trading Terminal, check the AI advisor, and start stacking gold.", icon: "📈" },
             ].map((step, i) => (
               <div key={i} className="feature-card" style={{ textAlign: "left" }}>
-                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", letterSpacing: "3px", color: "var(--gold-dim)", marginBottom: "16px" }}>{step.num}</div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", letterSpacing: "3px", color: "var(--gold)", marginBottom: "16px", fontWeight: 700 }}>{step.num}</div>
                 <span className="feature-icon">{step.icon}</span>
                 <div className="feature-title">{step.title}</div>
                 <div className="feature-desc">{step.desc}</div>
@@ -843,7 +859,7 @@ export default function LandingPage({ onEnterApp }) {
             ))}
           </div>
           <div style={{ marginTop: "48px" }}>
-            <a href="https://github.com/runelite/plugin-hub/pull/11114" target="_blank" rel="noreferrer" className="btn-secondary" style={{ fontSize: "13px", padding: "12px 28px", display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+            <a href="https://github.com/runelite/plugin-hub/pull/11028" target="_blank" rel="noreferrer" className="btn-secondary" style={{ fontSize: "15px", padding: "13px 32px", display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none", color: "var(--text)", borderColor: "rgba(255,255,255,0.2)" }}>
               View Plugin Hub PR #11114 →
             </a>
           </div>
@@ -852,33 +868,41 @@ export default function LandingPage({ onEnterApp }) {
 
       {/* COMPARISON */}
       <section className="comparison" id="compare">
-        <div className="comparison-inner">
-          <div className="comparison-left">
-            <div className="section-label">Why RuneTrader</div>
-            <h2 className="section-title">Everything a<br />serious flipper<br />needs</h2>
-            <p className="section-sub" style={{ marginTop: "16px" }}>We built RuneTrader because we wanted something better.</p>
-            <div className="comparison-highlight">
-              <div className="comparison-highlight-title">Only on RuneTrader</div>
-              {["AI advisor with live GE context", "Per-slot drift alerts", "Autopilot rules", "Trading Terminal command centre", "Ask questions in plain English"].map(item => (
-                <div key={item} className="comparison-highlight-item">{item}</div>
-              ))}
+        <div className="comparison-wrap">
+          <div className="comparison-header-row">
+            <div className="comparison-header-text">
+              <div className="section-label">Why RuneTrader</div>
+              <h2 className="section-title">Everything a serious<br />flipper needs</h2>
+              <p className="section-sub" style={{ marginTop: "16px" }}>We built RuneTrader because existing tools left too many gaps. Here's what sets us apart.</p>
+            </div>
+            <div className="comparison-vs">
+              <div className="comparison-vs-pill us">RuneTrader</div>
+              <span className="comparison-vs-divider">vs</span>
+              <div className="comparison-vs-pill them">Other Tools</div>
             </div>
           </div>
-          <div>
-            <div className="comparison-table">
-              <div className="comparison-header">
-                <div className="comparison-col-header blank" />
-                <div className="comparison-col-header us">RuneTrader</div>
-                <div className="comparison-col-header them">Others</div>
-              </div>
-              {COMPARISON_ROWS.map((row, i) => (
-                <div key={i} className="comparison-row">
-                  <div className="comparison-cell feature-name">{row.feature}</div>
-                  <div className="comparison-cell check us-check">{row.us}</div>
-                  <div className="comparison-cell check them-check">{row.them}</div>
+          <div className="cmp-grid">
+            {[
+              { icon:"📡", title:"Live GE Slot Sync",       desc:"Your active offers sync in real time via the RuneLite plugin. P&L, fill status and drift alerts update live.",           us:"✅ Yes", them:"⚠ Some",    exclusive:false },
+              { icon:"🤖", title:"AI with Live Context",    desc:"Ask questions in plain English with your current GE positions as context. No other tool does this.",                    us:"✅ Yes", them:"❌ No",     exclusive:true  },
+              { icon:"📊", title:"Trading Terminal",        desc:"A self-contained command centre for managing active flips — operations, analytics, alerts and picks in one screen.",    us:"✅ Yes", them:"❌ No",     exclusive:true  },
+              { icon:"⚡", title:"Drift Alerts",            desc:"Per-slot warnings when your offer price falls behind the market with exact relist prices to beat the queue.",           us:"✅ Yes", them:"❌ No",     exclusive:true  },
+              { icon:"🔔", title:"Smart Alerts",            desc:"Margin spikes, volume surges, dump detection and price crashes fired instantly — not just price crossing a threshold.",us:"✅ Yes", them:"⚠ Rarely", exclusive:false },
+              { icon:"📈", title:"Real-Time Margin Engine", desc:"4,525 items with GE tax already factored into every margin, ROI and GP/hr figure. Updated every 60 seconds.",         us:"✅ Yes", them:"⚠ Varies", exclusive:false },
+              { icon:"💬", title:"Plain English Questions", desc:"'I have 5M gp, what should I flip right now?' — answered with your live data, not generic advice.",                    us:"✅ Yes", them:"❌ No",     exclusive:true  },
+              { icon:"🆓", title:"Free Tier with Real Value",desc:"The free tier includes full market access, AI advisor, flip tracker and smart alerts. Not a trial — genuinely free.", us:"✅ Yes", them:"⚠ Limited", exclusive:false },
+              { icon:"🧪", title:"Recipes & Arbitrage",     desc:"GE sets, potion decanting, high alch, death's coffer — every conversion route with live profit and volume.",          us:"✅ Yes", them:"❌ No",     exclusive:true  },
+            ].map((c, i) => (
+              <div key={i} className={`cmp-card${c.exclusive ? " exclusive" : ""}`}>
+                <span className="cmp-icon">{c.icon}</span>
+                <div className="cmp-title">{c.title}</div>
+                <div className="cmp-desc">{c.desc}</div>
+                <div className="cmp-status">
+                  <span className="cmp-check yes">✓ {c.us.replace("✅ ","")}</span>
+                  <span className={`cmp-check ${c.them.startsWith("❌") ? "no" : "partial"}`}>{c.them.startsWith("❌") ? "✗" : "~"} Others: {c.them.replace("❌ ","").replace("✅ ","").replace("⚠ ","")}</span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -918,7 +942,7 @@ export default function LandingPage({ onEnterApp }) {
               <li className="active">Trading Terminal</li>
               <li className="active">Live GE slot tracking</li>
               <li className="active">AI Advisor with full context</li>
-              <li className="active">Autopilot rules &amp; GP goals</li>
+              <li className="active">Custom alerts &amp; notifications</li>
             </ul>
             <button className="pricing-btn featured-btn" onClick={() => onEnterApp && onEnterApp()}>Upgrade to Pro →</button>
           </div>
