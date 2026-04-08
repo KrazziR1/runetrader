@@ -9274,6 +9274,15 @@ RULES:
                                           {/* Inputs */}
                                           <div>
                                             <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>Inputs — buy these</div>
+                                            {/* Column headers */}
+                                            <div style={{ display: "grid", gridTemplateColumns: "24px 1fr 80px 80px 70px 70px", gap: "8px", fontSize: "10px", color: "var(--text-dim)", marginBottom: "6px", paddingBottom: "4px", borderBottom: "1px solid var(--border)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                              <span />
+                                              <span>Item</span>
+                                              <span>Price ea</span>
+                                              <span>Total</span>
+                                              <span>GE Limit</span>
+                                              <span>Updated</span>
+                                            </div>
                                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                                               {(r.inputs || []).map((inp, j) => {
                                                 const item = lookupItem(inp);
@@ -9285,9 +9294,9 @@ RULES:
                                                   <div key={j} style={{ display: "grid", gridTemplateColumns: "24px 1fr 80px 80px 70px 70px", alignItems: "center", gap: "8px", fontSize: "12px" }}>
                                                     <img src={item ? itemIconUrl(item.name) : ""} alt="" style={{ width: "24px", height: "24px", objectFit: "contain" }} onError={e => { e.target.style.display = "none"; }} />
                                                     <span style={{ color: "var(--text)", fontWeight: 500 }}>{inp.name}{qty > 1 ? <span style={{ color: "var(--text-dim)" }}> ×{qty}</span> : ""}</span>
-                                                    <span style={{ color: "var(--text-dim)" }}>{buyPrice ? formatGP(buyPrice) + " ea" : "—"}</span>
+                                                    <span style={{ color: "var(--text-dim)" }}>{buyPrice ? formatGP(buyPrice) : "—"}</span>
                                                     <span style={{ color: "var(--text-dim)", fontWeight: 600 }}>{totalCost ? formatGP(totalCost) : "—"}</span>
-                                                    <span style={{ color: "var(--text-dim)" }}>lim: {item?.buyLimit ? item.buyLimit.toLocaleString() : "—"}</span>
+                                                    <span style={{ color: "var(--text-dim)" }}>{item?.buyLimit ? item.buyLimit.toLocaleString() : "—"}</span>
                                                     <span style={{ color: stalenessSec && stalenessSec < 300 ? "var(--green)" : stalenessSec && stalenessSec < 3600 ? "var(--gold)" : "var(--text-dim)" }}>
                                                       {item?.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}
                                                     </span>
@@ -9299,6 +9308,15 @@ RULES:
                                           {/* Outputs */}
                                           <div>
                                             <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "8px" }}>Outputs — sell these</div>
+                                            {/* Column headers */}
+                                            <div style={{ display: "grid", gridTemplateColumns: "24px 1fr 80px 80px 70px 70px", gap: "8px", fontSize: "10px", color: "var(--text-dim)", marginBottom: "6px", paddingBottom: "4px", borderBottom: "1px solid var(--border)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                              <span />
+                                              <span>Item</span>
+                                              <span>Sell ea (after tax)</span>
+                                              <span>Total</span>
+                                              <span>GE Limit</span>
+                                              <span>Updated</span>
+                                            </div>
                                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                                               {(r.outputs || []).map((out, j) => {
                                                 const item = lookupItem(out);
@@ -9312,9 +9330,9 @@ RULES:
                                                   <div key={j} style={{ display: "grid", gridTemplateColumns: "24px 1fr 80px 80px 70px 70px", alignItems: "center", gap: "8px", fontSize: "12px" }}>
                                                     <img src={item ? itemIconUrl(item.name) : ""} alt="" style={{ width: "24px", height: "24px", objectFit: "contain" }} onError={e => { e.target.style.display = "none"; }} />
                                                     <span style={{ color: "var(--text)", fontWeight: 500 }}>{out.name}{qty > 1 ? <span style={{ color: "var(--text-dim)" }}> ×{qty}</span> : ""}</span>
-                                                    <span style={{ color: "var(--text-dim)" }}>{netSell ? formatGP(netSell) + " ea" : "—"}<span style={{ fontSize: "10px", opacity: 0.6 }}> (after tax)</span></span>
+                                                    <span style={{ color: "var(--text-dim)" }}>{netSell ? formatGP(netSell) : "—"}</span>
                                                     <span style={{ color: "var(--green)", fontWeight: 600 }}>{totalValue ? formatGP(totalValue) : "—"}</span>
-                                                    <span style={{ color: "var(--text-dim)" }}>lim: {item?.buyLimit ? item.buyLimit.toLocaleString() : "—"}</span>
+                                                    <span style={{ color: "var(--text-dim)" }}>{item?.buyLimit ? item.buyLimit.toLocaleString() : "—"}</span>
                                                     <span style={{ color: stalenessSec && stalenessSec < 300 ? "var(--green)" : stalenessSec && stalenessSec < 3600 ? "var(--gold)" : "var(--text-dim)" }}>
                                                       {item?.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}
                                                     </span>
