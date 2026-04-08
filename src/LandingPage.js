@@ -199,7 +199,7 @@ const STYLES = `
   .mockup-pill { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.2); }
 
   /* FEATURES */
-  .section { padding: 120px 48px; position: relative; }
+  .section { padding: 120px 48px; position: relative; scroll-margin-top: 130px; }
   .section-label {
     font-size: 18px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold);
     margin-bottom: 20px; display: flex; align-items: center; gap: 14px; font-weight: 800;
@@ -232,7 +232,7 @@ const STYLES = `
 
   /* TRADING TERMINAL HIGHLIGHT */
   .terminal-highlight {
-    padding: 100px 48px; background: var(--bg2);
+    padding: 100px 48px; background: var(--bg2); scroll-margin-top: 130px;
     border-top: 1px solid var(--border-solid); border-bottom: 1px solid var(--border-solid);
     position: relative; overflow: hidden;
   }
@@ -318,47 +318,52 @@ const STYLES = `
   .tv-ai-text { font-size: 15px; color: var(--text-dim); line-height: 1.6; transition: opacity 0.5s; }
   .tv-ai-text span { color: var(--gold); font-weight: 700; }
 
-  /* COMPARISON */
-  .comparison { padding: 120px 48px; background: var(--bg); position: relative; overflow: hidden; }
-  .comparison::before {
-    content: ''; position: absolute; bottom: -100px; right: -100px;
-    width: 500px; height: 500px; border-radius: 50%; pointer-events: none;
+  /* RECIPES SHOWCASE */
+  .recipes-section { padding: 100px 48px; background: var(--bg); position: relative; overflow: hidden; scroll-margin-top: 130px; }
+  .recipes-section::before {
+    content: ''; position: absolute; bottom: -100px; left: -100px;
+    width: 600px; height: 600px; border-radius: 50%; pointer-events: none;
     background: radial-gradient(ellipse at center, rgba(201,168,76,0.04) 0%, transparent 65%);
   }
-  .comparison-wrap { max-width: 1100px; margin: 0 auto; }
-  .comparison-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 60px; }
-  .comparison-header-text { max-width: 480px; }
-  .comparison-vs { display: flex; align-items: center; gap: 12px; }
-  .comparison-vs-pill {
-    padding: 9px 24px; border-radius: 8px; font-family: 'Cinzel', serif;
-    font-size: 20px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
-  }
-  .comparison-vs-pill.us { background: linear-gradient(135deg, #c9940a, #f0c030); color: #07090c; }
-  .comparison-vs-pill.them { background: var(--bg3); color: var(--text-dim); border: 1px solid var(--border-solid); }
-  .comparison-vs-divider { color: var(--text-dim); font-size: 15px; font-weight: 600; }
-  .cmp-list { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-  .cmp-row {
-    display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 16px;
-    background: var(--bg2); border: 1px solid var(--border-solid); border-radius: 10px;
-    padding: 16px 20px; transition: all 0.2s;
-  }
-  .cmp-row:hover { border-color: rgba(201,168,76,0.2); background: rgba(201,168,76,0.02); }
-  .cmp-row.exclusive { border-color: rgba(201,168,76,0.2); background: linear-gradient(90deg, rgba(201,168,76,0.05), var(--bg2)); }
-  .cmp-row-left { display: flex; align-items: center; gap: 14px; }
-  .cmp-row-icon { font-size: 20px; flex-shrink: 0; width: 36px; text-align: center; }
-  .cmp-row-text {}
-  .cmp-row-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
-  .cmp-row-desc { font-size: 14px; color: var(--text-dim); line-height: 1.55; }
-  .cmp-col { text-align: center; min-width: 90px; }
-  .cmp-col-head { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 4px; }
-  .cmp-badge { font-size: 13px; font-weight: 700; padding: 3px 10px; border-radius: 5px; display: inline-block; }
-  .cmp-badge.yes { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.2); }
-  .cmp-badge.no { background: rgba(231,76,60,0.1); color: #e74c3c; border: 1px solid rgba(231,76,60,0.2); }
-  .cmp-badge.partial { background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border-solid); }
-  .cmp-exclusive-tag { font-size: 10px; font-weight: 800; letter-spacing: 1.5px; color: var(--gold); background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.2); padding: 2px 7px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+  .recipes-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 5fr 7fr; gap: 72px; align-items: start; }
+  .recipes-feature-list { margin-top: 32px; display: flex; flex-direction: column; gap: 18px; }
+  .recipes-feature-item { display: flex; align-items: flex-start; gap: 14px; }
+  .recipes-feature-icon { width: 38px; height: 38px; border-radius: 8px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.15); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .recipes-feature-text { font-size: 15px; color: var(--text-dim); line-height: 1.6; }
+  .recipes-feature-text strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 16px; }
+  /* Recipe widget */
+  .rw { background: #070a0d; border-radius: 14px; border: 1px solid rgba(201,168,76,0.22); overflow: hidden; box-shadow: 0 0 0 1px rgba(201,168,76,0.04), 0 32px 80px rgba(0,0,0,0.6), 0 0 60px rgba(201,168,76,0.07); }
+  .rw-bar { display: flex; align-items: center; justify-content: space-between; padding: 13px 18px; background: linear-gradient(135deg, #0c1018, #0f1520); border-bottom: 1px solid rgba(201,168,76,0.18); }
+  .rw-title { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 900; color: var(--gold); letter-spacing: 2px; }
+  .rw-tabs { display: flex; gap: 4px; }
+  .rw-tab { padding: 5px 14px; border-radius: 5px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.2s; border: 1px solid transparent; color: var(--text-dim); }
+  .rw-tab.active { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.3); color: var(--gold); }
+  .rw-filters { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border-solid); flex-wrap: wrap; }
+  .rw-filter-pill { padding: 4px 12px; border-radius: 5px; font-size: 12px; font-weight: 600; border: 1px solid var(--border-solid); color: var(--text-dim); font-family: 'Inter', sans-serif; }
+  .rw-filter-pill.on { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.3); color: var(--gold); }
+  .rw-col-heads { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 8px; padding: 8px 16px; font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; border-bottom: 1px solid var(--border-solid); }
+  .rw-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 8px; padding: 11px 16px; border-bottom: 1px solid var(--border-solid); align-items: center; font-family: 'Inter', sans-serif; transition: background 0.15s; cursor: pointer; }
+  .rw-row:hover { background: rgba(201,168,76,0.03); }
+  .rw-row:last-child { border-bottom: none; }
+  .rw-row.highlight { background: rgba(46,204,113,0.04); border-left: 2px solid rgba(46,204,113,0.4); }
+  .rw-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .rw-sub { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+  .rw-profit { font-size: 14px; font-weight: 700; color: var(--green); }
+  .rw-roi { font-size: 13px; color: var(--text-dim); }
+  .rw-vol { font-size: 12px; }
+  .rw-vol-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .rw-vol-pill.high { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.2); }
+  .rw-vol-pill.med { background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.2); }
+  .rw-vol-pill.low { background: rgba(231,76,60,0.1); color: #e74c3c; border: 1px solid rgba(231,76,60,0.2); }
+  .rw-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+  .rw-tag.p2p { background: rgba(201,168,76,0.1); color: var(--gold); border: 1px solid rgba(201,168,76,0.2); }
+  .rw-tag.f2p { background: rgba(52,152,219,0.1); color: #5dade2; border: 1px solid rgba(52,152,219,0.2); }
+  .rw-footer { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--text-dim); border-top: 1px solid var(--border-solid); background: rgba(201,168,76,0.02); }
+  .rw-footer-stat { display: flex; align-items: center; gap: 6px; }
+  .rw-footer-val { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 900; color: var(--gold); }
 
   /* PRICING */
-  .pricing { padding: 120px 48px; background: var(--bg2); position: relative; overflow: hidden; }
+  .pricing { padding: 120px 48px; background: var(--bg2); position: relative; overflow: hidden; scroll-margin-top: 130px; }
   .pricing::before {
     content: ''; position: absolute; top: -150px; left: 50%; transform: translateX(-50%);
     width: 800px; height: 400px; border-radius: 50%; pointer-events: none;
@@ -640,7 +645,7 @@ export default function LandingPage({ onEnterApp }) {
       </nav>
 
       {/* TICKER */}
-      <div style={{ marginTop: "120px", width: "100%", overflow: "hidden", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--bg2)", height: "44px", display: "flex", alignItems: "center" }}>
+      <div style={{ marginTop: "130px", width: "100%", overflow: "hidden", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--bg2)", height: "44px", display: "flex", alignItems: "center" }}>
         <div style={{ display: "inline-flex", gap: "48px", whiteSpace: "nowrap", animation: "ticker 30s linear infinite", alignItems: "center", flexShrink: 0 }}>
           {[...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
             <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontFamily: "Inter, sans-serif" }}>
@@ -854,54 +859,77 @@ export default function LandingPage({ onEnterApp }) {
         </div>
       </section>
 
-      {/* COMPARISON */}
-      <section className="comparison" id="compare">
-        <div className="comparison-wrap">
-          <div className="comparison-header-row">
-            <div className="comparison-header-text">
-              <div className="section-label">Why RuneTrader</div>
-              <h2 className="section-title">Everything a serious<br />flipper needs</h2>
-              <p className="section-sub" style={{ marginTop: "16px" }}>We built RuneTrader because existing tools left too many gaps. Here's what sets us apart.</p>
-            </div>
-            <div className="comparison-vs">
-              <div className="comparison-vs-pill us">RuneTrader</div>
-              <span className="comparison-vs-divider">vs</span>
-              <div className="comparison-vs-pill them">Other Tools</div>
-            </div>
-          </div>
-          {/* Column headers */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 110px 110px", gap: "16px", padding: "0 20px 12px", marginTop: "20px" }}>
-            <span style={{ fontSize: "13px", fontWeight: 800, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1.5px" }}>Feature</span>
-            <span style={{ fontSize: "13px", fontWeight: 800, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1.5px", textAlign: "center" }}>RuneTrader</span>
-            <span style={{ fontSize: "13px", fontWeight: 800, color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1.5px", textAlign: "center" }}>Others</span>
-          </div>
-          <div className="cmp-list">
-            {[
-              { icon:"📡", title:"Live GE Slot Sync",        desc:"Real-time offer sync via RuneLite. P&L, fill status and drift alerts update live.",             us:"Yes",     them:"Some",    thType:"partial", exclusive:false },
-              { icon:"🤖", title:"AI with Live GE Context",  desc:"Ask questions in plain English with your actual positions as context. No other tool does this.", us:"Yes",     them:"No",      thType:"no",      exclusive:true  },
-              { icon:"📊", title:"Trading Terminal",         desc:"A full command centre for managing active flips — operations, analytics, alerts and picks.",      us:"Yes",     them:"No",      thType:"no",      exclusive:true  },
-              { icon:"⚡", title:"Per-Slot Drift Alerts",    desc:"Warns when your offer falls behind market with exact relist prices to beat the queue.",           us:"Yes",     them:"No",      thType:"no",      exclusive:true  },
-              { icon:"🔔", title:"Smart Alerts",             desc:"Margin spikes, volume surges, dump detection and crashes — not just basic price alerts.",         us:"Yes",     them:"Rarely",  thType:"partial", exclusive:false },
-              { icon:"💬", title:"Plain English Questions",  desc:"'I have 5M gp, what should I flip?' — answered with your live data, not generic advice.",        us:"Yes",     them:"No",      thType:"no",      exclusive:true  },
-              { icon:"🧪", title:"Recipes & Arbitrage",      desc:"GE sets, potions, high alch, death's coffer — every conversion with live profit and volume.",    us:"Yes",     them:"No",      thType:"no",      exclusive:true  },
-              { icon:"🆓", title:"Free Tier with Real Value",desc:"Full market access, AI advisor, flip tracker and smart alerts. Not a trial — genuinely free.",   us:"Yes",     them:"Limited", thType:"partial", exclusive:false },
-            ].map((c, i) => (
-              <div key={i} className={`cmp-row${c.exclusive ? " exclusive" : ""}`}>
-                <div className="cmp-row-left">
-                  <span className="cmp-row-icon">{c.icon}</span>
-                  <div className="cmp-row-text">
-                    <div className="cmp-row-title">{c.title}{c.exclusive && <span className="cmp-exclusive-tag">ONLY US</span>}</div>
-                    <div className="cmp-row-desc">{c.desc}</div>
+      {/* RECIPES SHOWCASE */}
+      <section className="recipes-section" id="compare">
+        <div className="recipes-inner">
+          <div>
+            <div className="section-label">Free Feature</div>
+            <h2 className="section-title">Recipes &amp;<br /><span style={{ color: "var(--gold)" }}>Arbitrage</span></h2>
+            <p className="section-sub" style={{ marginTop: "16px" }}>Every profit conversion route in one place — live margins, ROI and volume updated every 60 seconds.</p>
+            <div className="recipes-feature-list">
+              {[
+                { icon: "⚗️", title: "GE Set Exchange", text: "~110 armour and equipment sets. Toggle Making or Breaking direction. See profit per exchange and daily volume." },
+                { icon: "🧪", title: "Potion Decanting", text: "All major potions via Bob Barter. Find the most profitable dose conversion — Low→High or High→Low." },
+                { icon: "🔥", title: "High Alch Tracker", text: "Live nature rune pricing factored in. Filter F2P or Members. Sorted by max profit per 4hr cast limit." },
+                { icon: "💀", title: "Death's Coffer", text: "Find the cheapest items to sacrifice. Margin, max savings per 4hr, and a target amount calculator." },
+              ].map((f, i) => (
+                <div key={i} className="recipes-feature-item">
+                  <div className="recipes-feature-icon">{f.icon}</div>
+                  <div className="recipes-feature-text">
+                    <strong>{f.title}</strong>{f.text}
                   </div>
                 </div>
-                <div className="cmp-col">
-                  <span className="cmp-badge yes">✓ {c.us}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Recipes Widget */}
+          <div className="rw">
+            <div className="rw-bar">
+              <span className="rw-title">RECIPES</span>
+              <div className="rw-tabs">
+                {["GE Sets", "Potions", "Misc"].map((t, i) => (
+                  <div key={t} className={`rw-tab${i === 0 ? " active" : ""}`}>{t}</div>
+                ))}
+              </div>
+            </div>
+            <div className="rw-filters">
+              <div className="rw-filter-pill on">✓ Profitable only</div>
+              <div className="rw-filter-pill on">Making</div>
+              <div className="rw-filter-pill">Breaking</div>
+              <div className="rw-filter-pill">P2P</div>
+              <div className="rw-filter-pill">F2P</div>
+              <div style={{ marginLeft: "auto", fontSize: "12px", color: "var(--text-dim)" }}>23 results</div>
+            </div>
+            <div className="rw-col-heads">
+              <span>Recipe</span><span>Profit</span><span>ROI</span><span>Vol/Day</span><span>Type</span>
+            </div>
+            {[
+              { name: "Bandos armour set", dir: "Making", profit: "+82,400gp", roi: "+3.8%", vol: "high",  tag: "p2p", hot: true  },
+              { name: "Armadyl armour set", dir: "Making", profit: "+61,200gp", roi: "+2.1%", vol: "high",  tag: "p2p", hot: false },
+              { name: "Dragon armour set (lg)", dir: "Making", profit: "+44,800gp", roi: "+1.9%", vol: "med",   tag: "p2p", hot: false },
+              { name: "Rune armour set (lg)",   dir: "Making", profit: "+38,100gp", roi: "+4.2%", vol: "high",  tag: "f2p", hot: true  },
+              { name: "Gilded armour set",       dir: "Making", profit: "+29,600gp", roi: "+2.7%", vol: "med",   tag: "p2p", hot: false },
+              { name: "Inquisitor's armour set", dir: "Breaking", profit: "+231,000gp", roi: "+1.2%", vol: "low", tag: "p2p", hot: false },
+            ].map((r, i) => (
+              <div key={i} className={`rw-row${r.hot ? " highlight" : ""}`}>
+                <div>
+                  <div className="rw-name">{r.name}</div>
+                  <div className="rw-sub">{r.dir}</div>
                 </div>
-                <div className="cmp-col">
-                  <span className={`cmp-badge ${c.thType}`}>{c.thType === "no" ? "✗" : "~"} {c.them}</span>
-                </div>
+                <span className="rw-profit">{r.profit}</span>
+                <span className="rw-roi">{r.roi}</span>
+                <span className="rw-vol"><span className={`rw-vol-pill ${r.vol}`}>{r.vol.charAt(0).toUpperCase()+r.vol.slice(1)}</span></span>
+                <span><span className={`rw-tag ${r.tag}`}>{r.tag.toUpperCase()}</span></span>
               </div>
             ))}
+            <div className="rw-footer">
+              <div className="rw-footer-stat">Best profit: <span className="rw-footer-val" style={{ marginLeft: "8px" }}>+231,000gp</span></div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--green)", boxShadow: "0 0 6px var(--green)" }} />
+                <span>Live · updated 12s ago</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
