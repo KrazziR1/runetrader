@@ -8164,24 +8164,7 @@ RULES:
 
             <div className="header-right">
 
-              {/* Trading Terminal button */}
-              {user && (
-                <button onClick={toggleMerchantMode} className="terminal-btn"
-                  style={{
-                    border: `1px solid ${merchantMode ? "var(--gold)" : "rgba(201,168,76,0.4)"}`,
-                    background: merchantMode ? "linear-gradient(135deg, rgba(201,168,76,0.22), rgba(201,168,76,0.1))" : "rgba(201,168,76,0.07)",
-                    color: "var(--gold)", fontWeight: 700, letterSpacing: "0.2px",
-                    animation: merchantMode ? "none" : "terminalGlow 15s ease-in-out infinite",
-                    boxShadow: merchantMode ? "0 0 16px rgba(201,168,76,0.2)" : undefined,
-                  }}
-                  onMouseOver={e => { e.currentTarget.style.animation = "none"; e.currentTarget.style.background = "rgba(201,168,76,0.18)"; e.currentTarget.style.boxShadow = "0 0 20px rgba(201,168,76,0.35)"; }}
-                  onMouseOut={e => { if (!merchantMode) { e.currentTarget.style.animation = "terminalGlow 15s ease-in-out infinite"; e.currentTarget.style.background = "rgba(201,168,76,0.08)"; e.currentTarget.style.boxShadow = "none"; } }}>
-                  {merchantMode ? <><div className="merchant-dot" style={{ background: "var(--green)" }} /> Exit Terminal</> : <>
-                    {!isPro && !isOnTrial && <span style={{ fontSize: "12px", opacity: 0.8 }}>🔒</span>}
-                    📈 Trading Terminal
-                  </>}
-                </button>
-              )}
+
 
               {/* Sound toggle */}
               {user && (
@@ -8320,6 +8303,32 @@ RULES:
                     )}
                   </div>
                 ))}
+
+                {/* Divider + Trading Terminal as Option C nav tab */}
+                {user && (
+                  <>
+                    <div style={{ width: "1px", height: "20px", background: "var(--border)", margin: "0 4px", flexShrink: 0 }} />
+                    <button
+                      onClick={toggleMerchantMode}
+                      style={{
+                        display: "flex", alignItems: "center", gap: "7px",
+                        padding: "7px 16px", borderRadius: "7px", cursor: "pointer",
+                        fontFamily: "'DM Sans', sans-serif", fontSize: "15px", fontWeight: 600,
+                        letterSpacing: "0.2px", whiteSpace: "nowrap", transition: "all 0.15s",
+                        border: `1px solid ${merchantMode ? "var(--gold)" : "rgba(201,168,76,0.28)"}`,
+                        background: merchantMode ? "rgba(201,168,76,0.15)" : "rgba(201,168,76,0.07)",
+                        color: "var(--gold)",
+                        animation: merchantMode ? "none" : "terminalGlow 15s ease-in-out infinite",
+                        boxShadow: merchantMode ? "0 0 12px rgba(201,168,76,0.15)" : undefined,
+                      }}
+                      onMouseOver={e => { e.currentTarget.style.animation = "none"; e.currentTarget.style.background = "rgba(201,168,76,0.15)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"; }}
+                      onMouseOut={e => { if (!merchantMode) { e.currentTarget.style.animation = "terminalGlow 15s ease-in-out infinite"; e.currentTarget.style.background = "rgba(201,168,76,0.07)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.28)"; } }}>
+                      {merchantMode
+                        ? <><div className="merchant-dot" style={{ background: "var(--green)" }} /> Exit Terminal</>
+                        : <>{!isPro && !isOnTrial && <span style={{ fontSize: "11px", opacity: 0.7 }}>🔒</span>} 📈 Trading Terminal</>}
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Far-right: Upgrade to Pro + Support Development */}
