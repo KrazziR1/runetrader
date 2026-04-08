@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 const STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -147,7 +147,7 @@ const STYLES = `
     animation: fadeInUp 0.8s ease 0.4s both;
   }
   .hero-stat { text-align: center; }
-  .hero-stat-value { font-family: 'Cinzel', serif; font-size: 28px; font-weight: 700; color: var(--gold); }
+  .hero-stat-value { font-family: 'Cinzel', serif; font-size: 30px; font-weight: 900; color: var(--gold); }
   .hero-stat-label { font-size: 14px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; font-weight: 600; }
 
   /* PRODUCT MOCKUP */
@@ -179,7 +179,7 @@ const STYLES = `
     border: 1px solid var(--border-solid);
   }
   .mockup-card-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 6px; }
-  .mockup-card-value { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700; color: var(--gold); }
+  .mockup-card-value { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 900; color: var(--gold); }
   .mockup-card-sub { font-size: 11px; color: var(--green); margin-top: 3px; font-weight: 600; }
   .mockup-table { padding: 0 16px 16px; }
   .mockup-row {
@@ -201,7 +201,7 @@ const STYLES = `
     margin-bottom: 16px; display: flex; align-items: center; gap: 12px; font-weight: 800;
   }
   .section-label::before { content: ''; width: 32px; height: 1px; background: var(--gold); }
-  .section-title { font-family: 'Cinzel', serif; font-size: clamp(32px, 4vw, 52px); font-weight: 700; color: var(--text); line-height: 1.2; }
+  .section-title { font-family: 'Cinzel', serif; font-size: clamp(34px, 4vw, 54px); font-weight: 900; color: var(--text); line-height: 1.2; }
   .section-sub { font-size: 18px; color: var(--text-dim); margin-top: 16px; max-width: 560px; line-height: 1.7; }
 
   .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 64px; }
@@ -218,7 +218,7 @@ const STYLES = `
   .feature-card:hover::before { opacity: 1; }
   .feature-card:hover { border-color: rgba(201,168,76,0.3); transform: translateY(-2px); }
   .feature-icon { font-size: 32px; margin-bottom: 18px; display: block; }
-  .feature-title { font-family: 'Cinzel', serif; font-size: 21px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+  .feature-title { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 12px; }
   .feature-desc { font-size: 16px; color: #aec4d4; line-height: 1.8; }
   .feature-tag {
     display: inline-block; margin-top: 14px; padding: 3px 10px; border-radius: 4px;
@@ -264,14 +264,14 @@ const STYLES = `
     padding: 12px 16px; background: linear-gradient(135deg, #0c1018, #0f1520);
     border-bottom: 1px solid rgba(201,168,76,0.18);
   }
-  .tv-title { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 800; color: var(--gold); letter-spacing: 2px; }
+  .tv-title { font-family: 'Cinzel', serif; font-size: 16px; font-weight: 900; color: var(--gold); letter-spacing: 2px; }
   .tv-live { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--green); font-weight: 700; letter-spacing: 1px; }
   .tv-live::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.5s infinite; }
   .tv-stats { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border-solid); }
   .tv-stat { padding: 12px 14px; border-right: 1px solid var(--border-solid); background: rgba(201,168,76,0.02); }
   .tv-stat:last-child { border-right: none; }
   .tv-stat-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
-  .tv-stat-val { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700; color: var(--gold); margin-top: 3px; transition: all 0.4s; }
+  .tv-stat-val { font-family: 'Cinzel', serif; font-size: 26px; font-weight: 900; color: var(--gold); margin-top: 3px; transition: all 0.4s; }
   .tv-stat-delta { font-size: 13px; color: var(--green); font-weight: 600; margin-top: 1px; }
   .tv-slots { padding: 10px; display: flex; flex-direction: column; gap: 6px; }
   .tv-slot {
@@ -327,7 +327,7 @@ const STYLES = `
   .comparison-vs { display: flex; align-items: center; gap: 12px; }
   .comparison-vs-pill {
     padding: 9px 24px; border-radius: 8px; font-family: 'Cinzel', serif;
-    font-size: 14px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    font-size: 15px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
   }
   .comparison-vs-pill.us { background: linear-gradient(135deg, #c9940a, #f0c030); color: #07090c; }
   .comparison-vs-pill.them { background: var(--bg3); color: var(--text-dim); border: 1px solid var(--border-solid); }
@@ -374,10 +374,10 @@ const STYLES = `
   .pricing-badge {
     position: absolute; top: -14px; left: 28px;
     background: linear-gradient(135deg, #c9940a, #f0c030); color: #07090c; font-family: 'Cinzel', serif;
-    font-size: 13px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;
+    font-size: 14px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase;
     padding: 6px 20px; border-radius: 20px;
   }
-  .pricing-name { font-family: 'Cinzel', serif; font-size: 17px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: var(--text); margin-bottom: 10px; }
+  .pricing-name { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; color: var(--text); margin-bottom: 10px; }
   .pricing-price { font-family: 'Cinzel', serif; font-size: 56px; font-weight: 900; color: var(--gold); line-height: 1; }
   .pricing-price-free { font-family: 'Cinzel', serif; font-size: 56px; font-weight: 900; color: var(--text); line-height: 1; }
   .pricing-period { font-size: 17px; color: #8fa0b0; margin-top: 8px; margin-bottom: 28px; }
@@ -420,7 +420,7 @@ const STYLES = `
     display: flex; align-items: center; justify-content: space-between;
     font-size: 14px; color: var(--text-dim); background: var(--bg2);
   }
-  .footer-logo { font-family: 'Cinzel', serif; color: var(--gold); font-size: 16px; letter-spacing: 2px; font-weight: 700; }
+  .footer-logo { font-family: 'Cinzel', serif; color: var(--gold); font-size: 18px; letter-spacing: 2px; font-weight: 900; }
   .footer-links { display: flex; gap: 24px; }
   .footer-link { color: var(--text-dim); text-decoration: none; transition: color 0.2s; font-size: 14px; }
   .footer-link:hover { color: var(--gold); }
