@@ -5305,22 +5305,88 @@ export default function RuneTrader() {
     ];
   });
 
-  // ── Jewelry: charge arbitrage — buy uncharged, sell charged (or vice versa) ──
-  // Only including pairs where both charge variants have confirmed wiki prices
-  const JEWELRY_RECIPES = [
-    { name: "Amulet of glory (6) vs uncharaged", category: "jewelry", skill: "Fountain of Rune", inputs: [{name:"Amulet of glory"}], outputs: [{name:"Amulet of glory(6)"}] },
-    { name: "Games necklace (8) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Games necklace"}], outputs: [{name:"Games necklace(8)"}] },
-    { name: "Ring of dueling (8) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Ring of dueling"}], outputs: [{name:"Ring of dueling(8)"}] },
-    { name: "Combat bracelet (6) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Combat bracelet"}], outputs: [{name:"Combat bracelet(6)"}] },
-    { name: "Skills necklace (6) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Skills necklace"}], outputs: [{name:"Skills necklace(6)"}] },
-    { name: "Burning amulet (5) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Bracelet of slaughter"}], outputs: [{name:"Burning amulet(5)"}] },
-    { name: "Ring of wealth (5) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Ring of wealth"}], outputs: [{name:"Ring of wealth (5)"}] },
-    { name: "Necklace of passage (5) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Necklace of passage"}], outputs: [{name:"Necklace of passage(5)"}] },
-    { name: "Ring of returning (5) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Ring of returning"}], outputs: [{name:"Ring of returning(5)"}] },
-    { name: "Castle wars bracelet (3) vs uncharged", category: "jewelry", skill: "Grand Exchange", inputs: [{name:"Bracelet of clay"}], outputs: [{name:"Castle wars bracelet(3)"}] },
+  // ── Misc GE arbitrage — flatpacks, unstrung bows, gems, cannonballs, crafting ──
+  const MISC_RECIPES = [
+    // ── Charged jewelry arbitrage ──
+    { name: "Amulet of glory: uncharged → (6)", category: "misc", skill: "Fountain of Rune", inputs: [{name:"Amulet of glory"}], outputs: [{name:"Amulet of glory(6)"}] },
+    { name: "Amulet of glory: (6) → uncharged", category: "misc", skill: "Grand Exchange", inputs: [{name:"Amulet of glory(6)"}], outputs: [{name:"Amulet of glory"}] },
+    { name: "Combat bracelet: uncharged → (6)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Combat bracelet"}], outputs: [{name:"Combat bracelet(6)"}] },
+    { name: "Combat bracelet: (6) → uncharged", category: "misc", skill: "Grand Exchange", inputs: [{name:"Combat bracelet(6)"}], outputs: [{name:"Combat bracelet"}] },
+    { name: "Necklace of passage: uncharged → (5)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Necklace of passage"}], outputs: [{name:"Necklace of passage(5)"}] },
+    { name: "Games necklace: uncharged → (8)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Games necklace"}], outputs: [{name:"Games necklace(8)"}] },
+    { name: "Ring of dueling: uncharged → (8)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Ring of dueling"}], outputs: [{name:"Ring of dueling(8)"}] },
+    { name: "Ring of wealth: uncharged → (5)", category: "misc", skill: "Grand Exchange", inputs: [{name:"Ring of wealth"}], outputs: [{name:"Ring of wealth (5)"}] },
+    // ── Flatpacks — buy flatpack, sell built item (or vice versa) ──
+    { name: "Oak chair flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak chair (flatpack)"}], outputs: [{name:"Oak chair (flatpack)"}] },
+    { name: "Oak dining table flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak dining table (flatpack)"}], outputs: [{name:"Oak dining table (flatpack)"}] },
+    { name: "Oak bookcase flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak bookcase (flatpack)"}], outputs: [{name:"Oak bookcase (flatpack)"}] },
+    { name: "Oak bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak bench (flatpack)"}], outputs: [{name:"Oak bench (flatpack)"}] },
+    { name: "Oak dresser flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak dresser (flatpack)"}], outputs: [{name:"Oak dresser (flatpack)"}] },
+    { name: "Oak armour case flatpack", category: "misc", skill: "Construction", inputs: [{name:"Oak armour case (flatpack)"}], outputs: [{name:"Oak armour case (flatpack)"}] },
+    { name: "Carved teak table flatpack", category: "misc", skill: "Construction", inputs: [{name:"Carved teak table (flatpack)"}], outputs: [{name:"Carved teak table (flatpack)"}] },
+    { name: "Carved teak bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Carved teak bench (flatpack)"}], outputs: [{name:"Carved teak bench (flatpack)"}] },
+    { name: "Mahogany armchair flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany armchair (flatpack)"}], outputs: [{name:"Mahogany armchair (flatpack)"}] },
+    { name: "Mahogany bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany bench (flatpack)"}], outputs: [{name:"Mahogany bench (flatpack)"}] },
+    { name: "Mahogany dresser flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany dresser (flatpack)"}], outputs: [{name:"Mahogany dresser (flatpack)"}] },
+    { name: "Mahogany toy box flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany toy box (flatpack)"}], outputs: [{name:"Mahogany toy box (flatpack)"}] },
+    { name: "Mahogany magic wardrobe flatpack", category: "misc", skill: "Construction", inputs: [{name:"Mahogany magic wardrobe (flatpack)"}], outputs: [{name:"Mahogany magic wardrobe (flatpack)"}] },
+    { name: "Gilded wardrobe flatpack", category: "misc", skill: "Construction", inputs: [{name:"Gilded wardrobe (flatpack)"}], outputs: [{name:"Gilded wardrobe (flatpack)"}] },
+    { name: "Gilded four-poster flatpack", category: "misc", skill: "Construction", inputs: [{name:"Gilded four-poster (flatpack)"}], outputs: [{name:"Gilded four-poster (flatpack)"}] },
+    { name: "Shoe box flatpack", category: "misc", skill: "Construction", inputs: [{name:"Shoe box (flatpack)"}], outputs: [{name:"Shoe box (flatpack)"}] },
+    { name: "Wood dining table flatpack", category: "misc", skill: "Construction", inputs: [{name:"Wood dining table (flatpack)"}], outputs: [{name:"Wood dining table (flatpack)"}] },
+    { name: "Wooden chair flatpack", category: "misc", skill: "Construction", inputs: [{name:"Wooden chair (flatpack)"}], outputs: [{name:"Wooden chair (flatpack)"}] },
+    { name: "Wooden bench flatpack", category: "misc", skill: "Construction", inputs: [{name:"Wooden bench (flatpack)"}], outputs: [{name:"Wooden bench (flatpack)"}] },
+    { name: "Crystal of power flatpack", category: "misc", skill: "Construction", inputs: [{name:"Crystal of power (flatpack)"}], outputs: [{name:"Crystal of power (flatpack)"}] },
+    // ── Unstrung bows — buy unstrung, sell strung ──
+    { name: "Shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Shortbow (u)"}], outputs: [{name:"Shortbow"}] },
+    { name: "Longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Longbow (u)"}], outputs: [{name:"Longbow"}] },
+    { name: "Oak shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Oak shortbow (u)"}], outputs: [{name:"Oak shortbow"}] },
+    { name: "Oak longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Oak longbow (u)"}], outputs: [{name:"Oak longbow"}] },
+    { name: "Willow shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Willow shortbow (u)"}], outputs: [{name:"Willow shortbow"}] },
+    { name: "Willow longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Willow longbow (u)"}], outputs: [{name:"Willow longbow"}] },
+    { name: "Maple shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Maple shortbow (u)"}], outputs: [{name:"Maple shortbow"}] },
+    { name: "Maple longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Maple longbow (u)"}], outputs: [{name:"Maple longbow"}] },
+    { name: "Yew shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Yew shortbow (u)"}], outputs: [{name:"Yew shortbow"}] },
+    { name: "Yew longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Yew longbow (u)"}], outputs: [{name:"Yew longbow"}] },
+    { name: "Magic shortbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Magic shortbow (u)"}], outputs: [{name:"Magic shortbow"}] },
+    { name: "Magic longbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Magic longbow (u)"}], outputs: [{name:"Magic longbow"}] },
+    { name: "Adamant crossbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Adamant crossbow (u)"}], outputs: [{name:"Adamant crossbow"}] },
+    { name: "Rune crossbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Rune crossbow (u)"}], outputs: [{name:"Rune crossbow"}] },
+    { name: "Dragon crossbow: unstrung → strung", category: "misc", skill: "Fletching", inputs: [{name:"Dragon crossbow (u)"}], outputs: [{name:"Dragon crossbow"}] },
+    // ── Uncut gems — buy uncut, sell cut ──
+    { name: "Sapphire: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut sapphire"}], outputs: [{name:"Sapphire"}] },
+    { name: "Emerald: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut emerald"}], outputs: [{name:"Emerald"}] },
+    { name: "Ruby: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut ruby"}], outputs: [{name:"Ruby"}] },
+    { name: "Diamond: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut diamond"}], outputs: [{name:"Diamond"}] },
+    { name: "Dragonstone: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut dragonstone"}], outputs: [{name:"Dragonstone"}] },
+    { name: "Onyx: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut onyx"}], outputs: [{name:"Onyx"}] },
+    { name: "Zenyte: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut zenyte"}], outputs: [{name:"Zenyte"}] },
+    { name: "Red topaz: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut red topaz"}], outputs: [{name:"Red topaz"}] },
+    { name: "Jade: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut jade"}], outputs: [{name:"Jade"}] },
+    { name: "Opal: uncut → cut", category: "misc", skill: "Crafting", inputs: [{name:"Uncut opal"}], outputs: [{name:"Opal"}] },
+    // ── Cannonballs — buy steel bars, sell cannonballs ──
+    { name: "Cannonball: steel bar → 4 cannonballs", category: "misc", skill: "Smithing", inputs: [{name:"Steel bar"}], outputs: [{name:"Cannonball", quantity:4}] },
+    // ── Crafting supplies — flax → bow string ──
+    { name: "Flax → bow string", category: "misc", skill: "Crafting", inputs: [{name:"Flax"}], outputs: [{name:"Bow string"}] },
+    { name: "Sinew → bow string", category: "misc", skill: "Crafting", inputs: [{name:"Sinew"}], outputs: [{name:"Bow string"}] },
+    // ── Broad bolts — buy unfinished, sell finished ──
+    { name: "Broad bolts: unfinished → finished", category: "misc", skill: "Fletching", inputs: [{name:"Unfinished broad bolts", quantity:10}], outputs: [{name:"Broad bolts", quantity:10}] },
+    // ── Bolt tips — gems → bolt tips ──
+    { name: "Sapphire bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Sapphire"}], outputs: [{name:"Sapphire bolt tips", quantity:12}] },
+    { name: "Emerald bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Emerald"}], outputs: [{name:"Emerald bolt tips", quantity:12}] },
+    { name: "Ruby bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Ruby"}], outputs: [{name:"Ruby bolt tips", quantity:12}] },
+    { name: "Diamond bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Diamond"}], outputs: [{name:"Diamond bolt tips", quantity:12}] },
+    { name: "Dragonstone bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Dragonstone"}], outputs: [{name:"Dragonstone bolt tips", quantity:12}] },
+    { name: "Onyx bolt tips (10)", category: "misc", skill: "Fletching", inputs: [{name:"Onyx"}], outputs: [{name:"Onyx bolt tips", quantity:12}] },
+    { name: "Zenyte shard → bolt tips", category: "misc", skill: "Fletching", inputs: [{name:"Zenyte shard"}], outputs: [{name:"Zenyte", quantity:1}] },
+    // ── Noted item arbitrage — buy noted, sell unnoted (or vice versa) ──
+    { name: "Pure essence: noted → unnoted", category: "misc", skill: "Grand Exchange", inputs: [{name:"Pure essence"}], outputs: [{name:"Pure essence"}] },
+    // ── Seed packs ──
+    { name: "Herb seed pack → seeds", category: "misc", skill: "Grand Exchange", inputs: [{name:"Herb seed pack"}], outputs: [{name:"Ranarr seed", quantity:3}] },
+    { name: "Cactus seed pack", category: "misc", skill: "Grand Exchange", inputs: [{name:"Cactus seed pack"}], outputs: [{name:"Cactus seed", quantity:10}] },
   ];
 
-  const STATIC_RECIPES = [...SET_RECIPES, ...POTION_RECIPES, ...JEWELRY_RECIPES];
+  const STATIC_RECIPES = [...SET_RECIPES, ...POTION_RECIPES, ...MISC_RECIPES];
 
   // ── Advanced filters ──
   const [showAdvFilters, setShowAdvFilters] = useState(false);
@@ -8914,6 +8980,11 @@ RULES:
                     if (recipeDirection === "breaking") return r.name.startsWith("Breaking");
                     if (recipeDirection === "decant_up") return r.name.includes("(1)→") || r.name.includes("(2)→") || r.name.includes("(3)→(4)");
                     if (recipeDirection === "decant_down") return r.name.includes("→(1)") || r.name.includes("→(2)") || r.name.includes("(4)→(3)");
+                    if (recipeDirection === "fletching") return r.skill === "Fletching";
+                    if (recipeDirection === "crafting") return r.skill === "Crafting";
+                    if (recipeDirection === "construction") return r.skill === "Construction";
+                    if (recipeDirection === "smithing") return r.skill === "Smithing";
+                    if (recipeDirection === "charge") return r.skill === "Fountain of Rune" || r.name.toLowerCase().includes("uncharged") || r.name.includes("→ unch");
                     return true;
                   })
                   .filter(r => !recipeSearch || r.name.toLowerCase().includes(recipeSearch.toLowerCase()))
@@ -8932,13 +9003,15 @@ RULES:
                     { id: "all",     label: "All" },
                     { id: "sets",    label: "GE Sets" },
                     { id: "potions", label: "Potions" },
-                    { id: "jewelry", label: "Jewelry" },
+                    { id: "misc",    label: "Misc" },
                   ];
 
                   const DIR_OPTS = recipeCategory === "sets"
                     ? [{ id:"all",label:"All"},{id:"making",label:"Making"},{id:"breaking",label:"Breaking"}]
                     : recipeCategory === "potions"
                     ? [{ id:"all",label:"All"},{id:"decant_up",label:"Low→High dose"},{id:"decant_down",label:"High→Low dose"}]
+                    : recipeCategory === "misc"
+                    ? [{ id:"all",label:"All"},{id:"fletching",label:"Fletching"},{id:"crafting",label:"Crafting"},{id:"construction",label:"Construction"},{id:"smithing",label:"Smithing"},{id:"charge",label:"Charged Items"}]
                     : null;
 
                   const COLS_DEF = [
