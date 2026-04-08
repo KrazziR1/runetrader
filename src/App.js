@@ -7788,11 +7788,6 @@ RULES:
             </div>
 
             <div className="header-right">
-              {/* Live / paused badge */}
-              {syncPaused
-                ? <div className="paused-pill"><div className="paused-pill-dot" />Sync paused</div>
-                : lastUpdate && <div className="live-badge"><div className="live-dot" />Live · {formatTime(lastUpdate)}</div>
-              }
 
               {/* Trading Terminal button */}
               {user && (
@@ -7815,32 +7810,33 @@ RULES:
                 </button>
               )}
 
-              {/* Combined Level + Quests button */}
+              {/* Combined Level + Quests + Profile button */}
               {user && (() => {
                 const level = xpToLevel(totalXP);
                 const { emoji: _emoji5 } = getLevelTitle(level); const emoji = fixEmoji(_emoji5);
                 const doneQuests = dailyQuests.filter(q => q.completed).length;
                 const allDone = questsLoaded && doneQuests === dailyQuests.length && dailyQuests.length > 0;
+                const initial = (user.user_metadata?.username || user.email?.split("@")[0] || "?")[0].toUpperCase();
                 return (
                   <button className="level-btn"
-                    onClick={() => setShowPlayerCard(v => !v)}
-                    style={{ borderColor: allDone ? "var(--green-dim)" : "rgba(201,168,76,0.3)", background: allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.07)", color: allDone ? "var(--green)" : "var(--gold)" }}>
+                    onClick={() => { setShowPlayerCard(v => !v); setShowProfileMenu(v => !v); }}
+                    style={{ borderColor: allDone ? "var(--green-dim)" : "rgba(201,168,76,0.3)", background: allDone ? "rgba(46,204,113,0.07)" : "rgba(201,168,76,0.07)", color: allDone ? "var(--green)" : "var(--gold)", gap: "6px" }}>
                     {emoji} Lv.{level}
                     <span style={{ color: "var(--text-dim)", fontSize: "10px" }}>·</span>
                     <span>📋</span>
                     <span style={{ background: allDone ? "var(--green)" : "var(--gold)", color: "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
                       {questsLoaded ? `${doneQuests}/${dailyQuests.length}` : "…"}
                     </span>
+                    <span style={{ width: "22px", height: "22px", borderRadius: "50%", background: "var(--bg4)", border: "1px solid var(--border-bright)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "var(--text-dim)", fontFamily: "'Cinzel', serif", flexShrink: 0 }}>
+                      {initial}
+                    </span>
                   </button>
                 );
               })()}
 
-              {/* Profile button + dropdown */}
-              {user ? (
-                <div className="profile-wrap">
-                  <button className="profile-btn" onClick={() => setShowProfileMenu(v => !v)}>
-                    {(user.user_metadata?.username || user.email?.split("@")[0] || "?")[0].toUpperCase()}
-                  </button>
+              {/* Profile dropdown — attached to the merged level button */}
+              {user && (
+                <div className="profile-wrap" style={{ position: "relative" }}>
                   {showProfileMenu && (
                     <div className="profile-dropdown" onClick={() => setShowProfileMenu(false)}>
                       <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid var(--border)" }}>
@@ -7866,7 +7862,8 @@ RULES:
                     </div>
                   )}
                 </div>
-              ) : (
+              )}
+              {!user && (
                 <button onClick={() => setShowAuth(true)} style={{ padding: "7px 18px", borderRadius: "8px", border: "1px solid var(--gold-dim)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "13px", fontWeight: "600", cursor: "pointer", fontFamily: "Inter, sans-serif" }}
                   onMouseOver={e => e.target.style.background = "rgba(201,168,76,0.15)"} onMouseOut={e => e.target.style.background = "rgba(201,168,76,0.08)"}>Log In</button>
               )}
@@ -7929,14 +7926,9 @@ RULES:
 
               {/* Secondary nav — right side */}
               <div className="nav-tabs">
-                {user && [["watchlist","Watchlist"],["settings","Settings"],["referral","Refer & Earn"]].map(([t, label]) => (
+                {user && [["settings","Settings"],["referral","Refer & Earn"]].map(([t, label]) => (
                   <button key={t} className={`nav-tab ${activeTab === t ? "active" : ""}`} onClick={() => handleSetActiveTab(t)} style={{ fontSize: "12px", color: activeTab === t ? undefined : "#aabbcc" }}>
                     {label}
-                    {t === "watchlist" && watchlist.length > 0 && (
-                      <span style={{ marginLeft: "4px", background: "var(--bg4)", color: "#aabbcc", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700, border: "1px solid var(--border-bright)" }}>
-                        {watchlist.length}
-                      </span>
-                    )}
                   </button>
                 ))}
                 <a
@@ -8436,7 +8428,7 @@ RULES:
                       <strong style={{ color: "var(--gold)" }}>Personalised Picks</strong> — <strong style={{ color: "var(--gold)" }}>{filtered.length}</strong> items match your preferences
                       {filtered.length < 20 && (
                         <span style={{ marginLeft: "8px", fontSize: "12px", color: "var(--text-dim)" }}>
-                          · Few results? Try <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>adjusting your prefs</button> or <button onClick={() => setPicksMode(false)} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>show all items</button>
+                          · Few results? Try <button onClick={() => { setCustomizeStep(0); setShowCustomizeModal(true); }} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>adjusting your prefs</button> or <button onClick={() => { setPicksMode(false); setFilter("all"); setSearch(""); setCategoryFilter("All"); }} style={{ background: "none", border: "none", color: "#3498db", fontSize: "12px", cursor: "pointer", fontFamily: "Inter, sans-serif", padding: 0, textDecoration: "underline" }}>show all items</button>
                         </span>
                       )}
                     </div>
