@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600&display=swap');
@@ -24,6 +24,7 @@ const STYLES = `
   html { scroll-behavior: smooth; }
   body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow-x: hidden; }
 
+  /* GRAIN OVERLAY */
   body::before {
     content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
@@ -54,17 +55,6 @@ const STYLES = `
   }
   .nav-cta:hover { background: rgba(201,168,76,0.15); border-color: rgba(201,168,76,0.5); }
 
-  /* URGENCY BANNER */
-  .urgency-banner {
-    background: linear-gradient(90deg, rgba(201,168,76,0.08), rgba(201,168,76,0.14), rgba(201,168,76,0.08));
-    border-bottom: 1px solid rgba(201,168,76,0.2);
-    text-align: center; padding: 9px 24px; font-size: 13px;
-    color: var(--gold); font-family: 'Inter', sans-serif; font-weight: 500;
-    letter-spacing: 0.3px; position: relative; z-index: 99;
-  }
-  .urgency-banner a { color: var(--gold-light); text-decoration: underline; text-underline-offset: 3px; }
-  .urgency-banner .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 8px; animation: pulse 2s infinite; vertical-align: middle; }
-
   /* HERO */
   .hero {
     min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -83,18 +73,6 @@ const STYLES = `
     background-size: 60px 60px;
     mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
   }
-  /* Animated gold orb behind hero title */
-  .hero-orb {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%);
-    width: 600px; height: 600px; border-radius: 50%; z-index: 0; pointer-events: none;
-    background: radial-gradient(ellipse at center, rgba(201,168,76,0.07) 0%, rgba(201,168,76,0.03) 40%, transparent 70%);
-    animation: orbPulse 6s ease-in-out infinite;
-  }
-  @keyframes orbPulse {
-    0%, 100% { transform: translate(-50%, -55%) scale(1); opacity: 0.8; }
-    50% { transform: translate(-50%, -55%) scale(1.15); opacity: 1; }
-  }
-
   .hero-content { position: relative; z-index: 1; max-width: 900px; }
   
   .hero-badge {
@@ -115,6 +93,7 @@ const STYLES = `
     animation: fadeInUp 0.8s ease 0.1s both;
   }
   .hero-title .gold { color: var(--gold); }
+  .hero-title .dim { color: var(--text-dim); font-weight: 400; font-size: 0.6em; display: block; letter-spacing: 4px; margin-top: 8px; font-family: 'Cinzel', serif; }
 
   .hero-sub {
     font-size: clamp(15px, 2vw, 18px); color: var(--text-dim); max-width: 580px; margin: 28px auto 0;
@@ -133,7 +112,7 @@ const STYLES = `
     color: var(--bg); border: none; cursor: pointer; text-decoration: none;
     transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
   }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(201,168,76,0.25); opacity: 0.95; }
+  .btn-primary:hover { transform: translateY(-2px); opacity: 0.9; }
   .btn-secondary {
     padding: 17px 40px; border-radius: 8px; font-family: 'Cinzel', serif;
     font-size: 17px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
@@ -150,50 +129,6 @@ const STYLES = `
   .hero-stat { text-align: center; }
   .hero-stat-value { font-family: 'Cinzel', serif; font-size: 28px; font-weight: 700; color: var(--gold); }
   .hero-stat-label { font-size: 12px; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; font-weight: 500; }
-
-  /* PRODUCT MOCKUP */
-  .mockup-section {
-    padding: 0 48px 100px; position: relative; display: flex; justify-content: center;
-  }
-  .mockup-frame {
-    width: 100%; max-width: 1100px; border-radius: 16px; overflow: hidden;
-    border: 1px solid rgba(201,168,76,0.2);
-    box-shadow: 0 0 0 1px rgba(201,168,76,0.05), 0 40px 120px rgba(0,0,0,0.6), 0 0 80px rgba(201,168,76,0.06);
-    background: var(--bg2); position: relative;
-    animation: fadeInUp 0.9s ease 0.5s both;
-  }
-  .mockup-topbar {
-    display: flex; align-items: center; gap: 8px; padding: 12px 16px;
-    background: var(--bg3); border-bottom: 1px solid var(--border-solid);
-  }
-  .mockup-dot { width: 12px; height: 12px; border-radius: 50%; }
-  .mockup-url { flex: 1; background: var(--bg2); border-radius: 6px; padding: 5px 12px; font-size: 12px; color: var(--text-dim); font-family: 'Inter', sans-serif; margin: 0 12px; text-align: center; border: 1px solid var(--border-solid); }
-  .mockup-nav {
-    display: flex; align-items: center; gap: 2px; padding: 8px 16px;
-    background: var(--bg2); border-bottom: 1px solid var(--border-solid);
-  }
-  .mockup-tab { padding: 6px 16px; border-radius: 6px 6px 0 0; font-size: 12px; font-family: 'Inter', sans-serif; font-weight: 600; color: var(--text-dim); }
-  .mockup-tab.active { background: var(--bg3); color: var(--gold); border: 1px solid var(--border-solid); border-bottom: 1px solid var(--bg3); }
-  .mockup-body { padding: 16px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-  .mockup-card {
-    background: var(--bg3); border-radius: 8px; padding: 14px 16px;
-    border: 1px solid var(--border-solid);
-  }
-  .mockup-card-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-bottom: 6px; }
-  .mockup-card-value { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700; color: var(--gold); }
-  .mockup-card-sub { font-size: 11px; color: var(--green); margin-top: 3px; font-weight: 600; }
-  .mockup-table { padding: 0 16px 16px; }
-  .mockup-row {
-    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px;
-    padding: 9px 12px; border-radius: 6px; font-size: 12px; font-family: 'Inter', sans-serif;
-    border-bottom: 1px solid var(--border-solid); align-items: center;
-  }
-  .mockup-row.header { color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-  .mockup-row:not(.header):hover { background: rgba(201,168,76,0.04); }
-  .mockup-item-name { font-weight: 600; color: var(--text); }
-  .mockup-profit { color: var(--green); font-weight: 700; }
-  .mockup-dim { color: var(--text-dim); }
-  .mockup-pill { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.2); }
 
   /* FEATURES */
   .section { padding: 120px 48px; position: relative; }
@@ -227,56 +162,8 @@ const STYLES = `
     background: rgba(201,168,76,0.08); color: var(--gold); border: 1px solid rgba(201,168,76,0.2);
   }
 
-  /* TRADING TERMINAL HIGHLIGHT */
-  .terminal-highlight {
-    padding: 100px 48px; background: var(--bg2);
-    border-top: 1px solid var(--border-solid); border-bottom: 1px solid var(--border-solid);
-    position: relative; overflow: hidden;
-  }
-  .terminal-highlight::before {
-    content: ''; position: absolute; top: -200px; right: -200px;
-    width: 600px; height: 600px; border-radius: 50%; pointer-events: none;
-    background: radial-gradient(ellipse at center, rgba(201,168,76,0.05) 0%, transparent 65%);
-  }
-  .terminal-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
-  .terminal-tabs { display: flex; gap: 0; margin-top: 36px; border-bottom: 1px solid var(--border-solid); }
-  .terminal-tab {
-    padding: 10px 20px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
-    color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent;
-    transition: all 0.2s; letter-spacing: 0.3px;
-  }
-  .terminal-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
-  .terminal-feature-list { margin-top: 32px; display: flex; flex-direction: column; gap: 18px; }
-  .terminal-feature-item { display: flex; align-items: flex-start; gap: 14px; }
-  .terminal-feature-icon { width: 36px; height: 36px; border-radius: 8px; background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.15); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-  .terminal-feature-text { font-size: 14px; color: var(--text-dim); line-height: 1.6; }
-  .terminal-feature-text strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 15px; }
-  .terminal-visual {
-    background: var(--bg3); border-radius: 12px; border: 1px solid rgba(201,168,76,0.15);
-    overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(201,168,76,0.04);
-  }
-  .terminal-visual-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 16px; background: var(--bg2); border-bottom: 1px solid var(--border-solid);
-  }
-  .terminal-visual-title { font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700; color: var(--gold); letter-spacing: 1.5px; }
-  .terminal-live-dot { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--green); font-weight: 600; }
-  .terminal-live-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
-  .terminal-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border-solid); }
-  .terminal-stat-cell { background: var(--bg3); padding: 14px 16px; }
-  .terminal-stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; }
-  .terminal-stat-value { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 700; color: var(--gold); margin-top: 4px; }
-  .terminal-stat-delta { font-size: 11px; color: var(--green); font-weight: 600; margin-top: 2px; }
-  .terminal-ops { padding: 12px; }
-  .terminal-op-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-family: 'Inter', sans-serif; align-items: center; border-bottom: 1px solid var(--border-solid); }
-  .terminal-op-row.head { color: var(--text-dim); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; border-bottom: 1px solid var(--border-solid); }
-  .terminal-op-name { font-weight: 600; color: var(--text); }
-  .terminal-op-profit { color: var(--green); font-weight: 700; }
-  .terminal-op-dim { color: var(--text-dim); }
-  .terminal-op-badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 700; background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.2); }
-
   /* COMPARISON */
-  .comparison { padding: 120px 48px; background: var(--bg); }
+  .comparison { padding: 120px 48px; background: var(--bg2); }
   .comparison-table { max-width: 800px; margin: 64px auto 0; }
   .comparison-header { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 0; margin-bottom: 2px; }
   .comparison-col-header {
@@ -294,14 +181,14 @@ const STYLES = `
   .comparison-cell.them-check { background: var(--bg3); }
 
   /* PRICING */
-  .pricing { padding: 120px 48px; background: var(--bg2); }
+  .pricing { padding: 120px 48px; }
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1000px; margin: 64px auto 0; }
   .pricing-card {
-    background: var(--bg3); border: 1px solid var(--border-solid); border-radius: 12px;
+    background: var(--bg2); border: 1px solid var(--border-solid); border-radius: 12px;
     padding: 40px 32px; text-align: center; position: relative; transition: all 0.25s;
   }
   .pricing-card.featured {
-    border-color: rgba(201,168,76,0.4); background: linear-gradient(160deg, rgba(201,168,76,0.06), var(--bg3));
-    box-shadow: 0 0 40px rgba(201,168,76,0.08);
+    border-color: rgba(201,168,76,0.4); background: linear-gradient(160deg, rgba(201,168,76,0.06), var(--bg2));
   }
   .pricing-badge {
     position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
@@ -324,7 +211,7 @@ const STYLES = `
   }
   .pricing-btn:hover { border-color: rgba(201,168,76,0.4); color: var(--gold); }
   .pricing-btn.featured-btn { background: linear-gradient(135deg, var(--gold-dim), var(--gold)); color: var(--bg); border: none; font-size: 15px; font-weight: 800; }
-  .pricing-btn.featured-btn:hover { opacity: 0.88; box-shadow: 0 6px 24px rgba(201,168,76,0.2); }
+  .pricing-btn.featured-btn:hover { opacity: 0.88; }
 
   /* CTA */
   .cta-section {
@@ -333,8 +220,7 @@ const STYLES = `
   }
   .cta-bg {
     position: absolute; inset: 0;
-    background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(201,168,76,0.06) 0%, transparent 70%);
-    animation: orbPulse 8s ease-in-out infinite;
+    background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(201,168,76,0.05) 0%, transparent 70%);
   }
   .cta-title { font-family: 'Cinzel', serif; font-size: clamp(36px, 6vw, 64px); font-weight: 900; color: var(--text); position: relative; z-index: 1; }
   .cta-sub { font-size: 17px; color: var(--text-dim); margin: 20px auto; max-width: 500px; line-height: 1.75; position: relative; z-index: 1; }
@@ -356,19 +242,35 @@ const STYLES = `
   @keyframes fadeInUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
 
   /* LIVE TICKER */
+  .ticker-wrap {
+    width: 100%; overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    background: var(--bg2); height: 40px; display: flex; align-items: center;
+  }
+  .ticker {
+    display: inline-flex; gap: 32px; white-space: nowrap;
+    animation: ticker 30s linear infinite;
+    align-items: center; flex-shrink: 0; height: 40px;
+  }
+  .ticker-item { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-dim); font-family: 'Inter', sans-serif; height: 40px; vertical-align: middle; }
+  .ticker-item .name { color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; }
+  .ticker-item .up { color: var(--green); font-size: 13px; }
+  .ticker-item .down { color: var(--red); font-size: 13px; }
   @keyframes ticker { 0%{transform:translateX(-25%)} 100%{transform:translateX(-75%)} }
+
+  /* DIVIDER */
+  .divider { display: flex; align-items: center; gap: 16px; margin: 0 48px; opacity: 0.3; }
+  .divider-line { flex: 1; height: 1px; background: var(--gold); }
+  .divider-icon { color: var(--gold); font-size: 12px; }
 
   @media (max-width: 768px) {
     nav { padding: 16px 24px; }
     .nav-links { display: none; }
     .section, .comparison, .pricing, .cta-section { padding: 80px 24px; }
-    .features-grid { grid-template-columns: 1fr; }
+    .features-grid, .pricing-grid { grid-template-columns: 1fr; }
     .pricing-card.featured { transform: none; }
     .hero-stats { gap: 24px; }
     .comparison-header, .comparison-row { grid-template-columns: 1.5fr 1fr 1fr; }
     footer { flex-direction: column; gap: 16px; text-align: center; }
-    .terminal-inner { grid-template-columns: 1fr; gap: 40px; }
-    .mockup-section { padding: 0 16px 60px; }
   }
 `;
 
@@ -386,12 +288,12 @@ const TICKER_ITEMS = [
 ];
 
 const FEATURES = [
+  { icon: "📈", title: "Merchant Mode", desc: "A self-contained trading terminal with live operations, analytics, alerts and flip recommendations — all in one screen. Never leave the UI while actively trading.", tag: "Flagship feature" },
   { icon: "📡", title: "Live GE Slot Tracking", desc: "Connect the RuneLite plugin and your active GE offers sync in real time. See live P&L, slot drift alerts, and position status without tabbing out of the game.", tag: "RuneLite plugin" },
   { icon: "🤖", title: "AI Flip Advisor", desc: "Ask in plain English — 'I have 5M gp, what should I flip?' — and get intelligent recommendations backed by your live GE data and current positions.", tag: "Powered by Claude" },
   { icon: "📊", title: "Live Margin Engine", desc: "4,525 items tracked in real time from the OSRS Wiki API. GE tax automatically factored into every margin, ROI and GP/hr calculation.", tag: "Real-time data" },
   { icon: "🔔", title: "Smart Alerts", desc: "Margin spikes, volume surges, dump detection and price crashes — get notified the moment an opportunity appears or a position turns against you.", tag: "Live" },
   { icon: "📈", title: "Profit Tracker", desc: "Log every flip and track your GP/hr over time. See your best items, flip streaks, and capital efficiency — all in the Tracker tab.", tag: "Live" },
-  { icon: "🧪", title: "Recipes & Arbitrage", desc: "GE set exchange, potion decanting, alching, death's coffer — every conversion arbitrage in one place with live profit, ROI, and volume.", tag: "Free" },
 ];
 
 const COMPARISON_ROWS = [
@@ -399,37 +301,15 @@ const COMPARISON_ROWS = [
   { feature: "RuneLite plugin — live slot sync", us: "✅", them: "Some" },
   { feature: "AI advisor with live position context", us: "✅", them: "❌" },
   { feature: "Ask questions in plain English", us: "✅", them: "❌" },
-  { feature: "Trading Terminal", us: "✅", them: "❌" },
+  { feature: "Merchant Mode trading terminal", us: "✅", them: "❌" },
   { feature: "Filter flips by your cash stack", us: "✅", them: "Rarely" },
   { feature: "Smart alerts — dumps, spikes, crashes", us: "✅", them: "Rarely" },
   { feature: "Transparent flip scoring & reasoning", us: "✅", them: "❌" },
   { feature: "Free tier with real value", us: "✅", them: "Limited" },
 ];
 
-// Animated counter hook
-function useCounter(target, duration = 1800, start = false) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!start) return;
-    let startTime = null;
-    const step = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.floor(ease * target));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [target, duration, start]);
-  return value;
-}
-
 export default function LandingPage({ onEnterApp }) {
   const [scrolled, setScrolled] = useState(false);
-  const [statsVisible, setStatsVisible] = useState(false);
-  const [terminalTab, setTerminalTab] = useState(0);
-  const statsRef = useRef(null);
-  const itemCount = useCounter(4525, 1800, statsVisible);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -437,45 +317,12 @@ export default function LandingPage({ onEnterApp }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setStatsVisible(true); },
-      { threshold: 0.3 }
-    );
-    if (statsRef.current) observer.observe(statsRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const terminalFeatures = [
-    [
-      { icon: "📊", title: "Live Operations Table", text: "Every active flip with real-time P&L, margin drift alerts, and fill status — all in one view." },
-      { icon: "🤖", title: "Autopilot Rules", text: "Set per-slot rules: exit if margin drops below X%, or hold for a minimum time before relisting." },
-      { icon: "⚡", title: "Instant Alerts", text: "Margin spikes, volume surges, dump detection — fired the moment the market moves against you." },
-    ],
-    [
-      { icon: "📈", title: "P&L Analytics", text: "Session GP, GP/hr, win rate and capital efficiency tracked automatically across every flip." },
-      { icon: "🏆", title: "Best Flip Leaderboard", text: "Your top performers ranked by profit and ROI. Know exactly which items you flip best." },
-      { icon: "💡", title: "Flip Recommendations", text: "Personalised picks filtered by your cash stack, risk tolerance, and GE limit preferences." },
-    ],
-  ];
-
   return (
     <div style={{ minHeight: '100vh', overflowY: 'auto', overflowX: 'hidden', position: 'relative' }}>
       <style>{STYLES}</style>
 
-      {/* URGENCY BANNER */}
-      <div style={{ paddingTop: "0" }}>
-        <div className="urgency-banner">
-          <span className="dot" />
-          RuneLite Plugin Hub review in progress — plugin not yet publicly listed.{" "}
-          <a href="/#" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp(); }}>
-            Get early access now →
-          </a>
-        </div>
-      </div>
-
       {/* NAV */}
-      <nav style={{ background: scrolled ? "rgba(6,8,11,0.97)" : undefined, top: "37px" }}>
+      <nav style={{ background: scrolled ? "rgba(6,8,11,0.95)" : undefined }}>
         <a href="/#" className="nav-logo">
           <svg className="nav-logo-icon" viewBox="0 0 120 120" fill="none">
             <defs>
@@ -516,7 +363,6 @@ export default function LandingPage({ onEnterApp }) {
         </a>
         <div className="nav-links">
           <a href="#features" className="nav-link">Features</a>
-          <a href="#terminal" className="nav-link">Trading Terminal</a>
           <a href="#compare" className="nav-link">Why Us</a>
           <a href="#pricing" className="nav-link">Pricing</a>
         </div>
@@ -526,15 +372,17 @@ export default function LandingPage({ onEnterApp }) {
       </nav>
 
       {/* TICKER */}
-      <div style={{ marginTop: "101px", width: "100%", overflow: "hidden", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--bg2)", height: "44px", display: "flex", alignItems: "center" }}>
-        <div style={{ display: "inline-flex", gap: "48px", whiteSpace: "nowrap", animation: "ticker 30s linear infinite", alignItems: "center", flexShrink: 0 }}>
-          {[...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-            <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontFamily: "Inter, sans-serif" }}>
-              <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "13px" }}>{item.name}</span>
-              <span style={{ color: item.up ? "var(--green)" : "var(--red)", fontSize: "13px" }}>{item.margin}</span>
-              <span style={{ color: "var(--border)", fontSize: "13px" }}>·</span>
-            </span>
-          ))}
+      <div style={{ paddingTop: "64px" }}>
+        <div style={{ width: "100%", overflow: "hidden", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)", background: "var(--bg2)", height: "40px", display: "flex", alignItems: "center" }}>
+          <div style={{ display: "inline-flex", gap: "48px", whiteSpace: "nowrap", animation: "ticker 30s linear infinite", alignItems: "center", flexShrink: 0 }}>
+            {[...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+              <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontSize: "13px", fontFamily: "Inter, sans-serif", lineHeight: "40px" }}>
+                <span style={{ color: "var(--text)", fontWeight: 600, fontSize: "13px" }}>{item.name}</span>
+                <span style={{ color: item.up ? "var(--green)" : "var(--red)", fontSize: "13px" }}>{item.margin}</span>
+                <span style={{ color: "var(--border)" }}>·</span>
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -542,7 +390,6 @@ export default function LandingPage({ onEnterApp }) {
       <section className="hero">
         <div className="hero-bg" />
         <div className="hero-grid" />
-        <div className="hero-orb" />
         <div className="hero-content">
           <div className="hero-badge">
             <div className="hero-badge-dot" />
@@ -564,9 +411,9 @@ export default function LandingPage({ onEnterApp }) {
               Explore Demo ↗
             </a>
           </div>
-          <div className="hero-stats" ref={statsRef}>
+          <div className="hero-stats">
             <div className="hero-stat">
-              <div className="hero-stat-value">{statsVisible ? itemCount.toLocaleString() : "0"}</div>
+              <div className="hero-stat-value">4,525</div>
               <div className="hero-stat-label">Items Tracked</div>
             </div>
             <div className="hero-stat">
@@ -578,59 +425,12 @@ export default function LandingPage({ onEnterApp }) {
               <div className="hero-stat-label">To Start</div>
             </div>
             <div className="hero-stat">
-              <div className="hero-stat-value">Trading<br />Terminal</div>
+              <div className="hero-stat-value" style={{ fontSize: "18px", letterSpacing: "1px" }}>Trading Terminal</div>
+              <div className="hero-stat-label">Pro Feature</div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* PRODUCT MOCKUP */}
-      <div className="mockup-section">
-        <div className="mockup-frame">
-          <div className="mockup-topbar">
-            <div className="mockup-dot" style={{ background: "#e74c3c" }} />
-            <div className="mockup-dot" style={{ background: "#f39c12" }} />
-            <div className="mockup-dot" style={{ background: "#2ecc71" }} />
-            <div className="mockup-url">runetrader.gg</div>
-          </div>
-          <div className="mockup-nav">
-            {["Market", "High Alch", "Recipes", "Death's Coffer", "Trade Board"].map((t, i) => (
-              <div key={t} className={`mockup-tab${i === 0 ? " active" : ""}`}>{t}</div>
-            ))}
-          </div>
-          <div className="mockup-body">
-            {[
-              { label: "Best Margin", value: "+45,000gp", sub: "Bandos chestplate" },
-              { label: "GP / Hour", value: "2.4M", sub: "↑ 12% this session" },
-              { label: "Items Tracked", value: "4,525", sub: "Updated 3s ago" },
-            ].map(c => (
-              <div key={c.label} className="mockup-card">
-                <div className="mockup-card-label">{c.label}</div>
-                <div className="mockup-card-value">{c.value}</div>
-                <div className="mockup-card-sub">{c.sub}</div>
-              </div>
-            ))}
-          </div>
-          <div className="mockup-table">
-            <div className="mockup-row header">
-              <span>Item</span><span>Margin</span><span>ROI</span><span>Vol/Day</span>
-            </div>
-            {[
-              { name: "Bandos chestplate", margin: "+45,000gp", roi: "+3.2%", vol: "High" },
-              { name: "Abyssal whip", margin: "+12,400gp", roi: "+1.8%", vol: "High" },
-              { name: "Dragon bones", margin: "+2,847gp", roi: "+4.1%", vol: "High" },
-              { name: "Twisted bow", margin: "+180K gp", roi: "+0.9%", vol: "Low" },
-            ].map(r => (
-              <div key={r.name} className="mockup-row">
-                <span className="mockup-item-name">{r.name}</span>
-                <span className="mockup-profit">{r.margin}</span>
-                <span className="mockup-dim">{r.roi}</span>
-                <span className="mockup-pill">{r.vol}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* FEATURES */}
       <section className="section" id="features">
@@ -649,71 +449,8 @@ export default function LandingPage({ onEnterApp }) {
         </div>
       </section>
 
-      {/* TRADING TERMINAL HIGHLIGHT */}
-      <section className="terminal-highlight" id="terminal">
-        <div className="terminal-inner">
-          <div>
-            <div className="section-label">Pro Feature</div>
-            <h2 className="section-title">The Trading<br /><span style={{ color: "var(--gold)" }}>Terminal</span></h2>
-            <p className="section-sub">A self-contained trading command centre. Every tool you need to manage active flips — without leaving the screen.</p>
-            <div className="terminal-tabs">
-              {["Operations", "Analytics"].map((t, i) => (
-                <div key={t} className={`terminal-tab${terminalTab === i ? " active" : ""}`} onClick={() => setTerminalTab(i)}>{t}</div>
-              ))}
-            </div>
-            <div className="terminal-feature-list">
-              {terminalFeatures[terminalTab].map((f, i) => (
-                <div key={i} className="terminal-feature-item">
-                  <div className="terminal-feature-icon">{f.icon}</div>
-                  <div className="terminal-feature-text">
-                    <strong>{f.title}</strong>
-                    {f.text}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="terminal-visual">
-            <div className="terminal-visual-header">
-              <span className="terminal-visual-title">TRADING TERMINAL</span>
-              <span className="terminal-live-dot">LIVE</span>
-            </div>
-            <div className="terminal-stats-grid">
-              {[
-                { label: "Session GP", value: "1.84M", delta: "+284K today" },
-                { label: "GP / Hour", value: "2.4M", delta: "↑ from 1.9M" },
-                { label: "Win Rate", value: "87%", delta: "13 flips" },
-              ].map(s => (
-                <div key={s.label} className="terminal-stat-cell">
-                  <div className="terminal-stat-label">{s.label}</div>
-                  <div className="terminal-stat-value">{s.value}</div>
-                  <div className="terminal-stat-delta">{s.delta}</div>
-                </div>
-              ))}
-            </div>
-            <div className="terminal-ops">
-              <div className="terminal-op-row head">
-                <span>Item</span><span>P&L</span><span>ROI</span><span>Status</span>
-              </div>
-              {[
-                { name: "Bandos chestplate", pnl: "+45,000", roi: "+3.2%", status: "Buying" },
-                { name: "Dragon bones", pnl: "+8,541", roi: "+4.1%", status: "Selling" },
-                { name: "Abyssal whip", pnl: "+12,400", roi: "+1.8%", status: "Filled" },
-              ].map((r, i) => (
-                <div key={i} className="terminal-op-row">
-                  <span className="terminal-op-name">{r.name}</span>
-                  <span className="terminal-op-profit">+{r.pnl}gp</span>
-                  <span className="terminal-op-dim">{r.roi}</span>
-                  <span className="terminal-op-badge">{r.status}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* PLUGIN INSTALL STEPS */}
-      <section className="section" style={{ background: "var(--bg)", paddingTop: "80px", paddingBottom: "80px" }}>
+      <section className="section" style={{ background: "var(--bg2)", paddingTop: "80px", paddingBottom: "80px" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center" }}>
           <div className="section-label" style={{ justifyContent: "center" }}>Get Started</div>
           <h2 className="section-title">Up and running in 3 steps</h2>
@@ -722,7 +459,7 @@ export default function LandingPage({ onEnterApp }) {
             {[
               { num: "01", title: "Install RuneLite", desc: "Download RuneLite if you don't have it, then search 'RuneTrader' in the Plugin Hub and click install.", icon: "🔌" },
               { num: "02", title: "Create a free account", desc: "Sign up at RuneTrader.gg — no credit card, no commitment. Your account links to the plugin automatically.", icon: "🧑‍💻" },
-              { num: "03", title: "Open the GE and flip", desc: "Your GE slots sync in real time. Open the Trading Terminal, check the AI advisor, and start stacking gold.", icon: "📈" },
+              { num: "03", title: "Open the GE and flip", desc: "Your GE slots sync in real time. Open Merchant Mode, check the AI advisor, and start stacking gold.", icon: "📈" },
             ].map((step, i) => (
               <div key={i} className="feature-card" style={{ textAlign: "left" }}>
                 <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", letterSpacing: "3px", color: "var(--gold-dim)", marginBottom: "16px" }}>{step.num}</div>
@@ -733,8 +470,8 @@ export default function LandingPage({ onEnterApp }) {
             ))}
           </div>
           <div style={{ marginTop: "48px" }}>
-            <a href="https://github.com/runelite/plugin-hub/pull/11114" target="_blank" rel="noreferrer" className="btn-secondary" style={{ fontSize: "13px", padding: "12px 28px", display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
-              View Plugin Hub PR #11114 →
+            <a href="https://github.com/runelite/plugin-hub" target="_blank" rel="noreferrer" className="btn-secondary" style={{ fontSize: "13px", padding: "12px 28px", display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
+              View RuneLite Plugin Hub →
             </a>
           </div>
         </div>
@@ -808,8 +545,8 @@ export default function LandingPage({ onEnterApp }) {
         <p className="cta-sub">Built by an OSRS player, for OSRS players. Free to use — install the RuneLite plugin and you're ready to flip.</p>
         <div className="cta-actions">
           <a href="/#" className="btn-primary" onClick={e => { e.preventDefault(); onEnterApp && onEnterApp(); }}>
-            Create Free Account →
-          </a>
+              Create Free Account →
+            </a>
         </div>
       </section>
 
