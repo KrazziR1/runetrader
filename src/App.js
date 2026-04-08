@@ -9284,7 +9284,7 @@ RULES:
                                               <span />
                                               <span>Item</span>
                                               <span>{label === "buy" ? "Buy Price" : "Sell Price"}</span>
-                                              <span>Total</span>
+                                              <span>{label === "buy" ? "Total Cost" : "After-Tax Value"}</span>
                                               <span>GE Limit</span>
                                               <span>Last Traded</span>
                                             </div>
@@ -9341,17 +9341,20 @@ RULES:
                                           );
                                         })()}
                                         {/* Summary bar */}
-                                        <div style={{ marginTop: "14px", paddingTop: "10px", borderTop: "1px solid var(--border)", display: "flex", gap: "24px", fontSize: "12px", flexWrap: "wrap", alignItems: "center" }}>
-                                          <span style={{ color: "var(--text-dim)" }}>Input cost: <span style={{ color: "var(--text)", fontWeight: 600 }}>{formatGP(r.inputCost)}</span></span>
-                                          <span style={{ color: "var(--text-dim)" }}>Output value: <span style={{ color: "var(--text)", fontWeight: 600 }}>{formatGP(r.outputValue)}</span></span>
-                                          <span style={{ color: "var(--text-dim)" }}>Profit after tax: <span style={{ color: r.profit >= 0 ? "var(--green)" : "var(--red)", fontWeight: 700 }}>{r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}</span></span>
-                                          <span style={{ color: "var(--text-dim)" }}>ROI: <span style={{ color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)", fontWeight: 600 }}>{r.roi >= 0 ? "+" : ""}{r.roi}%</span></span>
+                                        <div style={{ marginTop: "14px", paddingTop: "10px", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
                                           {r.category === "sets" && (
                                             <button onClick={e => { e.stopPropagation(); const setItem = lookupItem({ name: r.outputs?.[0]?.name }) || lookupItem({ name: r.inputs?.[0]?.name }); if (setItem) setSelectedItem(setItem); }}
-                                              style={{ marginLeft: "auto", padding: "4px 12px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif" }}>
+                                              style={{ padding: "4px 12px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", flexShrink: 0 }}>
                                               View price chart →
                                             </button>
                                           )}
+                                          <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>Input cost: <span style={{ color: "var(--text)", fontWeight: 600 }}>{formatGP(r.inputCost)}</span></span>
+                                          <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>Output value: <span style={{ color: "var(--text)", fontWeight: 600 }}>{formatGP(r.outputValue)}</span></span>
+                                          <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>ROI: <span style={{ color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)", fontWeight: 600 }}>{r.roi >= 0 ? "+" : ""}{r.roi}%</span></span>
+                                          <div style={{ marginLeft: "auto", background: r.profit >= 0 ? "rgba(46,204,113,0.1)" : "rgba(231,76,60,0.1)", border: `1px solid ${r.profit >= 0 ? "rgba(46,204,113,0.3)" : "rgba(231,76,60,0.3)"}`, borderRadius: "8px", padding: "6px 16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                                            <span style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Profit after tax</span>
+                                            <span style={{ fontSize: "16px", fontWeight: 700, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>{r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}</span>
+                                          </div>
                                         </div>
                                       </div>
                                     )}
