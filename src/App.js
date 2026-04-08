@@ -8326,16 +8326,16 @@ RULES:
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 {user && !isPro && !isOnTrial && (
                   <button onClick={() => setActiveTab("pricing")}
-                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "7px", border: "1px solid rgba(52,152,219,0.4)", background: "rgba(52,152,219,0.08)", color: "#5dade2", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.2s", whiteSpace: "nowrap" }}
-                    onMouseOver={e => { e.currentTarget.style.background = "rgba(52,152,219,0.16)"; e.currentTarget.style.borderColor = "rgba(52,152,219,0.6)"; }}
-                    onMouseOut={e => { e.currentTarget.style.background = "rgba(52,152,219,0.08)"; e.currentTarget.style.borderColor = "rgba(52,152,219,0.4)"; }}>
+                    style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 6px", border: "none", background: "none", color: "#5dade2", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "color 0.15s", whiteSpace: "nowrap" }}
+                    onMouseOver={e => { e.currentTarget.style.color = "#82c6e8"; }}
+                    onMouseOut={e => { e.currentTarget.style.color = "#5dade2"; }}>
                     ✦ Upgrade to Pro
                   </button>
                 )}
                 <a href="https://buymeacoffee.com/runetrader" target="_blank" rel="noopener noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "6px 13px", borderRadius: "7px", border: "1px solid rgba(201,168,76,0.22)", background: "rgba(201,168,76,0.06)", color: "var(--gold)", fontSize: "13px", fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(201,168,76,0.14)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.4)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(201,168,76,0.06)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.22)"; }}>
+                  style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 6px", border: "none", background: "none", color: "var(--gold)", fontSize: "13px", fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans', sans-serif", transition: "opacity 0.15s", whiteSpace: "nowrap", opacity: 0.75 }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity = "1"; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = "0.75"; }}>
                   ☕ Support Development
                 </a>
               </div>
@@ -9179,7 +9179,7 @@ RULES:
                       )}
 
                       {/* Data disclaimer */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", background: "rgba(52,152,219,0.06)", border: "1px solid rgba(52,152,219,0.15)", borderRadius: "8px", fontSize: "12px", color: "var(--text-dim)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: "rgba(52,152,219,0.06)", border: "1px solid rgba(52,152,219,0.15)", borderRadius: "8px", fontSize: "15px", color: "#a8c0cc" }}>
                         <span style={{ color: "#3498db", flexShrink: 0 }}>ℹ</span>
                         <span>Only recipes where all items have recent GE trades are shown. Items that haven't traded in 24–48hrs are excluded — actual opportunities may be higher. Prices update every 60 seconds.</span>
                       </div>
@@ -9239,16 +9239,16 @@ RULES:
                                       {/* Expanded rows */}
                                       {isExpanded && recipes.map((r, i) => (
                                         <div key={i} className="recipe-row" style={{ gridTemplateColumns: RECIPE_COLS, paddingLeft: "32px", background: "rgba(0,0,0,0.15)" }}>
-                                          <div>
-                                            <div style={{ fontWeight: 500, color: "var(--text-dim)", fontSize: "12px" }}>{r.name.replace(`Decant ${potionName}: `, "").replace("Decant ", "")}</div>
-                                            <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "1px" }}>{r.skill}</div>
+                                          <div style={{ cursor: "pointer" }} onClick={e => { e.stopPropagation(); const firstItem = lookupItem(r.inputs && r.inputs[0]); if (firstItem) setSelectedItem(firstItem); }}>
+                                            <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{r.name.replace(`Decant ${potionName}: `, "").replace("Decant ", "")}</div>
+                                            <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "1px" }}>{r.skill === "Bob Barter" || r.skill === "Bob Barter (GE)" ? "Bob Barter" : r.skill}</div>
                                           </div>
                                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                             {(r.inputs || []).map((inp, j) => {
                                               const item = lookupItem(inp); const dose = getDose(inp.name); const qty = inp.quantity || 1;
-                                              return <span key={j} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }} title={inp.name}>
+                                              return <span key={j} onClick={e => { e.stopPropagation(); if (item) setSelectedItem(item); }} style={{ display: "inline-flex", alignItems: "center", gap: "4px", cursor: item ? "pointer" : "default" }} title={item ? `Click to view ${inp.name}` : inp.name}>
                                                 <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
-                                                <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
+                                                <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
                                               </span>;
                                             })}
                                           </div>
@@ -9256,9 +9256,9 @@ RULES:
                                             <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>→</span>
                                             {(r.outputs || []).map((out, j) => {
                                               const item = lookupItem(out); const dose = getDose(out.name); const qty = out.quantity || 1;
-                                              return <span key={j} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }} title={out.name}>
+                                              return <span key={j} onClick={e => { e.stopPropagation(); if (item) setSelectedItem(item); }} style={{ display: "inline-flex", alignItems: "center", gap: "4px", cursor: item ? "pointer" : "default" }} title={item ? `Click to view ${out.name}` : out.name}>
                                                 <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
-                                                <span style={{ fontSize: "11px", color: "var(--text)" }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
+                                                <span style={{ fontSize: "12px", color: "var(--text)", fontWeight: 500 }}>{dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}</span>
                                               </span>;
                                             })}
                                           </div>
@@ -9302,7 +9302,9 @@ RULES:
                                           )}
                                         </div>
                                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px", flexWrap: "wrap", paddingLeft: "16px" }}>
-                                          {r.skill && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
+                                          {r.skill && r.skill !== "Grand Exchange" && <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{r.skill}</span>}
+                                          {r.skill === "Grand Exchange" && recipeCategory === "sets" && <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>GE Sets</span>}
+                                          {r.skill === "Grand Exchange" && recipeCategory !== "sets" && recipeCategory !== "potions" && <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>Grand Exchange</span>}
                                           {r.isMembersOnly && <span style={{ fontSize: "10px", color: "#c9a84c", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "3px", padding: "0 4px" }}>P2P</span>}
                                         </div>
                                       </div>
