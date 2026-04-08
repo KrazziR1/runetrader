@@ -3795,6 +3795,16 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fmtDate = ts => ts ? new Date(ts).toLocaleDateString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+  async function toggleExclude(id) {
+    const flip = flips.find(f => f.id === id);
+    if (!flip) return;
+    // Block excluding closed flips with negative profit
+    if (["SOLD", "CANCELLED"].includes(flip.status) && (flip.profit || 0) < 0) return;
+    const newExcluded = !flip.excluded;
+    setFlips(prev => prev.map(f => f.id === id ? { ...f, excluded: newExcluded } : f));
+    try { await sb.from("ge_flips_live").update({ excluded: newExcluded }).eq("id", id); } catch {}
+  }
+
   const statusBadge = s => {
     const map = { BUYING: ["#f39c12", "Buying"], BOUGHT: ["var(--green)", "Holding"], SELLING: ["#4fc3f7", "Selling"], SOLD: ["var(--green)", "Closed"], CANCELLED: ["var(--text-dim)", "Cancelled"] };
     const [color, label] = map[s] || ["var(--text-dim)", s];
@@ -3811,7 +3821,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
       {/* Open flips */}
       <div style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "10px", padding: "20px" }}>
         <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "16px" }}>
-          📈 Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "DM Sans", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{openFlips.length} active</span>
+          📈 Open Flips <span style={{ fontSize: "11px", color: "var(--text-dim)", fontFamily: "DM Sans", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>{flips.filter(f => !["SOLD", "CANCELLED"].includes(f.status)).length} active</span>
         </div>
         {loading ? <div style={{ color: "var(--text-dim)", fontSize: "13px" }}>Loading...</div>
         : openFlips.length === 0 ? (
@@ -3830,7 +3840,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
               <span>Bought items to exchange as a set or for personal use? Use <strong style={{ color: "var(--text)" }}>Exclude</strong> to remove them from your stats. Excluded items won't affect your GP/hr, win rate, or flip count. You can't exclude a closed flip that lost GP.</span>
             </div>
             {/* All open flips including excluded (shown dimmed) */}
-            {flipsLog.filter(f => f.status === "open").map(f => (
+            {flips.filter(f => !["SOLD", "CANCELLED"].includes(f.status)).map(f => (
               <div key={f.id} style={{ display: "grid", gridTemplateColumns: "2fr 90px 80px 80px 80px 80px 80px", gap: "8px", padding: "10px 4px", borderTop: "1px solid var(--border)", alignItems: "center", opacity: f.excluded ? 0.45 : 1, transition: "opacity 0.2s" }}>
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: 500, textDecoration: f.excluded ? "line-through" : "none", color: f.excluded ? "var(--text-dim)" : "var(--text)" }}>{f.item_name}</div>
@@ -3845,7 +3855,7 @@ function AutoFlipHistory({ user, supabase: sb, formatGP }) {
                 <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{(f.quantity || 0).toLocaleString()}</span>
                 <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{fmtDate(f.buy_started_at)}</span>
                 <button
-                  onClick={() => toggleFlipExclude(f.id)}
+                  onClick={() => toggleExclude(f.id)}
                   style={{ padding: "3px 8px", borderRadius: "5px", border: `1px solid ${f.excluded ? "rgba(46,204,113,0.3)" : "rgba(255,255,255,0.1)"}`, background: f.excluded ? "rgba(46,204,113,0.08)" : "transparent", color: f.excluded ? "var(--green)" : "var(--text-dim)", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}
                   onMouseOver={e => { if (!f.excluded) { e.currentTarget.style.borderColor = "rgba(231,76,60,0.3)"; e.currentTarget.style.color = "#e74c3c"; } }}
                   onMouseOut={e => { if (!f.excluded) { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.color = "var(--text-dim)"; } }}>
