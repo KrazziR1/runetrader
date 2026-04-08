@@ -12,8 +12,25 @@ import { generateDailyQuests, updateQuestProgress, calcQuestRewards, todayStr } 
 import { initAudio, playLoginChime, playCoinClink, playBigProfit, playEpicProfit, playLevelUp, playQuestComplete, playNudge, toggleMute, getSoundMuted } from "./SoundEngine";
 
 // ── Changelog — add new entries at the top, bump DEPLOY_KEY on each deploy ──
-const DEPLOY_KEY = "runetrader_seen_deploy_v4"; // change this string on each deploy to trigger the modal
+const DEPLOY_KEY = "runetrader_seen_deploy_v5"; // change this string on each deploy to trigger the modal
 const CHANGELOG = [
+  {
+    version: "v1.3",
+    date: "April 2026",
+    items: [
+      { type: "new",      text: "Recipes tab — GE set exchange calculator with live profit, ROI and Vol/Day for all ~110 sets. Supports Making and Breaking direction." },
+      { type: "new",      text: "Potion decanting — find profitable dose conversions across all major potions via Bob Barter. Filterable by direction, min profit, min volume and ROI." },
+      { type: "new",      text: "Recipe filters — Making/Breaking toggle, F2P/Members filter, min profit, min ROI, min volume, profitable-only toggle, and search." },
+      { type: "new",      text: "Bottleneck piece indicator — recipes show the cheapest input piece driving the set exchange arbitrage." },
+      { type: "new",      text: "New items badge — items added to the GE in the last 30 days show a NEW badge in the market table." },
+      { type: "new",      text: "Support Development — Buy Me a Coffee link in nav and Settings. Diamond badge and thank-you toast for supporters." },
+      { type: "improved", text: "Recipes tab clickable rows — clicking a set recipe opens the price chart for that set item." },
+      { type: "improved", text: "Vol/Day column on Recipes — shows daily trade volume of the bottleneck item so you know how liquid each recipe is." },
+      { type: "improved", text: "Profile and level button merged — one combined pill in the nav reduces clutter." },
+      { type: "fixed",    text: "Quest emoji rendering fixed sitewide — garbled characters no longer appear in player card, quests and achievements." },
+      { type: "fixed",    text: "Show all items in Personalised Picks now reliably resets all active filters in one click." },
+    ],
+  },
   {
     version: "v1.2",
     date: "March 2026",
@@ -1345,7 +1362,7 @@ const MERCHANT_TOUR_STEPS = [
 
 // ─── FLIP ROW (memoised to prevent sparkline flicker on price updates) ────────
 
-const FlipRow = React.memo(function FlipRow({ item, compression, isWatchlisted, hasAlert, onSelect, onToggleWatchlist, onQuickAlert, onGoToMarginWatch, formatGP, timeAgo, itemIconUrl }) {
+const FlipRow = React.memo(function FlipRow({ item, compression, isWatchlisted, hasAlert, onSelect, onToggleWatchlist, onQuickAlert, onGoToMarginWatch, formatGP, timeAgo, itemIconUrl, isNew }) {
   const ageSec = item.lastTradeTime ? Math.floor(Date.now() / 1000 - item.lastTradeTime) : null;
   const tradeColor = !ageSec ? "var(--text-dim)" : ageSec < 300 ? "var(--green)" : ageSec < 3600 ? "var(--text)" : "var(--text-dim)";
   const lim = item.buyLimit > 0 ? item.buyLimit : 500;
@@ -1366,6 +1383,7 @@ const FlipRow = React.memo(function FlipRow({ item, compression, isWatchlisted, 
         <img src={itemIconUrl(item.name)} alt="" className="item-icon" onError={e => { e.target.style.display = "none"; }} />
         <div style={{ display: "flex", alignItems: "center", flexWrap: "nowrap", gap: "4px", minWidth: 0 }}>
           <div className="item-name" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</div>
+          {isNew && <span style={{ fontSize: "9px", fontWeight: 700, color: "#2ecc71", background: "rgba(46,204,113,0.12)", border: "1px solid rgba(46,204,113,0.3)", borderRadius: "3px", padding: "1px 4px", letterSpacing: "0.5px", flexShrink: 0 }}>NEW</span>}
           {compression && (() => {
             const cls = compression.direction === "crash" ? "crash" : compression.direction === "recover" ? "recover" : "warn";
             const arrow = compression.pct > 0 ? "▲" : "▼";
@@ -3611,6 +3629,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     formatGP={formatGP}
                     timeAgo={timeAgo}
                     itemIconUrl={itemIconUrl}
+                    isNew={!!newItemDates[String(item.id)]}
                   />
                 ))
               )}
@@ -4641,6 +4660,9 @@ export default function RuneTrader() {
   // ── Market data ──
   const [items, setItems] = useState([]);
   const [allItems, setAllItems] = useState([]);
+  const [newItemDates, setNewItemDates] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("rt_new_item_dates") || "{}"); } catch { return {}; }
+  });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshCooldown, setRefreshCooldown] = useState(0); // seconds remaining
@@ -5069,6 +5091,12 @@ export default function RuneTrader() {
   const [recipeSortState, setRecipeSortState] = useState({ col: "profit", dir: "desc" });
   const [recipeRowsShown, setRecipeRowsShown] = useState(100);
   const [recipeCategory, setRecipeCategory] = useState("all");
+  const [recipeHideLosses, setRecipeHideLosses] = useState(true);
+  const [recipeMinProfit, setRecipeMinProfit] = useState("");
+  const [recipeMinVolume, setRecipeMinVolume] = useState("");
+  const [recipeMinRoi, setRecipeMinRoi] = useState("");
+  const [recipeDirection, setRecipeDirection] = useState("all"); // "all" | "making" | "breaking" | "decant_up" | "decant_down"
+  const [recipeMembersFilter, setRecipeMembersFilter] = useState("all"); // "all" | "f2p" | "members"
   const [cofferTarget, setCofferTarget] = useState("");
   const [cofferSearch, setCofferSearch] = useState("");
   const [cofferShowLosses, setCofferShowLosses] = useState(false);
@@ -5856,6 +5884,34 @@ export default function RuneTrader() {
         mappingData.forEach(item => { mappingMap[item.id] = item; nameMap[item.id] = item.name; });
         mappingCacheRef.current = mappingMap;
         setAllItemsMap(nameMap);
+
+        // ── New item detection ──
+        // Compare current item IDs against stored snapshot; flag any new ones
+        const NEW_ITEMS_KEY = "rt_known_item_ids";
+        const NEW_ITEMS_DATES_KEY = "rt_new_item_dates";
+        const currentIds = new Set(mappingData.map(i => String(i.id)));
+        try {
+          const storedRaw = localStorage.getItem(NEW_ITEMS_KEY);
+          const datesRaw = localStorage.getItem(NEW_ITEMS_DATES_KEY);
+          const knownIds = storedRaw ? new Set(JSON.parse(storedRaw)) : null;
+          const newDates = datesRaw ? JSON.parse(datesRaw) : {};
+          const today = new Date().toISOString().slice(0, 10);
+          if (knownIds) {
+            // Find IDs in current mapping not in stored snapshot
+            currentIds.forEach(id => {
+              if (!knownIds.has(id) && !newDates[id]) {
+                newDates[id] = today;
+              }
+            });
+            // Clean up entries older than 30 days
+            const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+            Object.keys(newDates).forEach(id => { if (newDates[id] < cutoff) delete newDates[id]; });
+            localStorage.setItem(NEW_ITEMS_DATES_KEY, JSON.stringify(newDates));
+          }
+          // Always update the known IDs snapshot
+          localStorage.setItem(NEW_ITEMS_KEY, JSON.stringify([...currentIds]));
+          setNewItemDates(newDates);
+        } catch (e) { /* localStorage quota */ }
       }
 
       // Fetch volumes at most once every 10 minutes (cached server-side)
@@ -8802,7 +8858,7 @@ RULES:
 
                 {/* ── RECIPES TAB ── */}
                 {marketSubTab === "recipes" && (() => {
-                  const RECIPE_COLS = "3fr 1.4fr 1.4fr 1fr 1fr 0.9fr 0.8fr";
+                  const RECIPE_COLS = "2.2fr 1.3fr 1.3fr 1fr 1fr 0.8fr 0.8fr 0.8fr";
                   const recipeSortCol = recipeSortState.col;
                   const recipeSortDir = recipeSortState.dir;
                   const handleRecipeSort = col => setRecipeSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
@@ -8810,7 +8866,6 @@ RULES:
                   const priceByName = {};
                   (allItems || []).forEach(item => { priceByName[item.name?.toLowerCase().trim()] = item; });
                   const lookupItem = (inp) => priceByName[inp.name?.toLowerCase().trim()];
-                  // Get best available price — use low for buying, high for selling, fall back to either
                   const getBuyPrice = (item) => item?.low || item?.high || 0;
                   const getSellPrice = (item) => item?.high || item?.low || 0;
 
@@ -8830,12 +8885,38 @@ RULES:
                       const tax = price < 50 ? 0 : Math.min(Math.floor(price * 0.02), 5_000_000);
                       outputValue += (price - tax) * (out.quantity || 1);
                     });
+                    const allVols = [
+                      ...(r.inputs || []).map(inp => lookupItem(inp)?.volume || 0),
+                      ...(r.outputs || []).map(out => lookupItem(out)?.volume || 0),
+                    ].filter(v => v > 0);
+                    const volume = allVols.length > 0 ? Math.min(...allVols) : 0;
                     const profit = outputValue - inputCost;
                     const roi = inputCost > 0 ? parseFloat(((profit / inputCost) * 100).toFixed(1)) : 0;
-                    return { ...r, inputCost, outputValue, profit, roi, resolvable: inputsOk && outputsOk };
+                    const profitPerKDoses = r.category === "potions" ? Math.round(profit * (1000 / ((r.inputs?.[0]?.quantity || 1) * (r.inputs?.[0]?.name?.match(/\((\d+)\)/)?.[1] || 1)))) : null;
+                    // Bottleneck piece — input piece with lowest price (for sets)
+                    const bottleneck = r.category === "sets" ? (r.inputs || []).reduce((min, inp) => {
+                      const item = lookupItem(inp); const p = item?.low || 0;
+                      return (!min || p < min.price) ? { name: inp.name, price: p } : min;
+                    }, null) : null;
+                    // Members check — if any input/output is members-only
+                    const isMembersOnly = [...(r.inputs||[]), ...(r.outputs||[])].some(x => lookupItem(x)?.members);
+                    return { ...r, inputCost, outputValue, profit, roi, volume, profitPerKDoses, bottleneck, isMembersOnly, resolvable: inputsOk && outputsOk };
                   })
                   .filter(r => r.resolvable && r.inputCost > 0)
                   .filter(r => recipeCategory === "all" || r.category === recipeCategory)
+                  .filter(r => !recipeHideLosses || r.profit > 0)
+                  .filter(r => !recipeMinProfit || r.profit >= parseInt(recipeMinProfit.replace(/[km]/i, m => m.toLowerCase() === 'k' ? '000' : '000000') || 0))
+                  .filter(r => !recipeMinVolume || r.volume >= parseInt(recipeMinVolume) || 0)
+                  .filter(r => !recipeMinRoi || r.roi >= parseFloat(recipeMinRoi))
+                  .filter(r => recipeMembersFilter === "all" || (recipeMembersFilter === "f2p" && !r.isMembersOnly) || (recipeMembersFilter === "members" && r.isMembersOnly))
+                  .filter(r => {
+                    if (recipeDirection === "all") return true;
+                    if (recipeDirection === "making") return r.name.startsWith("Making");
+                    if (recipeDirection === "breaking") return r.name.startsWith("Breaking");
+                    if (recipeDirection === "decant_up") return r.name.includes("(1)→") || r.name.includes("(2)→") || r.name.includes("(3)→(4)");
+                    if (recipeDirection === "decant_down") return r.name.includes("→(1)") || r.name.includes("→(2)") || r.name.includes("(4)→(3)");
+                    return true;
+                  })
                   .filter(r => !recipeSearch || r.name.toLowerCase().includes(recipeSearch.toLowerCase()))
                   .sort((a, b) => {
                     const dir = recipeSortDir === "asc" ? 1 : -1;
@@ -8844,46 +8925,114 @@ RULES:
                     if (recipeSortCol === "outputValue") return dir * (a.outputValue - b.outputValue);
                     if (recipeSortCol === "profit")      return dir * (a.profit - b.profit);
                     if (recipeSortCol === "roi")         return dir * (a.roi - b.roi);
+                    if (recipeSortCol === "volume")      return dir * (a.volume - b.volume);
                     return dir * (a.profit - b.profit);
                   });
 
                   const CATS = [
                     { id: "all",     label: "All" },
                     { id: "sets",    label: "GE Sets" },
-                    { id: "potions", label: "Potion Decanting" },
+                    { id: "potions", label: "Potions" },
                     { id: "jewelry", label: "Jewelry" },
                   ];
+
+                  const DIR_OPTS = recipeCategory === "sets"
+                    ? [{ id:"all",label:"All"},{id:"making",label:"Making"},{id:"breaking",label:"Breaking"}]
+                    : recipeCategory === "potions"
+                    ? [{ id:"all",label:"All"},{id:"decant_up",label:"Low→High dose"},{id:"decant_down",label:"High→Low dose"}]
+                    : null;
 
                   const COLS_DEF = [
                     ["name",        "Recipe",       "The exchange recipe name."],
                     ["inputs",      "Inputs",       "Items required."],
                     ["outputs",     "Outputs",      "Items received."],
                     ["inputCost",   "Input Cost",   "Total GE buy price of all inputs."],
-                    ["outputValue", "Output Value", "Total GE sell value of outputs after 2% GE tax (max 5M per item)."],
-                    ["profit",      "Profit",       "Output Value minus Input Cost. GE tax is already deducted from the output value."],
-                    ["roi",         "ROI",          "Return on investment after GE tax. Higher is better."],
+                    ["outputValue", "Output Value", "Total GE sell value of outputs after 2% GE tax."],
+                    ["profit",      "Profit",       "Output Value minus Input Cost after GE tax."],
+                    ["roi",         "ROI",          "Return on investment after GE tax."],
+                    ["volume",      "Vol/Day",      "Daily trade volume of the bottleneck item. Higher = easier to fill."],
                   ];
+
+                  const resetFilters = () => {
+                    setRecipeHideLosses(true); setRecipeMinProfit(""); setRecipeMinVolume("");
+                    setRecipeMinRoi(""); setRecipeDirection("all"); setRecipeMembersFilter("all");
+                    setRecipeSearch(""); setRecipeRowsShown(100);
+                  };
+                  const activeFilterCount = [recipeHideLosses, recipeMinProfit, recipeMinVolume, recipeMinRoi, recipeDirection !== "all", recipeMembersFilter !== "all", recipeSearch].filter(Boolean).length;
+
+                  const getDose = (name) => { const m = name?.match(/\((\d+)\)$/); return m ? m[1] : null; };
 
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                      <div className="filter-bar" style={{ flexWrap: "wrap", gap: "8px" }}>
-                        <div style={{ display: "flex", gap: "6px" }}>
-                          {CATS.map(c => (
-                            <button key={c.id}
-                              onClick={() => { setRecipeCategory(c.id); setRecipeRowsShown(100); }}
-                              style={{ padding: "5px 12px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", border: recipeCategory === c.id ? "1px solid var(--gold)" : "1px solid var(--border)", background: recipeCategory === c.id ? "rgba(201,168,76,0.12)" : "transparent", color: recipeCategory === c.id ? "var(--gold)" : "var(--text-dim)" }}>
-                              {c.label}
+
+                      {/* Category tabs */}
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        {CATS.map(c => (
+                          <button key={c.id}
+                            onClick={() => { setRecipeCategory(c.id); setRecipeDirection("all"); setRecipeRowsShown(100); }}
+                            style={{ padding: "5px 14px", borderRadius: "6px", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s", border: recipeCategory === c.id ? "1px solid var(--gold)" : "1px solid var(--border)", background: recipeCategory === c.id ? "rgba(201,168,76,0.12)" : "transparent", color: recipeCategory === c.id ? "var(--gold)" : "var(--text-dim)" }}>
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Filters row */}
+                      <div className="filter-bar" style={{ flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+                        {/* Direction filter — only for sets and potions */}
+                        {DIR_OPTS && (
+                          <div style={{ display: "flex", gap: "4px" }}>
+                            {DIR_OPTS.map(d => (
+                              <button key={d.id} onClick={() => { setRecipeDirection(d.id); setRecipeRowsShown(100); }}
+                                style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: recipeDirection === d.id ? "1px solid rgba(52,152,219,0.5)" : "1px solid var(--border)", background: recipeDirection === d.id ? "rgba(52,152,219,0.1)" : "transparent", color: recipeDirection === d.id ? "#3498db" : "var(--text-dim)" }}>
+                                {d.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {/* Members filter */}
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {[{id:"all",label:"All"},{id:"f2p",label:"F2P"},{id:"members",label:"Members"}].map(m => (
+                            <button key={m.id} onClick={() => { setRecipeMembersFilter(m.id); setRecipeRowsShown(100); }}
+                              style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: recipeMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: recipeMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "transparent", color: recipeMembersFilter === m.id ? "var(--green)" : "var(--text-dim)" }}>
+                              {m.label}
                             </button>
                           ))}
                         </div>
-                        <input className="filter-input" placeholder="Search..." value={recipeSearch} onChange={e => { setRecipeSearch(e.target.value); setRecipeRowsShown(100); }} style={{ maxWidth: "180px" }} />
+                        {/* Hide losses */}
+                        <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
+                          <input type="checkbox" checked={recipeHideLosses} onChange={e => { setRecipeHideLosses(e.target.checked); setRecipeRowsShown(100); }} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
+                          Profitable only
+                        </label>
+                        {/* Min profit */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", padding: "4px 10px" }}>
+                          <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min profit</span>
+                          <input type="text" value={recipeMinProfit} onChange={e => { setRecipeMinProfit(e.target.value); setRecipeRowsShown(100); }} placeholder="e.g. 10k" style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "55px", fontFamily: "Inter, sans-serif" }} />
+                        </div>
+                        {/* Min ROI */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", padding: "4px 10px" }}>
+                          <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min ROI</span>
+                          <input type="number" value={recipeMinRoi} onChange={e => { setRecipeMinRoi(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "40px", fontFamily: "Inter, sans-serif" }} />
+                          <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>%</span>
+                        </div>
+                        {/* Min volume */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", padding: "4px 10px" }}>
+                          <span style={{ fontSize: "11px", color: "var(--text-dim)", whiteSpace: "nowrap" }}>Min vol</span>
+                          <input type="number" value={recipeMinVolume} onChange={e => { setRecipeMinVolume(e.target.value); setRecipeRowsShown(100); }} placeholder="0" style={{ background: "transparent", border: "none", outline: "none", color: "var(--gold)", fontWeight: 600, fontSize: "12px", width: "55px", fontFamily: "Inter, sans-serif" }} />
+                        </div>
+                        {/* Search */}
+                        <input className="filter-input" placeholder="Search..." value={recipeSearch} onChange={e => { setRecipeSearch(e.target.value); setRecipeRowsShown(100); }} style={{ maxWidth: "160px" }} />
+                        {/* Reset + count */}
+                        {activeFilterCount > 1 && (
+                          <button onClick={resetFilters} style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", cursor: "pointer", fontFamily: "Inter, sans-serif", border: "1px solid var(--border)", background: "transparent", color: "var(--text-dim)" }}>↺ Reset</button>
+                        )}
                         <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-dim)", alignSelf: "center" }}>
                           {processedRecipes.length} results
                         </span>
                       </div>
+
                       {processedRecipes.length === 0 ? (
                         <div style={{ padding: "60px", textAlign: "center", color: "var(--text-dim)", fontSize: "13px" }}>
-                          {allItems.length === 0 ? "Loading prices..." : "No matching recipes found"}
+                          {allItems.length === 0 ? "Loading prices..." : "No matching recipes — try adjusting the filters"}
                         </div>
                       ) : (
                         <>
@@ -8892,49 +9041,62 @@ RULES:
                               {COLS_DEF.map(([col, label, tip], idx) => (
                                 <button key={col} className={`sort-btn ${recipeSortCol === col ? "active" : ""}`} onClick={() => handleRecipeSort(col)}>
                                   {label} {recipeSortCol === col && <span className="sort-arrow">{recipeSortDir === "desc" ? "▼" : "▲"}</span>}
-                                  <span className={`stat-tooltip-wrap${idx === COLS_DEF.length - 1 ? " anchor-right" : ""}`} onClick={e => e.stopPropagation()}>
+                                  <span className={`stat-tooltip-wrap${idx >= COLS_DEF.length - 2 ? " anchor-right" : ""}`} onClick={e => e.stopPropagation()}>
                                     <span className="stat-help">?</span>
                                     <span className="stat-tooltip" style={{ bottom: "auto", top: "calc(100% + 6px)" }}>{tip}</span>
                                   </span>
                                 </button>
                               ))}
                             </div>
-                            {processedRecipes.slice(0, recipeRowsShown).map((r, i) => {
-                              // Extract dose number from item name e.g. "Prayer potion(3)" → "3"
-                              const getDose = (name) => { const m = name?.match(/\((\d+)\)$/); return m ? m[1] : null; };
-                              return (
-                              <div key={i} className="recipe-row" style={{ gridTemplateColumns: RECIPE_COLS }}>
+                            {processedRecipes.slice(0, recipeRowsShown).map((r, i) => (
+                              <div key={i} className="recipe-row" style={{ gridTemplateColumns: RECIPE_COLS, cursor: r.category === "sets" ? "pointer" : "default" }}
+                                onClick={() => {
+                                  if (r.category === "sets") {
+                                    const setItem = lookupItem({ name: r.outputs?.[0]?.name }) || lookupItem({ name: r.inputs?.[0]?.name });
+                                    if (setItem) setSelectedItem(setItem);
+                                  }
+                                }}>
                                 <div>
                                   <div style={{ fontWeight: 600, color: "var(--text)", fontSize: "13px" }}>{r.name}</div>
-                                  {r.skill && <div style={{ fontSize: "11px", color: "var(--text-dim)", marginTop: "2px" }}>{r.skill}</div>}
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "2px", flexWrap: "wrap" }}>
+                                    {r.skill && <span style={{ fontSize: "11px", color: "var(--text-dim)" }}>{r.skill}</span>}
+                                    {r.isMembersOnly && <span style={{ fontSize: "10px", color: "#c9a84c", background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "3px", padding: "0 4px" }}>P2P</span>}
+                                    {r.bottleneck && r.category === "sets" && (
+                                      <span style={{ fontSize: "10px", color: "var(--text-dim)" }}>
+                                        bottleneck: <span style={{ color: "var(--text)" }}>{r.bottleneck.name.replace(/ \(.*\)$/, "")} ({formatGP(r.bottleneck.price)})</span>
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="recipe-icons">
+                                {/* Inputs */}
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                                   {(r.inputs || []).map((inp, j) => {
                                     const item = lookupItem(inp);
                                     const dose = getDose(inp.name);
+                                    const qty = inp.quantity || 1;
                                     return (
-                                      <span key={j} title={`${inp.name}${inp.quantity > 1 ? ` ×${inp.quantity}` : ""}`} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "1px", position: "relative" }}>
-                                        <span style={{ display: "inline-flex", alignItems: "center", gap: "1px" }}>
-                                          {(inp.quantity || 1) > 1 && <span style={{ fontSize: "10px", color: "var(--text-dim)", fontWeight: 600 }}>{inp.quantity}×</span>}
-                                          <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                      <span key={j} title={inp.name} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                        <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                        <span style={{ fontSize: "11px", color: "var(--text-dim)", fontWeight: 500 }}>
+                                          {dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}
                                         </span>
-                                        {dose && <span style={{ fontSize: "9px", color: "var(--gold)", fontWeight: 700, lineHeight: 1 }}>({dose})</span>}
                                       </span>
                                     );
                                   })}
                                 </div>
-                                <div className="recipe-icons">
-                                  <span style={{ color: "var(--text-dim)", fontSize: "13px", marginRight: "4px" }}>→</span>
+                                {/* Outputs */}
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                  <span style={{ color: "var(--text-dim)", fontSize: "12px" }}>→</span>
                                   {(r.outputs || []).map((out, j) => {
                                     const item = lookupItem(out);
                                     const dose = getDose(out.name);
+                                    const qty = out.quantity || 1;
                                     return (
-                                      <span key={j} title={`${out.name}${out.quantity > 1 ? ` ×${out.quantity}` : ""}`} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "1px", position: "relative" }}>
-                                        <span style={{ display: "inline-flex", alignItems: "center", gap: "1px" }}>
-                                          {(out.quantity || 1) > 1 && <span style={{ fontSize: "10px", color: "var(--text-dim)", fontWeight: 600 }}>{out.quantity}×</span>}
-                                          <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                      <span key={j} title={out.name} style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                        <img src={item ? itemIconUrl(item.name) : ""} alt="" className="recipe-icon" onError={e => { e.target.style.display = "none"; }} />
+                                        <span style={{ fontSize: "11px", color: "var(--text)", fontWeight: 500 }}>
+                                          {dose ? `${qty}× ${dose}-dose` : qty > 1 ? `×${qty}` : ""}
                                         </span>
-                                        {dose && <span style={{ fontSize: "9px", color: "var(--green)", fontWeight: 700, lineHeight: 1 }}>({dose})</span>}
                                       </span>
                                     );
                                   })}
@@ -8947,9 +9109,11 @@ RULES:
                                 <span style={{ fontSize: "12px", fontWeight: 600, padding: "2px 7px", borderRadius: "5px", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>
                                   {r.roi >= 0 ? "+" : ""}{r.roi}%
                                 </span>
+                                <span style={{ fontSize: "12px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)" }}>
+                                  {r.volume >= 1000 ? (r.volume / 1000).toFixed(1) + "k" : r.volume > 0 ? r.volume.toLocaleString() : "—"}
+                                </span>
                               </div>
-                              );
-                            })}
+                            ))}
                           </div>
                           {processedRecipes.length > recipeRowsShown && (
                             <div style={{ textAlign: "center", padding: "8px 0" }}>
@@ -9478,6 +9642,7 @@ RULES:
                           formatGP={formatGP}
                           timeAgo={timeAgo}
                           itemIconUrl={itemIconUrl}
+                          isNew={!!newItemDates[String(item.id)]}
                         />
                       ))
                     )}
