@@ -8924,7 +8924,6 @@ RULES:
 
                 {/* ── RECIPES TAB ── */}
                 {marketSubTab === "recipes" && (() => {
-                  const RECIPE_COLS = "2fr 1.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr";
                   const recipeSortCol = recipeSortState.col;
                   const recipeSortDir = recipeSortState.dir;
                   const handleRecipeSort = col => setRecipeSortState(s => ({ col, dir: s.col === col && s.dir === "desc" ? "asc" : "desc" }));
