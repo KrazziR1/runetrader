@@ -8951,11 +8951,13 @@ RULES:
                       const tax = price < 50 ? 0 : Math.min(Math.floor(price * 0.02), 5_000_000);
                       outputValue += (price - tax) * (out.quantity || 1);
                     });
-                    const allVols = [
-                      ...(r.inputs || []).map(inp => lookupItem(inp)?.volume || 0),
-                      ...(r.outputs || []).map(out => lookupItem(out)?.volume || 0),
-                    ].filter(v => v > 0);
-                    const volume = allVols.length > 0 ? Math.min(...allVols) : 0;
+                    // Volume bottleneck — lowest vol item across all inputs+outputs, track which item it is
+                    const allVolItems = [
+                      ...(r.inputs || []).map(inp => ({ item: lookupItem(inp), name: inp.name, side: "input" })),
+                      ...(r.outputs || []).map(out => ({ item: lookupItem(out), name: out.name, side: "output" })),
+                    ].filter(x => (x.item?.volume || 0) > 0);
+                    const volBottleneck = allVolItems.length > 0 ? allVolItems.reduce((min, x) => (x.item.volume < min.item.volume ? x : min)) : null;
+                    const volume = volBottleneck ? volBottleneck.item.volume : 0;
                     const profit = outputValue - inputCost;
                     const roi = inputCost > 0 ? parseFloat(((profit / inputCost) * 100).toFixed(1)) : 0;
                     // Bottleneck piece — input piece with lowest price (for sets)
@@ -8968,7 +8970,7 @@ RULES:
                     // Last update — most recent lastTradeTime across all items
                     const allTimes = [...(r.inputs||[]), ...(r.outputs||[])].map(x => lookupItem(x)?.lastTradeTime || 0).filter(t => t > 0);
                     const lastUpdated = allTimes.length > 0 ? Math.min(...allTimes) : 0; // use oldest (most stale) as the bottleneck
-                    return { ...r, inputCost, outputValue, profit, roi, volume, bottleneck, isMembersOnly, lastUpdated, resolvable: inputsOk && outputsOk };
+                    return { ...r, inputCost, outputValue, profit, roi, volume, volBottleneck, bottleneck, isMembersOnly, lastUpdated, resolvable: inputsOk && outputsOk };
                   })
                   .filter(r => r.resolvable && r.inputCost > 0)
                   .filter(r => recipeCategory === "all" || r.category === recipeCategory)
@@ -9029,7 +9031,7 @@ RULES:
                     ["outputValue", "Output Value", "Total GE sell value of outputs after 2% GE tax."],
                     ["profit",      "Profit",       "Output Value minus Input Cost after GE tax."],
                     ["roi",         "ROI",          "Return on investment after GE tax."],
-                    ["volume",      "Vol/Day",      "Daily trade volume of the bottleneck item. Higher = easier to fill."],
+                    ["volume",      "Vol/Day",      "Daily trade volume of the lowest-volume item in this recipe (the bottleneck). The item name is shown in the cell. Higher = easier to fill your offers."],
                     ["lastUpdated", "Updated",      "How recently the most stale item in this recipe last traded. Old data = less reliable pricing."],
                   ];
 
@@ -9203,8 +9205,11 @@ RULES:
                                           <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{formatGP(r.outputValue)}</span>
                                           <span style={{ fontSize: "12px", fontWeight: 600, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>{r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}</span>
                                           <span style={{ fontSize: "11px", fontWeight: 600, padding: "2px 5px", borderRadius: "4px", display: "inline-flex", width: "fit-content", whiteSpace: "nowrap", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>{r.roi >= 0 ? "+" : ""}{r.roi}%</span>
-                                          <span style={{ fontSize: "11px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)" }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume : "—"}</span>
-                                          <span style={{ fontSize: "11px", color: r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 300 ? "var(--green)" : r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 3600 ? "var(--gold)" : "var(--text-dim)" }}>
+                                          <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+                                            <span style={{ fontSize: "11px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)", fontWeight: 600 }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume : "—"}</span>
+                                            {r.volBottleneck && <span style={{ fontSize: "9px", color: "var(--text-dim)" }}>{r.volBottleneck.name.replace(/\(\d+\)/, "").trim()}</span>}
+                                          </div>
+                                          <span style={{ fontSize: "11px", color: (() => { if (!r.lastUpdated) return "var(--text-dim)"; const sec = Date.now()/1000 - r.lastUpdated; return sec < 3600 ? "var(--green)" : sec < 86400 ? "#f39c12" : "var(--red)"; })() }}>
                                             {r.lastUpdated ? timeAgo(r.lastUpdated) : "—"}
                                           </span>
                                         </div>
@@ -9261,8 +9266,11 @@ RULES:
                                       <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>{formatGP(r.outputValue)}</span>
                                       <span style={{ fontSize: "13px", fontWeight: 600, color: r.profit >= 0 ? "var(--green)" : "var(--red)" }}>{r.profit >= 0 ? "+" : ""}{formatGP(r.profit)}</span>
                                       <span style={{ fontSize: "12px", fontWeight: 600, padding: "2px 6px", borderRadius: "5px", display: "inline-flex", alignItems: "center", width: "fit-content", whiteSpace: "nowrap", background: r.roi >= 5 ? "rgba(46,204,113,0.12)" : r.roi >= 1 ? "rgba(52,152,219,0.1)" : "rgba(231,76,60,0.1)", color: r.roi >= 5 ? "var(--green)" : r.roi >= 1 ? "#3498db" : "var(--red)" }}>{r.roi >= 0 ? "+" : ""}{r.roi}%</span>
-                                      <span style={{ fontSize: "12px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)" }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume.toLocaleString() : "—"}</span>
-                                      <span style={{ fontSize: "11px", color: r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 300 ? "var(--green)" : r.lastUpdated && (Date.now()/1000 - r.lastUpdated) < 3600 ? "var(--gold)" : "var(--text-dim)" }}>
+                                      <div style={{ display: "flex", flexDirection: "column", gap: "1px" }}>
+                                        <span style={{ fontSize: "12px", color: r.volume >= 10000 ? "var(--green)" : r.volume >= 1000 ? "var(--gold)" : "var(--text-dim)", fontWeight: 600 }}>{r.volume >= 1000 ? (r.volume/1000).toFixed(1)+"k" : r.volume > 0 ? r.volume.toLocaleString() : "—"}</span>
+                                        {r.volBottleneck && <span style={{ fontSize: "10px", color: "var(--text-dim)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.volBottleneck.name.replace(/ \(.*\)$/, "").replace(/ armour set.*/, " set")}</span>}
+                                      </div>
+                                      <span style={{ fontSize: "11px", color: (() => { if (!r.lastUpdated) return "var(--text-dim)"; const sec = Date.now()/1000 - r.lastUpdated; return sec < 3600 ? "var(--green)" : sec < 86400 ? "#f39c12" : "var(--red)"; })() }}>
                                         {r.lastUpdated ? timeAgo(r.lastUpdated) : "—"}
                                       </span>
                                     </div>
@@ -9271,14 +9279,16 @@ RULES:
                                     {isExpanded && (
                                       <div style={{ background: "#090d12", borderBottom: "1px solid var(--border)", padding: "14px 20px 16px" }}>
                                         {(() => {
-                                          const COL = "26px 1.8fr 90px 90px 70px 80px";
+                                          const COL = "26px 1.8fr 90px 90px 70px 70px 80px";
                                           const tradeColor = (lastTradeTime) => {
                                             if (!lastTradeTime) return "var(--text-dim)";
                                             const sec = Date.now()/1000 - lastTradeTime;
-                                            if (sec < 3600) return "var(--green)";       // < 1hr green
-                                            if (sec < 86400) return "#f39c12";           // < 1 day orange
-                                            return "var(--red)";                         // > 1 day red
+                                            if (sec < 3600) return "var(--green)";
+                                            if (sec < 86400) return "#f39c12";
+                                            return "var(--red)";
                                           };
+                                          const volColor = (vol) => vol >= 10000 ? "var(--green)" : vol >= 1000 ? "var(--gold)" : "var(--text-dim)";
+                                          const fmtVol = (vol) => vol >= 1000 ? (vol/1000).toFixed(1)+"k" : vol > 0 ? vol.toLocaleString() : "—";
                                           const HDR = (label) => (
                                             <div style={{ display: "grid", gridTemplateColumns: COL, gap: "8px", fontSize: "10px", color: "var(--text-dim)", marginBottom: "6px", paddingBottom: "5px", borderBottom: "1px solid var(--border)", textTransform: "uppercase", letterSpacing: "0.6px", fontWeight: 600 }}>
                                               <span />
@@ -9286,6 +9296,7 @@ RULES:
                                               <span>{label === "buy" ? "Buy Price" : "Sell Price"}</span>
                                               <span>{label === "buy" ? "Total Cost" : "After-Tax Value"}</span>
                                               <span>GE Limit</span>
+                                              <span>Vol/Day</span>
                                               <span>Last Traded</span>
                                             </div>
                                           );
@@ -9307,6 +9318,7 @@ RULES:
                                                         <span style={{ color: "var(--text-dim)" }}>{buyPrice ? formatGP(buyPrice) : "—"}</span>
                                                         <span style={{ color: "var(--text)", fontWeight: 600 }}>{buyPrice ? formatGP(buyPrice * qty) : "—"}</span>
                                                         <span style={{ color: "var(--text-dim)" }}>{item?.buyLimit?.toLocaleString() ?? "—"}</span>
+                                                        <span style={{ color: volColor(item?.volume || 0) }}>{fmtVol(item?.volume || 0)}</span>
                                                         <span style={{ color: tradeColor(item?.lastTradeTime) }}>{item?.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
                                                       </div>
                                                     );
@@ -9331,6 +9343,7 @@ RULES:
                                                         <span style={{ color: "var(--text-dim)" }}>{sellPrice ? formatGP(sellPrice) : "—"}</span>
                                                         <span style={{ color: "var(--green)", fontWeight: 600 }}>{netSell ? formatGP(netSell * qty) : "—"}</span>
                                                         <span style={{ color: "var(--text-dim)" }}>{item?.buyLimit?.toLocaleString() ?? "—"}</span>
+                                                        <span style={{ color: volColor(item?.volume || 0) }}>{fmtVol(item?.volume || 0)}</span>
                                                         <span style={{ color: tradeColor(item?.lastTradeTime) }}>{item?.lastTradeTime ? timeAgo(item.lastTradeTime) : "—"}</span>
                                                       </div>
                                                     );
