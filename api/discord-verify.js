@@ -47,10 +47,29 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Code has expired. Run !verify in Discord to get a new one." });
   }
 
-  // Update the user's profile with their Discord ID
+  // Fetch Discord username from Discord API
+  let discordUsername = null;
+  try {
+    const discordRes = await fetch(`https://discord.com/api/v10/users/${pending.discord_id}`, {
+      headers: { Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}` },
+    });
+    if (discordRes.ok) {
+      const discordUser = await discordRes.json();
+      // Use global_name (display name) if available, otherwise username
+      discordUsername = discordUser.global_name || discordUser.username || null;
+    }
+  } catch (e) {
+    console.error("discord-verify: failed to fetch Discord username:", e);
+    // Non-fatal — still link the account, just without username
+  }
+
+  // Update the user's profile with their Discord ID and username
   const { error: updateError } = await supabase
     .from("user_profiles")
-    .update({ discord_id: pending.discord_id })
+    .update({
+      discord_id: pending.discord_id,
+      ...(discordUsername ? { discord_username: discordUsername } : {}),
+    })
     .eq("user_id", user.id);
 
   if (updateError) {
@@ -61,5 +80,5 @@ export default async function handler(req, res) {
   // Delete the used code
   await supabase.from("discord_verify_codes").delete().eq("code", code);
 
-  return res.status(200).json({ ok: true });
+  return res.status(200).json({ ok: true, discord_username: discordUsername });
 }

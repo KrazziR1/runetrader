@@ -144,6 +144,7 @@ export default function SettingsPage({
   sortCol, sortDir, onSetDefaultSort,
   flipsLog = [], autoFlipsLog = [],
   initialSection = null, onSectionMounted,
+  onDiscordLinked,
 }) {
   const [active, setActive] = useState(initialSection || "general");
 
@@ -199,8 +200,8 @@ export default function SettingsPage({
     setDiscordChecking(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const { data } = await supabase.from("user_profiles").select("discord_id").eq("user_id", session.user.id).single();
-      if (data?.discord_id) setDiscordLinked(true);
+      const { data } = await supabase.from("user_profiles").select("discord_id, discord_username").eq("user_id", session.user.id).single();
+      if (data?.discord_id) { setDiscordLinked(true); if (data?.discord_username && onDiscordLinked) onDiscordLinked(data.discord_username); }
     } catch {}
     setDiscordChecking(false);
   }
@@ -216,7 +217,18 @@ export default function SettingsPage({
         body: JSON.stringify({ code: discordCode.trim() }),
       });
       const json = await res.json();
-      if (json.ok) { setDiscordLinked(true); showToast("Discord linked!", "success"); }
+      if (json.ok) {
+        setDiscordLinked(true);
+        showToast("Discord linked!", "success");
+        // Re-fetch discord_id so App.js can update discordUsername without a page refresh
+        try {
+          const { data: { session: s } } = await supabase.auth.getSession();
+          if (s?.user?.id) {
+            const { data: profile } = await supabase.from("user_profiles").select("discord_id, discord_username").eq("user_id", s.user.id).single();
+            if (onDiscordLinked) onDiscordLinked(profile?.discord_username || profile?.discord_id || null);
+          }
+        } catch {}
+      }
       else showToast(json.error || "Invalid or expired code.", "error");
     } catch { showToast("Failed to link Discord.", "error"); }
     setDiscordLoading(false);

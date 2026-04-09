@@ -4879,11 +4879,11 @@ export default function RuneTrader() {
       if (session?.user?.id) {
         profileFetchedForUser = session.user.id;
         supabase.from("user_profiles")
-          .select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter, discord_id")
+          .select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter, discord_id, discord_username")
           .eq("user_id", session.user.id).single()
           .then(({ data }) => {
             if (data?.ref_code) setUserRefCode(data.ref_code);
-            if (data?.discord_id) setDiscordUsername(data.discord_id);
+            if (data?.discord_username || data?.discord_id) setDiscordUsername(data.discord_username || data.discord_id);
             if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(data.sync_paused_at ? new Date(data.sync_paused_at) : new Date()); }
             if (data?.is_pro) { setIsPro(true); return; }
             if (data?.trial_ends_at) {
@@ -4954,10 +4954,10 @@ export default function RuneTrader() {
         } else if (session?.user?.id && session.user.id !== profileFetchedForUser) {
           // Load ref code, pro status, trial, and sync pause state for returning users
           // (skip if getSession already fetched profile for this user)
-          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter, discord_id").eq("user_id", session.user.id).single()
+          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter, discord_id, discord_username").eq("user_id", session.user.id).single()
             .then(({ data }) => {
               if (data?.ref_code) setUserRefCode(data.ref_code);
-              if (data?.discord_id) setDiscordUsername(data.discord_id);
+              if (data?.discord_username || data?.discord_id) setDiscordUsername(data.discord_username || data.discord_id);
               if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(data.sync_paused_at ? new Date(data.sync_paused_at) : new Date()); }
               if (data?.is_supporter) {
                 setIsSupporter(true);
@@ -8705,6 +8705,7 @@ RULES:
                 supabase={supabase}
                 initialSection={settingsInitialSection}
                 onSectionMounted={() => setSettingsInitialSection(null)}
+                onDiscordLinked={(id) => setDiscordUsername(id)}
                 showToast={showToast}
                 soundMuted={soundMuted}
                 onToggleSound={() => { const m = toggleMute(); setSoundMuted(m); }}
