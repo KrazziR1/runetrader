@@ -6865,6 +6865,12 @@ RULES:
   const openFlips = flipsLog.filter(f => f.status === "open" && !f.excluded);
   // eslint-disable-next-line no-unused-vars
   const excludedFlips = flipsLog.filter(f => f.excluded);
+
+  // Stable callback for TradeBoard new listing signal
+  const onNewListings = useCallback((ts) => {
+    try { localStorage.setItem("rt_tradeboard_newest_ts", ts); } catch {}
+    if (marketSubTab !== "tradeboard") setHasNewTradeListings(true);
+  }, [marketSubTab]);
   const autoClosedFlips = autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, date: f.sell_completed_at }));
   const allClosedFlips = [...closedFlips, ...autoClosedFlips];
   const totalProfit = allClosedFlips.reduce((s, f) => s + (f.totalProfit || 0), 0);
@@ -9710,10 +9716,7 @@ RULES:
                     user={user}
                     supabase={supabase}
                     showToast={showToast}
-                    onNewListings={(ts) => {
-                      try { localStorage.setItem("rt_tradeboard_newest_ts", ts); } catch {}
-                      if (marketSubTab !== "tradeboard") setHasNewTradeListings(true);
-                    }}
+                    onNewListings={onNewListings}
                   />
                 )}
 

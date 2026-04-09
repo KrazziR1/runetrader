@@ -161,7 +161,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
         realtimeTimer = setTimeout(() => loadListings(false), 1000);
       }).subscribe();
     return () => { supabase.removeChannel(ch); clearTimeout(realtimeTimer); };
-  }, [supabase]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [supabase, onNewListings]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset user-specific state on logout
   useEffect(() => {
