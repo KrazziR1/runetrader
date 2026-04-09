@@ -1,5 +1,5 @@
 // src/TradeBoard.js
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const WIKI_MAP = "https://prices.runescape.wiki/api/v1/osrs/mapping";
 const WIKI_IMG = (name) => `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}_detail.png`;
@@ -148,24 +148,6 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
     bundle_only: false,
   });
   const [posting, setPosting] = useState(false);
-  const [localDiscord, setLocalDiscord] = useState(null); // fetched directly — doesn't race with prop
-
-  // ── Search autocomplete ──
-  const [searchSuggestions, setSearchSuggestions] = useState([]);
-  const [searchFocused, setSearchFocused] = useState(false);
-  const [searchHighlight, setSearchHighlight] = useState(-1);
-  const searchRef = useRef(null);
-
-  // ── Watch panel add-watch search ──
-  const [watchPanelSearch, setWatchPanelSearch] = useState("");
-  const [watchPanelSuggestions, setWatchPanelSuggestions] = useState([]);
-  const [watchPanelHighlight, setWatchPanelHighlight] = useState(-1);
-  const watchPanelRef = useRef(null);
-
-  // ── Watch modal autocomplete (when opened directly from panel) ──
-  const [watchModalSearch, setWatchModalSearch] = useState("");
-  const [watchModalSuggestions, setWatchModalSuggestions] = useState([]);
-  const [watchModalHighlight, setWatchModalHighlight] = useState(-1);
 
   // ── Watch system ──
   const [watches, setWatches] = useState([]);
@@ -190,18 +172,9 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
 
   // Reset user-specific state on logout
   useEffect(() => {
-    if (!user) { setMyListings(false); setShowPostForm(false); setWatches([]); setLocalDiscord(null); }
+    if (!user) { setMyListings(false); setShowPostForm(false); setWatches([]); }
     else loadWatches();
   }, [user]); // eslint-disable-line
-
-  function getSuggestions(val, limit = 8) {
-    if (!val || val.length < 2 || !allItems.length) return [];
-    const v = val.toLowerCase();
-    // Prioritise items that START with the query, then items that contain it
-    const starts = allItems.filter(n => n.toLowerCase().startsWith(v)).slice(0, limit);
-    const contains = allItems.filter(n => !n.toLowerCase().startsWith(v) && n.toLowerCase().includes(v)).slice(0, limit - starts.length);
-    return [...starts, ...contains];
-  }
 
   async function loadWatches() {
     if (!user) return;
@@ -221,8 +194,6 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
 
   async function addWatch(itemName) {
     if (!user) return showToast("Sign in to set up watch alerts", "info");
-    if (!itemName?.trim()) return showToast("Please enter an item name", "error");
-    itemName = itemName.trim();
     const maxPrice = watchForm.maxPrice ? parseGPInput(watchForm.maxPrice) : null;
     // Prevent duplicate watch for same item + type
     if (watches.some(w => w.item_name.toLowerCase() === itemName.toLowerCase() && w.type === watchForm.type)) {
@@ -241,8 +212,6 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
       setWatches(updated);
       try { localStorage.setItem("rt_trade_watches", JSON.stringify(updated)); } catch {}
       setWatchModal(null);
-      setWatchModalSearch("");
-      setWatchModalSuggestions([]);
       setWatchForm({ type: "Either", maxPrice: "" });
       showToast(`Watching ${itemName} — you'll be notified when it's listed`, "success");
     } catch (e) { showToast(e?.message || "Failed to save watch", "error"); }
@@ -268,22 +237,10 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
     if (!user) return;
     const username = user.user_metadata?.username || user.email?.split("@")[0] || "";
     setForm(f => ({ ...f, rsn: f.rsn || username }));
-    // Fetch discord_username directly — don't rely on prop timing
-    supabase.from("user_profiles")
-      .select("discord_id, discord_username")
-      .eq("user_id", user.id).single()
-      .then(({ data }) => {
-        const name = data?.discord_username || null;
-        setLocalDiscord(name);
-        setForm(f => ({ ...f, discord: name || "" }));
-      });
-  }, [user]); // eslint-disable-line
+  }, [user]);
 
   useEffect(() => {
-    if (discordUsername) {
-      setLocalDiscord(discordUsername);
-      setForm(f => ({ ...f, discord: discordUsername }));
-    }
+    setForm(f => ({ ...f, discord: discordUsername || "" }));
   }, [discordUsername]);
 
   async function loadItemNames() {
@@ -306,9 +263,25 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
         // Signal new listings to parent (newest created_at)
         if (data?.length > 0 && onNewListings) {
           const newest = data.reduce((a, b) => new Date(a.created_at) > new Date(b.created_at) ? a : b);
-          if (newest?.created_at) onNewListings(newest.created_at, data);
+          if (newest?.created_at) onNewListings(newest.created_at);
         }
-
+        // Check if any watched items are now listed — fires amber bell + sound
+        if (data?.length > 0 && onWatchAlert) {
+          try {
+            const watches = JSON.parse(localStorage.getItem("rt_trade_watches") || "[]");
+            const lastChecked = parseInt(localStorage.getItem("rt_watches_last_checked") || "0");
+            const hasMatch = watches.some(w =>
+              data.some(l =>
+                l.item_name?.toLowerCase() === w.item_name?.toLowerCase() &&
+                (w.type === "Either" || l.type === w.type) &&
+                (!w.maxPrice || l.price <= w.maxPrice) &&
+                new Date(l.created_at).getTime() > lastChecked
+              )
+            );
+            if (hasMatch) onWatchAlert();
+            localStorage.setItem("rt_watches_last_checked", Date.now().toString());
+          } catch {}
+        }
       }
     } catch (e) { console.error(e); }
     finally { if (showSpinner) setLoading(false); }
@@ -540,62 +513,18 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
       {/* My Watches panel */}
       {showWatches && user && (
         <div style={{ background: "#0c1018", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "12px", padding: "16px 20px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px", flexWrap: "wrap", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
               <span style={{ fontFamily: "'Cinzel', serif", fontSize: "14px", fontWeight: 700, color: "var(--gold)" }}>My Watches</span>
-              <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>— notified when a watched item is listed</span>
-            </div>
-            {/* Add watch search inline */}
-            <div style={{ position: "relative", flex: "1", minWidth: "200px", maxWidth: "320px" }} ref={watchPanelRef}>
-              <input
-                value={watchPanelSearch}
-                onChange={e => { setWatchPanelSearch(e.target.value); setWatchPanelSuggestions(getSuggestions(e.target.value)); setWatchPanelHighlight(-1); }}
-                onBlur={() => setTimeout(() => { setWatchPanelSuggestions([]); setWatchPanelHighlight(-1); }, 150)}
-                onKeyDown={e => {
-                  if (e.key === "ArrowDown") { e.preventDefault(); setWatchPanelHighlight(h => Math.min(h + 1, watchPanelSuggestions.length - 1)); }
-                  else if (e.key === "ArrowUp") { e.preventDefault(); setWatchPanelHighlight(h => Math.max(h - 1, -1)); }
-                  else if (e.key === "Enter") {
-                    e.preventDefault();
-                    const name = watchPanelHighlight >= 0 ? watchPanelSuggestions[watchPanelHighlight] : watchPanelSearch.trim();
-                    if (name) { setWatchModal(name); setWatchForm({ type: "Either", maxPrice: "" }); setWatchPanelSearch(""); setWatchPanelSuggestions([]); }
-                  }
-                  else if (e.key === "Escape") { setWatchPanelSuggestions([]); setWatchPanelHighlight(-1); }
-                }}
-                placeholder="Add a watch — type an item name..."
-                style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "7px 40px 7px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" }}
-                onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
-              />
-              {watchPanelSearch.trim() && (
-                <button
-                  onClick={() => {
-                    const name = watchPanelHighlight >= 0 ? watchPanelSuggestions[watchPanelHighlight] : watchPanelSearch.trim();
-                    if (name) { setWatchModal(name); setWatchForm({ type: "Either", maxPrice: "" }); setWatchPanelSearch(""); setWatchPanelSuggestions([]); }
-                  }}
-                  style={{ position: "absolute", right: "6px", top: "50%", transform: "translateY(-50%)", background: "rgba(201,168,76,0.12)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "5px", color: "var(--gold)", fontSize: "11px", fontWeight: 700, padding: "2px 8px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
-                  + Watch
-                </button>
-              )}
-              {watchPanelSuggestions.length > 0 && (
-                <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111620", border: "1px solid #2a3a4d", borderRadius: "8px", zIndex: 200, maxHeight: "220px", overflowY: "auto", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
-                  {watchPanelSuggestions.map((name, i) => (
-                    <div key={name} onMouseDown={() => { setWatchModal(name); setWatchForm({ type: "Either", maxPrice: "" }); setWatchPanelSearch(""); setWatchPanelSuggestions([]); }}
-                      style={{ padding: "9px 14px", fontSize: "13px", color: i === watchPanelHighlight ? "var(--gold)" : "var(--text)", background: i === watchPanelHighlight ? "rgba(201,168,76,0.08)" : "transparent", cursor: "pointer", borderBottom: i < watchPanelSuggestions.length - 1 ? "1px solid #1a2535" : "none", display: "flex", alignItems: "center", gap: "8px" }}
-                      onMouseOver={e => { if (i !== watchPanelHighlight) e.currentTarget.style.background = "var(--bg3)"; }}
-                      onMouseOut={e => { if (i !== watchPanelHighlight) e.currentTarget.style.background = "transparent"; }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--gold-dim)" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                      {name}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>— get notified when a watched item is listed</span>
             </div>
           </div>
           {watchesLoading ? (
             <div style={{ fontSize: "13px", color: "var(--text-dim)", padding: "8px 0" }}>Loading...</div>
           ) : watches.length === 0 ? (
             <div style={{ fontSize: "13px", color: "var(--text-dim)", fontStyle: "italic", padding: "8px 0" }}>
-              No watches yet — type an item name above to add your first watch.
+              No watches yet. Search for an item and click the bell icon to get notified when it's listed.
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -621,36 +550,14 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
 
       {/* Search + filter row */}
       <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-        {/* Search with autocomplete */}
-        <div style={{ position: "relative", minWidth: "180px", width: "200px" }} ref={searchRef}>
-          <input
-            value={search}
-            onChange={e => { setSearch(e.target.value); setSearchSuggestions(getSuggestions(e.target.value)); setSearchHighlight(-1); }}
-            onFocus={e => { e.target.style.borderColor = "rgba(201,168,76,0.4)"; setSearchFocused(true); if (search.length >= 2) setSearchSuggestions(getSuggestions(search)); }}
-            onBlur={() => { setTimeout(() => { setSearchFocused(false); setSearchSuggestions([]); setSearchHighlight(-1); }, 150); }}
-            onKeyDown={e => {
-              if (!searchSuggestions.length) return;
-              if (e.key === "ArrowDown") { e.preventDefault(); setSearchHighlight(h => Math.min(h + 1, searchSuggestions.length - 1)); }
-              else if (e.key === "ArrowUp") { e.preventDefault(); setSearchHighlight(h => Math.max(h - 1, -1)); }
-              else if (e.key === "Enter" && searchHighlight >= 0) { e.preventDefault(); setSearch(searchSuggestions[searchHighlight]); setSearchSuggestions([]); setSearchHighlight(-1); }
-              else if (e.key === "Escape") { setSearchSuggestions([]); setSearchHighlight(-1); }
-            }}
-            placeholder="Search items..."
-            style={{ width: "100%", background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", padding: "7px 14px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", transition: "border-color 0.15s", boxSizing: "border-box" }}
-          />
-          {searchFocused && searchSuggestions.length > 0 && (
-            <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111620", border: "1px solid #2a3a4d", borderRadius: "8px", zIndex: 200, maxHeight: "240px", overflowY: "auto", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
-              {searchSuggestions.map((name, i) => (
-                <div key={name} onMouseDown={() => { setSearch(name); setSearchSuggestions([]); setSearchHighlight(-1); }}
-                  style={{ padding: "9px 14px", fontSize: "14px", color: i === searchHighlight ? "var(--gold)" : "var(--text)", background: i === searchHighlight ? "rgba(201,168,76,0.08)" : "transparent", cursor: "pointer", borderBottom: i < searchSuggestions.length - 1 ? "1px solid #1a2535" : "none", transition: "background 0.1s" }}
-                  onMouseOver={e => { if (i !== searchHighlight) e.currentTarget.style.background = "var(--bg3)"; }}
-                  onMouseOut={e => { if (i !== searchHighlight) e.currentTarget.style.background = "transparent"; }}>
-                  {name}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Search */}
+        <input
+          value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Search items..."
+          style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", padding: "7px 14px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", minWidth: "180px", width: "200px", transition: "border-color 0.15s" }}
+          onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
+          onBlur={e => e.target.style.borderColor = "var(--border)"}
+        />
 
         <div style={{ width: "1px", height: "22px", background: "var(--border)", flexShrink: 0 }} />
 
@@ -988,7 +895,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
       {/* ── WATCH MODAL ── */}
       {watchModal && (
         <>
-          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000 }} onClick={() => { setWatchModal(null); setWatchModalSearch(""); setWatchModalSuggestions([]); }} />
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000 }} onClick={() => setWatchModal(null)} />
           <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 1001, width: "calc(100% - 40px)", maxWidth: "420px", background: "#111620", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "16px", padding: "28px", display: "flex", flexDirection: "column", gap: "20px" }}>
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent)", borderRadius: "16px 16px 0 0" }} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -999,43 +906,12 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
                 </div>
                 <div style={{ fontSize: "13px", color: "var(--text-dim)", marginTop: "3px" }}>Get notified when a listing appears</div>
               </div>
-              <button onClick={() => { setWatchModal(null); setWatchModalSearch(""); setWatchModalSuggestions([]); }} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "18px", lineHeight: 1 }}>✕</button>
+              <button onClick={() => setWatchModal(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "18px", lineHeight: 1 }}>✕</button>
             </div>
 
-            {watchModal === "__new__" ? (
-              <div style={{ position: "relative" }}>
-                <input
-                  autoFocus
-                  value={watchModalSearch}
-                  onChange={e => { setWatchModalSearch(e.target.value); setWatchModalSuggestions(getSuggestions(e.target.value)); setWatchModalHighlight(-1); }}
-                  onBlur={() => setTimeout(() => { setWatchModalSuggestions([]); }, 150)}
-                  onKeyDown={e => {
-                    if (e.key === "ArrowDown") { e.preventDefault(); setWatchModalHighlight(h => Math.min(h + 1, watchModalSuggestions.length - 1)); }
-                    else if (e.key === "ArrowUp") { e.preventDefault(); setWatchModalHighlight(h => Math.max(h - 1, -1)); }
-                    else if (e.key === "Enter" && watchModalHighlight >= 0) { e.preventDefault(); setWatchModalSearch(watchModalSuggestions[watchModalHighlight]); setWatchModalSuggestions([]); setWatchModalHighlight(-1); }
-                    else if (e.key === "Escape") { setWatchModalSuggestions([]); }
-                  }}
-                  placeholder="Type an item name..."
-                  style={{ width: "100%", background: "var(--bg3)", border: "1px solid rgba(201,168,76,0.3)", borderRadius: "8px", padding: "10px 14px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", boxSizing: "border-box" }}
-                />
-                {watchModalSuggestions.length > 0 && (
-                  <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#111620", border: "1px solid #2a3a4d", borderRadius: "8px", zIndex: 1100, maxHeight: "220px", overflowY: "auto", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
-                    {watchModalSuggestions.map((name, i) => (
-                      <div key={name} onMouseDown={() => { setWatchModalSearch(name); setWatchModalSuggestions([]); setWatchModalHighlight(-1); }}
-                        style={{ padding: "9px 14px", fontSize: "14px", color: i === watchModalHighlight ? "var(--gold)" : "var(--text)", background: i === watchModalHighlight ? "rgba(201,168,76,0.08)" : "transparent", cursor: "pointer", borderBottom: i < watchModalSuggestions.length - 1 ? "1px solid #1a2535" : "none" }}
-                        onMouseOver={e => { if (i !== watchModalHighlight) e.currentTarget.style.background = "var(--bg3)"; }}
-                        onMouseOut={e => { if (i !== watchModalHighlight) e.currentTarget.style.background = "transparent"; }}>
-                        {name}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div style={{ padding: "10px 14px", background: "var(--bg3)", borderRadius: "8px", border: "1px solid #1c2a3a", fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>
-                {watchModal}
-              </div>
-            )}
+            <div style={{ padding: "10px 14px", background: "var(--bg3)", borderRadius: "8px", border: "1px solid #1c2a3a", fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>
+              {watchModal}
+            </div>
 
             <div>
               <div style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 700, marginBottom: "8px", fontFamily: "'DM Sans', sans-serif" }}>Notify me for</div>
@@ -1068,9 +944,9 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
               <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "5px" }}>Only notify me if the listing is at or below this price.</div>
             </div>
 
-            <button onClick={() => addWatch(watchModal === "__new__" ? watchModalSearch.trim() : watchModal)} disabled={savingWatch || (watchModal === "__new__" && !watchModalSearch.trim())}
+            <button onClick={() => addWatch(watchModal)} disabled={savingWatch}
               style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, rgba(201,168,76,0.8), var(--gold))", color: "#000", fontSize: "14px", fontWeight: 700, cursor: savingWatch ? "wait" : "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.5px", opacity: savingWatch ? 0.7 : 1 }}>
-              {savingWatch ? "Saving..." : watchModal === "__new__" ? `Watch ${watchModalSearch || "item"} →` : "Start watching →"}
+              {savingWatch ? "Saving..." : "Start watching →"}
             </button>
           </div>
         </>
@@ -1197,10 +1073,10 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               <div>
                 <label style={labelStyle}>Discord</label>
-                {localDiscord ? (
+                {discordUsername ? (
                   <div style={{ ...inputStyle, display: "flex", alignItems: "center", gap: "8px", background: "rgba(114,137,218,0.06)", borderColor: "rgba(114,137,218,0.3)", cursor: "default" }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="#7289da" style={{ flexShrink: 0 }}><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-                    <span style={{ color: "#7289da", fontWeight: 600, fontSize: "14px" }}>{localDiscord}</span>
+                    <span style={{ color: "#7289da", fontWeight: 600, fontSize: "14px" }}>{discordUsername}</span>
                     <span style={{ marginLeft: "auto", fontSize: "11px", background: "rgba(46,204,113,0.1)", border: "1px solid rgba(46,204,113,0.25)", borderRadius: "4px", padding: "1px 6px", color: "var(--green)" }}>linked</span>
                   </div>
                 ) : (
