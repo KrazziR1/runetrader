@@ -103,7 +103,7 @@ function normaliseCategory(cat, itemName) {
   if (c === "other" && itemName) {
     const n = itemName.toLowerCase();
     if (/arrow|bolt|dart|cannonball|javelin|chinchompa|thrownaxe/.test(n)) return "Ammunition";
-    if (/(air|water|earth|fire|mind|chaos|death|blood|soul|nature|law|cosmic|astral|wrath|dust|lava|steam|smoke|mist|mud) rune/.test(n) || /rune$/.test(n)) return "Runes";
+    if (/(air|water|earth|fire|mind|chaos|death|blood|soul|nature|law|cosmic|astral|wrath|dust|lava|steam|smoke|mist|mud) rune/.test(n) || / rune$| runes$/.test(n)) return "Runes";
     if (/potion|brew|restore|overload|divine|bastion|battlemage/.test(n)) return "Potions";
     if (/shark|anglerfish|karambwan|manta|dark crab|tuna|lobster|monkfish/.test(n)) return "Food";
     if (/ore|bar|log|plank|hide|leather|gem|herb|seed|essence|coal|iron|steel|mithril|adamant/.test(n)) return "Skilling Resources";
@@ -202,22 +202,6 @@ export default function TradeBoard({ user, supabase, showToast }) {
     setItemSuggestions(allItems.filter(n => n.toLowerCase().includes(val.toLowerCase())).slice(0, 8));
   }
 
-  function guessCategoryFromName(name) {
-    const n = name.toLowerCase();
-    if (/3rd age|third age/.test(n)) return "3rd Age";
-    // Weapons/Armour before runes — "rune scimitar" is a weapon, not a rune
-    if (/sword|scimitar|bow|staff|wand|mace|dagger|whip|halberd|crossbow|lance|spear|rapier|fang|glaive|blade|claw|flail|maul|hammer|sceptre|trident|tentacle|bulwark|hasta|partisan/.test(n)) return "Weapons";
-    if (/helm|platebody|platelegs|plateskirt|chainbody|kiteshield|chestplate|tassets|shield|coif|chaps|dhide|armour|mail|robe top|robe bottom|hauberk|cuisse|barding|body|legs|boots|gloves|vambraces|bracers/.test(n)) return "Armour";
-    // Ammo before runes — "bolt" could match rune bolts
-    if (/arrow|bolt|dart|cannonball|javelin|chinchompa|thrownaxe/.test(n)) return "Ammunition";
-    // Actual runes — ends in "rune" or is a known rune type
-    if (/(air|water|earth|fire|mind|chaos|death|blood|soul|nature|law|cosmic|astral|wrath|dust|lava|steam|smoke|mist|mud) rune/.test(n) || /rune$/.test(n)) return "Runes";
-    if (/axe|pickaxe/.test(n)) return "Weapons";
-    if (/potion|brew|restore|prayer pot|ranging|combat pot|antifire|anti-|divine|bastion|battlemage|saturated|overload|mix/.test(n)) return "Potions";
-    if (/shark|anglerfish|dark crab|karambwan|manta ray|tuna|lobster|monkfish|pie|cake|cheese|bread|pizza|potato|karambwanji/.test(n)) return "Food";
-    if (/ore|bar|log|plank|hide|leather|gem|herb|seed|fur|bone|essence|coal|iron|steel|mithril|adamant|crystal|uncut|grimy|clean/.test(n)) return "Skilling Resources";
-    return "Other";
-  }
 
   function selectItem(name) {
     setItemSearch(name);
