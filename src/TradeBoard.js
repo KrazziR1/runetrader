@@ -100,7 +100,6 @@ export default function TradeBoard({ user, supabase, showToast }) {
   const [bumpCooldowns, setBumpCooldowns] = useState(() => {
     try { return JSON.parse(localStorage.getItem("rt_bump_cooldowns") || "{}"); } catch { return {}; }
   });
-  const [copied, setCopied] = useState(null);
   const [priceView, setPriceView] = useState("total"); // "total" | "each"
   const [sortBy, setSortBy] = useState("newest"); // "newest" | "price_asc" | "price_desc" | "expiring"
   const [priceMin, setPriceMin] = useState("");
