@@ -9,7 +9,7 @@ import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 import { xpToLevel, xpProgress, xpToNextLevel, calcFlipXP, getLevelTitle, getCelebrationTier, checkNewAchievements, ACHIEVEMENTS } from "./XPSystem";
 import { generateDailyQuests, updateQuestProgress, calcQuestRewards, todayStr } from "./QuestSystem";
-import { initAudio, playLoginChime, playCoinClink, playBigProfit, playEpicProfit, playLevelUp, playQuestComplete, playNudge, playTradeAlert, toggleMute, getSoundMuted } from "./SoundEngine";
+import { initAudio, playLoginChime, playCoinClink, playBigProfit, playEpicProfit, playLevelUp, playQuestComplete, playNudge, toggleMute, getSoundMuted } from "./SoundEngine";
 
 // ── Changelog — add new entries at the top, bump DEPLOY_KEY on each deploy ──
 const DEPLOY_KEY = "runetrader_seen_deploy_v5"; // change this string on each deploy to trigger the modal
@@ -4872,26 +4872,7 @@ export default function RuneTrader() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      // Fetch profile on initial load — covers page refresh with existing session
-      if (session?.user?.id) {
-        profileFetchedRef.current = session.user.id;
-        supabase.from("user_profiles")
-          .select("ref_code, is_pro, trial_ends_at, sync_paused, picks_prefs, discord_id, discord_username")
-          .eq("user_id", session.user.id).single()
-          .then(({ data }) => {
-            if (data?.ref_code) setUserRefCode(data.ref_code);
-            if (data?.discord_username || data?.discord_id) setDiscordUsername(data.discord_username || data.discord_id);
-            if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(new Date()); }
-            if (data?.is_pro) { setIsPro(true); return; }
-            if (data?.trial_ends_at) {
-              const daysLeft = Math.ceil((new Date(data.trial_ends_at) - Date.now()) / 86400000);
-              if (daysLeft > 0) { setIsOnTrial(true); setTrialDaysLeft(daysLeft); setIsPro(true); }
-            }
-          });
-      }
-    });
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) setDemoMode(false); // exit demo when signed in
@@ -4950,15 +4931,22 @@ export default function RuneTrader() {
             if (el) { const r = el.getBoundingClientRect(); setTourRects({ top: r.top, left: r.left, width: r.width, height: r.height }); }
             setTourStep(0);
           }, 800);
-        } else if (session?.user?.id && session.user.id !== profileFetchedRef.current) {
+        } else if (session?.user?.id) {
           // Load ref code, pro status, trial, and sync pause state for returning users
-          // (skip if getSession already fetched profile for this user)
-          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, picks_prefs, discord_id, discord_username").eq("user_id", session.user.id).single()
+          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter").eq("user_id", session.user.id).single()
             .then(({ data }) => {
               if (data?.ref_code) setUserRefCode(data.ref_code);
-              if (data?.discord_username || data?.discord_id) setDiscordUsername(data.discord_username || data.discord_id);
-              if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(new Date()); }
-              // is_supporter column removed
+              if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(data.sync_paused_at ? new Date(data.sync_paused_at) : new Date()); }
+              if (data?.is_supporter) {
+                setIsSupporter(true);
+                const toastKey = "rt_supporter_toast_shown";
+                if (!localStorage.getItem(toastKey)) {
+                  setTimeout(() => {
+                    showSupporterToast();
+                    safeSetItem(toastKey, "1");
+                  }, 2000);
+                }
+              }
               if (data?.is_pro) { setIsPro(true); return; }
               // Check active trial
               if (data?.trial_ends_at) {
@@ -5050,14 +5038,10 @@ export default function RuneTrader() {
   const [merchantMode, setMerchantMode] = useState(false);
   const [upgradeModal, setUpgradeModal] = useState(null);
   const [isPro, setIsPro] = useState(false);
-  // eslint-disable-next-line no-unused-vars
   const [isSupporter, setIsSupporter] = useState(false);
   const [showSupporterToastState, setShowSupporterToastState] = useState(false);
-  // eslint-disable-next-line no-unused-vars
   function showSupporterToast() { setShowSupporterToastState(true); setTimeout(() => setShowSupporterToastState(false), 6000); }
   const [userRefCode, setUserRefCode] = useState(null);
-  const [discordUsername, setDiscordUsername] = useState(null); // linked Discord username from user_profiles
-  const [settingsInitialSection, setSettingsInitialSection] = useState(null); // jump to a section on open
   const [syncPaused, setSyncPaused] = useState(false);
   const [syncPausedAt, setSyncPausedAt] = useState(null);
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
@@ -5087,7 +5071,6 @@ export default function RuneTrader() {
     try { return JSON.parse(localStorage.getItem("runetrader_pnl_history") || "[]"); } catch { return []; }
   });
   const pnlCanvasRef = useRef(null);
-  const profileFetchedRef = useRef(null); // prevents double profile fetch on sign-in
 
   async function loadMerchantSettings() {
     if (!user) return;
@@ -5467,7 +5450,6 @@ export default function RuneTrader() {
     } catch { return false; }
   });
   const [unseenMarketAlerts, setUnseenMarketAlerts] = useState(false);
-  const [hasWatchAlert, setHasWatchAlert] = useState(false); // amber bell — watched item was listed
   const [lastSeenAlertCount, setLastSeenAlertCount] = useState(() => { try { return parseInt(localStorage.getItem("rt_alerts_last_seen_count") || "0"); } catch { return 0; } });
   const [lastSeenMarginCount, setLastSeenMarginCount] = useState(() => { try { return parseInt(localStorage.getItem("rt_marginwatch_last_seen_count") || "0"); } catch { return 0; } });
   const [natureRunePrice, setNatureRunePrice] = useState(0);
@@ -5735,7 +5717,7 @@ export default function RuneTrader() {
     const isViewingMargin = activeTab === "market" && marketInnerView === "marginwatch";
     if (!isViewingAlerts && currentAlertCount > lastSeenAlertCount) { setUnseenMarketAlerts(true); }
     if (!isViewingMargin && currentMarginCount > lastSeenMarginCount) { setUnseenMarketAlerts(true); }
-  }, [alerts, smartEvents, marginCompression, activeTab, marketInnerView, lastSeenAlertCount, lastSeenMarginCount]); // eslint-disable-line
+  }, [alerts, smartEvents, marginCompression]); // eslint-disable-line
 
   function saveSmartAlertSettings(key, val) {
     const updated = { ...smartAlertSettings, [key]: val };
@@ -6928,34 +6910,9 @@ RULES:
   const excludedFlips = flipsLog.filter(f => f.excluded);
 
   // Stable callback for TradeBoard new listing signal
-  const onNewListings = useCallback((ts, listings) => {
+  const onNewListings = useCallback((ts) => {
     try { localStorage.setItem("rt_tradeboard_newest_ts", ts); } catch {}
     if (marketSubTab !== "tradeboard") setHasNewTradeListings(true);
-    // Check watches at App level so it fires regardless of which tab is active
-    if (listings?.length && user) {
-      try {
-        const watches = JSON.parse(localStorage.getItem("rt_trade_watches") || "[]");
-        const lastChecked = parseInt(localStorage.getItem("rt_watches_last_checked") || "0");
-        const hasMatch = watches.some(w =>
-          listings.some(l =>
-            l.item_name?.toLowerCase() === w.item_name?.toLowerCase() &&
-            (w.type === "Either" || l.type === w.type) &&
-            (!w.max_price || l.price <= w.max_price) &&
-            new Date(l.created_at).getTime() > lastChecked
-          )
-        );
-        if (hasMatch) onWatchAlert();
-        localStorage.setItem("rt_watches_last_checked", Date.now().toString());
-      } catch {}
-    }
-  }, [marketSubTab, user, onWatchAlert]); // eslint-disable-line
-
-  // Callback for when a watched item gets listed — fires amber bell + sound
-  const onWatchAlert = useCallback(() => {
-    if (marketSubTab !== "tradeboard") {
-      setHasWatchAlert(true);
-      playTradeAlert();
-    }
   }, [marketSubTab]);
   const autoClosedFlips = autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, date: f.sell_completed_at }));
   const allClosedFlips = [...closedFlips, ...autoClosedFlips];
@@ -8438,8 +8395,8 @@ RULES:
                   { v: "alch",       label: "High Alch" },
                   { v: "recipes",    label: "Recipes", badge: "NEW" },
                   { v: "coffer",     label: "Death's Coffer" },
-                  { v: "tradeboard", label: "Trade Board", newDot: hasNewTradeListings, watchAlert: hasWatchAlert },
-                ].map(({ v, label, dropdown, badge, newDot, watchAlert }) => (
+                  { v: "tradeboard", label: "Trade Board", newDot: hasNewTradeListings },
+                ].map(({ v, label, dropdown, badge, newDot }) => (
                   <div key={v} style={{ position: "relative" }}>
                     <button
                       className={`nav-tab ${activeTab === "market" && marketSubTab === v ? "active" : ""}`}
@@ -8449,7 +8406,6 @@ RULES:
           handleSetActiveTab("market"); setMarketSubTab(v); setPicksMode(false); setMarketDropdownOpen(false);
           if (v === "tradeboard") {
             setHasNewTradeListings(false);
-            setHasWatchAlert(false);
             try { localStorage.setItem("rt_tradeboard_last_seen", new Date().toISOString()); } catch {}
           }
         }
@@ -8459,13 +8415,7 @@ RULES:
                         ? (marketInnerView === "marginwatch" ? "Margin Watch" : marketInnerView === "alerts" ? "Alerts" : "Market")
                         : label}
                       {badge && <span style={{ fontSize: "9px", fontWeight: 700, color: "#2ecc71", background: "rgba(46,204,113,0.12)", border: "1px solid rgba(46,204,113,0.3)", borderRadius: "3px", padding: "1px 4px", letterSpacing: "0.5px" }}>{badge}</span>}
-                      {watchAlert ? (
-                        <span style={{ width: "16px", height: "16px", borderRadius: "50%", background: "#c9a84c", display: "inline-flex", alignItems: "center", justifyContent: "center", marginLeft: "3px", marginBottom: "5px", flexShrink: 0 }}>
-                          <svg width="9" height="9" viewBox="0 0 24 24" fill="#000"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                        </span>
-                      ) : newDot ? (
-                        <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2ecc71", display: "inline-block", marginLeft: "2px", marginBottom: "6px", flexShrink: 0 }} />
-                      ) : null}
+                      {newDot && <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2ecc71", display: "inline-block", marginLeft: "2px", marginBottom: "6px", flexShrink: 0 }} />}
                       {dropdown && <span style={{ fontSize: "9px", opacity: 0.6, transition: "transform 0.15s", display: "inline-block", transform: marketDropdownOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>}
                     </button>
                     {dropdown && marketDropdownOpen && (
@@ -8475,14 +8425,15 @@ RULES:
                         <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "8px", minWidth: "160px", overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)", zIndex: 200 }}>
                           {[
                             { v: "items",       label: "Items" },
-                            { v: "marginwatch", label: "Margin Watch", badge: Object.values(marginCompression).filter(c => c.direction !== "recover").length, action: () => { setUnseenMarketAlerts(false); const c = Object.values(marginCompression).filter(c => c.direction !== "recover").length; setLastSeenMarginCount(c); try { localStorage.setItem("rt_marginwatch_last_seen_count", String(c)); } catch {} } },
-                            { v: "alerts",      label: "Alerts", badge: alerts.filter(a => a.triggered).length + smartEvents.length, action: () => { setUnseenMarketAlerts(false); const c = alerts.filter(a => a.triggered).length + smartEvents.length; setLastSeenAlertCount(c); try { localStorage.setItem("rt_alerts_last_seen_count", String(c)); } catch {} } },
+                            { v: "marginwatch", label: "Margin Watch", badge: Object.values(marginCompression).filter(c => c.direction !== "recover").length, onSelect: () => { setUnseenMarketAlerts(false); const c = Object.values(marginCompression).filter(c => c.direction !== "recover").length; setLastSeenMarginCount(c); try { localStorage.setItem("rt_marginwatch_last_seen_count", String(c)); } catch {} } },
+                            { v: "alerts",      label: "Alerts", badge: alerts.filter(a => a.triggered).length + smartEvents.length, onSelect: () => { setUnseenMarketAlerts(false); const c = alerts.filter(a => a.triggered).length + smartEvents.length; setLastSeenAlertCount(c); try { localStorage.setItem("rt_alerts_last_seen_count", String(c)); } catch {} } },
                           ].map(item => (
                             <button key={item.v}
-                              onClick={() => { handleSetActiveTab("market"); setMarketSubTab("flips"); setMarketInnerView(item.v); setMarketDropdownOpen(false); if (item.action) item.action(); }}
+                              onClick={() => { handleSetActiveTab("market"); setMarketSubTab("flips"); setMarketInnerView(item.v); setMarketDropdownOpen(false); if (item.onSelect) item.onSelect(); }}
                               style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "9px 14px", background: marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none", border: "none", color: marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)", fontSize: "15px", fontFamily: "DM Sans, sans-serif", cursor: "pointer", transition: "background 0.1s", textAlign: "left", fontWeight: 500 }}
                               onMouseOver={e => { e.currentTarget.style.background = "var(--bg3)"; e.currentTarget.style.color = "var(--text)"; }}
-                              onMouseOut={e => { e.currentTarget.style.background = marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none"; e.currentTarget.style.color = marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)"; }}>
+                              onMouseOut={e => { e.currentTarget.style.background = marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none"; e.currentTarget.style.color = marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)"; }}
+                              onClick={e => { e.stopPropagation(); handleSetActiveTab("market"); setMarketSubTab("flips"); setMarketInnerView(item.v); if (item.v !== "items") setPicksMode(false); setMarketDropdownOpen(false); }}>
                               {item.label}
                               {item.badge > 0 && (
                                 <span style={{ marginLeft: "auto", background: item.v === "marginwatch" ? "rgba(231,76,60,0.8)" : "var(--gold)", color: item.v === "marginwatch" ? "#fff" : "#000", borderRadius: "8px", padding: "0 5px", fontSize: "10px", fontWeight: 700 }}>
@@ -8563,7 +8514,7 @@ RULES:
               setSyncPausedAt(null);
               if (user) {
                 try {
-                  await supabase.from("user_profiles").update({ sync_paused: false }).eq("user_id", user.id);
+                  await supabase.from("user_profiles").update({ sync_paused: false, sync_paused_at: null }).eq("user_id", user.id);
                 } catch (e) { console.error("[resume sync]", e?.message); }
               }
             }}>Resume tracking</button>
@@ -8713,9 +8664,6 @@ RULES:
               <SettingsPage
                 user={user}
                 supabase={supabase}
-                initialSection={settingsInitialSection}
-                onSectionMounted={() => setSettingsInitialSection(null)}
-                onDiscordLinked={(id) => setDiscordUsername(id)}
                 showToast={showToast}
                 soundMuted={soundMuted}
                 onToggleSound={() => { const m = toggleMute(); setSoundMuted(m); }}
@@ -9821,9 +9769,6 @@ RULES:
                     supabase={supabase}
                     showToast={showToast}
                     onNewListings={onNewListings}
-                    onWatchAlert={onWatchAlert}
-                    discordUsername={discordUsername}
-                    onGoToSettings={() => { handleSetActiveTab("settings"); setSettingsInitialSection("connections"); }}
                   />
                 )}
 
