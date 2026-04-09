@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 
 const WIKI_MAP = "https://prices.runescape.wiki/api/v1/osrs/mapping";
 const WIKI_IMG = (name) => `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}_detail.png`;
-const CATEGORIES = ["All", "Weapons", "Armour", "3rd Age", "Runes", "Potions", "Food & Supplies", "Boss Drops", "Skilling", "Cosmetics", "Other"];
+const CATEGORIES = ["All", "Weapons", "Armour", "3rd Age", "Runes & Ammo", "Potions", "Food", "Skilling Resources", "Other"];
 const MAX_CASH = 2_147_483_647;
 const DISCORD_SERVER_ID  = "1459412578999599216";
 const DISCORD_CHANNEL_ID = "1491584732025065544";
@@ -66,15 +66,16 @@ function timeLeftPct(ts) {
 }
 
 function ItemImage({ name, size = 44 }) {
-  const [src, setSrc] = useState(WIKI_IMG(name));
+  const safeName = name || "Unknown_item";
+  const [src, setSrc] = useState(WIKI_IMG(safeName));
   const [failed, setFailed] = useState(false);
   if (failed) return (
     <div style={{ width: size, height: size, borderRadius: "8px", background: "var(--bg4)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: Math.round(size * 0.45) + "px", flexShrink: 0 }}>📦</div>
   );
   return (
-    <img src={src} alt={name} width={size} height={size}
+    <img src={src} alt={safeName} width={size} height={size}
       onError={() => {
-        if (src.includes("_detail")) setSrc(`https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}.png`);
+        if (src.includes("_detail")) setSrc(`https://oldschool.runescape.wiki/images/${encodeURIComponent(safeName.replace(/ /g, "_"))}.png`);
         else setFailed(true);
       }}
       style={{ width: size, height: size, objectFit: "contain", flexShrink: 0, borderRadius: "8px", background: "var(--bg4)", padding: "4px" }}
@@ -84,6 +85,18 @@ function ItemImage({ name, size = 44 }) {
 
 const BUMP_COOLDOWN_MS = 60 * 60 * 1000; // 60 minutes
 const MAX_LISTINGS_PER_USER = 8;
+
+// Normalise legacy DB category names to current ones
+function normaliseCategory(cat) {
+  if (!cat) return "Other";
+  const c = cat.toLowerCase();
+  if (c === "runes" || c === "ammo" || c === "runes & ammo") return "Runes & Ammo";
+  if (c === "food & supplies" || c === "food") return "Food";
+  if (c === "skilling" || c === "skilling resources") return "Skilling Resources";
+  if (c === "boss drops" || c === "cosmetics" || c === "raids") return "Other";
+  const match = CATEGORIES.find(cat2 => cat2.toLowerCase() === c);
+  return match || "Other";
+}
 
 export default function TradeBoard({ user, supabase, showToast }) {
   const [listings, setListings] = useState([]);
@@ -104,7 +117,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
   const [sortBy, setSortBy] = useState("newest"); // "newest" | "price_asc" | "price_desc" | "expiring"
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
-  const [showPriceFilter, setShowPriceFilter] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [reportModal, setReportModal] = useState(null); // listing object
   const [reportReason, setReportReason] = useState("");
   const [submittingReport, setSubmittingReport] = useState(false);
@@ -120,13 +133,15 @@ export default function TradeBoard({ user, supabase, showToast }) {
   useEffect(() => {
     loadListings();
     loadItemNames();
-    // Real-time: refresh when any listing changes
+    // Real-time: refresh when listings change (debounced to avoid reload storms)
+    let realtimeTimer = null;
     const ch = supabase.channel("trade-listings-live")
       .on("postgres_changes", { event: "*", schema: "public", table: "trade_listings" }, () => {
-        loadListings();
+        clearTimeout(realtimeTimer);
+        realtimeTimer = setTimeout(() => loadListings(), 1000);
       }).subscribe();
-    return () => supabase.removeChannel(ch);
-  }, []); // eslint-disable-line
+    return () => { supabase.removeChannel(ch); clearTimeout(realtimeTimer); };
+  }, [supabase]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Pre-fill RSN from user profile on mount
   useEffect(() => {
@@ -177,7 +192,9 @@ export default function TradeBoard({ user, supabase, showToast }) {
 
     const price = parseGPInput(form.price);
     if (!price || price <= 0) return showToast("Invalid price — try e.g. 2.5m or 500k", "error");
-    const qty = parseGPInput(form.quantity) || parseInt(form.quantity) || 1;
+    if (price > 999_000_000_000) return showToast("Price seems too high — max 999B gp", "error");
+    const qty = Math.max(1, Math.min(2_147_483_647, parseGPInput(form.quantity) || parseInt(form.quantity) || 1));
+    if (!Number.isFinite(qty)) return showToast("Invalid quantity", "error");
 
     // Check max listing count
     const myActiveListings = listings.filter(l => l.user_id === user.id);
@@ -187,7 +204,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
     // Check for duplicate: same user, same item, same type (WTS or WTB)
     const duplicate = listings.find(l =>
       l.user_id === user.id &&
-      l.item_name.toLowerCase() === form.item_name.toLowerCase() &&
+      (l.item_name || "").toLowerCase() === form.item_name.toLowerCase() &&
       l.type === form.type
     );
     if (duplicate) return showToast(`You already have an active ${form.type} listing for ${form.item_name}. Remove or edit it before posting another.`, "error");
@@ -221,8 +238,12 @@ export default function TradeBoard({ user, supabase, showToast }) {
 
   async function closeListing(id) {
     const { error } = await supabase.from("trade_listings").delete().eq("id", id).eq("user_id", user.id);
-    if (error) showToast("Failed to remove: " + error.message, "error");
-    else { setListings(prev => prev.filter(l => l.id !== id)); showToast("Listing removed", "success"); }
+    if (error) { showToast("Failed to remove: " + error.message, "error"); return; }
+    setListings(prev => prev.filter(l => l.id !== id));
+    const updated = { ...bumpCooldowns }; delete updated[id];
+    setBumpCooldowns(updated);
+    try { localStorage.setItem("rt_bump_cooldowns", JSON.stringify(updated)); } catch {}
+    showToast("Listing removed", "success");
   }
 
   function getBumpCooldownRemaining(id) {
@@ -257,19 +278,18 @@ export default function TradeBoard({ user, supabase, showToast }) {
       showToast("Listing bumped to top!", "success");
       loadListings();
     } catch { showToast("Failed to bump listing", "error"); }
-    setBumping(null);
+    finally { setBumping(null); }
   }
 
   function openDiscordTrade(l) {
-    // Build a pre-filled message mentioning the seller if they have a discord tag
     const mention = `@${l.discord}`;
-    const totalPrice = l.price * (l.quantity || 1);
+    const totalPrice = (l.price || 0) * (l.quantity || 1);
     const priceStr = l.quantity > 1
       ? `${compactGP(l.price)} each (${compactGP(totalPrice)} total)`
       : compactGP(l.price);
     const msg = `${mention} — interested in your ${l.item_name} listing (${l.type === "WTS" ? "selling" : "buying"}${(l.quantity || 1) > 1 ? ` ×${l.quantity.toLocaleString()} @` : ""} ${priceStr} gp) — RuneTrader.gg`;
     // Copy message to clipboard, then open Discord trade channel
-    navigator.clipboard?.writeText(msg).catch(() => {});
+    if (navigator.clipboard?.writeText) { navigator.clipboard.writeText(msg).catch(() => {}); }
     window.open(DISCORD_TRADE_URL, "_blank", "noopener,noreferrer");
     showToast("Message copied — paste it in #trade-chat to ping the seller!", "info", 5000);
   }
@@ -287,7 +307,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
       setReportModal(null);
       setReportReason("");
     } catch { showToast("Failed to submit report", "error"); }
-    setSubmittingReport(false);
+    finally { setSubmittingReport(false); }
   }
 
   const priceMinNum = parseGPInput(priceMin);
@@ -297,18 +317,18 @@ export default function TradeBoard({ user, supabase, showToast }) {
   const filtered = listings
     .filter(l => {
       if (typeFilter !== "All" && l.type !== typeFilter) return false;
-      if (filter !== "All" && l.category !== filter) return false;
+      if (filter !== "All" && normaliseCategory(l.category) !== filter) return false;
       if (myListings && l.user_id !== user?.id) return false;
-      if (search.trim() && !l.item_name.toLowerCase().includes(search.trim().toLowerCase())) return false;
+      if (search.trim() && !(l.item_name || "").toLowerCase().includes(search.trim().replace(/\s+/g, " ").toLowerCase())) return false;
       if (priceMinNum > 0 && l.price < priceMinNum) return false;
       if (priceMaxNum > 0 && l.price > priceMaxNum) return false;
       return true;
     })
     .sort((a, b) => {
-      if (sortBy === "price_asc")  return a.price - b.price;
-      if (sortBy === "price_desc") return b.price - a.price;
-      if (sortBy === "expiring")   return new Date(a.expires_at) - new Date(b.expires_at);
-      return new Date(b.created_at) - new Date(a.created_at); // newest
+      if (sortBy === "price_asc")  return (a.price || 0) - (b.price || 0);
+      if (sortBy === "price_desc") return (b.price || 0) - (a.price || 0);
+      if (sortBy === "expiring")   return (new Date(a.expires_at) || 0) - (new Date(b.expires_at) || 0);
+      return (new Date(b.created_at) || 0) - (new Date(a.created_at) || 0);
     });
 
   const inputStyle = { width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" };
@@ -330,8 +350,9 @@ export default function TradeBoard({ user, supabase, showToast }) {
         <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
           {user && (
             <button onClick={() => setMyListings(m => !m)}
-              style={{ padding: "7px 14px", borderRadius: "8px", border: `1px solid ${myListings ? "var(--gold-dim)" : "var(--border)"}`, background: myListings ? "rgba(201,168,76,0.1)" : "transparent", color: myListings ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
+              style={{ padding: "7px 14px", borderRadius: "8px", border: `1px solid ${myListings ? "var(--gold-dim)" : "var(--border)"}`, background: myListings ? "rgba(201,168,76,0.1)" : "transparent", color: myListings ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
               My Listings
+              {(() => { const n = listings.filter(l => l.user_id === user?.id).length; return n > 0 ? <span style={{ background: myListings ? "var(--gold)" : "var(--bg4)", color: myListings ? "#000" : "var(--text-dim)", borderRadius: "10px", padding: "0 6px", fontSize: "11px", fontWeight: 700 }}>{n}</span> : null; })()}
             </button>
           )}
           <button onClick={loadListings} title="Refresh"
@@ -356,61 +377,54 @@ export default function TradeBoard({ user, supabase, showToast }) {
       </div>
 
       {/* Search + filter row */}
-      <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
         {/* Search */}
         <input
           value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search items..."
-          style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", padding: "7px 14px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", minWidth: "180px", width: "220px", transition: "border-color 0.15s" }}
+          style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "8px", padding: "7px 14px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", minWidth: "180px", width: "200px", transition: "border-color 0.15s" }}
           onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
           onBlur={e => e.target.style.borderColor = "var(--border)"}
         />
 
-        <div style={{ width: "1px", height: "22px", background: "var(--border)" }} />
+        <div style={{ width: "1px", height: "22px", background: "var(--border)", flexShrink: 0 }} />
 
         {/* WTS / WTB */}
         <div style={{ display: "flex", gap: "5px" }}>
           {["All", "WTS", "WTB"].map(t => (
             <button key={t} onClick={() => setTypeFilter(t)}
-              style={{ padding: "5px 13px", borderRadius: "6px", border: `1px solid ${typeFilter === t ? (t === "WTS" ? "rgba(231,76,60,0.5)" : t === "WTB" ? "rgba(46,204,113,0.5)" : "var(--gold-dim)") : "var(--border)"}`, background: typeFilter === t ? (t === "WTS" ? "rgba(231,76,60,0.1)" : t === "WTB" ? "rgba(46,204,113,0.1)" : "rgba(201,168,76,0.1)") : "transparent", color: typeFilter === t ? (t === "WTS" ? "var(--red)" : t === "WTB" ? "var(--green)" : "var(--gold)") : "var(--text-dim)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+              style={{ padding: "6px 14px", borderRadius: "6px", border: `1px solid ${typeFilter === t ? (t === "WTS" ? "rgba(231,76,60,0.5)" : t === "WTB" ? "rgba(46,204,113,0.5)" : "var(--gold-dim)") : "var(--border)"}`, background: typeFilter === t ? (t === "WTS" ? "rgba(231,76,60,0.1)" : t === "WTB" ? "rgba(46,204,113,0.1)" : "rgba(201,168,76,0.1)") : "transparent", color: typeFilter === t ? (t === "WTS" ? "var(--red)" : t === "WTB" ? "var(--green)" : "var(--gold)") : "var(--text-dim)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
               {t}
             </button>
           ))}
         </div>
 
-        <div style={{ width: "1px", height: "22px", background: "var(--border)" }} />
-
-        {/* Category */}
-        <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-          {CATEGORIES.map(c => (
-            <button key={c} onClick={() => setFilter(c)}
-              style={{ padding: "5px 12px", borderRadius: "6px", border: `1px solid ${filter === c ? "rgba(255,255,255,0.15)" : "transparent"}`, background: filter === c ? "var(--bg3)" : "transparent", color: filter === c ? "var(--text)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
-              {c}
-            </button>
-          ))}
-        </div>
-
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
+          {/* Filters button */}
+          {(() => {
+            const activeFilterCount = (filter !== "All" ? 1 : 0) + (priceFilterActive ? 1 : 0);
+            return (
+              <button onClick={() => setShowFilters(v => !v)}
+                style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "7px", border: `1px solid ${showFilters || activeFilterCount > 0 ? "rgba(201,168,76,0.4)" : "var(--border)"}`, background: showFilters || activeFilterCount > 0 ? "rgba(201,168,76,0.08)" : "transparent", color: showFilters || activeFilterCount > 0 ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                ⚙ Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+              </button>
+            );
+          })()}
+
           {/* Sort */}
           <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-            style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", color: "var(--text-dim)", fontSize: "13px", padding: "5px 10px", fontFamily: "'DM Sans', sans-serif", outline: "none", cursor: "pointer" }}>
+            style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", color: "var(--text-dim)", fontSize: "13px", padding: "6px 10px", fontFamily: "'DM Sans', sans-serif", outline: "none", cursor: "pointer" }}>
             <option value="newest">Newest first</option>
             <option value="price_asc">Price: low → high</option>
             <option value="price_desc">Price: high → low</option>
             <option value="expiring">Expiring soon</option>
           </select>
 
-          {/* Price filter toggle */}
-          <button onClick={() => setShowPriceFilter(v => !v)}
-            style={{ padding: "5px 12px", borderRadius: "7px", border: `1px solid ${priceFilterActive || showPriceFilter ? "rgba(201,168,76,0.4)" : "var(--border)"}`, background: priceFilterActive || showPriceFilter ? "rgba(201,168,76,0.08)" : "transparent", color: priceFilterActive || showPriceFilter ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, whiteSpace: "nowrap" }}>
-            {priceFilterActive ? `💰 ${priceMinNum > 0 ? compactGP(priceMinNum) : "0"} – ${priceMaxNum > 0 ? compactGP(priceMaxNum) : "∞"}` : "💰 Price range"}
-          </button>
-
           {/* Per-item / total toggle */}
           <div style={{ display: "flex", gap: "3px" }}>
             {["total", "each"].map(v => (
               <button key={v} onClick={() => setPriceView(v)}
-                style={{ padding: "5px 11px", borderRadius: "6px", border: `1px solid ${priceView === v ? "var(--border)" : "transparent"}`, background: priceView === v ? "var(--bg3)" : "transparent", color: priceView === v ? "var(--text)" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
+                style={{ padding: "6px 12px", borderRadius: "6px", border: `1px solid ${priceView === v ? "var(--border)" : "transparent"}`, background: priceView === v ? "var(--bg3)" : "transparent", color: priceView === v ? "var(--text)" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
                 {v === "total" ? "Total" : "Each"}
               </button>
             ))}
@@ -418,27 +432,52 @@ export default function TradeBoard({ user, supabase, showToast }) {
         </div>
       </div>
 
-      {/* Price range filter panel */}
-      {showPriceFilter && (
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.15)", borderRadius: "10px", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "13px", color: "var(--text-dim)", fontWeight: 600 }}>Price per item:</span>
-          <input value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="Min (e.g. 100k)"
-            style={{ background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "7px", padding: "6px 10px", color: "var(--text)", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "130px" }}
-            onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
-            onBlur={e => e.target.style.borderColor = "#1c2a3a"} />
-          <span style={{ color: "var(--text-dim)" }}>—</span>
-          <input value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Max (e.g. 5m)"
-            style={{ background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "7px", padding: "6px 10px", color: "var(--text)", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "130px" }}
-            onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
-            onBlur={e => e.target.style.borderColor = "#1c2a3a"} />
-          {priceMinNum > 0 && <span style={{ fontSize: "12px", color: "var(--gold)" }}>{compactGP(priceMinNum)}</span>}
-          {priceMaxNum > 0 && <span style={{ fontSize: "12px", color: "var(--gold)" }}>→ {compactGP(priceMaxNum)}</span>}
-          {priceFilterActive && (
-            <button onClick={() => { setPriceMin(""); setPriceMax(""); }}
-              style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: "0 4px" }}
-              onMouseOver={e => e.currentTarget.style.color = "var(--red)"}
-              onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>
-              ✕ Clear
+      {/* Expanded filters panel */}
+      {showFilters && (
+        <div style={{ background: "rgba(201,168,76,0.03)", border: "1px solid rgba(201,168,76,0.12)", borderRadius: "10px", padding: "16px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
+          {/* Category */}
+          <div>
+            <div style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 700, marginBottom: "8px", fontFamily: "'DM Sans', sans-serif" }}>Category</div>
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              {CATEGORIES.map(c => (
+                <button key={c} onClick={() => setFilter(c)}
+                  style={{ padding: "5px 13px", borderRadius: "6px", border: `1px solid ${filter === c ? "rgba(201,168,76,0.4)" : "var(--border)"}`, background: filter === c ? "rgba(201,168,76,0.1)" : "transparent", color: filter === c ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", fontWeight: filter === c ? 600 : 400, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.1s" }}>
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Price range */}
+          <div>
+            <div style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 700, marginBottom: "8px", fontFamily: "'DM Sans', sans-serif" }}>Price per item</div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              <input value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="Min (e.g. 100k)"
+                style={{ background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "7px", padding: "7px 10px", color: "var(--text)", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "140px" }}
+                onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
+                onBlur={e => e.target.style.borderColor = "#1c2a3a"} />
+              <span style={{ color: "var(--text-dim)" }}>—</span>
+              <input value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Max (e.g. 5m)"
+                style={{ background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "7px", padding: "7px 10px", color: "var(--text)", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "140px" }}
+                onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
+                onBlur={e => e.target.style.borderColor = "#1c2a3a"} />
+              {priceMinNum > 0 && <span style={{ fontSize: "12px", color: "var(--gold)" }}>{compactGP(priceMinNum)}</span>}
+              {priceMaxNum > 0 && <span style={{ fontSize: "12px", color: "var(--gold)" }}>→ {compactGP(priceMaxNum)}</span>}
+              {priceFilterActive && (
+                <button onClick={() => { setPriceMin(""); setPriceMax(""); }}
+                  style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+                  onMouseOver={e => e.currentTarget.style.color = "var(--red)"}
+                  onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>
+                  ✕ Clear
+                </button>
+              )}
+            </div>
+          </div>
+          {(filter !== "All" || priceFilterActive) && (
+            <button onClick={() => { setFilter("All"); setPriceMin(""); setPriceMax(""); }}
+              style={{ alignSelf: "flex-start", background: "none", border: "1px solid rgba(231,76,60,0.25)", borderRadius: "6px", color: "#c0564a", fontSize: "12px", padding: "4px 12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+              onMouseOver={e => { e.currentTarget.style.background = "rgba(231,76,60,0.06)"; e.currentTarget.style.color = "var(--red)"; }}
+              onMouseOut={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#c0564a"; }}>
+              ✕ Clear all filters
             </button>
           )}
         </div>
@@ -461,14 +500,24 @@ export default function TradeBoard({ user, supabase, showToast }) {
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-dim)", background: "var(--bg3)", borderRadius: "12px", border: "1px solid #1c2a3a" }}>
           <div style={{ fontSize: "32px", marginBottom: "12px" }}>📋</div>
-          <div style={{ fontSize: "15px", marginBottom: "6px" }}>{search ? `No listings for "${search}"` : "No listings yet"}</div>
-          <div style={{ fontSize: "13px" }}>{user ? "Be the first to post a listing." : "Sign in to post a listing."}</div>
+          <div style={{ fontSize: "15px", marginBottom: "6px" }}>
+            {search ? `No listings for "${search}"` : (filter !== "All" || typeFilter !== "All" || priceFilterActive) ? "No listings match your filters" : "No listings yet"}
+          </div>
+          <div style={{ fontSize: "13px" }}>
+            {(filter !== "All" || typeFilter !== "All" || priceFilterActive) ? (
+              <button onClick={() => { setFilter("All"); setTypeFilter("All"); setPriceMin(""); setPriceMax(""); setSearch(""); }}
+                style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", color: "var(--text-dim)", padding: "6px 14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontSize: "13px", marginTop: "8px" }}>
+                Clear all filters
+              </button>
+            ) : user ? "Be the first to post a listing." : "Sign in to post a listing."}
+          </div>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {filtered.map(l => {
-            const total = l.price * (l.quantity || 1);
-            const displayPrice = priceView === "each" || l.quantity <= 1 ? l.price : total;
+            const price = l.price || 0;
+            const total = price * (l.quantity || 1);
+            const displayPrice = priceView === "each" || (l.quantity || 1) <= 1 ? price : total;
             const isOwn = user?.id === l.user_id;
             const pct = timeLeftPct(l.expires_at);
             const expiryColor = pct > 50 ? "var(--green)" : pct > 20 ? "#f39c12" : "var(--red)";
@@ -484,12 +533,12 @@ export default function TradeBoard({ user, supabase, showToast }) {
                 <div style={{ minWidth: 0 }}>
                   {/* Top row: name + badges */}
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "5px" }}>
-                    <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--text)" }}>{l.item_name}</span>
+                    <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--text)" }}>{l.item_name || "Unknown item"}</span>
                     {(() => {
                       const counterType = l.type === "WTS" ? "WTB" : "WTS";
-                      const hasMatch = listings.some(m => m.id !== l.id && m.item_name.toLowerCase() === l.item_name.toLowerCase() && m.type === counterType);
+                      const hasMatch = !!(l.item_name && listings.some(m => m.id !== l.id && (m.item_name || '').toLowerCase() === l.item_name.toLowerCase() && m.type === counterType));
                       return hasMatch ? (
-                        <button onClick={() => { setTypeFilter(counterType); setSearch(l.item_name); }}
+                        <button onClick={() => { setTypeFilter(counterType); setSearch(l.item_name); setMyListings(false); }}
                           title={`There's a ${counterType} listing for this item — click to view`}
                           style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "rgba(52,152,219,0.1)", color: "#4fc3f7", border: "1px solid rgba(52,152,219,0.3)", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "'DM Sans', sans-serif" }}>
                           ⇄ {counterType} match
@@ -511,7 +560,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
                   <div style={{ display: "flex", gap: "14px", fontSize: "13px", color: "var(--text-dim)", flexWrap: "wrap", marginBottom: "6px" }}>
                     {l.rsn && <span>RSN: <span style={{ color: "var(--text)", fontWeight: 600 }}>{l.rsn}</span></span>}
                     {l.discord && <span>Discord: <span style={{ color: "var(--text)" }}>{l.discord}</span></span>}
-                    {l.notes && <span style={{ fontStyle: "italic" }}>{l.notes}</span>}
+                    {l.notes && <span style={{ fontStyle: "italic", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{l.notes}</span>}
                   </div>
 
                   {/* Bottom row: time + expiry bar + actions */}
@@ -527,7 +576,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
 
                     {/* Action buttons */}
 
-                    {l.discord && (
+                    {l.discord && !isOwn && (
                       <button onClick={() => openDiscordTrade(l)}
                         title="Open RuneTrader Discord trade channel and ping the seller"
                         style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid rgba(114,137,218,0.35)", background: "rgba(114,137,218,0.08)", color: "#7289da", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: "5px" }}
@@ -538,7 +587,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
                       </button>
                     )}
 
-                    {!isOwn && (
+                    {!isOwn && user && (
                       <button onClick={() => { setReportModal(l); setReportReason(""); }}
                         style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid transparent", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: 0.5, transition: "all 0.15s" }}
                         onMouseOver={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.3)"; }}
@@ -561,7 +610,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
                             </button>
                           );
                         })()}
-                        <button onClick={() => closeListing(l.id)}
+                        <button onClick={() => { if (window.confirm(`Remove your ${l.item_name || 'item'} listing? This cannot be undone.`)) closeListing(l.id); }}
                           style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid rgba(231,76,60,0.2)", background: "transparent", color: "#c0564a", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
                           onMouseOver={e => { e.currentTarget.style.background = "rgba(231,76,60,0.08)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.5)"; e.currentTarget.style.color = "var(--red)"; }}
                           onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.2)"; e.currentTarget.style.color = "#c0564a"; }}>
@@ -578,16 +627,16 @@ export default function TradeBoard({ user, supabase, showToast }) {
                     {compactGP(displayPrice)} <span style={{ fontSize: "13px", fontWeight: 400 }}>gp</span>
                   </div>
                   <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "3px" }}>
-                    {displayPrice.toLocaleString("en-GB")} gp
+                    {(displayPrice || 0).toLocaleString("en-GB")} gp
                   </div>
                   {l.quantity > 1 && (
                     <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "2px" }}>
                       {priceView === "total"
-                        ? `${compactGP(l.price)} each`
+                        ? `${compactGP(price)} each`
                         : `${compactGP(total)} total`}
                     </div>
                   )}
-                  {total > MAX_CASH && (
+                  {total > MAX_CASH && total > 0 && (
                     <div style={{ fontSize: "11px", color: "var(--gold-dim)", marginTop: "3px" }}>Above max cash</div>
                   )}
                 </div>
@@ -673,7 +722,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
               </div>
               <div>
                 <label style={labelStyle}>Quantity</label>
-                <input value={form.quantity} onChange={e => setForm(f => ({ ...f, quantity: e.target.value }))}
+                <input value={form.quantity} onChange={e => { const v = e.target.value; const n = parseGPInput(v) || parseInt(v) || 1; setForm(f => ({ ...f, quantity: v, bundle_only: n <= 1 ? false : f.bundle_only })); }}
                   placeholder="1"
                   style={inputStyle} />
                 {form.quantity && parseGPInput(form.quantity) > 1 && (
@@ -716,23 +765,25 @@ export default function TradeBoard({ user, supabase, showToast }) {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               <div>
                 <label style={labelStyle}>Discord Username</label>
-                <input value={form.discord} onChange={e => setForm(f => ({ ...f, discord: e.target.value }))}
-                  placeholder="username#0000" style={inputStyle} />
+                <input value={form.discord} onChange={e => setForm(f => ({ ...f, discord: e.target.value.replace(/^@/, "").slice(0, 50) }))}
+                  placeholder="username" maxLength={50} style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>RSN</label>
-                <input value={form.rsn} onChange={e => setForm(f => ({ ...f, rsn: e.target.value }))}
-                  placeholder="In-game name" style={inputStyle} />
+                <input value={form.rsn} onChange={e => setForm(f => ({ ...f, rsn: e.target.value.slice(0, 12) }))}
+                  placeholder="In-game name" maxLength={12} style={inputStyle} />
               </div>
             </div>
 
             {/* Notes */}
             <div>
               <label style={labelStyle}>Notes (optional)</label>
-              <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value.slice(0, 300) }))}
                 placeholder="e.g. Will split, swap offers welcome, DM before trading..."
                 rows={3}
+                maxLength={300}
                 style={{ ...inputStyle, resize: "vertical", minHeight: "72px", lineHeight: 1.5 }} />
+              {form.notes.length > 250 && <div style={{ fontSize: "11px", color: form.notes.length >= 300 ? "var(--red)" : "var(--text-dim)", marginTop: "4px", textAlign: "right" }}>{form.notes.length}/300</div>}
             </div>
 
             <div style={{ fontSize: "12px", color: "var(--text-dim)", fontStyle: "italic", lineHeight: 1.6 }}>
