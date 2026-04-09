@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 
 const WIKI_MAP = "https://prices.runescape.wiki/api/v1/osrs/mapping";
 const WIKI_IMG = (name) => `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}_detail.png`;
-const CATEGORIES = ["All", "Weapons", "Armour", "3rd Age", "Raids", "Skilling", "Other"];
+const CATEGORIES = ["All", "Weapons", "Armour", "3rd Age", "Runes", "Potions", "Food & Supplies", "Boss Drops", "Skilling", "Cosmetics", "Other"];
 const MAX_CASH = 2_147_483_647;
 const DISCORD_SERVER_ID  = "1459412578999599216";
 const DISCORD_CHANNEL_ID = "1491584732025065544";
@@ -26,7 +26,8 @@ function parseGPInput(raw) {
 
 // ── Compact display: 2500000 → "2.5M" ──
 function compactGP(n) {
-  if (!n) return "0";
+  if (!n && n !== 0) return "—";
+  if (n === 0) return "0";
   if (n >= 1_000_000_000) return (n / 1_000_000_000 % 1 === 0 ? n / 1_000_000_000 : (n / 1_000_000_000).toFixed(1)) + "B";
   if (n >= 1_000_000)     return (n / 1_000_000 % 1 === 0 ? n / 1_000_000 : (n / 1_000_000).toFixed(1)) + "M";
   if (n >= 1_000)         return (n / 1_000 % 1 === 0 ? n / 1_000 : (n / 1_000).toFixed(1)) + "K";
@@ -39,7 +40,9 @@ function formatGP(n) {
 }
 
 function timeAgo(ts) {
+  if (!ts) return "—";
   const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
+  if (isNaN(diff) || diff < 0) return "—";
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -47,17 +50,19 @@ function timeAgo(ts) {
 }
 
 function timeLeft(ts) {
+  if (!ts) return "—";
   const diff = Math.floor((new Date(ts) - Date.now()) / 1000);
-  if (diff <= 0) return "Expired";
+  if (isNaN(diff) || diff <= 0) return "Expired";
   if (diff < 3600) return `${Math.floor(diff / 60)}m left`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h left`;
   return `${Math.floor(diff / 86400)}d left`;
 }
 
 function timeLeftPct(ts) {
+  if (!ts) return 0;
   const total = 7 * 24 * 3600;
   const remaining = Math.max(0, (new Date(ts) - Date.now()) / 1000);
-  return Math.min(100, (remaining / total) * 100);
+  return isNaN(remaining) ? 0 : Math.min(100, (remaining / total) * 100);
 }
 
 function ItemImage({ name, size = 44 }) {
@@ -77,6 +82,9 @@ function ItemImage({ name, size = 44 }) {
   );
 }
 
+const BUMP_COOLDOWN_MS = 60 * 60 * 1000; // 60 minutes
+const MAX_LISTINGS_PER_USER = 8;
+
 export default function TradeBoard({ user, supabase, showToast }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,8 +97,15 @@ export default function TradeBoard({ user, supabase, showToast }) {
   const [allItems, setAllItems] = useState([]);
   const [myListings, setMyListings] = useState(false);
   const [bumping, setBumping] = useState(null);
+  const [bumpCooldowns, setBumpCooldowns] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("rt_bump_cooldowns") || "{}"); } catch { return {}; }
+  });
   const [copied, setCopied] = useState(null);
   const [priceView, setPriceView] = useState("total"); // "total" | "each"
+  const [sortBy, setSortBy] = useState("newest"); // "newest" | "price_asc" | "price_desc" | "expiring"
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [showPriceFilter, setShowPriceFilter] = useState(false);
   const [reportModal, setReportModal] = useState(null); // listing object
   const [reportReason, setReportReason] = useState("");
   const [submittingReport, setSubmittingReport] = useState(false);
@@ -106,6 +121,12 @@ export default function TradeBoard({ user, supabase, showToast }) {
   useEffect(() => {
     loadListings();
     loadItemNames();
+    // Real-time: refresh when any listing changes
+    const ch = supabase.channel("trade-listings-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "trade_listings" }, () => {
+        loadListings();
+      }).subscribe();
+    return () => supabase.removeChannel(ch);
   }, []); // eslint-disable-line
 
   // Pre-fill RSN from user profile on mount
@@ -150,7 +171,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
 
   async function submitListing() {
     if (!form.item_name) return showToast("Please enter an item name", "error");
-    if (allItems.length > 0 && !allItems.includes(form.item_name)) return showToast("Please select a valid item from the suggestions", "error");
+    if (allItems.length > 0 && !allItems.some(n => n.toLowerCase() === form.item_name.toLowerCase())) return showToast("Please select a valid item from the suggestions", "error");
     if (!form.price) return showToast("Please enter a price", "error");
     if (!form.discord && !form.rsn) return showToast("Please add at least one contact method", "error");
     if (!user) return showToast("Please sign in to post", "error");
@@ -158,6 +179,19 @@ export default function TradeBoard({ user, supabase, showToast }) {
     const price = parseGPInput(form.price);
     if (!price || price <= 0) return showToast("Invalid price — try e.g. 2.5m or 500k", "error");
     const qty = parseGPInput(form.quantity) || parseInt(form.quantity) || 1;
+
+    // Check max listing count
+    const myActiveListings = listings.filter(l => l.user_id === user.id);
+    if (myActiveListings.length >= MAX_LISTINGS_PER_USER)
+      return showToast(`You can have at most ${MAX_LISTINGS_PER_USER} active listings at once. Remove one to post a new listing.`, "error");
+
+    // Check for duplicate: same user, same item, same type (WTS or WTB)
+    const duplicate = listings.find(l =>
+      l.user_id === user.id &&
+      l.item_name.toLowerCase() === form.item_name.toLowerCase() &&
+      l.type === form.type
+    );
+    if (duplicate) return showToast(`You already have an active ${form.type} listing for ${form.item_name}. Remove or edit it before posting another.`, "error");
 
     setPosting(true);
     try {
@@ -192,7 +226,25 @@ export default function TradeBoard({ user, supabase, showToast }) {
     else { setListings(prev => prev.filter(l => l.id !== id)); showToast("Listing removed", "success"); }
   }
 
+  function getBumpCooldownRemaining(id) {
+    const last = bumpCooldowns[id];
+    if (!last) return 0;
+    return Math.max(0, BUMP_COOLDOWN_MS - (Date.now() - last));
+  }
+
+  function formatCooldown(ms) {
+    const mins = Math.ceil(ms / 60000);
+    if (mins >= 60) {
+      const h = Math.floor(mins / 60), m = mins % 60;
+      return m === 0 ? `${h}h` : `${h}h ${m}m`;
+    }
+    return `${mins}m`;
+  }
+
   async function bumpListing(id) {
+    const remaining = getBumpCooldownRemaining(id);
+    if (remaining > 0) return showToast(`Bump available in ${formatCooldown(remaining)}`, "error");
+    if (bumping) return; // prevent double-fire
     setBumping(id);
     try {
       const newExpiry = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
@@ -200,28 +252,23 @@ export default function TradeBoard({ user, supabase, showToast }) {
         .update({ created_at: new Date().toISOString(), expires_at: newExpiry })
         .eq("id", id).eq("user_id", user.id);
       if (error) throw error;
+      const updated = { ...bumpCooldowns, [id]: Date.now() };
+      setBumpCooldowns(updated);
+      try { localStorage.setItem("rt_bump_cooldowns", JSON.stringify(updated)); } catch {}
       showToast("Listing bumped to top!", "success");
       loadListings();
     } catch { showToast("Failed to bump listing", "error"); }
     setBumping(null);
   }
 
-  function copyRSN(l) {
-    navigator.clipboard?.writeText(l.rsn).then(() => {
-      setCopied(l.id + "_rsn");
-      setTimeout(() => setCopied(null), 2000);
-      showToast("RSN copied — paste it into OSRS trade chat", "success");
-    });
-  }
-
   function openDiscordTrade(l) {
     // Build a pre-filled message mentioning the seller if they have a discord tag
-    const mention = l.discord ? `@${l.discord}` : (l.rsn || "seller");
+    const mention = `@${l.discord}`;
     const totalPrice = l.price * (l.quantity || 1);
     const priceStr = l.quantity > 1
       ? `${compactGP(l.price)} each (${compactGP(totalPrice)} total)`
       : compactGP(l.price);
-    const msg = `${mention} — interested in your ${l.item_name} listing (${l.type === "WTS" ? "selling" : "buying"} ${l.quantity > 1 ? `×${l.quantity.toLocaleString()} @ ` : ""}${priceStr} gp) — RuneTrader.gg`;
+    const msg = `${mention} — interested in your ${l.item_name} listing (${l.type === "WTS" ? "selling" : "buying"}${(l.quantity || 1) > 1 ? ` ×${l.quantity.toLocaleString()} @` : ""} ${priceStr} gp) — RuneTrader.gg`;
     // Copy message to clipboard, then open Discord trade channel
     navigator.clipboard?.writeText(msg).catch(() => {});
     window.open(DISCORD_TRADE_URL, "_blank", "noopener,noreferrer");
@@ -244,13 +291,26 @@ export default function TradeBoard({ user, supabase, showToast }) {
     setSubmittingReport(false);
   }
 
-  const filtered = listings.filter(l => {
-    if (typeFilter !== "All" && l.type !== typeFilter) return false;
-    if (filter !== "All" && l.category !== filter) return false;
-    if (myListings && l.user_id !== user?.id) return false;
-    if (search.trim() && !l.item_name.toLowerCase().includes(search.trim().toLowerCase())) return false;
-    return true;
-  });
+  const priceMinNum = parseGPInput(priceMin);
+  const priceMaxNum = parseGPInput(priceMax);
+  const priceFilterActive = priceMinNum > 0 || priceMaxNum > 0;
+
+  const filtered = listings
+    .filter(l => {
+      if (typeFilter !== "All" && l.type !== typeFilter) return false;
+      if (filter !== "All" && l.category !== filter) return false;
+      if (myListings && l.user_id !== user?.id) return false;
+      if (search.trim() && !l.item_name.toLowerCase().includes(search.trim().toLowerCase())) return false;
+      if (priceMinNum > 0 && l.price < priceMinNum) return false;
+      if (priceMaxNum > 0 && l.price > priceMaxNum) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "price_asc")  return a.price - b.price;
+      if (sortBy === "price_desc") return b.price - a.price;
+      if (sortBy === "expiring")   return new Date(a.expires_at) - new Date(b.expires_at);
+      return new Date(b.created_at) - new Date(a.created_at); // newest
+    });
 
   const inputStyle = { width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" };
   const labelStyle = { fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 700, display: "block", marginBottom: "6px", fontFamily: "'DM Sans', sans-serif" };
@@ -279,12 +339,18 @@ export default function TradeBoard({ user, supabase, showToast }) {
             style={{ padding: "7px 12px", borderRadius: "8px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
             ↻
           </button>
-          {user ? (
-            <button onClick={() => setShowPostForm(true)}
-              style={{ padding: "7px 18px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, #c9a84c, #e8c96a)", color: "#0a0e14", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.5px", boxShadow: "0 2px 8px rgba(201,168,76,0.3)" }}>
-              + Post Listing
-            </button>
-          ) : (
+          {user ? (() => {
+            const myCount = listings.filter(l => l.user_id === user.id).length;
+            const atLimit = myCount >= MAX_LISTINGS_PER_USER;
+            return (
+              <button onClick={() => !atLimit && setShowPostForm(true)}
+                title={atLimit ? `Listing limit reached (${MAX_LISTINGS_PER_USER} max). Remove one to post more.` : `${MAX_LISTINGS_PER_USER - myCount} listing slot${MAX_LISTINGS_PER_USER - myCount !== 1 ? "s" : ""} remaining`}
+                style={{ padding: "7px 18px", borderRadius: "8px", border: "none", background: atLimit ? "var(--bg3)" : "linear-gradient(135deg, #c9a84c, #e8c96a)", color: atLimit ? "var(--text-dim)" : "#0a0e14", fontSize: "13px", fontWeight: 700, cursor: atLimit ? "not-allowed" : "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.5px", boxShadow: atLimit ? "none" : "0 2px 8px rgba(201,168,76,0.3)", opacity: atLimit ? 0.6 : 1 }}>
+                {atLimit ? `${myCount}/${MAX_LISTINGS_PER_USER} listings` : "+ Post Listing"}
+              </button>
+            );
+          })()
+          : (
             <div style={{ fontSize: "13px", color: "var(--text-dim)", fontStyle: "italic" }}>Sign in to post</div>
           )}
         </div>
@@ -325,15 +391,59 @@ export default function TradeBoard({ user, supabase, showToast }) {
           ))}
         </div>
 
-        <div style={{ marginLeft: "auto", display: "flex", gap: "5px" }}>
-          {["total", "each"].map(v => (
-            <button key={v} onClick={() => setPriceView(v)}
-              style={{ padding: "5px 12px", borderRadius: "6px", border: `1px solid ${priceView === v ? "var(--border)" : "transparent"}`, background: priceView === v ? "var(--bg3)" : "transparent", color: priceView === v ? "var(--text)" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
-              {v === "total" ? "Total price" : "Per item"}
-            </button>
-          ))}
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
+          {/* Sort */}
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+            style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", color: "var(--text-dim)", fontSize: "13px", padding: "5px 10px", fontFamily: "'DM Sans', sans-serif", outline: "none", cursor: "pointer" }}>
+            <option value="newest">Newest first</option>
+            <option value="price_asc">Price: low → high</option>
+            <option value="price_desc">Price: high → low</option>
+            <option value="expiring">Expiring soon</option>
+          </select>
+
+          {/* Price filter toggle */}
+          <button onClick={() => setShowPriceFilter(v => !v)}
+            style={{ padding: "5px 12px", borderRadius: "7px", border: `1px solid ${priceFilterActive || showPriceFilter ? "rgba(201,168,76,0.4)" : "var(--border)"}`, background: priceFilterActive || showPriceFilter ? "rgba(201,168,76,0.08)" : "transparent", color: priceFilterActive || showPriceFilter ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, whiteSpace: "nowrap" }}>
+            {priceFilterActive ? `💰 ${priceMinNum > 0 ? compactGP(priceMinNum) : "0"} – ${priceMaxNum > 0 ? compactGP(priceMaxNum) : "∞"}` : "💰 Price range"}
+          </button>
+
+          {/* Per-item / total toggle */}
+          <div style={{ display: "flex", gap: "3px" }}>
+            {["total", "each"].map(v => (
+              <button key={v} onClick={() => setPriceView(v)}
+                style={{ padding: "5px 11px", borderRadius: "6px", border: `1px solid ${priceView === v ? "var(--border)" : "transparent"}`, background: priceView === v ? "var(--bg3)" : "transparent", color: priceView === v ? "var(--text)" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
+                {v === "total" ? "Total" : "Each"}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
+
+      {/* Price range filter panel */}
+      {showPriceFilter && (
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", background: "rgba(201,168,76,0.04)", border: "1px solid rgba(201,168,76,0.15)", borderRadius: "10px", flexWrap: "wrap" }}>
+          <span style={{ fontSize: "13px", color: "var(--text-dim)", fontWeight: 600 }}>Price per item:</span>
+          <input value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="Min (e.g. 100k)"
+            style={{ background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "7px", padding: "6px 10px", color: "var(--text)", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "130px" }}
+            onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
+            onBlur={e => e.target.style.borderColor = "#1c2a3a"} />
+          <span style={{ color: "var(--text-dim)" }}>—</span>
+          <input value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Max (e.g. 5m)"
+            style={{ background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "7px", padding: "6px 10px", color: "var(--text)", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "130px" }}
+            onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
+            onBlur={e => e.target.style.borderColor = "#1c2a3a"} />
+          {priceMinNum > 0 && <span style={{ fontSize: "12px", color: "var(--gold)" }}>{compactGP(priceMinNum)}</span>}
+          {priceMaxNum > 0 && <span style={{ fontSize: "12px", color: "var(--gold)" }}>→ {compactGP(priceMaxNum)}</span>}
+          {priceFilterActive && (
+            <button onClick={() => { setPriceMin(""); setPriceMax(""); }}
+              style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: "0 4px" }}
+              onMouseOver={e => e.currentTarget.style.color = "var(--red)"}
+              onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>
+              ✕ Clear
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Listing count */}
       {!loading && (
@@ -376,6 +486,17 @@ export default function TradeBoard({ user, supabase, showToast }) {
                   {/* Top row: name + badges */}
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "5px" }}>
                     <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--text)" }}>{l.item_name}</span>
+                    {(() => {
+                      const counterType = l.type === "WTS" ? "WTB" : "WTS";
+                      const hasMatch = listings.some(m => m.id !== l.id && m.item_name.toLowerCase() === l.item_name.toLowerCase() && m.type === counterType);
+                      return hasMatch ? (
+                        <button onClick={() => { setTypeFilter(counterType); setSearch(l.item_name); }}
+                          title={`There's a ${counterType} listing for this item — click to view`}
+                          style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "rgba(52,152,219,0.1)", color: "#4fc3f7", border: "1px solid rgba(52,152,219,0.3)", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "'DM Sans', sans-serif" }}>
+                          ⇄ {counterType} match
+                        </button>
+                      ) : null;
+                    })()}
                     <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: l.type === "WTS" ? "rgba(231,76,60,0.12)" : "rgba(46,204,113,0.12)", color: l.type === "WTS" ? "var(--red)" : "var(--green)", border: `1px solid ${l.type === "WTS" ? "rgba(231,76,60,0.3)" : "rgba(46,204,113,0.3)"}` }}>
                       {l.type}
                     </span>
@@ -406,14 +527,8 @@ export default function TradeBoard({ user, supabase, showToast }) {
                     </div>
 
                     {/* Action buttons */}
-                    {l.rsn && (
-                      <button onClick={() => copyRSN(l)}
-                        title="Copy RSN to paste into OSRS trade chat"
-                        style={{ padding: "3px 10px", borderRadius: "5px", border: `1px solid ${copied === l.id + "_rsn" ? "rgba(46,204,113,0.4)" : "rgba(255,255,255,0.1)"}`, background: copied === l.id + "_rsn" ? "rgba(46,204,113,0.08)" : "transparent", color: copied === l.id + "_rsn" ? "var(--green)" : "var(--text-dim)", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap" }}>
-                        {copied === l.id + "_rsn" ? "✓ RSN copied" : "⚔ Copy RSN"}
-                      </button>
-                    )}
-                    {(l.discord || l.rsn) && (
+
+                    {l.discord && (
                       <button onClick={() => openDiscordTrade(l)}
                         title="Open RuneTrader Discord trade channel and ping the seller"
                         style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid rgba(114,137,218,0.35)", background: "rgba(114,137,218,0.08)", color: "#7289da", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: "5px" }}
@@ -434,12 +549,19 @@ export default function TradeBoard({ user, supabase, showToast }) {
                     )}
                     {isOwn && (
                       <>
-                        <button onClick={() => bumpListing(l.id)} disabled={bumping === l.id}
-                          style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid rgba(201,168,76,0.25)", background: "transparent", color: bumping === l.id ? "var(--text-dim)" : "var(--gold)", fontSize: "11px", fontWeight: 600, cursor: bumping === l.id ? "wait" : "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
-                          onMouseOver={e => { if (bumping !== l.id) { e.currentTarget.style.background = "rgba(201,168,76,0.08)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"; }}}
-                          onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.25)"; }}>
-                          {bumping === l.id ? "Bumping..." : "↑ Bump"}
-                        </button>
+                        {(() => {
+                          const cooldownMs = getBumpCooldownRemaining(l.id);
+                          const onCooldown = cooldownMs > 0;
+                          return (
+                            <button onClick={() => bumpListing(l.id)} disabled={bumping === l.id || onCooldown}
+                              title={onCooldown ? `Next bump in ${formatCooldown(cooldownMs)}` : "Bump to top of listings"}
+                              style={{ padding: "3px 10px", borderRadius: "5px", border: `1px solid ${onCooldown ? "var(--border)" : "rgba(201,168,76,0.25)"}`, background: "transparent", color: onCooldown ? "var(--text-dim)" : bumping === l.id ? "var(--text-dim)" : "var(--gold)", fontSize: "11px", fontWeight: 600, cursor: onCooldown || bumping === l.id ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", opacity: onCooldown ? 0.5 : 1 }}
+                              onMouseOver={e => { if (!onCooldown && bumping !== l.id) { e.currentTarget.style.background = "rgba(201,168,76,0.08)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"; }}}
+                              onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = onCooldown ? "var(--border)" : "rgba(201,168,76,0.25)"; }}>
+                              {bumping === l.id ? "Bumping..." : onCooldown ? `↑ Bump (${formatCooldown(cooldownMs)})` : "↑ Bump"}
+                            </button>
+                          );
+                        })()}
                         <button onClick={() => closeListing(l.id)}
                           style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid rgba(231,76,60,0.2)", background: "transparent", color: "#c0564a", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
                           onMouseOver={e => { e.currentTarget.style.background = "rgba(231,76,60,0.08)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.5)"; e.currentTarget.style.color = "var(--red)"; }}
@@ -608,9 +730,10 @@ export default function TradeBoard({ user, supabase, showToast }) {
             {/* Notes */}
             <div>
               <label style={labelStyle}>Notes (optional)</label>
-              <input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="e.g. Will split, swap offers welcome, DM before trading..."
-                style={inputStyle} />
+                rows={3}
+                style={{ ...inputStyle, resize: "vertical", minHeight: "72px", lineHeight: 1.5 }} />
             </div>
 
             <div style={{ fontSize: "12px", color: "var(--text-dim)", fontStyle: "italic", lineHeight: 1.6 }}>
