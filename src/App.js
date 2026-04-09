@@ -4933,9 +4933,10 @@ export default function RuneTrader() {
           }, 800);
         } else if (session?.user?.id) {
           // Load ref code, pro status, trial, and sync pause state for returning users
-          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter").eq("user_id", session.user.id).single()
+          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter, discord_id").eq("user_id", session.user.id).single()
             .then(({ data }) => {
               if (data?.ref_code) setUserRefCode(data.ref_code);
+              if (data?.discord_id) setDiscordUsername(data.discord_id);
               if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(data.sync_paused_at ? new Date(data.sync_paused_at) : new Date()); }
               if (data?.is_supporter) {
                 setIsSupporter(true);
@@ -5042,6 +5043,8 @@ export default function RuneTrader() {
   const [showSupporterToastState, setShowSupporterToastState] = useState(false);
   function showSupporterToast() { setShowSupporterToastState(true); setTimeout(() => setShowSupporterToastState(false), 6000); }
   const [userRefCode, setUserRefCode] = useState(null);
+  const [discordUsername, setDiscordUsername] = useState(null); // linked Discord username from user_profiles
+  const [settingsInitialSection, setSettingsInitialSection] = useState(null); // jump to a section on open
   const [syncPaused, setSyncPaused] = useState(false);
   const [syncPausedAt, setSyncPausedAt] = useState(null);
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
@@ -8679,6 +8682,8 @@ RULES:
               <SettingsPage
                 user={user}
                 supabase={supabase}
+                initialSection={settingsInitialSection}
+                onSectionMounted={() => setSettingsInitialSection(null)}
                 showToast={showToast}
                 soundMuted={soundMuted}
                 onToggleSound={() => { const m = toggleMute(); setSoundMuted(m); }}
@@ -9785,6 +9790,8 @@ RULES:
                     showToast={showToast}
                     onNewListings={onNewListings}
                     onWatchAlert={onWatchAlert}
+                    discordUsername={discordUsername}
+                    onGoToSettings={() => { handleSetActiveTab("settings"); setSettingsInitialSection("connections"); }}
                   />
                 )}
 

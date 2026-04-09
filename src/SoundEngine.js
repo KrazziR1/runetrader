@@ -118,7 +118,7 @@ export function initAudio() {
   try { getCtx(); } catch {}
 }
 
-// ── Trade watch alert (shop bell — two sharp triangle tones) ──────────────────
+// -- Trade watch alert (shop bell -- two sharp triangle tones) --
 export function playTradeAlert() {
   if (isMuted()) return;
   const c = getCtx();

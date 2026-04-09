@@ -143,8 +143,17 @@ export default function SettingsPage({
   smartAlertSettings, onSaveSmartAlert,
   sortCol, sortDir, onSetDefaultSort,
   flipsLog = [], autoFlipsLog = [],
+  initialSection = null, onSectionMounted,
 }) {
-  const [active, setActive] = useState("general");
+  const [active, setActive] = useState(initialSection || "general");
+
+  // Jump to initialSection on mount if provided
+  useEffect(() => {
+    if (initialSection) {
+      setActive(initialSection);
+      if (onSectionMounted) onSectionMounted();
+    }
+  }, []); // eslint-disable-line
 
   // ── API keys ──
   const [keys, setKeys] = useState([]);
