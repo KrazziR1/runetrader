@@ -4872,26 +4872,7 @@ export default function RuneTrader() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      // Fetch profile on initial load — covers page refresh with existing session
-      if (session?.user?.id) {
-        profileFetchedRef.current = session.user.id;
-        supabase.from("user_profiles")
-          .select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter, discord_id, discord_username")
-          .eq("user_id", session.user.id).single()
-          .then(({ data }) => {
-            if (data?.ref_code) setUserRefCode(data.ref_code);
-            if (data?.discord_username || data?.discord_id) setDiscordUsername(data.discord_username || data.discord_id);
-            if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(data.sync_paused_at ? new Date(data.sync_paused_at) : new Date()); }
-            if (data?.is_pro) { setIsPro(true); return; }
-            if (data?.trial_ends_at) {
-              const daysLeft = Math.ceil((new Date(data.trial_ends_at) - Date.now()) / 86400000);
-              if (daysLeft > 0) { setIsOnTrial(true); setTrialDaysLeft(daysLeft); setIsPro(true); }
-            }
-          });
-      }
-    });
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) setDemoMode(false); // exit demo when signed in
@@ -4950,13 +4931,11 @@ export default function RuneTrader() {
             if (el) { const r = el.getBoundingClientRect(); setTourRects({ top: r.top, left: r.left, width: r.width, height: r.height }); }
             setTourStep(0);
           }, 800);
-        } else if (session?.user?.id && session.user.id !== profileFetchedRef.current) {
+        } else if (session?.user?.id) {
           // Load ref code, pro status, trial, and sync pause state for returning users
-          // (skip if getSession already fetched profile for this user)
-          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter, discord_id, discord_username").eq("user_id", session.user.id).single()
+          supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter").eq("user_id", session.user.id).single()
             .then(({ data }) => {
               if (data?.ref_code) setUserRefCode(data.ref_code);
-              if (data?.discord_username || data?.discord_id) setDiscordUsername(data.discord_username || data.discord_id);
               if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(data.sync_paused_at ? new Date(data.sync_paused_at) : new Date()); }
               if (data?.is_supporter) {
                 setIsSupporter(true);
@@ -5063,8 +5042,6 @@ export default function RuneTrader() {
   const [showSupporterToastState, setShowSupporterToastState] = useState(false);
   function showSupporterToast() { setShowSupporterToastState(true); setTimeout(() => setShowSupporterToastState(false), 6000); }
   const [userRefCode, setUserRefCode] = useState(null);
-  const [discordUsername, setDiscordUsername] = useState(null); // linked Discord username from user_profiles
-  const [settingsInitialSection, setSettingsInitialSection] = useState(null); // jump to a section on open
   const [syncPaused, setSyncPaused] = useState(false);
   const [syncPausedAt, setSyncPausedAt] = useState(null);
   const [showMerchantAnim, setShowMerchantAnim] = useState(false);
@@ -5094,7 +5071,6 @@ export default function RuneTrader() {
     try { return JSON.parse(localStorage.getItem("runetrader_pnl_history") || "[]"); } catch { return []; }
   });
   const pnlCanvasRef = useRef(null);
-  const profileFetchedRef = useRef(null); // prevents double profile fetch on sign-in
 
   async function loadMerchantSettings() {
     if (!user) return;
@@ -5742,7 +5718,7 @@ export default function RuneTrader() {
     const isViewingMargin = activeTab === "market" && marketInnerView === "marginwatch";
     if (!isViewingAlerts && currentAlertCount > lastSeenAlertCount) { setUnseenMarketAlerts(true); }
     if (!isViewingMargin && currentMarginCount > lastSeenMarginCount) { setUnseenMarketAlerts(true); }
-  }, [alerts, smartEvents, marginCompression, activeTab, marketInnerView, lastSeenAlertCount, lastSeenMarginCount]); // eslint-disable-line
+  }, [alerts, smartEvents, marginCompression]); // eslint-disable-line
 
   function saveSmartAlertSettings(key, val) {
     const updated = { ...smartAlertSettings, [key]: val };
@@ -6935,27 +6911,10 @@ RULES:
   const excludedFlips = flipsLog.filter(f => f.excluded);
 
   // Stable callback for TradeBoard new listing signal
-  const onNewListings = useCallback((ts, listings) => {
+  const onNewListings = useCallback((ts) => {
     try { localStorage.setItem("rt_tradeboard_newest_ts", ts); } catch {}
     if (marketSubTab !== "tradeboard") setHasNewTradeListings(true);
-    // Check watches at App level so it fires regardless of which tab is active
-    if (listings?.length && user) {
-      try {
-        const watches = JSON.parse(localStorage.getItem("rt_trade_watches") || "[]");
-        const lastChecked = parseInt(localStorage.getItem("rt_watches_last_checked") || "0");
-        const hasMatch = watches.some(w =>
-          listings.some(l =>
-            l.item_name?.toLowerCase() === w.item_name?.toLowerCase() &&
-            (w.type === "Either" || l.type === w.type) &&
-            (!w.max_price || l.price <= w.max_price) &&
-            new Date(l.created_at).getTime() > lastChecked
-          )
-        );
-        if (hasMatch) onWatchAlert();
-        localStorage.setItem("rt_watches_last_checked", Date.now().toString());
-      } catch {}
-    }
-  }, [marketSubTab, user, onWatchAlert]); // eslint-disable-line
+  }, [marketSubTab]);
 
   // Callback for when a watched item gets listed — fires amber bell + sound
   const onWatchAlert = useCallback(() => {
@@ -8720,9 +8679,6 @@ RULES:
               <SettingsPage
                 user={user}
                 supabase={supabase}
-                initialSection={settingsInitialSection}
-                onSectionMounted={() => setSettingsInitialSection(null)}
-                onDiscordLinked={(id) => setDiscordUsername(id)}
                 showToast={showToast}
                 soundMuted={soundMuted}
                 onToggleSound={() => { const m = toggleMute(); setSoundMuted(m); }}
@@ -9829,8 +9785,6 @@ RULES:
                     showToast={showToast}
                     onNewListings={onNewListings}
                     onWatchAlert={onWatchAlert}
-                    discordUsername={discordUsername}
-                    onGoToSettings={() => { handleSetActiveTab("settings"); setSettingsInitialSection("connections"); }}
                   />
                 )}
 
