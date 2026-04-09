@@ -14,7 +14,7 @@
 - **Price truth architecture** is designed and ready — just waiting on user growth to activate.
 - **Stripe is live** — $9.99/mo Pro tier, checkout flow, webhook handler, referral coupon `sAvO4kCM`.
 - **Referral system is live** — 50% off first month for both sides, Pro for life at 3 converted referrals.
-- **Trade Board is live** — player-to-player listings for rare/above-max-cash items. Wiki item validation, 7-day auto-expiry, Discord/RSN contact.
+- **Trade Board is live** — player-to-player listings with full feature set (see below).
 - **3-day Pro trial** — new signups automatically get full Pro access for 3 days via `trial_ends_at` in `user_profiles`.
 - **Rune Trader Discord Bot is live** — Python/discord.py bot hosted on Railway, connected to Supabase. GitHub: https://github.com/KrazziR1/rune-trader-bot
 - **Discord server is live** — full server structure set up with welcome, rules, FAQ, roadmap, connect, announcements, general, flipping, bot, pro, support, and staff sections.
@@ -38,7 +38,6 @@
 - Market tab with 4,525 items — Flips / High Alch / Death's Coffer / Recipes / Trade Board
 - High Alch tracker — profit/cast, live + editable nature rune price, F2P/Members filter, Vol/Day column
 - Death's Coffer — Margin column, Max Savings/4hr, Vol/Day column, target amount calculator
-- Trade Board — WTS/WTB listings, wiki item validation, 7-day expiry, category filters
 - Flip Queue, Rotation Picks, Session Intel, Risk Exposure, Daily GP Goal
 - Portfolio page — period selector, win rate donut, per-item P&L, best/worst items
 - Alerts page — price alerts, smart alert feed, clickable items open chart modal
@@ -48,61 +47,94 @@
 - Shareable flip cards — canvas-rendered card on profitable close
 - Watchlist — sortable, Vol/Day + Last Trade columns, price chart access from row click
 
+### Trade Board (fully shipped April 8, 2026)
+- WTS/WTB listings with wiki item validation and 7-day auto-expiry
+- k/m/b price shorthand input (100k, 2.5m, 1b) with live preview
+- Compact price display — shows "2.5B gp" headline with exact amount below
+- Categories: Weapons, Armour, 3rd Age, Runes, Ammunition, Potions, Food, Skilling Resources, Other
+- Category auto-normalisation for legacy DB values
+- Bundle only toggle per listing
+- Bump listing button with 60-minute cooldown (stored in localStorage)
+- Max 8 listings per user enforced client + server side
+- Duplicate listing prevention (same item + type blocked)
+- Discord "Message in Discord" button — copies pre-filled @mention message, opens trade channel (server: `1459412578999599216`, channel: `1491584732025065544`)
+- Report listing modal with pre-set reasons → writes to `trade_reports` table
+- Sort options: Newest first, Price low→high, Price high→low, Expiring soon
+- WTB/WTS match indicator — badge on listing if counter-listing exists for same item
+- Search bar, category filter panel, price range filter (with k/m/b support)
+- Expiry progress bar per listing (green → amber → red)
+- Realtime updates via Supabase postgres_changes (debounced 1s)
+- New listing dot on Trade Board tab when unseen listings exist
+- Remove confirmation dialog to prevent accidental deletion
+- Self-contained bundle toggle (no App.js CSS dependency)
+- Separate backdrop + modal pattern (fixes modal closing on field click)
+- Full null/error safety on all fields, sort, and display
+
+### Flip Exclusion System (shipped April 8, 2026)
+- "Exclude" toggle on open positions in tracker — removes from all stats
+- Rule: cannot exclude a closed flip with negative profit (prevents stat gaming)
+- Exclusion persisted to localStorage and Supabase `ge_flips_live`
+- Filters `!f.excluded` applied to all 13 stat calculation sites:
+  - Portfolio P&L chart, closed count badge, period stats
+  - Tracker open/closed counts, Merchant Mode GE slots
+  - Realised today, session summary, live GP tracker
+  - Quest/daily progress, player card Total Profit + Flips count
+- Info banner above open positions explaining the feature
+
+### Header & Navigation (April 8, 2026)
+- Alpha banner: slim green strip with ALPHA badge, What's New button, Send Feedback link
+- Header top row: 68px, stronger gold border/shadow
+- Nav tab row: 46px, 15px/600 font, visible border on hover, gold active state
+- Trading Terminal: plain gold text in nav row far-right, intermittent `terminalTextGlow` pulse every 15s
+- Upgrade to Pro button (blue, free users only) in nav row far-right
+- Support Development link in nav row far-right
+- Player card button: avatar circle (30px, gold border), Lv.X in Cinzel 900, XP progress bar, quest count — avatar click opens profile dropdown, rest opens player card
+- Profile dropdown: 15px username, plan status in green/gold/amber
+- Settings X button added to close settings page
+- AI bubble shifts right by 408px when player card is open
+
+### Settings Page Rebuild (April 8, 2026)
+- Sidebar nav + content panel layout (replaces stacked accordions)
+- 6 sections: General, Alerts, RuneLite Plugin, Connections, Support Us, Account
+- Smart Alert Types in dedicated group
+- Support page with breakdown of what funding goes toward
+- Danger Zone: red-bordered section for destructive actions
+- Font sizes bumped throughout (nav 15px, titles 20px, row labels 15px)
+- Mobile: sidebar collapses to horizontal tab bar
+
+### Bug Fixes & Code Quality (April 8, 2026)
+- `mapFlipRow` now carries `excluded` flag — survives page reload and Supabase re-sync
+- `flip.item` null safety in ItemChart (`.toLowerCase()` guard)
+- 21 raw `localStorage.setItem` calls → `safeSetItem` (Safari ITP / private browsing safety)
+- `sessionStorage.getItem` wrapped in try/catch
+- `buyLimit.toLocaleString()` null guard in AI context
+- `AutoFlipHistory` exclusion: local `toggleExclude` fn, updates Supabase `ge_flips_live.excluded`
+- `toggleFlipExclude` in main App suppressed (reserved for manual flip log)
+- TradeBoard: 30+ bug fixes across null guards, sort stability, realtime debounce, category normalisation, input limits, bundle_only reset, clipboard guard, modal close fix
+
 ### Recipes Tab (shipped April 2026 — v1.3)
-- GE Sets tab — ~110 sets, Making/Breaking direction toggle, live profit/ROI/Vol/Day
-- Potion Decanting tab — all major potions, dose direction filter, grouped by potion with collapse/expand
-- Misc tab — flatpacks (construction), unstrung bows (fletching), uncut gems (crafting), cannonballs (smithing), charged jewelry arbitrage
-- Per-recipe expandable breakdown panel — individual item buy/sell price, GE limit, Vol/Day, Last Trade; all items clickable to open price chart
-- Vol/Day column — green/gold/red color coding, lowest-volume item in recipe
-- Last Trade column — green < 1hr, orange < 24hr, red > 24hr
-- ⚠ Stale badge — hoverable warning when any recipe item hasn't traded in 24hrs+
-- Advanced filters panel — F2P/Members, hide no volume, min profit, min ROI, min vol
-- Profitable only toggle (default on), search box far-right, results count
-- Context-sensitive direction sub-filters (Making/Breaking for sets, Low→High dose / High→Low dose for potions, skill filter for misc)
-- Data disclaimer banner explaining wiki data freshness
-- NEW badge on Recipes nav tab
+- GE Sets tab, Potion Decanting tab, Misc tab
+- "Grand Exchange" label replaced with "GE Sets" for sets category
+- Potion decanting items clickable to open price chart
+- Disclaimer banner font bumped to 15px
 
 ### Market Tab Enhancements (April 2026)
-- Filter bar simplified — All Items / F2P / Watchlist / 1gp Sales only (Members + High Volume moved to ⚙ Filters panel)
-- Personalised Picks banner — Edit prefs + Show all items as inline text links, no separate button cluster
-- New Items badge — green NEW pill on items added to the GE in the last 30 days (30-day TTL, persists in localStorage)
-- Profile dropdown — outside-click backdrop to close
-
-### High Alch Enhancements (April 2026)
-- F2P / Members / All filter added
-- Vol/Day column with green/gold/red color coding
-- Last Trade column with staleness colors
-- Default sort changed to Max Profit/4hr
-- Buy limit "?" now hoverable with tooltip explaining why it's unknown
-
-### Death's Coffer Enhancements (April 2026)
-- Vol/Day column added
-- "Savings" renamed to "Margin", "Potential Savings" renamed to "Max Savings / 4hr"
-- Typo fixed ("Taget" → "Target")
-
-### Watchlist Enhancements (April 2026)
-- Vol/Day column added (sortable)
-- Last Trade column added (sortable, staleness colors)
+- Filter bar simplified — All Items / F2P / Watchlist / 1gp Sales
+- Personalised Picks fully reworked
+- New Items badge — green NEW pill on items added in last 30 days
 
 ### UI / Typography (April 2026)
-- Font upgrade: **Cinzel Decorative** for logo, **DM Sans** for all body text (replaces Inter)
-- Logo `.gg` now uses same gold gradient as "RuneTrader", rendered crisply in Cinzel Decorative
-- `--text` bumped to `#eef0f2`, `--text-dim` bumped to `#a8bccb` for better contrast
-- Nav tab font size bumped to 14px/600 weight
-- Filter bar buttons (Search, Filters, Refresh, Export) bumped to 14px/600 weight
-- Table headers bumped from 11px to 12px across market, recipe, margin watch
-- Sort buttons bumped from 11px to 12px
-- Item count labels, results counts, filter labels all bumped from 11–12px to 13–14px
-- Help me decide button bumped from 12px to 14px
-- "Settings" / "Refer & Earn" inline size override removed (now inherits 14px nav-tab)
+- Font upgrade: Cinzel Decorative for logo, DM Sans for body
+- Logo `.gg` gold gradient, nav tabs 15px/600
+- All dropdown items (Market sub-menu, profile dropdown) bumped to 15px/500
 
 ### Plugin Enhancements (shipped March 17, 2026)
-- **Sync pause / resume** — Shift+P keybind + panel button
-- **Buy limit countdown overlays** — live countdown on each GE slot
-- **Drift alert overlays** — badge on slot when offer drifts from Wiki price
-- **Flip recommendation panel** — side panel with personalised top picks
-- **Click-to-fill** — opt-in config toggle (off by default)
-- **Actual fill price tracking** — uses `getSpent() / getQuantitySold()`
+- Sync pause / resume — Shift+P keybind + panel button
+- Buy limit countdown overlays
+- Drift alert overlays
+- Flip recommendation panel
+- Click-to-fill opt-in config toggle
+- Actual fill price tracking
 
 ### API Endpoints (all live)
 - `POST /api/sync-offers`, `POST /api/sync-pause`, `GET /api/plugin/picks`
@@ -112,20 +144,18 @@
 - `GET /api/og`, `GET /api/api-keys`, `POST /api/generate-api-key`
 - `GET /api/check-alerts`, `POST /api/discord-verify`
 
-### Website — Discord Integration (shipped March 30, 2026)
-- Discord section in Settings, one-time `RT-XXXXXX` code verification flow
-- `/api/discord-verify` endpoint, `discord_verify_codes` table
-
-### Discord Bot (shipped March 30, 2026)
-- Python/discord.py, Railway hosted, Supabase connected
-- Commands: `!price`, `!tax`, `!stats`, `!kc`, `!myflips`, `!fliplb`, `!announce`, `!ping`, `!verify`, `!linked`, panel commands
-
-### Discord Server (set up March 30, 2026)
-- Full server structure, welcome/rules/FAQ/roadmap panels live
-
 ### Supabase Schema
 - `user_profiles`: `is_pro`, `stripe_customer_id`, `stripe_subscription_id`, `pro_expires_at`, `referral_count`, `lifetime_pro`, `trial_ends_at`, `ref_code`, `api_key`, `sync_paused`, `sync_paused_at`, `picks_prefs`, `discord_id`
-- `trade_listings`, `trader_xp`, `daily_quests`, `ge_offers`, `ge_flips_live`, `discord_verify_codes`
+- `trade_listings`: `user_id`, `item_name`, `item_image`, `type`, `price`, `quantity`, `notes`, `discord`, `rsn`, `category`, `bundle_only`, `active`, `expires_at`, `created_at`
+- `trade_reports`: `listing_id`, `reporter_id`, `reason`
+- `trader_xp`, `daily_quests`, `ge_offers`, `ge_flips_live` (with `excluded` column), `discord_verify_codes`
+
+**Required SQL for Trade Board (run if not already done):**
+```sql
+ALTER TABLE trade_listings ADD COLUMN IF NOT EXISTS bundle_only boolean DEFAULT false;
+ALTER TABLE trade_listings ADD COLUMN IF NOT EXISTS active boolean DEFAULT true;
+ALTER TABLE ge_flips_live ADD COLUMN IF NOT EXISTS excluded boolean DEFAULT false;
+```
 
 ---
 
@@ -141,7 +171,6 @@
 - [ ] Price alert system — `!alert <item> <price>` notifies user in Discord when price is hit
 - [ ] Flip of the Day — bot auto-posts best flip opportunity daily to a designated channel
 - [ ] Update all embed styling to match dark gold Rune Trader theme
-- [ ] Roadmap panel visual redesign — header images for each section
 
 ### Pro Gating (Pass 2)
 - [ ] Gate quests + XP behind `isPro` — free tier sees locked state with upgrade prompt
@@ -157,6 +186,7 @@
 ### Market / Flips Page
 - [ ] "You've flipped this" badge on rows with personal history
 - [ ] Margin History Chart — margin as third line on item chart modal
+- [ ] Exclusion toggle on manual flip log rows (toggleFlipExclude already wired, just needs UI)
 
 ### Growth
 - [ ] Daily Digest AI Prompts — market pulse on login
@@ -247,6 +277,9 @@ Paste this file at the start of any new Claude conversation to restore full cont
 > Stripe Price ID: `price_1TAk4ECNKvvsYZxGopi1ANmE`  
 > Stripe Referral Coupon: `sAvO4kCM`  
 > Plugin Hub PR: https://github.com/runelite/plugin-hub/pull/11114  
+> Discord Server ID: `1459412578999599216`  
+> Discord Trade Channel ID: `1491584732025065544`  
+> Discord Invite: https://discord.gg/runetrader  
 > Vercel env vars: `REACT_APP_SUPABASE_URL`, `REACT_APP_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `REACT_APP_ANTHROPIC_KEY`, `REACT_APP_VAPID_PUBLIC_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL`, `CRON_SECRET`  
 > Railway env vars: `DISCORD_TOKEN`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `PREFIX`  
 > Welcome banner imgur: https://i.imgur.com/ksDy6lV.png  
