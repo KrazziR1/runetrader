@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 
 const WIKI_MAP = "https://prices.runescape.wiki/api/v1/osrs/mapping";
 const WIKI_IMG = (name) => `https://oldschool.runescape.wiki/images/${encodeURIComponent(name.replace(/ /g, "_"))}_detail.png`;
-const CATEGORIES = ["All", "Weapons", "Armour", "3rd Age", "Runes & Ammo", "Potions", "Food", "Skilling Resources", "Other"];
+const CATEGORIES = ["All", "Weapons", "Armour", "3rd Age", "Runes", "Ammunition", "Potions", "Food", "Skilling Resources", "Other"];
 const MAX_CASH = 2_147_483_647;
 const DISCORD_SERVER_ID  = "1459412578999599216";
 const DISCORD_CHANNEL_ID = "1491584732025065544";
@@ -87,15 +87,35 @@ const BUMP_COOLDOWN_MS = 60 * 60 * 1000; // 60 minutes
 const MAX_LISTINGS_PER_USER = 8;
 
 // Normalise legacy DB category names to current ones
-function normaliseCategory(cat) {
+function normaliseCategory(cat, itemName) {
   if (!cat) return "Other";
   const c = cat.toLowerCase();
-  if (c === "runes" || c === "ammo" || c === "runes & ammo") return "Runes & Ammo";
+  // Legacy mappings
+  if (c === "runes & ammo") return inferAmmoOrRune(itemName) === "ammo" ? "Ammunition" : "Runes";
+  if (c === "ammo" || c === "ammunition") return "Ammunition";
+  if (c === "runes") return "Runes";
   if (c === "food & supplies" || c === "food") return "Food";
   if (c === "skilling" || c === "skilling resources") return "Skilling Resources";
   if (c === "boss drops" || c === "cosmetics" || c === "raids") return "Other";
   const match = CATEGORIES.find(cat2 => cat2.toLowerCase() === c);
-  return match || "Other";
+  if (match) return match;
+  // Infer from item name for legacy "Other" listings
+  if (c === "other" && itemName) {
+    const n = itemName.toLowerCase();
+    if (/arrow|bolt|dart|cannonball|javelin|chinchompa|thrownaxe/.test(n)) return "Ammunition";
+    if (/(air|water|earth|fire|mind|chaos|death|blood|soul|nature|law|cosmic|astral|wrath|dust|lava|steam|smoke|mist|mud) rune/.test(n) || /rune$/.test(n)) return "Runes";
+    if (/potion|brew|restore|overload|divine|bastion|battlemage/.test(n)) return "Potions";
+    if (/shark|anglerfish|karambwan|manta|dark crab|tuna|lobster|monkfish/.test(n)) return "Food";
+    if (/ore|bar|log|plank|hide|leather|gem|herb|seed|essence|coal|iron|steel|mithril|adamant/.test(n)) return "Skilling Resources";
+  }
+  return "Other";
+}
+
+function inferAmmoOrRune(itemName) {
+  if (!itemName) return "rune";
+  const n = itemName.toLowerCase();
+  if (/arrow|bolt|dart|cannonball|javelin|chinchompa|thrownaxe|knife/.test(n)) return "ammo";
+  return "rune";
 }
 
 export default function TradeBoard({ user, supabase, showToast }) {
@@ -138,10 +158,15 @@ export default function TradeBoard({ user, supabase, showToast }) {
     const ch = supabase.channel("trade-listings-live")
       .on("postgres_changes", { event: "*", schema: "public", table: "trade_listings" }, () => {
         clearTimeout(realtimeTimer);
-        realtimeTimer = setTimeout(() => loadListings(), 1000);
+        realtimeTimer = setTimeout(() => loadListings(false), 1000);
       }).subscribe();
     return () => { supabase.removeChannel(ch); clearTimeout(realtimeTimer); };
   }, [supabase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reset user-specific state on logout
+  useEffect(() => {
+    if (!user) { setMyListings(false); setShowPostForm(false); }
+  }, [user]);
 
   // Pre-fill RSN from user profile on mount
   useEffect(() => {
@@ -158,8 +183,8 @@ export default function TradeBoard({ user, supabase, showToast }) {
     } catch (e) { console.error(e); }
   }
 
-  const loadListings = useCallback(async () => {
-    setLoading(true);
+  const loadListings = useCallback(async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     try {
       const { data, error } = await supabase
         .from("trade_listings").select("*").eq("active", true)
@@ -167,7 +192,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
         .order("created_at", { ascending: false });
       if (!error) setListings(data || []);
     } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    finally { if (showSpinner) setLoading(false); }
   }, [supabase]);
 
   function handleItemSearch(val) {
@@ -175,6 +200,23 @@ export default function TradeBoard({ user, supabase, showToast }) {
     setForm(f => ({ ...f, item_name: val, item_image: WIKI_IMG(val) }));
     if (val.length < 2) { setItemSuggestions([]); return; }
     setItemSuggestions(allItems.filter(n => n.toLowerCase().includes(val.toLowerCase())).slice(0, 8));
+  }
+
+  function guessCategoryFromName(name) {
+    const n = name.toLowerCase();
+    if (/3rd age|third age/.test(n)) return "3rd Age";
+    // Weapons/Armour before runes — "rune scimitar" is a weapon, not a rune
+    if (/sword|scimitar|bow|staff|wand|mace|dagger|whip|halberd|crossbow|lance|spear|rapier|fang|glaive|blade|claw|flail|maul|hammer|sceptre|trident|tentacle|bulwark|hasta|partisan/.test(n)) return "Weapons";
+    if (/helm|platebody|platelegs|plateskirt|chainbody|kiteshield|chestplate|tassets|shield|coif|chaps|dhide|armour|mail|robe top|robe bottom|hauberk|cuisse|barding|body|legs|boots|gloves|vambraces|bracers/.test(n)) return "Armour";
+    // Ammo before runes — "bolt" could match rune bolts
+    if (/arrow|bolt|dart|cannonball|javelin|chinchompa|thrownaxe/.test(n)) return "Ammunition";
+    // Actual runes — ends in "rune" or is a known rune type
+    if (/(air|water|earth|fire|mind|chaos|death|blood|soul|nature|law|cosmic|astral|wrath|dust|lava|steam|smoke|mist|mud) rune/.test(n) || /rune$/.test(n)) return "Runes";
+    if (/axe|pickaxe/.test(n)) return "Weapons";
+    if (/potion|brew|restore|prayer pot|ranging|combat pot|antifire|anti-|divine|bastion|battlemage|saturated|overload|mix/.test(n)) return "Potions";
+    if (/shark|anglerfish|dark crab|karambwan|manta ray|tuna|lobster|monkfish|pie|cake|cheese|bread|pizza|potato|karambwanji/.test(n)) return "Food";
+    if (/ore|bar|log|plank|hide|leather|gem|herb|seed|fur|bone|essence|coal|iron|steel|mithril|adamant|crystal|uncut|grimy|clean/.test(n)) return "Skilling Resources";
+    return "Other";
   }
 
   function selectItem(name) {
@@ -229,7 +271,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
       setShowPostForm(false);
       setForm({ item_name: "", item_image: "", type: "WTS", price: "", quantity: "1", notes: "", discord: "", rsn: user?.user_metadata?.username || "", category: "Other", bundle_only: false });
       setItemSearch("");
-      loadListings();
+      loadListings(false);
     } catch (e) {
       console.error(e);
       showToast("Failed to post listing.", "error");
@@ -276,7 +318,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
       setBumpCooldowns(updated);
       try { localStorage.setItem("rt_bump_cooldowns", JSON.stringify(updated)); } catch {}
       showToast("Listing bumped to top!", "success");
-      loadListings();
+      loadListings(false);
     } catch { showToast("Failed to bump listing", "error"); }
     finally { setBumping(null); }
   }
@@ -285,8 +327,8 @@ export default function TradeBoard({ user, supabase, showToast }) {
     const mention = `@${l.discord}`;
     const totalPrice = (l.price || 0) * (l.quantity || 1);
     const priceStr = l.quantity > 1
-      ? `${compactGP(l.price)} each (${compactGP(totalPrice)} total)`
-      : compactGP(l.price);
+      ? `${compactGP(l.price || 0)} each (${compactGP(totalPrice)} total)`
+      : compactGP(l.price || 0);
     const msg = `${mention} — interested in your ${l.item_name} listing (${l.type === "WTS" ? "selling" : "buying"}${(l.quantity || 1) > 1 ? ` ×${l.quantity.toLocaleString()} @` : ""} ${priceStr} gp) — RuneTrader.gg`;
     // Copy message to clipboard, then open Discord trade channel
     if (navigator.clipboard?.writeText) { navigator.clipboard.writeText(msg).catch(() => {}); }
@@ -317,7 +359,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
   const filtered = listings
     .filter(l => {
       if (typeFilter !== "All" && l.type !== typeFilter) return false;
-      if (filter !== "All" && normaliseCategory(l.category) !== filter) return false;
+      if (filter !== "All" && normaliseCategory(l.category, l.item_name) !== filter) return false;
       if (myListings && l.user_id !== user?.id) return false;
       if (search.trim() && !(l.item_name || "").toLowerCase().includes(search.trim().replace(/\s+/g, " ").toLowerCase())) return false;
       if (priceMinNum > 0 && l.price < priceMinNum) return false;
@@ -327,8 +369,14 @@ export default function TradeBoard({ user, supabase, showToast }) {
     .sort((a, b) => {
       if (sortBy === "price_asc")  return (a.price || 0) - (b.price || 0);
       if (sortBy === "price_desc") return (b.price || 0) - (a.price || 0);
-      if (sortBy === "expiring")   return (new Date(a.expires_at) || 0) - (new Date(b.expires_at) || 0);
-      return (new Date(b.created_at) || 0) - (new Date(a.created_at) || 0);
+      if (sortBy === "expiring") {
+        const ea = a.expires_at ? new Date(a.expires_at).getTime() : Infinity;
+        const eb = b.expires_at ? new Date(b.expires_at).getTime() : Infinity;
+        return ea - eb;
+      }
+      const ca = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const cb = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return cb - ca;
     });
 
   const inputStyle = { width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", boxSizing: "border-box", transition: "border-color 0.15s" };
@@ -434,59 +482,77 @@ export default function TradeBoard({ user, supabase, showToast }) {
 
       {/* Expanded filters panel */}
       {showFilters && (
-        <div style={{ background: "rgba(201,168,76,0.03)", border: "1px solid rgba(201,168,76,0.12)", borderRadius: "10px", padding: "16px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
-          {/* Category */}
+        <div style={{ background: "#0e1420", border: "1px solid #1c2a3a", borderRadius: "12px", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+
+          {/* Category pills */}
           <div>
-            <div style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 700, marginBottom: "8px", fontFamily: "'DM Sans', sans-serif" }}>Category</div>
-            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#8fa0b0", marginBottom: "12px", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.3px" }}>Category</div>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
               {CATEGORIES.map(c => (
                 <button key={c} onClick={() => setFilter(c)}
-                  style={{ padding: "5px 13px", borderRadius: "6px", border: `1px solid ${filter === c ? "rgba(201,168,76,0.4)" : "var(--border)"}`, background: filter === c ? "rgba(201,168,76,0.1)" : "transparent", color: filter === c ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", fontWeight: filter === c ? 600 : 400, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.1s" }}>
+                  style={{
+                    padding: "7px 16px", borderRadius: "20px", cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif", fontSize: "14px", fontWeight: filter === c ? 700 : 500,
+                    transition: "all 0.15s",
+                    border: filter === c ? "1px solid rgba(201,168,76,0.5)" : "1px solid #1c2a3a",
+                    background: filter === c ? "rgba(201,168,76,0.12)" : "#111620",
+                    color: filter === c ? "var(--gold)" : "#6a8099",
+                    boxShadow: filter === c ? "0 0 10px rgba(201,168,76,0.08)" : "none",
+                  }}
+                  onMouseOver={e => { if (filter !== c) { e.currentTarget.style.borderColor = "rgba(201,168,76,0.25)"; e.currentTarget.style.color = "#a8bccb"; } }}
+                  onMouseOut={e => { if (filter !== c) { e.currentTarget.style.borderColor = "#1c2a3a"; e.currentTarget.style.color = "#6a8099"; } }}>
                   {c}
                 </button>
               ))}
             </div>
           </div>
+
           {/* Price range */}
           <div>
-            <div style={{ fontSize: "11px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 700, marginBottom: "8px", fontFamily: "'DM Sans', sans-serif" }}>Price per item</div>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#8fa0b0", marginBottom: "12px", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.3px" }}>Price per item</div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-              <input value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="Min (e.g. 100k)"
-                style={{ background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "7px", padding: "7px 10px", color: "var(--text)", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "140px" }}
+              <input value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="Min e.g. 100k"
+                style={{ background: "#111620", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "8px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "150px", transition: "border-color 0.15s" }}
                 onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
                 onBlur={e => e.target.style.borderColor = "#1c2a3a"} />
-              <span style={{ color: "var(--text-dim)" }}>—</span>
-              <input value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Max (e.g. 5m)"
-                style={{ background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "7px", padding: "7px 10px", color: "var(--text)", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "140px" }}
+              <span style={{ color: "#3d5060", fontSize: "16px" }}>—</span>
+              <input value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Max e.g. 5m"
+                style={{ background: "#111620", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "8px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "150px", transition: "border-color 0.15s" }}
                 onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
                 onBlur={e => e.target.style.borderColor = "#1c2a3a"} />
-              {priceMinNum > 0 && <span style={{ fontSize: "12px", color: "var(--gold)" }}>{compactGP(priceMinNum)}</span>}
-              {priceMaxNum > 0 && <span style={{ fontSize: "12px", color: "var(--gold)" }}>→ {compactGP(priceMaxNum)}</span>}
+              {priceMinNum > 0 && <span style={{ fontSize: "13px", color: "var(--gold)", fontWeight: 600 }}>{compactGP(priceMinNum)}</span>}
+              {priceMaxNum > 0 && <span style={{ fontSize: "13px", color: "var(--gold)", fontWeight: 600 }}>→ {compactGP(priceMaxNum)}</span>}
               {priceFilterActive && (
                 <button onClick={() => { setPriceMin(""); setPriceMax(""); }}
-                  style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+                  style={{ background: "none", border: "none", color: "#3d5060", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: "0 4px" }}
                   onMouseOver={e => e.currentTarget.style.color = "var(--red)"}
-                  onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>
+                  onMouseOut={e => e.currentTarget.style.color = "#3d5060"}>
                   ✕ Clear
                 </button>
               )}
             </div>
           </div>
+
+          {/* Clear all */}
           {(filter !== "All" || priceFilterActive) && (
-            <button onClick={() => { setFilter("All"); setPriceMin(""); setPriceMax(""); }}
-              style={{ alignSelf: "flex-start", background: "none", border: "1px solid rgba(231,76,60,0.25)", borderRadius: "6px", color: "#c0564a", fontSize: "12px", padding: "4px 12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
-              onMouseOver={e => { e.currentTarget.style.background = "rgba(231,76,60,0.06)"; e.currentTarget.style.color = "var(--red)"; }}
-              onMouseOut={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#c0564a"; }}>
-              ✕ Clear all filters
-            </button>
+            <div style={{ borderTop: "1px solid #1c2a3a", paddingTop: "14px" }}>
+              <button onClick={() => { setFilter("All"); setPriceMin(""); setPriceMax(""); }}
+                style={{ background: "rgba(231,76,60,0.06)", border: "1px solid rgba(231,76,60,0.2)", borderRadius: "7px", color: "#c0564a", fontSize: "13px", fontWeight: 600, padding: "7px 16px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
+                onMouseOver={e => { e.currentTarget.style.background = "rgba(231,76,60,0.12)"; e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.4)"; }}
+                onMouseOut={e => { e.currentTarget.style.background = "rgba(231,76,60,0.06)"; e.currentTarget.style.color = "#c0564a"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.2)"; }}>
+                ✕ Clear all filters
+              </button>
+            </div>
           )}
         </div>
       )}
 
       {/* Listing count */}
       {!loading && (
-        <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>
-          {filtered.length} listing{filtered.length !== 1 ? "s" : ""}{search ? ` matching "${search}"` : ""}
+        <div style={{ fontSize: "14px", color: "#6a8099", fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+          <span style={{ color: "#a8bccb", fontWeight: 700 }}>{filtered.length}</span> listing{filtered.length !== 1 ? "s" : ""}
+          {search && <span style={{ color: "#4a6070" }}> matching "{search}"</span>}
+          {(filter !== "All") && <span style={{ color: "#4a6070" }}> in <span style={{ color: "#6a8099" }}>{filter}</span></span>}
         </div>
       )}
 
@@ -657,7 +723,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)" }}>Post a Listing</div>
-              <button onClick={() => setShowPostForm(false)}
+              <button onClick={() => { setShowPostForm(false); setItemSuggestions([]); }}
                 style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "20px", cursor: "pointer", lineHeight: 1 }}>✕</button>
             </div>
 
@@ -791,7 +857,7 @@ export default function TradeBoard({ user, supabase, showToast }) {
             </div>
 
             <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={() => setShowPostForm(false)}
+              <button onClick={() => { setShowPostForm(false); setItemSuggestions([]); }}
                 style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
                 Cancel
               </button>
