@@ -246,7 +246,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
       const { error } = await supabase.from("trade_listings").insert({
         user_id: user.id,
         item_name: form.item_name,
-        item_image: form.item_image,
+        item_image: form.item_image || null,
         type: form.type,
         price,
         quantity: qty,
@@ -254,7 +254,9 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
         discord: form.discord || null,
         rsn: form.rsn || null,
         category: form.category,
-        bundle_only: form.bundle_only,
+        bundle_only: form.bundle_only || false,
+        active: true,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       });
       if (error) throw error;
       showToast("Listing posted! Expires in 7 days.", "success");
@@ -263,8 +265,8 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
       setItemSearch("");
       loadListings(false);
     } catch (e) {
-      console.error(e);
-      showToast("Failed to post listing.", "error");
+      console.error("[TradeBoard] Post error:", e);
+      showToast(e?.message || "Failed to post listing. Please try again.", "error");
     } finally { setPosting(false); }
   }
 
