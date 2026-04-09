@@ -4872,12 +4872,11 @@ export default function RuneTrader() {
   }, []);
 
   useEffect(() => {
-    let profileFetchedForUser = null; // prevents double fetch when SIGNED_IN fires after getSession
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       // Fetch profile on initial load — covers page refresh with existing session
       if (session?.user?.id) {
-        profileFetchedForUser = session.user.id;
+        profileFetchedRef.current = session.user.id;
         supabase.from("user_profiles")
           .select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter, discord_id, discord_username")
           .eq("user_id", session.user.id).single()
@@ -4951,7 +4950,7 @@ export default function RuneTrader() {
             if (el) { const r = el.getBoundingClientRect(); setTourRects({ top: r.top, left: r.left, width: r.width, height: r.height }); }
             setTourStep(0);
           }, 800);
-        } else if (session?.user?.id && session.user.id !== profileFetchedForUser) {
+        } else if (session?.user?.id && session.user.id !== profileFetchedRef.current) {
           // Load ref code, pro status, trial, and sync pause state for returning users
           // (skip if getSession already fetched profile for this user)
           supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter, discord_id, discord_username").eq("user_id", session.user.id).single()
@@ -5095,6 +5094,7 @@ export default function RuneTrader() {
     try { return JSON.parse(localStorage.getItem("runetrader_pnl_history") || "[]"); } catch { return []; }
   });
   const pnlCanvasRef = useRef(null);
+  const profileFetchedRef = useRef(null); // prevents double profile fetch on sign-in
 
   async function loadMerchantSettings() {
     if (!user) return;
@@ -6935,10 +6935,27 @@ RULES:
   const excludedFlips = flipsLog.filter(f => f.excluded);
 
   // Stable callback for TradeBoard new listing signal
-  const onNewListings = useCallback((ts) => {
+  const onNewListings = useCallback((ts, listings) => {
     try { localStorage.setItem("rt_tradeboard_newest_ts", ts); } catch {}
     if (marketSubTab !== "tradeboard") setHasNewTradeListings(true);
-  }, [marketSubTab]);
+    // Check watches at App level so it fires regardless of which tab is active
+    if (listings?.length && user) {
+      try {
+        const watches = JSON.parse(localStorage.getItem("rt_trade_watches") || "[]");
+        const lastChecked = parseInt(localStorage.getItem("rt_watches_last_checked") || "0");
+        const hasMatch = watches.some(w =>
+          listings.some(l =>
+            l.item_name?.toLowerCase() === w.item_name?.toLowerCase() &&
+            (w.type === "Either" || l.type === w.type) &&
+            (!w.max_price || l.price <= w.max_price) &&
+            new Date(l.created_at).getTime() > lastChecked
+          )
+        );
+        if (hasMatch) onWatchAlert();
+        localStorage.setItem("rt_watches_last_checked", Date.now().toString());
+      } catch {}
+    }
+  }, [marketSubTab, user, onWatchAlert]); // eslint-disable-line
 
   // Callback for when a watched item gets listed — fires amber bell + sound
   const onWatchAlert = useCallback(() => {

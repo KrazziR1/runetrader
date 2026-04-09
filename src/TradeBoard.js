@@ -148,6 +148,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
     bundle_only: false,
   });
   const [posting, setPosting] = useState(false);
+  const [localDiscord, setLocalDiscord] = useState(null); // fetched directly — doesn't race with prop
 
   // ── Search autocomplete ──
   const [searchSuggestions, setSearchSuggestions] = useState([]);
@@ -189,7 +190,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
 
   // Reset user-specific state on logout
   useEffect(() => {
-    if (!user) { setMyListings(false); setShowPostForm(false); setWatches([]); }
+    if (!user) { setMyListings(false); setShowPostForm(false); setWatches([]); setLocalDiscord(null); }
     else loadWatches();
   }, [user]); // eslint-disable-line
 
@@ -267,10 +268,22 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
     if (!user) return;
     const username = user.user_metadata?.username || user.email?.split("@")[0] || "";
     setForm(f => ({ ...f, rsn: f.rsn || username }));
-  }, [user]);
+    // Fetch discord_username directly — don't rely on prop timing
+    supabase.from("user_profiles")
+      .select("discord_id, discord_username")
+      .eq("user_id", user.id).single()
+      .then(({ data }) => {
+        const name = data?.discord_username || null;
+        setLocalDiscord(name);
+        setForm(f => ({ ...f, discord: name || "" }));
+      });
+  }, [user]); // eslint-disable-line
 
   useEffect(() => {
-    setForm(f => ({ ...f, discord: discordUsername || "" }));
+    if (discordUsername) {
+      setLocalDiscord(discordUsername);
+      setForm(f => ({ ...f, discord: discordUsername }));
+    }
   }, [discordUsername]);
 
   async function loadItemNames() {
@@ -293,25 +306,9 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
         // Signal new listings to parent (newest created_at)
         if (data?.length > 0 && onNewListings) {
           const newest = data.reduce((a, b) => new Date(a.created_at) > new Date(b.created_at) ? a : b);
-          if (newest?.created_at) onNewListings(newest.created_at);
+          if (newest?.created_at) onNewListings(newest.created_at, data);
         }
-        // Check if any watched items are now listed — fires amber bell + sound
-        if (data?.length > 0 && onWatchAlert) {
-          try {
-            const watches = JSON.parse(localStorage.getItem("rt_trade_watches") || "[]");
-            const lastChecked = parseInt(localStorage.getItem("rt_watches_last_checked") || "0");
-            const hasMatch = watches.some(w =>
-              data.some(l =>
-                l.item_name?.toLowerCase() === w.item_name?.toLowerCase() &&
-                (w.type === "Either" || l.type === w.type) &&
-                (!w.maxPrice || l.price <= w.maxPrice) &&
-                new Date(l.created_at).getTime() > lastChecked
-              )
-            );
-            if (hasMatch) onWatchAlert();
-            localStorage.setItem("rt_watches_last_checked", Date.now().toString());
-          } catch {}
-        }
+
       }
     } catch (e) { console.error(e); }
     finally { if (showSpinner) setLoading(false); }
@@ -1200,10 +1197,10 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
               <div>
                 <label style={labelStyle}>Discord</label>
-                {discordUsername ? (
+                {localDiscord ? (
                   <div style={{ ...inputStyle, display: "flex", alignItems: "center", gap: "8px", background: "rgba(114,137,218,0.06)", borderColor: "rgba(114,137,218,0.3)", cursor: "default" }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="#7289da" style={{ flexShrink: 0 }}><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-                    <span style={{ color: "#7289da", fontWeight: 600, fontSize: "14px" }}>{discordUsername}</span>
+                    <span style={{ color: "#7289da", fontWeight: 600, fontSize: "14px" }}>{localDiscord}</span>
                     <span style={{ marginLeft: "auto", fontSize: "11px", background: "rgba(46,204,113,0.1)", border: "1px solid rgba(46,204,113,0.25)", borderRadius: "4px", padding: "1px 6px", color: "var(--green)" }}>linked</span>
                   </div>
                 ) : (
