@@ -1271,16 +1271,14 @@ function getScore(margin, volume, roi, speed, risk, buyLimit, lastTradeTime) {
   return Math.max(0, Math.min(100, base + prefDelta));
 }
 
-function renderMarkdown(text) {
+function renderMarkdown(text, allItems, onItemClick) {
   if (!text) return null;
   const lines = text.split("\n");
   const elements = [];
   let i = 0;
   while (i < lines.length) {
     const line = lines[i];
-    // blank line → spacer
     if (line.trim() === "") { elements.push(<div key={i} style={{ height: "6px" }} />); i++; continue; }
-    // bullet line
     if (/^[-*]\s/.test(line.trim())) {
       const bulletLines = [];
       while (i < lines.length && /^[-*]\s/.test(lines[i].trim())) {
@@ -1289,28 +1287,68 @@ function renderMarkdown(text) {
       }
       elements.push(
         <ul key={i} style={{ paddingLeft: "16px", margin: "4px 0", listStyle: "disc" }}>
-          {bulletLines.map((bl, j) => <li key={j} style={{ marginBottom: "3px" }}>{inlineFormat(bl)}</li>)}
+          {bulletLines.map((bl, j) => <li key={j} style={{ marginBottom: "3px" }}>{inlineFormat(bl, allItems, onItemClick)}</li>)}
         </ul>
       );
       continue;
     }
-    // regular line
-    elements.push(<div key={i} style={{ marginBottom: "2px" }}>{inlineFormat(line)}</div>);
+    elements.push(<div key={i} style={{ marginBottom: "2px" }}>{inlineFormat(line, allItems, onItemClick)}</div>);
     i++;
   }
   return elements;
 }
 
-function inlineFormat(text) {
-  // **bold**, then plain text
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={i} style={{ color: "var(--gold-light)", fontWeight: 600 }}>{part.slice(2, -2)}</strong>;
+function inlineFormat(text, allItems, onItemClick) {
+  const itemNames = (allItems && allItems.length)
+    ? allItems.map(i => i.name).sort((a, b) => b.length - a.length)
+    : [];
+
+  let segments = [{ type: "text", value: text }];
+
+  segments = segments.flatMap(seg => {
+    if (seg.type !== "text") return [seg];
+    return seg.value.split(/(\*\*[^*]+\*\*)/g).map(part => ({
+      type: part.startsWith("**") && part.endsWith("**") ? "bold" : "text",
+      value: part,
+    }));
+  });
+
+  if (itemNames.length && onItemClick) {
+    const escapedNames = itemNames.map(n => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const itemRegex = new RegExp(`(${escapedNames.join("|")})`, "gi");
+    segments = segments.flatMap(seg => {
+      if (seg.type !== "text") return [seg];
+      return seg.value.split(itemRegex).map(part => {
+        const matched = allItems.find(i => i.name.toLowerCase() === part.toLowerCase());
+        return matched
+          ? { type: "item", value: part, item: matched }
+          : { type: "text", value: part };
+      });
+    });
+  }
+
+  return segments.map((seg, i) => {
+    if (seg.type === "bold") {
+      return <strong key={i} style={{ color: "var(--gold-light)", fontWeight: 600 }}>{seg.value.slice(2, -2)}</strong>;
     }
-    return part;
+    if (seg.type === "item") {
+      return (
+        <span
+          key={i}
+          onClick={() => onItemClick(seg.item)}
+          style={{ color: "var(--gold)", fontWeight: 600, cursor: "pointer", borderBottom: "1px dashed rgba(201,168,76,0.5)", transition: "color 0.15s" }}
+          onMouseOver={e => e.currentTarget.style.color = "var(--gold-light)"}
+          onMouseOut={e => e.currentTarget.style.color = "var(--gold)"}
+          title={`View ${seg.item.name} chart`}
+        >
+          {seg.value}
+        </span>
+      );
+    }
+    return seg.value;
   });
 }
+
 
 function itemIconUrl(name) {
   if (!name) return "";
@@ -1457,7 +1495,8 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
       else if (range === "3D") endpoint = "1h";
       else if (range === "7D") endpoint = "6h";
       else if (range === "1M") endpoint = "6h";
-      else endpoint = "6h"; // 6M, 1Y — was "24h", now 6h for 4× more data points
+      else if (range === "6M") endpoint = "24h"; // daily points = full 6 months of coverage
+      else endpoint = "24h"; // 1Y — daily points = full year of coverage
 
       const res = await fetch(`https://prices.runescape.wiki/api/v1/osrs/timeseries?timestep=${endpoint}&id=${item.id}`, { headers: { "User-Agent": "RuneTrader/1.0" } });
       if (!res.ok) { setChartLoading(false); return; }
@@ -1465,7 +1504,9 @@ function ItemChart({ item, onClose, onAskAI, onRefresh, refreshing, refreshCoold
       if (!data?.data || data.data.length === 0) { setChartLoading(false); return; }
       const now = Date.now() / 1000;
       const filtered = data.data.filter(d => now - d.timestamp <= rangeObj.seconds);
-      setChartData(filtered.length > 0 ? filtered : data.data.slice(-200));
+      // Fallback slice respects the range — more points for longer views
+      const sliceCount = range === "1Y" ? 365 : range === "6M" ? 180 : range === "1M" ? 30 : 200;
+      setChartData(filtered.length > 0 ? filtered : data.data.slice(-sliceCount));
     } catch { } finally { setChartLoading(false); }
   }
 
@@ -7273,7 +7314,7 @@ RULES:
         <ItemChart
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
-          onAskAI={msg => { setInput(msg); sendMessage(msg); }}
+          onAskAI={msg => { setMerchantAIOpen(true); setInput(msg); sendMessage(msg); }}
           onRefresh={() => fetchPrices(true)}
           refreshing={refreshing}
           refreshCooldown={refreshCooldown}
@@ -7410,7 +7451,7 @@ RULES:
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: "20px", fontWeight: 700, color: "#3498db" }}>⚙ Customize Your Picks</div>
-                  <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "4px" }}>Tell us how you flip and we'll filter to your perfect items</div>
+                  <div style={{ fontSize: "14px", color: "var(--text-dim)", marginTop: "4px" }}>Answer 4 quick questions — we'll surface the best flips for you.</div>
                 </div>
                 <button onClick={() => setShowCustomizeModal(false)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "20px" }}>✕</button>
               </div>
@@ -7431,8 +7472,8 @@ RULES:
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: "36px", marginBottom: "8px" }}>💰</div>
-                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>What's your cash stack?</div>
-                    <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>We'll only show items you can actually afford to flip.</div>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>What's your cash stack?</div>
+                    <div style={{ fontSize: "15px", color: "var(--text-dim)" }}>We'll only show items you can actually afford to flip.</div>
                   </div>
                   <input className="filter-input" placeholder="e.g. 5m, 50m, 500k..." value={customizePrefs.cashStack}
                     onChange={e => setCustomizePrefs(p => ({ ...p, cashStack: e.target.value }))}
@@ -7452,21 +7493,21 @@ RULES:
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: "36px", marginBottom: "8px" }}>⚖️</div>
-                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>Risk tolerance?</div>
-                    <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>How aggressive do you want to flip?</div>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>How much risk can you stomach?</div>
+                    <div style={{ fontSize: "15px", color: "var(--text-dim)" }}>This sets the price range and fill speed of your picks.</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {[
-                      { v: "low",    emoji: "🛡️", label: "Low Risk",    desc: "Items under 5M. Vol/limit ≥ 50×. Consistent fills." },
-                      { v: "medium", emoji: "⚖️", label: "Medium Risk", desc: "Items 5M–50M. Margin ≥ 15k. Vol/limit ≥ 10×." },
-                      { v: "high",   emoji: "🔥", label: "High Risk",   desc: "Items 50M+. Bigger margins, slower fills." },
+                      { v: "low",    emoji: "🛡️", label: "Low Risk",    desc: "Safe, consistent flips under 5M. High volume, fast fills. Great for beginners." },
+                      { v: "medium", emoji: "⚖️", label: "Medium Risk", desc: "Balanced flips between 5M–50M. Good margins, manageable wait times." },
+                      { v: "high",   emoji: "🔥", label: "High Risk",   desc: "High-value items 50M+. Bigger GP per flip — but slower fills and more capital needed." },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, risk: opt.v }))}
                         style={{ padding: "14px 18px", borderRadius: "10px", border: `1px solid ${customizePrefs.risk === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.risk === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "14px", textAlign: "left", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}>
                         <span style={{ fontSize: "24px", flexShrink: 0 }}>{opt.emoji}</span>
                         <div>
-                          <div style={{ fontSize: "14px", fontWeight: 600, color: customizePrefs.risk === opt.v ? "var(--gold)" : "var(--text)", marginBottom: "2px" }}>{opt.label}</div>
-                          <div style={{ fontSize: "12px", color: "var(--text-dim)" }}>{opt.desc}</div>
+                          <div style={{ fontSize: "15px", fontWeight: 600, color: customizePrefs.risk === opt.v ? "var(--gold)" : "var(--text)", marginBottom: "3px" }}>{opt.label}</div>
+                          <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.5 }}>{opt.desc}</div>
                         </div>
                         {customizePrefs.risk === opt.v && <span style={{ marginLeft: "auto", color: "var(--gold)", fontSize: "16px" }}>✓</span>}
                       </button>
@@ -7479,25 +7520,25 @@ RULES:
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: "36px", marginBottom: "8px" }}>⏳️</div>
-                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>How often do you flip?</div>
-                    <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>We'll match items to how active you are.</div>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>How often do you check your offers?</div>
+                    <div style={{ fontSize: "15px", color: "var(--text-dim)" }}>We'll match items to your playstyle — no point flipping slow items if you're always online.</div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {[
-                      { v: "fast",   emoji: "⚡", label: "Constantly",           desc: "You check your offers frequently. Prioritises high trade volume items." },
-                      { v: "medium", emoji: "🕐", label: "Every few hours",       desc: "Standard 4hr GE cycle. Good balance of volume and margin." },
-                      { v: "slow",   emoji: "📅", label: "Once or twice a day", desc: "Patient flips. Focuses on higher margins.", warn: true },
-                      { v: "any",    emoji: "🌐", label: "Show everything",        desc: "No filter on flip speed." },
+                      { v: "fast",   emoji: "⚡", label: "Constantly",           desc: "You're always online. High-volume items that fill fast and flip again quickly." },
+                      { v: "medium", emoji: "🕐", label: "Every few hours",       desc: "The standard GE cycle. Solid balance of margin and fill speed." },
+                      { v: "slow",   emoji: "📅", label: "Once or twice a day", desc: "Patient flipping. Higher margins but you may wait 12–24hrs for fills.", warn: true },
+                      { v: "any",    emoji: "🌐", label: "Show everything",        desc: "No filter applied — show all items regardless of flip speed." },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, flipSpeed: opt.v }))}
                         style={{ padding: "12px 16px", borderRadius: "10px", border: `1px solid ${customizePrefs.flipSpeed === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.flipSpeed === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", display: "flex", alignItems: "center", gap: "12px", textAlign: "left", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}>
                         <span style={{ fontSize: "20px", flexShrink: 0 }}>{opt.emoji}</span>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
-                            <span style={{ fontSize: "13px", fontWeight: 600, color: customizePrefs.flipSpeed === opt.v ? "var(--gold)" : "var(--text)" }}>{opt.label}</span>
+                            <span style={{ fontSize: "15px", fontWeight: 600, color: customizePrefs.flipSpeed === opt.v ? "var(--gold)" : "var(--text)" }}>{opt.label}</span>
                             {opt.warn && <span style={{ fontSize: "9px", fontWeight: 700, color: "#f39c12", background: "rgba(243,156,18,0.12)", border: "1px solid rgba(243,156,18,0.3)", borderRadius: "4px", padding: "1px 5px", textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap" }}>Not Recommended</span>}
                           </div>
-                          <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{opt.desc}</div>
+                          <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.5 }}>{opt.desc}</div>
                         </div>
                         {customizePrefs.flipSpeed === opt.v && <span style={{ marginLeft: "auto", color: "var(--gold)", fontSize: "14px", flexShrink: 0 }}>✓</span>}
                       </button>
@@ -7510,19 +7551,19 @@ RULES:
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   <div style={{ textAlign: "center" }}>
                     <div style={{ fontSize: "36px", marginBottom: "8px" }}>👥</div>
-                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", marginBottom: "6px" }}>F2P or Members?</div>
-                    <div style={{ fontSize: "13px", color: "var(--text-dim)" }}>Filters out member-only items if needed.</div>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 700, color: "var(--gold)", marginBottom: "8px" }}>Are you F2P or a Member?</div>
+                    <div style={{ fontSize: "15px", color: "var(--text-dim)" }}>We'll hide items you can't access on your account.</div>
                   </div>
                   <div style={{ display: "flex", gap: "12px" }}>
                     {[
-                      { v: "members", emoji: "💎", label: "Members", desc: "All items including members-only" },
-                      { v: "f2p",     emoji: "🆓", label: "F2P Only", desc: "Free-to-play items only" },
+                      { v: "members", emoji: "💎", label: "Members", desc: "Full access — all items including members-only gear, potions and supplies." },
+                      { v: "f2p",     emoji: "🆓", label: "F2P Only", desc: "Free-to-play items only — no members gear or supplies." },
                     ].map(opt => (
                       <button key={opt.v} onClick={() => setCustomizePrefs(p => ({ ...p, membership: opt.v }))}
                         style={{ flex: 1, padding: "20px 16px", borderRadius: "12px", border: `2px solid ${customizePrefs.membership === opt.v ? "var(--gold)" : "rgba(255,255,255,0.08)"}`, background: customizePrefs.membership === opt.v ? "rgba(201,168,76,0.1)" : "rgba(255,255,255,0.02)", cursor: "pointer", textAlign: "center", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s" }}>
                         <div style={{ fontSize: "28px", marginBottom: "8px" }}>{opt.emoji}</div>
                         <div style={{ fontSize: "14px", fontWeight: 600, color: customizePrefs.membership === opt.v ? "var(--gold)" : "var(--text)", marginBottom: "4px" }}>{opt.label}</div>
-                        <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>{opt.desc}</div>
+                        <div style={{ fontSize: "13px", color: "var(--text-dim)", lineHeight: 1.5 }}>{opt.desc}</div>
                       </button>
                     ))}
                   </div>
@@ -9195,7 +9236,15 @@ RULES:
                     setRecipeSearch(""); setRecipeRowsShown(100); setRecipeExpandedPotions(new Set()); setShowRecipeFilters(false);
                   };
                   const advRecipeFilterCount = [recipeMinProfit, recipeMinVolume, recipeMinRoi, recipeMembersFilter !== "all"].filter(Boolean).length;
-                  const getDose = (name) => { const m = name?.match(/\((\d+)\)$/); return m ? m[1] : null; };
+                  const POTION_KEYWORDS = ["potion", "brew", "mix", "antifire", "antipoison", "antivenom", "saradomin", "zamorak", "guthix", "bastion", "battlemage", "divine", "super ", "extreme", "overload", "prayer", "stamina", "ranging", "magic", "strength", "attack", "defence", "restore", "energy", "agility", "fishing", "hunter", "fletching"];
+                  const getDose = (name) => {
+                    if (!name) return null;
+                    const m = name.match(/\((\d+)\)$/);
+                    if (!m) return null;
+                    const lower = name.toLowerCase();
+                    const isPotion = POTION_KEYWORDS.some(k => lower.includes(k));
+                    return isPotion ? m[1] : null;
+                  };
 
                   return (
                     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -9900,7 +9949,7 @@ RULES:
                     style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.5)", background: picksMode ? "linear-gradient(135deg,rgba(201,168,76,0.22),rgba(201,168,76,0.12))" : "linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.06))", color: "var(--gold)", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "DM Sans, sans-serif", transition: "all 0.15s", whiteSpace: "nowrap", boxShadow: picksMode ? "0 0 14px rgba(201,168,76,0.2)" : "none" }}
                     onMouseOver={e => { e.currentTarget.style.background = "linear-gradient(135deg,rgba(201,168,76,0.22),rgba(201,168,76,0.12))"; e.currentTarget.style.boxShadow = "0 0 14px rgba(201,168,76,0.18)"; }}
                     onMouseOut={e => { e.currentTarget.style.background = picksMode ? "linear-gradient(135deg,rgba(201,168,76,0.22),rgba(201,168,76,0.12))" : "linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.06))"; e.currentTarget.style.boxShadow = picksMode ? "0 0 14px rgba(201,168,76,0.2)" : "none"; }}>
-                    ✨ Help me decide{picksMode ? " ●" : ""}
+                    ⚙ Personalise My Picks{picksMode ? " ●" : ""}
                   </button>
                   <input className="filter-input" placeholder="Search items..." value={search} onChange={e => setSearch(e.target.value)} style={{ marginLeft: "auto" }} />
                   <button
@@ -10267,7 +10316,7 @@ RULES:
               {messages.map((msg, i) => (
                 <div key={i} className={`msg ${msg.role}`}>
                   <div className="msg-bubble">
-                    {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
+                    {msg.role === "assistant" ? renderMarkdown(msg.content, allItems, (item) => { setSelectedItem(item); setMerchantAIOpen(false); }) : msg.content}
                   </div>
                   <span className="msg-time">{formatTime(msg.time)}</span>
                 </div>
