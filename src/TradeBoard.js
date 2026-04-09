@@ -133,7 +133,6 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
   const [bumpCooldowns, setBumpCooldowns] = useState(() => {
     try { return JSON.parse(localStorage.getItem("rt_bump_cooldowns") || "{}"); } catch { return {}; }
   });
-  const [priceView, setPriceView] = useState("total"); // "total" | "each"
   const [sortBy, setSortBy] = useState("newest"); // "newest" | "price_asc" | "price_desc" | "expiring"
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
@@ -459,15 +458,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
             <option value="expiring">Expiring soon</option>
           </select>
 
-          {/* Per-item / total toggle */}
-          <div style={{ display: "flex", gap: "3px" }}>
-            {["total", "each"].map(v => (
-              <button key={v} onClick={() => setPriceView(v)}
-                style={{ padding: "6px 12px", borderRadius: "6px", border: `1px solid ${priceView === v ? "var(--border)" : "transparent"}`, background: priceView === v ? "var(--bg3)" : "transparent", color: priceView === v ? "var(--text)" : "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
-                {v === "total" ? "Total" : "Each"}
-              </button>
-            ))}
-          </div>
+
         </div>
       </div>
 
@@ -574,7 +565,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
           {filtered.map(l => {
             const price = l.price || 0;
             const total = price * (l.quantity || 1);
-            const displayPrice = priceView === "each" || (l.quantity || 1) <= 1 ? price : total;
+            const displayPrice = (l.quantity || 1) <= 1 ? price : total;
             const isOwn = user?.id === l.user_id;
             const pct = timeLeftPct(l.expires_at);
             const expiryColor = pct > 50 ? "var(--green)" : pct > 20 ? "#f39c12" : "var(--red)";
@@ -688,9 +679,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
                   </div>
                   {l.quantity > 1 && (
                     <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "2px" }}>
-                      {priceView === "total"
-                        ? `${compactGP(price)} each`
-                        : `${compactGP(total)} total`}
+                      {compactGP(price)} each
                     </div>
                   )}
                   {total > MAX_CASH && total > 0 && (
@@ -705,12 +694,13 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
 
       {/* ── POST FORM MODAL ── */}
       {showPostForm && user && (
-        <div
-          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}
-          onClick={e => { if (e.target === e.currentTarget) setShowPostForm(false); }}>
+        <>
+          {/* Backdrop — click to close */}
           <div
-            style={{ background: "#111620", border: "1px solid #1c2a3a", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "500px", display: "flex", flexDirection: "column", gap: "18px", maxHeight: "90vh", overflowY: "auto" }}
-            onClick={e => e.stopPropagation()}>
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000 }}
+            onClick={() => { setShowPostForm(false); setItemSuggestions([]); }} />
+          {/* Modal — sits above backdrop, no click handler needed */}
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 1001, width: "calc(100% - 40px)", maxWidth: "500px", background: "#111620", border: "1px solid #1c2a3a", borderRadius: "16px", padding: "28px", display: "flex", flexDirection: "column", gap: "18px", maxHeight: "90vh", overflowY: "auto" }}>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)" }}>Post a Listing</div>
@@ -807,13 +797,14 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
 
             {/* Bundle only toggle */}
             {formQtyNum > 1 && (
-              <label style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", userSelect: "none", fontSize: "14px", color: "var(--text-dim)" }}>
-                <div className={`tog${form.bundle_only ? " on" : ""}`} onClick={() => setForm(f => ({ ...f, bundle_only: !f.bundle_only }))}>
-                  <div className="tog-thumb" />
+              <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", userSelect: "none" }}
+                onClick={() => setForm(f => ({ ...f, bundle_only: !f.bundle_only }))}>
+                <div style={{ width: "44px", height: "24px", borderRadius: "24px", background: form.bundle_only ? "rgba(201,168,76,0.15)" : "#1c2a3a", border: `1.5px solid ${form.bundle_only ? "#c9a84c" : "#2a3a4d"}`, position: "relative", flexShrink: 0, transition: "all 0.22s", boxSizing: "border-box" }}>
+                  <div style={{ position: "absolute", top: "3px", left: form.bundle_only ? "22px" : "3px", width: "14px", height: "14px", borderRadius: "50%", background: form.bundle_only ? "#c9a84c" : "#4a6070", transition: "left 0.22s, background 0.22s" }} />
                 </div>
                 <div>
-                  <span style={{ color: "var(--text)", fontWeight: 600 }}>Bundle only</span>
-                  <span style={{ marginLeft: "8px", fontSize: "12px" }}>— buyer must take the full quantity</span>
+                  <span style={{ fontSize: "14px", fontWeight: 600, color: form.bundle_only ? "var(--gold)" : "var(--text)" }}>Bundle only</span>
+                  <span style={{ marginLeft: "8px", fontSize: "12px", color: "var(--text-dim)" }}>— buyer must take the full quantity</span>
                 </div>
               </label>
             )}
@@ -858,15 +849,16 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
               </button>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* ── REPORT MODAL ── */}
       {reportModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1001, padding: "20px" }}
-          onClick={e => { if (e.target === e.currentTarget) setReportModal(null); }}>
-          <div style={{ background: "#111620", border: "1px solid #1c2a3a", borderRadius: "14px", padding: "26px", width: "100%", maxWidth: "400px", display: "flex", flexDirection: "column", gap: "16px" }}
-            onClick={e => e.stopPropagation()}>
+        <>
+          <div
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1001 }}
+            onClick={() => setReportModal(null)} />
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 1002, width: "calc(100% - 40px)", maxWidth: "400px", background: "#111620", border: "1px solid #1c2a3a", borderRadius: "14px", padding: "26px", display: "flex", flexDirection: "column", gap: "16px" }}>
             <div style={{ fontFamily: "'Cinzel', serif", fontSize: "16px", fontWeight: 700, color: "var(--text)" }}>Report Listing</div>
             <div style={{ fontSize: "14px", color: "var(--text-dim)" }}>
               Reporting <strong style={{ color: "var(--text)" }}>{reportModal.item_name}</strong> listed by {reportModal.rsn || reportModal.discord || "unknown"}
@@ -893,7 +885,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
               </button>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
