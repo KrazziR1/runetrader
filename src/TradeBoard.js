@@ -563,7 +563,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
           </div>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           {filtered.map(l => {
             const price = l.price || 0;
             const total = price * (l.quantity || 1);
@@ -571,122 +571,152 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
             const isOwn = user?.id === l.user_id;
             const pct = timeLeftPct(l.expires_at);
             const expiryColor = pct > 50 ? "var(--green)" : pct > 20 ? "#f39c12" : "var(--red)";
+            const typeColor = l.type === "WTS" ? { bg: "rgba(231,76,60,0.12)", border: "rgba(231,76,60,0.35)", text: "var(--red)" } : { bg: "rgba(46,204,113,0.12)", border: "rgba(46,204,113,0.35)", text: "var(--green)" };
+            const counterType = l.type === "WTS" ? "WTB" : "WTS";
+            const hasMatch = !!(l.item_name && listings.some(m => m.id !== l.id && (m.item_name || "").toLowerCase() === l.item_name.toLowerCase() && m.type === counterType));
+            const cat = normaliseCategory(l.category, l.item_name);
+            const cooldownMs = isOwn ? getBumpCooldownRemaining(l.id) : 0;
+            const onCooldown = cooldownMs > 0;
 
             return (
-              <div key={l.id}
-                style={{ display: "grid", gridTemplateColumns: "60px 1fr auto", gap: "14px", alignItems: "center", background: "#111620", border: `1px solid ${isOwn ? "rgba(201,168,76,0.18)" : "#1c2a3a"}`, borderRadius: "12px", padding: "14px 16px", transition: "border-color 0.15s" }}
-                onMouseOver={e => e.currentTarget.style.borderColor = isOwn ? "rgba(201,168,76,0.35)" : "rgba(255,255,255,0.1)"}
-                onMouseOut={e => e.currentTarget.style.borderColor = isOwn ? "rgba(201,168,76,0.18)" : "#1c2a3a"}>
+              <div key={l.id} style={{
+                background: isOwn ? "linear-gradient(135deg, #111e14 0%, #111620 60%)" : "#0f1319",
+                border: `1px solid ${isOwn ? "rgba(201,168,76,0.22)" : "#1c2a3a"}`,
+                borderRadius: "14px",
+                overflow: "hidden",
+                transition: "border-color 0.15s, box-shadow 0.15s",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.3)",
+              }}
+                onMouseOver={e => { e.currentTarget.style.borderColor = isOwn ? "rgba(201,168,76,0.45)" : "rgba(255,255,255,0.12)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.4)"; }}
+                onMouseOut={e => { e.currentTarget.style.borderColor = isOwn ? "rgba(201,168,76,0.22)" : "#1c2a3a"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.3)"; }}>
 
-                <ItemImage name={l.item_name} size={56} />
+                {/* Coloured top accent bar */}
+                <div style={{ height: "2px", background: l.type === "WTS" ? "linear-gradient(90deg, rgba(231,76,60,0.6), transparent)" : "linear-gradient(90deg, rgba(46,204,113,0.6), transparent)" }} />
 
-                <div style={{ minWidth: 0 }}>
-                  {/* Top row: name + badges */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "5px" }}>
-                    <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--text)" }}>{l.item_name || "Unknown item"}</span>
-                    {(() => {
-                      const counterType = l.type === "WTS" ? "WTB" : "WTS";
-                      const hasMatch = !!(l.item_name && listings.some(m => m.id !== l.id && (m.item_name || '').toLowerCase() === l.item_name.toLowerCase() && m.type === counterType));
-                      return hasMatch ? (
-                        <button onClick={() => { setTypeFilter(counterType); setSearch(l.item_name); setMyListings(false); }}
-                          title={`There's a ${counterType} listing for this item — click to view`}
-                          style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "rgba(52,152,219,0.1)", color: "#4fc3f7", border: "1px solid rgba(52,152,219,0.3)", cursor: "pointer", whiteSpace: "nowrap", fontFamily: "'DM Sans', sans-serif" }}>
-                          ⇄ {counterType} match
-                        </button>
-                      ) : null;
-                    })()}
-                    <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: l.type === "WTS" ? "rgba(231,76,60,0.12)" : "rgba(46,204,113,0.12)", color: l.type === "WTS" ? "var(--red)" : "var(--green)", border: `1px solid ${l.type === "WTS" ? "rgba(231,76,60,0.3)" : "rgba(46,204,113,0.3)"}` }}>
+                <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "64px 1fr auto", gap: "16px", alignItems: "start" }}>
+
+                  {/* Image */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                    <ItemImage name={l.item_name} size={56} />
+                    {/* Type badge under image */}
+                    <span style={{ padding: "2px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: 800, background: typeColor.bg, color: typeColor.text, border: `1px solid ${typeColor.border}`, letterSpacing: "0.5px" }}>
                       {l.type}
                     </span>
-                    {l.quantity > 1 && <span style={{ fontSize: "13px", color: "var(--text-dim)", fontWeight: 600 }}>×{l.quantity.toLocaleString()}</span>}
-                    {l.bundle_only && (
-                      <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "rgba(52,152,219,0.1)", color: "#4fc3f7", border: "1px solid rgba(52,152,219,0.3)" }}>
-                        Bundle only
-                      </span>
-                    )}
                   </div>
 
-                  {/* Contact + notes row */}
-                  <div style={{ display: "flex", gap: "14px", fontSize: "13px", color: "var(--text-dim)", flexWrap: "wrap", marginBottom: "6px" }}>
-                    {l.rsn && <span>RSN: <span style={{ color: "var(--text)", fontWeight: 600 }}>{l.rsn}</span></span>}
-                    {l.discord && <span>Discord: <span style={{ color: "var(--text)" }}>{l.discord}</span></span>}
-                    {l.notes && <span style={{ fontStyle: "italic", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{l.notes}</span>}
-                  </div>
-
-                  {/* Bottom row: time + expiry bar + actions */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                    <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>{timeAgo(l.created_at)}</span>
-                    {/* Expiry bar */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                      <div style={{ width: "60px", height: "4px", borderRadius: "2px", background: "var(--bg4)", overflow: "hidden" }}>
-                        <div style={{ width: `${pct}%`, height: "100%", background: expiryColor, borderRadius: "2px", transition: "width 0.3s" }} />
-                      </div>
-                      <span style={{ fontSize: "12px", color: expiryColor, fontWeight: 600 }}>{timeLeft(l.expires_at)}</span>
+                  {/* Main content */}
+                  <div style={{ minWidth: 0 }}>
+                    {/* Item name row */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "16px", fontWeight: 700, color: "var(--text)", fontFamily: "'DM Sans', sans-serif" }}>{l.item_name || "Unknown item"}</span>
+                      {l.quantity > 1 && (
+                        <span style={{ fontSize: "13px", color: "var(--text-dim)", fontWeight: 600, background: "var(--bg4)", borderRadius: "6px", padding: "1px 8px" }}>×{l.quantity.toLocaleString()}</span>
+                      )}
+                      {l.bundle_only && (
+                        <span style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "rgba(52,152,219,0.1)", color: "#4fc3f7", border: "1px solid rgba(52,152,219,0.25)" }}>Bundle only</span>
+                      )}
+                      {hasMatch && (
+                        <button onClick={() => { setTypeFilter(counterType); setSearch(l.item_name); setMyListings(false); }}
+                          title={`There's a ${counterType} listing for this item`}
+                          style={{ padding: "2px 8px", borderRadius: "20px", fontSize: "11px", fontWeight: 700, background: "rgba(52,152,219,0.1)", color: "#4fc3f7", border: "1px solid rgba(52,152,219,0.25)", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
+                          ⇄ {counterType} available
+                        </button>
+                      )}
                     </div>
 
-                    {/* Action buttons */}
+                    {/* Category + contact row */}
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-dim)", background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", padding: "2px 8px", letterSpacing: "0.3px" }}>{cat}</span>
+                      {l.rsn && (
+                        <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>
+                          👤 <span style={{ color: "var(--text)", fontWeight: 600 }}>{l.rsn}</span>
+                        </span>
+                      )}
+                      {l.discord && (
+                        <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="#7289da" style={{ marginRight: "4px", verticalAlign: "middle" }}><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                          <span style={{ color: "#7289da", fontWeight: 500 }}>{l.discord}</span>
+                        </span>
+                      )}
+                    </div>
 
-                    {l.discord && !isOwn && (
-                      <button onClick={() => openDiscordTrade(l)}
-                        title="Open RuneTrader Discord trade channel and ping the seller"
-                        style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid rgba(114,137,218,0.35)", background: "rgba(114,137,218,0.08)", color: "#7289da", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: "5px" }}
-                        onMouseOver={e => { e.currentTarget.style.background = "rgba(114,137,218,0.18)"; e.currentTarget.style.borderColor = "rgba(114,137,218,0.6)"; }}
-                        onMouseOut={e => { e.currentTarget.style.background = "rgba(114,137,218,0.08)"; e.currentTarget.style.borderColor = "rgba(114,137,218,0.35)"; }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#7289da"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-                        Message in Discord
-                      </button>
+                    {/* Notes */}
+                    {l.notes && (
+                      <div style={{ fontSize: "13px", color: "var(--text-dim)", fontStyle: "italic", background: "rgba(255,255,255,0.03)", borderLeft: "2px solid var(--border)", paddingLeft: "10px", marginBottom: "10px", lineHeight: 1.5, borderRadius: "0 4px 4px 0" }}>
+                        {l.notes}
+                      </div>
                     )}
 
-                    {!isOwn && user && (
-                      <button onClick={() => { setReportModal(l); setReportReason(""); }}
-                        style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid transparent", background: "transparent", color: "var(--text-dim)", fontSize: "11px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: 0.5, transition: "all 0.15s" }}
-                        onMouseOver={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.3)"; }}
-                        onMouseOut={e => { e.currentTarget.style.opacity = "0.5"; e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.borderColor = "transparent"; }}>
-                        ⚑ Report
-                      </button>
-                    )}
-                    {isOwn && (
-                      <>
-                        {(() => {
-                          const cooldownMs = getBumpCooldownRemaining(l.id);
-                          const onCooldown = cooldownMs > 0;
-                          return (
+                    {/* Footer: time + expiry + actions */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "12px", color: "#4a6070" }}>{timeAgo(l.created_at)}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                        <div style={{ width: "48px", height: "3px", borderRadius: "2px", background: "var(--bg4)", overflow: "hidden" }}>
+                          <div style={{ width: `${pct}%`, height: "100%", background: expiryColor, borderRadius: "2px", transition: "width 0.3s" }} />
+                        </div>
+                        <span style={{ fontSize: "11px", color: expiryColor, fontWeight: 600 }}>{timeLeft(l.expires_at)}</span>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "2px" }}>
+                        {l.discord && !isOwn && (
+                          <button onClick={() => openDiscordTrade(l)}
+                            style={{ padding: "4px 12px", borderRadius: "6px", border: "1px solid rgba(114,137,218,0.35)", background: "rgba(114,137,218,0.08)", color: "#7289da", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: "5px" }}
+                            onMouseOver={e => { e.currentTarget.style.background = "rgba(114,137,218,0.18)"; e.currentTarget.style.borderColor = "rgba(114,137,218,0.6)"; }}
+                            onMouseOut={e => { e.currentTarget.style.background = "rgba(114,137,218,0.08)"; e.currentTarget.style.borderColor = "rgba(114,137,218,0.35)"; }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="#7289da"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                            Contact in Discord
+                          </button>
+                        )}
+                        {isOwn && (
+                          <>
                             <button onClick={() => bumpListing(l.id)} disabled={bumping === l.id || onCooldown}
                               title={onCooldown ? `Next bump in ${formatCooldown(cooldownMs)}` : "Bump to top of listings"}
-                              style={{ padding: "3px 10px", borderRadius: "5px", border: `1px solid ${onCooldown ? "var(--border)" : "rgba(201,168,76,0.25)"}`, background: "transparent", color: onCooldown ? "var(--text-dim)" : bumping === l.id ? "var(--text-dim)" : "var(--gold)", fontSize: "11px", fontWeight: 600, cursor: onCooldown || bumping === l.id ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", opacity: onCooldown ? 0.5 : 1 }}
-                              onMouseOver={e => { if (!onCooldown && bumping !== l.id) { e.currentTarget.style.background = "rgba(201,168,76,0.08)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"; }}}
-                              onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = onCooldown ? "var(--border)" : "rgba(201,168,76,0.25)"; }}>
-                              {bumping === l.id ? "Bumping..." : onCooldown ? `↑ Bump (${formatCooldown(cooldownMs)})` : "↑ Bump"}
+                              style={{ padding: "4px 12px", borderRadius: "6px", border: `1px solid ${onCooldown ? "var(--border)" : "rgba(201,168,76,0.3)"}`, background: onCooldown ? "transparent" : "rgba(201,168,76,0.06)", color: onCooldown ? "var(--text-dim)" : "var(--gold)", fontSize: "12px", fontWeight: 600, cursor: onCooldown || bumping === l.id ? "not-allowed" : "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s", opacity: onCooldown ? 0.5 : 1 }}
+                              onMouseOver={e => { if (!onCooldown && bumping !== l.id) { e.currentTarget.style.background = "rgba(201,168,76,0.12)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.5)"; }}}
+                              onMouseOut={e => { e.currentTarget.style.background = onCooldown ? "transparent" : "rgba(201,168,76,0.06)"; e.currentTarget.style.borderColor = onCooldown ? "var(--border)" : "rgba(201,168,76,0.3)"; }}>
+                              {bumping === l.id ? "Bumping..." : onCooldown ? `↑ ${formatCooldown(cooldownMs)}` : "↑ Bump"}
                             </button>
-                          );
-                        })()}
-                        <button onClick={() => { if (window.confirm(`Remove your ${l.item_name || 'item'} listing? This cannot be undone.`)) closeListing(l.id); }}
-                          style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid rgba(231,76,60,0.2)", background: "transparent", color: "#c0564a", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
-                          onMouseOver={e => { e.currentTarget.style.background = "rgba(231,76,60,0.08)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.5)"; e.currentTarget.style.color = "var(--red)"; }}
-                          onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.2)"; e.currentTarget.style.color = "#c0564a"; }}>
-                          Remove
-                        </button>
-                      </>
+                            <button onClick={() => { if (window.confirm(`Remove your ${l.item_name || "item"} listing? This cannot be undone.`)) closeListing(l.id); }}
+                              style={{ padding: "4px 12px", borderRadius: "6px", border: "1px solid rgba(231,76,60,0.2)", background: "transparent", color: "#c0564a", fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
+                              onMouseOver={e => { e.currentTarget.style.background = "rgba(231,76,60,0.08)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.5)"; e.currentTarget.style.color = "var(--red)"; }}
+                              onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.2)"; e.currentTarget.style.color = "#c0564a"; }}>
+                              Remove
+                            </button>
+                          </>
+                        )}
+                        {!isOwn && user && (
+                          <button onClick={() => { setReportModal(l); setReportReason(""); }}
+                            style={{ padding: "4px 10px", borderRadius: "6px", border: "1px solid transparent", background: "transparent", color: "var(--text-dim)", fontSize: "12px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", opacity: 0.45, transition: "all 0.15s" }}
+                            onMouseOver={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.3)"; }}
+                            onMouseOut={e => { e.currentTarget.style.opacity = "0.45"; e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.borderColor = "transparent"; }}>
+                            ⚑ Report
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Price panel */}
+                  <div style={{ textAlign: "right", flexShrink: 0, minWidth: "130px", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
+                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 800, color: "var(--gold)", lineHeight: 1, letterSpacing: "-0.5px" }}>
+                      {compactGP(displayPrice)}
+                    </div>
+                    <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--gold-dim)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "2px" }}>GP</div>
+                    <div style={{ fontSize: "12px", color: "#4a6070" }}>
+                      {(displayPrice || 0).toLocaleString("en-GB")}
+                    </div>
+                    {l.quantity > 1 && (
+                      <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "2px" }}>
+                        {compactGP(price)} <span style={{ color: "#4a6070" }}>each</span>
+                      </div>
+                    )}
+                    {total > MAX_CASH && total > 0 && (
+                      <div style={{ fontSize: "11px", color: "var(--gold-dim)", marginTop: "4px", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "4px", padding: "2px 6px" }}>
+                        Above max cash
+                      </div>
                     )}
                   </div>
-                </div>
 
-                {/* Price column */}
-                <div style={{ textAlign: "right", flexShrink: 0, minWidth: "120px" }}>
-                  <div style={{ fontFamily: "'Cinzel', serif", fontSize: "18px", fontWeight: 700, color: "var(--gold)", lineHeight: 1.1 }}>
-                    {compactGP(displayPrice)} <span style={{ fontSize: "13px", fontWeight: 400 }}>gp</span>
-                  </div>
-                  <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "3px" }}>
-                    {(displayPrice || 0).toLocaleString("en-GB")} gp
-                  </div>
-                  {l.quantity > 1 && (
-                    <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "2px" }}>
-                      {compactGP(price)} each
-                    </div>
-                  )}
-                  {total > MAX_CASH && total > 0 && (
-                    <div style={{ fontSize: "11px", color: "var(--gold-dim)", marginTop: "3px" }}>Above max cash</div>
-                  )}
                 </div>
               </div>
             );

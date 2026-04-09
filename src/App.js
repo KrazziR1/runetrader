@@ -5449,6 +5449,9 @@ export default function RuneTrader() {
       return new Date(newest) > new Date(lastSeen);
     } catch { return false; }
   });
+  const [unseenMarketAlerts, setUnseenMarketAlerts] = useState(false);
+  const [lastSeenAlertCount, setLastSeenAlertCount] = useState(() => { try { return parseInt(localStorage.getItem("rt_alerts_last_seen_count") || "0"); } catch { return 0; } });
+  const [lastSeenMarginCount, setLastSeenMarginCount] = useState(() => { try { return parseInt(localStorage.getItem("rt_marginwatch_last_seen_count") || "0"); } catch { return 0; } });
   const [natureRunePrice, setNatureRunePrice] = useState(0);
   const [customNatureRunePrice, setCustomNatureRunePrice] = useState(""); // empty = use live price
   const [alchShowLosses, setAlchShowLosses] = useState(false);
@@ -5705,6 +5708,16 @@ export default function RuneTrader() {
   const [mwatchSearch, setMwatchSearch] = useState("");
   const [mwatchSortCol, setMwatchSortCol] = useState("pct");
   const [mwatchSortDir, setMwatchSortDir] = useState("asc"); // asc = most negative (crashed) first within group
+
+  // ── Market tab notification dot — fires when unseen alerts or margin watch items appear ──
+  useEffect(() => {
+    const currentAlertCount = alerts.filter(a => a.triggered).length + smartEvents.length;
+    const currentMarginCount = Object.values(marginCompression).filter(c => c.direction !== "recover").length;
+    const isViewingAlerts = activeTab === "market" && marketInnerView === "alerts";
+    const isViewingMargin = activeTab === "market" && marketInnerView === "marginwatch";
+    if (!isViewingAlerts && currentAlertCount > lastSeenAlertCount) { setUnseenMarketAlerts(true); }
+    if (!isViewingMargin && currentMarginCount > lastSeenMarginCount) { setUnseenMarketAlerts(true); }
+  }, [alerts, smartEvents, marginCompression]); // eslint-disable-line
 
   function saveSmartAlertSettings(key, val) {
     const updated = { ...smartAlertSettings, [key]: val };
@@ -8378,7 +8391,7 @@ RULES:
               <div className="nav-tabs">
 
                 {[
-                  { v: "flips",      label: "Market", dropdown: true },
+                  { v: "flips",      label: "Market", dropdown: true, newDot: unseenMarketAlerts },
                   { v: "alch",       label: "High Alch" },
                   { v: "recipes",    label: "Recipes", badge: "NEW" },
                   { v: "coffer",     label: "Death's Coffer" },
@@ -8412,10 +8425,11 @@ RULES:
                         <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, background: "var(--bg2)", border: "1px solid var(--border)", borderRadius: "8px", minWidth: "160px", overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)", zIndex: 200 }}>
                           {[
                             { v: "items",       label: "Items" },
-                            { v: "marginwatch", label: "Margin Watch", badge: Object.values(marginCompression).filter(c => c.direction !== "recover").length },
-                            { v: "alerts",      label: "Alerts", badge: alerts.filter(a => a.triggered).length + smartEvents.length },
+                            { v: "marginwatch", label: "Margin Watch", badge: Object.values(marginCompression).filter(c => c.direction !== "recover").length, onSelect: () => { setUnseenMarketAlerts(false); const c = Object.values(marginCompression).filter(c => c.direction !== "recover").length; setLastSeenMarginCount(c); try { localStorage.setItem("rt_marginwatch_last_seen_count", String(c)); } catch {} } },
+                            { v: "alerts",      label: "Alerts", badge: alerts.filter(a => a.triggered).length + smartEvents.length, onSelect: () => { setUnseenMarketAlerts(false); const c = alerts.filter(a => a.triggered).length + smartEvents.length; setLastSeenAlertCount(c); try { localStorage.setItem("rt_alerts_last_seen_count", String(c)); } catch {} } },
                           ].map(item => (
                             <button key={item.v}
+                              onClick={() => { handleSetActiveTab("market"); setMarketSubTab("flips"); setMarketInnerView(item.v); setMarketDropdownOpen(false); if (item.onSelect) item.onSelect(); }}
                               style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", padding: "9px 14px", background: marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none", border: "none", color: marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)", fontSize: "15px", fontFamily: "DM Sans, sans-serif", cursor: "pointer", transition: "background 0.1s", textAlign: "left", fontWeight: 500 }}
                               onMouseOver={e => { e.currentTarget.style.background = "var(--bg3)"; e.currentTarget.style.color = "var(--text)"; }}
                               onMouseOut={e => { e.currentTarget.style.background = marketInnerView === item.v && activeTab === "market" ? "rgba(201,168,76,0.07)" : "none"; e.currentTarget.style.color = marketInnerView === item.v && activeTab === "market" ? "var(--gold)" : "var(--text-dim)"; }}
