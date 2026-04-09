@@ -117,3 +117,12 @@ export function playLoginChime() {
 export function initAudio() {
   try { getCtx(); } catch {}
 }
+
+// ── Trade watch alert (shop bell — two sharp triangle tones) ──────────────────
+export function playTradeAlert() {
+  if (isMuted()) return;
+  const c = getCtx();
+  const now = c.currentTime;
+  playTone(1318, now,        0.12, "triangle", 0.16);
+  playTone(1760, now + 0.10, 0.18, "triangle", 0.13);
+}

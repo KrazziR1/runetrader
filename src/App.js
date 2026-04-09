@@ -9,7 +9,7 @@ import { supabase } from "./supabaseClient";
 import SettingsPage from "./SettingsPage";
 import { xpToLevel, xpProgress, xpToNextLevel, calcFlipXP, getLevelTitle, getCelebrationTier, checkNewAchievements, ACHIEVEMENTS } from "./XPSystem";
 import { generateDailyQuests, updateQuestProgress, calcQuestRewards, todayStr } from "./QuestSystem";
-import { initAudio, playLoginChime, playCoinClink, playBigProfit, playEpicProfit, playLevelUp, playQuestComplete, playNudge, toggleMute, getSoundMuted } from "./SoundEngine";
+import { initAudio, playLoginChime, playCoinClink, playBigProfit, playEpicProfit, playLevelUp, playQuestComplete, playNudge, playTradeAlert, toggleMute, getSoundMuted } from "./SoundEngine";
 
 // ── Changelog — add new entries at the top, bump DEPLOY_KEY on each deploy ──
 const DEPLOY_KEY = "runetrader_seen_deploy_v5"; // change this string on each deploy to trigger the modal
@@ -5450,6 +5450,7 @@ export default function RuneTrader() {
     } catch { return false; }
   });
   const [unseenMarketAlerts, setUnseenMarketAlerts] = useState(false);
+  const [hasWatchAlert, setHasWatchAlert] = useState(false); // amber bell — watched item was listed
   const [lastSeenAlertCount, setLastSeenAlertCount] = useState(() => { try { return parseInt(localStorage.getItem("rt_alerts_last_seen_count") || "0"); } catch { return 0; } });
   const [lastSeenMarginCount, setLastSeenMarginCount] = useState(() => { try { return parseInt(localStorage.getItem("rt_marginwatch_last_seen_count") || "0"); } catch { return 0; } });
   const [natureRunePrice, setNatureRunePrice] = useState(0);
@@ -6913,6 +6914,14 @@ RULES:
   const onNewListings = useCallback((ts) => {
     try { localStorage.setItem("rt_tradeboard_newest_ts", ts); } catch {}
     if (marketSubTab !== "tradeboard") setHasNewTradeListings(true);
+  }, [marketSubTab]);
+
+  // Callback for when a watched item gets listed — fires amber bell + sound
+  const onWatchAlert = useCallback(() => {
+    if (marketSubTab !== "tradeboard") {
+      setHasWatchAlert(true);
+      playTradeAlert();
+    }
   }, [marketSubTab]);
   const autoClosedFlips = autoFlipsLog.map(f => ({ item: f.item_name, totalProfit: f.profit || 0, date: f.sell_completed_at }));
   const allClosedFlips = [...closedFlips, ...autoClosedFlips];
@@ -8395,8 +8404,8 @@ RULES:
                   { v: "alch",       label: "High Alch" },
                   { v: "recipes",    label: "Recipes", badge: "NEW" },
                   { v: "coffer",     label: "Death's Coffer" },
-                  { v: "tradeboard", label: "Trade Board", newDot: hasNewTradeListings },
-                ].map(({ v, label, dropdown, badge, newDot }) => (
+                  { v: "tradeboard", label: "Trade Board", newDot: hasNewTradeListings, watchAlert: hasWatchAlert },
+                ].map(({ v, label, dropdown, badge, newDot, watchAlert }) => (
                   <div key={v} style={{ position: "relative" }}>
                     <button
                       className={`nav-tab ${activeTab === "market" && marketSubTab === v ? "active" : ""}`}
@@ -8406,6 +8415,7 @@ RULES:
           handleSetActiveTab("market"); setMarketSubTab(v); setPicksMode(false); setMarketDropdownOpen(false);
           if (v === "tradeboard") {
             setHasNewTradeListings(false);
+            setHasWatchAlert(false);
             try { localStorage.setItem("rt_tradeboard_last_seen", new Date().toISOString()); } catch {}
           }
         }
@@ -8415,7 +8425,13 @@ RULES:
                         ? (marketInnerView === "marginwatch" ? "Margin Watch" : marketInnerView === "alerts" ? "Alerts" : "Market")
                         : label}
                       {badge && <span style={{ fontSize: "9px", fontWeight: 700, color: "#2ecc71", background: "rgba(46,204,113,0.12)", border: "1px solid rgba(46,204,113,0.3)", borderRadius: "3px", padding: "1px 4px", letterSpacing: "0.5px" }}>{badge}</span>}
-                      {newDot && <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2ecc71", display: "inline-block", marginLeft: "2px", marginBottom: "6px", flexShrink: 0 }} />}
+                      {watchAlert ? (
+                        <span style={{ width: "16px", height: "16px", borderRadius: "50%", background: "#c9a84c", display: "inline-flex", alignItems: "center", justifyContent: "center", marginLeft: "3px", marginBottom: "5px", flexShrink: 0 }}>
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="#000"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        </span>
+                      ) : newDot ? (
+                        <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2ecc71", display: "inline-block", marginLeft: "2px", marginBottom: "6px", flexShrink: 0 }} />
+                      ) : null}
                       {dropdown && <span style={{ fontSize: "9px", opacity: 0.6, transition: "transform 0.15s", display: "inline-block", transform: marketDropdownOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>}
                     </button>
                     {dropdown && marketDropdownOpen && (
@@ -9768,6 +9784,7 @@ RULES:
                     supabase={supabase}
                     showToast={showToast}
                     onNewListings={onNewListings}
+                    onWatchAlert={onWatchAlert}
                   />
                 )}
 

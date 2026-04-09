@@ -118,7 +118,7 @@ function inferAmmoOrRune(itemName) {
   return "rune";
 }
 
-export default function TradeBoard({ user, supabase, showToast, onNewListings }) {
+export default function TradeBoard({ user, supabase, showToast, onNewListings, onWatchAlert }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
@@ -196,10 +196,27 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
           const newest = data.reduce((a, b) => new Date(a.created_at) > new Date(b.created_at) ? a : b);
           if (newest?.created_at) onNewListings(newest.created_at);
         }
+        // Check if any watched items are now listed — fires amber bell + sound
+        if (data?.length > 0 && onWatchAlert) {
+          try {
+            const watches = JSON.parse(localStorage.getItem("rt_trade_watches") || "[]");
+            const lastChecked = parseInt(localStorage.getItem("rt_watches_last_checked") || "0");
+            const hasMatch = watches.some(w =>
+              data.some(l =>
+                l.item_name?.toLowerCase() === w.item_name?.toLowerCase() &&
+                (w.type === "Either" || l.type === w.type) &&
+                (!w.maxPrice || l.price <= w.maxPrice) &&
+                new Date(l.created_at).getTime() > lastChecked
+              )
+            );
+            if (hasMatch) onWatchAlert();
+            localStorage.setItem("rt_watches_last_checked", Date.now().toString());
+          } catch {}
+        }
       }
     } catch (e) { console.error(e); }
     finally { if (showSpinner) setLoading(false); }
-  }, [supabase, onNewListings]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [supabase, onNewListings, onWatchAlert]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleItemSearch(val) {
     setItemSearch(val);
@@ -580,8 +597,11 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
 
             return (
               <div key={l.id} style={{
-                background: isOwn ? "linear-gradient(135deg, #111e14 0%, #111620 60%)" : "#0f1319",
-                border: `1px solid ${isOwn ? "rgba(201,168,76,0.22)" : "#1c2a3a"}`,
+                background: "#0f1319",
+                borderTop: `1px solid ${isOwn ? "rgba(201,168,76,0.22)" : "#1c2a3a"}`,
+                borderRight: `1px solid ${isOwn ? "rgba(201,168,76,0.22)" : "#1c2a3a"}`,
+                borderBottom: `1px solid ${isOwn ? "rgba(201,168,76,0.22)" : "#1c2a3a"}`,
+                borderLeft: `3px solid ${l.type === "WTS" ? "rgba(231,76,60,0.6)" : "rgba(46,204,113,0.6)"}`,
                 borderRadius: "14px",
                 overflow: "hidden",
                 transition: "border-color 0.15s, box-shadow 0.15s",
@@ -590,8 +610,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
                 onMouseOver={e => { e.currentTarget.style.borderColor = isOwn ? "rgba(201,168,76,0.45)" : "rgba(255,255,255,0.12)"; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.4)"; }}
                 onMouseOut={e => { e.currentTarget.style.borderColor = isOwn ? "rgba(201,168,76,0.22)" : "#1c2a3a"; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.3)"; }}>
 
-                {/* Coloured top accent bar */}
-                <div style={{ height: "2px", background: l.type === "WTS" ? "linear-gradient(90deg, rgba(231,76,60,0.6), transparent)" : "linear-gradient(90deg, rgba(46,204,113,0.6), transparent)" }} />
+
 
                 <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "64px 1fr auto", gap: "16px", alignItems: "start" }}>
 
@@ -629,12 +648,13 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
                       <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-dim)", background: "var(--bg4)", border: "1px solid var(--border)", borderRadius: "5px", padding: "2px 8px", letterSpacing: "0.3px" }}>{cat}</span>
                       {l.rsn && (
                         <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>
-                          👤 <span style={{ color: "var(--text)", fontWeight: 600 }}>{l.rsn}</span>
+                          RSN: <span style={{ color: "var(--text)", fontWeight: 600 }}>{l.rsn}</span>
                         </span>
                       )}
                       {l.discord && (
-                        <span style={{ fontSize: "13px", color: "var(--text-dim)" }}>
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="#7289da" style={{ marginRight: "4px", verticalAlign: "middle" }}><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                        <span style={{ fontSize: "13px", color: "var(--text-dim)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                          Discord:
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="#7289da"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
                           <span style={{ color: "#7289da", fontWeight: 500 }}>{l.discord}</span>
                         </span>
                       )}
@@ -697,17 +717,17 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
                   </div>
 
                   {/* Price panel */}
-                  <div style={{ textAlign: "right", flexShrink: 0, minWidth: "130px", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
-                    <div style={{ fontFamily: "'Cinzel', serif", fontSize: "22px", fontWeight: 800, color: "var(--gold)", lineHeight: 1, letterSpacing: "-0.5px" }}>
-                      {compactGP(displayPrice)}
+                  <div style={{ textAlign: "right", flexShrink: 0, minWidth: "140px", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "3px", paddingLeft: "16px", borderLeft: "1px solid #1c2a3a" }}>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "5px" }}>
+                      <span style={{ fontFamily: "'Cinzel', serif", fontSize: "24px", fontWeight: 800, color: "var(--gold)", lineHeight: 1, letterSpacing: "-0.5px" }}>{compactGP(displayPrice)}</span>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--gold-dim)", letterSpacing: "0.5px" }}>GP</span>
                     </div>
-                    <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--gold-dim)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "2px" }}>GP</div>
-                    <div style={{ fontSize: "12px", color: "#4a6070" }}>
-                      {(displayPrice || 0).toLocaleString("en-GB")}
+                    <div style={{ fontSize: "12px", color: "#4a6070", fontVariantNumeric: "tabular-nums" }}>
+                      {(displayPrice || 0).toLocaleString("en-GB")} gp
                     </div>
-                    {l.quantity > 1 && (
+                    {l.quantity > 1 && price !== displayPrice && (
                       <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "2px" }}>
-                        {compactGP(price)} <span style={{ color: "#4a6070" }}>each</span>
+                        {compactGP(price)} <span style={{ color: "#4a6070" }}>/ item</span>
                       </div>
                     )}
                     {total > MAX_CASH && total > 0 && (
