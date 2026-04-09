@@ -41,7 +41,7 @@
 - Flip Queue, Rotation Picks, Session Intel, Risk Exposure, Daily GP Goal
 - Portfolio page — period selector, win rate donut, per-item P&L, best/worst items
 - Alerts page — price alerts, smart alert feed, clickable items open chart modal
-- Changelog page + What's New modal (DEPLOY_KEY v5, shows v1.3 on next login)
+- Changelog page + What's New modal (DEPLOY_KEY v5) — updated to v1.4, trimmed to user-facing entries only
 - Login streak tracking + streak banner
 - Shareable item URLs — `/item/abyssal-whip`
 - Shareable flip cards — canvas-rendered card on profitable close
@@ -68,6 +68,10 @@
 - Remove confirmation dialog to prevent accidental deletion
 - Self-contained bundle toggle (no App.js CSS dependency)
 - Separate backdrop + modal pattern (fixes modal closing on field click)
+- Remove listing confirmation dialog
+- Total/Each toggle removed — multi-qty listings always show total with "X each" subtitle
+- Filter panel redesigned — inline layout, no box, label/controls rows
+- Category pills redesigned — borderless, warm gold active state
 - Full null/error safety on all fields, sort, and display
 
 ### Flip Exclusion System (shipped April 8, 2026)
@@ -82,12 +86,12 @@
 - Info banner above open positions explaining the feature
 
 ### Header & Navigation (April 8, 2026)
-- Alpha banner: slim green strip with ALPHA badge, What's New button, Send Feedback link
+- Alpha banner: slim green strip with ALPHA badge, What's New button, Send Feedback link — text bumped to 14px, buttons 13px
 - Header top row: 68px, stronger gold border/shadow
 - Nav tab row: 46px, 15px/600 font, visible border on hover, gold active state
 - Trading Terminal: plain gold text in nav row far-right, intermittent `terminalTextGlow` pulse every 15s
 - Upgrade to Pro button (blue, free users only) in nav row far-right
-- Support Development link in nav row far-right
+- Support Development link in nav row far-right — brightened to gold-light (#e8c96a), full opacity
 - Player card button: avatar circle (30px, gold border), Lv.X in Cinzel 900, XP progress bar, quest count — avatar click opens profile dropdown, rest opens player card
 - Profile dropdown: 15px username, plan status in green/gold/amber
 - Settings X button added to close settings page
@@ -101,6 +105,10 @@
 - Danger Zone: red-bordered section for destructive actions
 - Font sizes bumped throughout (nav 15px, titles 20px, row labels 15px)
 - Mobile: sidebar collapses to horizontal tab bar
+
+### UI Consistency Pass (April 8, 2026)
+- Filter buttons in High Alch, Recipes, and Margin Watch bumped to match Market tab style — 14px, rounded pill, bg3 background
+- Show unprofitable / hide no volume labels bumped to 14px
 
 ### Bug Fixes & Code Quality (April 8, 2026)
 - `mapFlipRow` now carries `excluded` flag — survives page reload and Supabase re-sync
