@@ -220,6 +220,8 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
 
   async function addWatch(itemName) {
     if (!user) return showToast("Sign in to set up watch alerts", "info");
+    if (!itemName?.trim()) return showToast("Please enter an item name", "error");
+    itemName = itemName.trim();
     const maxPrice = watchForm.maxPrice ? parseGPInput(watchForm.maxPrice) : null;
     // Prevent duplicate watch for same item + type
     if (watches.some(w => w.item_name.toLowerCase() === itemName.toLowerCase() && w.type === watchForm.type)) {

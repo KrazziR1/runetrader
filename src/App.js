@@ -4872,7 +4872,27 @@ export default function RuneTrader() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
+    let profileFetchedForUser = null; // prevents double fetch when SIGNED_IN fires after getSession
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      // Fetch profile on initial load — covers page refresh with existing session
+      if (session?.user?.id) {
+        profileFetchedForUser = session.user.id;
+        supabase.from("user_profiles")
+          .select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter, discord_id")
+          .eq("user_id", session.user.id).single()
+          .then(({ data }) => {
+            if (data?.ref_code) setUserRefCode(data.ref_code);
+            if (data?.discord_id) setDiscordUsername(data.discord_id);
+            if (data?.sync_paused) { setSyncPaused(true); setSyncPausedAt(data.sync_paused_at ? new Date(data.sync_paused_at) : new Date()); }
+            if (data?.is_pro) { setIsPro(true); return; }
+            if (data?.trial_ends_at) {
+              const daysLeft = Math.ceil((new Date(data.trial_ends_at) - Date.now()) / 86400000);
+              if (daysLeft > 0) { setIsOnTrial(true); setTrialDaysLeft(daysLeft); setIsPro(true); }
+            }
+          });
+      }
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) setDemoMode(false); // exit demo when signed in
@@ -4931,8 +4951,9 @@ export default function RuneTrader() {
             if (el) { const r = el.getBoundingClientRect(); setTourRects({ top: r.top, left: r.left, width: r.width, height: r.height }); }
             setTourStep(0);
           }, 800);
-        } else if (session?.user?.id) {
+        } else if (session?.user?.id && session.user.id !== profileFetchedForUser) {
           // Load ref code, pro status, trial, and sync pause state for returning users
+          // (skip if getSession already fetched profile for this user)
           supabase.from("user_profiles").select("ref_code, is_pro, trial_ends_at, sync_paused, sync_paused_at, is_supporter, discord_id").eq("user_id", session.user.id).single()
             .then(({ data }) => {
               if (data?.ref_code) setUserRefCode(data.ref_code);
@@ -5721,7 +5742,7 @@ export default function RuneTrader() {
     const isViewingMargin = activeTab === "market" && marketInnerView === "marginwatch";
     if (!isViewingAlerts && currentAlertCount > lastSeenAlertCount) { setUnseenMarketAlerts(true); }
     if (!isViewingMargin && currentMarginCount > lastSeenMarginCount) { setUnseenMarketAlerts(true); }
-  }, [alerts, smartEvents, marginCompression]); // eslint-disable-line
+  }, [alerts, smartEvents, marginCompression, activeTab, marketInnerView, lastSeenAlertCount, lastSeenMarginCount]); // eslint-disable-line
 
   function saveSmartAlertSettings(key, val) {
     const updated = { ...smartAlertSettings, [key]: val };
