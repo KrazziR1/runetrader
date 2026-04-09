@@ -1056,9 +1056,9 @@ const STYLES = `
   .toast.info { background: #0f1218; border: 1px solid var(--gold-dim); color: var(--gold); }
 
   /* ALPHA BANNER */
-  .alpha-banner { background: #0a0d08; border-bottom: 1px solid rgba(46,204,113,0.15); padding: 5px 32px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 12px; color: var(--text-dim); }
-  .alpha-badge { background: rgba(46,204,113,0.12); border: 1px solid rgba(46,204,113,0.3); color: var(--green); border-radius: 20px; padding: 2px 10px; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
-  .feedback-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px; padding: 2px 10px; font-size: 11px; cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+  .alpha-banner { background: #0a0d08; border-bottom: 1px solid rgba(46,204,113,0.15); padding: 7px 32px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 14px; color: var(--text-dim); }
+  .alpha-badge { background: rgba(46,204,113,0.12); border: 1px solid rgba(46,204,113,0.3); color: var(--green); border-radius: 20px; padding: 3px 12px; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+  .feedback-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px; padding: 4px 12px; font-size: 13px; cursor: pointer; font-family: "DM Sans", sans-serif; transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
   .feedback-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
 
   /* MOBILE */
@@ -3565,7 +3565,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     {[["1", "1hr"], ["6", "6hr"], ["24", "24hr"], ["168", "7d"]].map(([val, label]) => (
                       <button key={val}
                         className={`filter-btn${advFilters.maxLastTrade === val ? " active" : ""}`}
-                        style={{ fontSize: "11px", padding: "4px 10px" }}
+                        style={{ fontSize: "14px", padding: "7px 16px" }}
                         onClick={() => setAdv("maxLastTrade", advFilters.maxLastTrade === val ? "" : val)}>
                         {label}
                       </button>
@@ -3588,7 +3588,7 @@ function MerchantMode({ items, allItems, flipsLog, autoFlipsLog = [], manualPosi
                     {[["all", "All"], ["members", "Members"], ["f2p", "F2P"], ["highvol", "High Volume"]].map(([val, label]) => (
                       <button key={val}
                         className={`filter-btn${filter === val ? " active" : ""}`}
-                        style={{ fontSize: "11px", padding: "4px 10px" }}
+                        style={{ fontSize: "14px", padding: "7px 16px" }}
                         onClick={() => setFilter(filter === val ? "all" : val)}>
                         {label}
                       </button>
@@ -8425,9 +8425,9 @@ RULES:
                   </button>
                 )}
                 <a href="https://buymeacoffee.com/runetrader" target="_blank" rel="noopener noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 6px", border: "none", background: "none", color: "var(--gold)", fontSize: "13px", fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans', sans-serif", transition: "opacity 0.15s", whiteSpace: "nowrap", opacity: 0.75 }}
-                  onMouseEnter={e => { e.currentTarget.style.opacity = "1"; }}
-                  onMouseLeave={e => { e.currentTarget.style.opacity = "0.75"; }}>
+                  style={{ display: "inline-flex", alignItems: "center", gap: "5px", padding: "4px 6px", border: "none", background: "none", color: "#e8c96a", fontSize: "13px", fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans', sans-serif", transition: "color 0.15s", whiteSpace: "nowrap" }}
+                  onMouseEnter={e => { e.currentTarget.style.color = "#ffd980"; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "#e8c96a"; }}>
                   ☕ Support Development
                 </a>
               </div>
@@ -8986,12 +8986,12 @@ RULES:
                         <div style={{ display: "flex", gap: "4px" }}>
                           {[{id:"all",label:"All"},{id:"f2p",label:"F2P"},{id:"members",label:"Members"}].map(m => (
                             <button key={m.id} onClick={() => setAlchMembersFilter(m.id)}
-                              style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: alchMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: alchMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "transparent", color: alchMembersFilter === m.id ? "var(--green)" : "var(--text-dim)" }}>
+                              style={{ padding: "7px 16px", borderRadius: "20px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: alchMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: alchMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "var(--bg3)", color: alchMembersFilter === m.id ? "var(--green)" : "var(--text-dim)", transition: "all 0.15s" }}>
                               {m.label}
                             </button>
                           ))}
                         </div>
-                        <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "14px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
                           <input type="checkbox" checked={alchShowLosses} onChange={e => setAlchShowLosses(e.target.checked)} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
                           Show unprofitable
                         </label>
@@ -9255,14 +9255,14 @@ RULES:
                           <div style={{ display: "flex", gap: "4px" }}>
                             {[{id:"all",label:"All"},{id:"f2p",label:"F2P"},{id:"members",label:"Members"}].map(m => (
                               <button key={m.id} onClick={() => { setRecipeMembersFilter(m.id); setRecipeRowsShown(100); }}
-                                style={{ padding: "4px 10px", borderRadius: "5px", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: recipeMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: recipeMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "transparent", color: recipeMembersFilter === m.id ? "var(--green)" : "var(--text-dim)" }}>
+                                style={{ padding: "7px 16px", borderRadius: "20px", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "DM Sans, sans-serif", border: recipeMembersFilter === m.id ? "1px solid rgba(46,204,113,0.4)" : "1px solid var(--border)", background: recipeMembersFilter === m.id ? "rgba(46,204,113,0.08)" : "var(--bg3)", color: recipeMembersFilter === m.id ? "var(--green)" : "var(--text-dim)", transition: "all 0.15s" }}>
                                 {m.label}
                               </button>
                             ))}
                           </div>
                           <div style={{ width: "1px", height: "20px", background: "var(--border)" }} />
                           {/* Hide no volume */}
-                          <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
+                          <label style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "14px", color: "var(--text-dim)", cursor: "pointer", userSelect: "none" }}>
                             <input type="checkbox" checked={recipeHideNoVolume} onChange={e => { setRecipeHideNoVolume(e.target.checked); setRecipeRowsShown(100); }} style={{ accentColor: "var(--gold)", cursor: "pointer" }} />
                             Hide no volume
                           </label>
@@ -10019,7 +10019,7 @@ RULES:
                         {[["1", "1hr"], ["6", "6hr"], ["24", "24hr"], ["168", "7d"]].map(([val, label]) => (
                           <button key={val}
                             className={`filter-btn${advFilters.maxLastTrade === val ? " active" : ""}`}
-                            style={{ fontSize: "11px", padding: "4px 10px" }}
+                            style={{ fontSize: "14px", padding: "7px 16px" }}
                             onClick={() => setAdv("maxLastTrade", advFilters.maxLastTrade === val ? "" : val)}>
                             {label}
                           </button>
