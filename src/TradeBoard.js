@@ -118,7 +118,7 @@ function inferAmmoOrRune(itemName) {
   return "rune";
 }
 
-export default function TradeBoard({ user, supabase, showToast }) {
+export default function TradeBoard({ user, supabase, showToast, onNewListings }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
@@ -190,7 +190,14 @@ export default function TradeBoard({ user, supabase, showToast }) {
         .from("trade_listings").select("*").eq("active", true)
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false });
-      if (!error) setListings(data || []);
+      if (!error) {
+        setListings(data || []);
+        // Signal new listings to parent (newest created_at)
+        if (data?.length > 0 && onNewListings) {
+          const newest = data.reduce((a, b) => new Date(a.created_at) > new Date(b.created_at) ? a : b);
+          if (newest?.created_at) onNewListings(newest.created_at);
+        }
+      }
     } catch (e) { console.error(e); }
     finally { if (showSpinner) setLoading(false); }
   }, [supabase]);
@@ -466,25 +473,25 @@ export default function TradeBoard({ user, supabase, showToast }) {
 
       {/* Expanded filters panel */}
       {showFilters && (
-        <div style={{ background: "#0e1420", border: "1px solid #1c2a3a", borderRadius: "12px", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div style={{ borderTop: "1px solid var(--border)", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "18px" }}>
 
-          {/* Category pills */}
-          <div>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#8fa0b0", marginBottom: "12px", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.3px" }}>Category</div>
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          {/* Category */}
+          <div style={{ display: "flex", alignItems: "baseline", gap: "16px", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "12px", fontWeight: 700, color: "#4a6070", textTransform: "uppercase", letterSpacing: "1px", fontFamily: "'DM Sans', sans-serif", flexShrink: 0, minWidth: "70px" }}>Category</span>
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
               {CATEGORIES.map(c => (
                 <button key={c} onClick={() => setFilter(c)}
                   style={{
-                    padding: "7px 16px", borderRadius: "20px", cursor: "pointer",
-                    fontFamily: "'DM Sans', sans-serif", fontSize: "14px", fontWeight: filter === c ? 700 : 500,
-                    transition: "all 0.15s",
-                    border: filter === c ? "1px solid rgba(201,168,76,0.5)" : "1px solid #1c2a3a",
-                    background: filter === c ? "rgba(201,168,76,0.12)" : "#111620",
-                    color: filter === c ? "var(--gold)" : "#6a8099",
-                    boxShadow: filter === c ? "0 0 10px rgba(201,168,76,0.08)" : "none",
+                    padding: "5px 13px", borderRadius: "6px", cursor: "pointer",
+                    fontFamily: "'DM Sans', sans-serif", fontSize: "13px",
+                    fontWeight: filter === c ? 700 : 500,
+                    transition: "all 0.12s",
+                    border: `1px solid ${filter === c ? "rgba(201,168,76,0.35)" : "var(--border)"}`,
+                    background: filter === c ? "rgba(201,168,76,0.1)" : "transparent",
+                    color: filter === c ? "var(--gold)" : "var(--text-dim)",
                   }}
-                  onMouseOver={e => { if (filter !== c) { e.currentTarget.style.borderColor = "rgba(201,168,76,0.25)"; e.currentTarget.style.color = "#a8bccb"; } }}
-                  onMouseOut={e => { if (filter !== c) { e.currentTarget.style.borderColor = "#1c2a3a"; e.currentTarget.style.color = "#6a8099"; } }}>
+                  onMouseOver={e => { if (filter !== c) { e.currentTarget.style.borderColor = "rgba(201,168,76,0.2)"; e.currentTarget.style.color = "var(--text)"; } }}
+                  onMouseOut={e => { if (filter !== c) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; } }}>
                   {c}
                 </button>
               ))}
@@ -492,25 +499,25 @@ export default function TradeBoard({ user, supabase, showToast }) {
           </div>
 
           {/* Price range */}
-          <div>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#8fa0b0", marginBottom: "12px", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.3px" }}>Price per item</div>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+            <span style={{ fontSize: "12px", fontWeight: 700, color: "#4a6070", textTransform: "uppercase", letterSpacing: "1px", fontFamily: "'DM Sans', sans-serif", flexShrink: 0, minWidth: "70px" }}>Price</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
               <input value={priceMin} onChange={e => setPriceMin(e.target.value)} placeholder="Min e.g. 100k"
-                style={{ background: "#111620", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "8px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "150px", transition: "border-color 0.15s" }}
+                style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", padding: "7px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "140px", transition: "border-color 0.15s" }}
                 onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
-                onBlur={e => e.target.style.borderColor = "#1c2a3a"} />
-              <span style={{ color: "#3d5060", fontSize: "16px" }}>—</span>
+                onBlur={e => e.target.style.borderColor = "var(--border)"} />
+              <span style={{ color: "var(--text-dim)", fontSize: "14px" }}>—</span>
               <input value={priceMax} onChange={e => setPriceMax(e.target.value)} placeholder="Max e.g. 5m"
-                style={{ background: "#111620", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "8px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "150px", transition: "border-color 0.15s" }}
+                style={{ background: "var(--bg3)", border: "1px solid var(--border)", borderRadius: "7px", padding: "7px 12px", color: "var(--text)", fontSize: "13px", fontFamily: "'DM Sans', sans-serif", outline: "none", width: "140px", transition: "border-color 0.15s" }}
                 onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
-                onBlur={e => e.target.style.borderColor = "#1c2a3a"} />
+                onBlur={e => e.target.style.borderColor = "var(--border)"} />
               {priceMinNum > 0 && <span style={{ fontSize: "13px", color: "var(--gold)", fontWeight: 600 }}>{compactGP(priceMinNum)}</span>}
               {priceMaxNum > 0 && <span style={{ fontSize: "13px", color: "var(--gold)", fontWeight: 600 }}>→ {compactGP(priceMaxNum)}</span>}
               {priceFilterActive && (
                 <button onClick={() => { setPriceMin(""); setPriceMax(""); }}
-                  style={{ background: "none", border: "none", color: "#3d5060", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: "0 4px" }}
+                  style={{ background: "none", border: "none", color: "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", padding: "0" }}
                   onMouseOver={e => e.currentTarget.style.color = "var(--red)"}
-                  onMouseOut={e => e.currentTarget.style.color = "#3d5060"}>
+                  onMouseOut={e => e.currentTarget.style.color = "var(--text-dim)"}>
                   ✕ Clear
                 </button>
               )}
@@ -519,11 +526,11 @@ export default function TradeBoard({ user, supabase, showToast }) {
 
           {/* Clear all */}
           {(filter !== "All" || priceFilterActive) && (
-            <div style={{ borderTop: "1px solid #1c2a3a", paddingTop: "14px" }}>
+            <div>
               <button onClick={() => { setFilter("All"); setPriceMin(""); setPriceMax(""); }}
-                style={{ background: "rgba(231,76,60,0.06)", border: "1px solid rgba(231,76,60,0.2)", borderRadius: "7px", color: "#c0564a", fontSize: "13px", fontWeight: 600, padding: "7px 16px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
-                onMouseOver={e => { e.currentTarget.style.background = "rgba(231,76,60,0.12)"; e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.4)"; }}
-                onMouseOut={e => { e.currentTarget.style.background = "rgba(231,76,60,0.06)"; e.currentTarget.style.color = "#c0564a"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.2)"; }}>
+                style={{ background: "none", border: "none", color: "#c0564a", fontSize: "13px", fontWeight: 600, padding: "0", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+                onMouseOver={e => e.currentTarget.style.color = "var(--red)"}
+                onMouseOut={e => e.currentTarget.style.color = "#c0564a"}>
                 ✕ Clear all filters
               </button>
             </div>

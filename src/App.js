@@ -5411,6 +5411,14 @@ export default function RuneTrader() {
   const [marketSubTab, setMarketSubTab] = useState("flips");
   const [marketInnerView, setMarketInnerView] = useState("items"); // "items" | "marginwatch" | "alerts"
   const [marketDropdownOpen, setMarketDropdownOpen] = useState(false);
+  const [hasNewTradeListings, setHasNewTradeListings] = useState(() => {
+    try {
+      const lastSeen = localStorage.getItem("rt_tradeboard_last_seen");
+      const newest = localStorage.getItem("rt_tradeboard_newest_ts");
+      if (!lastSeen || !newest) return false;
+      return new Date(newest) > new Date(lastSeen);
+    } catch { return false; }
+  });
   const [natureRunePrice, setNatureRunePrice] = useState(0);
   const [customNatureRunePrice, setCustomNatureRunePrice] = useState(""); // empty = use live price
   const [alchShowLosses, setAlchShowLosses] = useState(false);
@@ -8338,20 +8346,27 @@ RULES:
                   { v: "alch",       label: "High Alch" },
                   { v: "recipes",    label: "Recipes", badge: "NEW" },
                   { v: "coffer",     label: "Death's Coffer" },
-                  { v: "tradeboard", label: "Trade Board" },
-                ].map(({ v, label, dropdown, badge }) => (
+                  { v: "tradeboard", label: "Trade Board", newDot: hasNewTradeListings },
+                ].map(({ v, label, dropdown, badge, newDot }) => (
                   <div key={v} style={{ position: "relative" }}>
                     <button
                       className={`nav-tab ${activeTab === "market" && marketSubTab === v ? "active" : ""}`}
                       onClick={() => {
                         if (dropdown) { setMarketDropdownOpen(o => !o); handleSetActiveTab("market"); setMarketSubTab(v); }
-                        else { handleSetActiveTab("market"); setMarketSubTab(v); setPicksMode(false); setMarketDropdownOpen(false); }
+                        else {
+          handleSetActiveTab("market"); setMarketSubTab(v); setPicksMode(false); setMarketDropdownOpen(false);
+          if (v === "tradeboard") {
+            setHasNewTradeListings(false);
+            try { localStorage.setItem("rt_tradeboard_last_seen", new Date().toISOString()); } catch {}
+          }
+        }
                       }}
                       style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       {v === "flips" && activeTab === "market"
                         ? (marketInnerView === "marginwatch" ? "Margin Watch" : marketInnerView === "alerts" ? "Alerts" : "Market")
                         : label}
                       {badge && <span style={{ fontSize: "9px", fontWeight: 700, color: "#2ecc71", background: "rgba(46,204,113,0.12)", border: "1px solid rgba(46,204,113,0.3)", borderRadius: "3px", padding: "1px 4px", letterSpacing: "0.5px" }}>{badge}</span>}
+                      {newDot && <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#2ecc71", display: "inline-block", marginLeft: "2px", marginBottom: "6px", flexShrink: 0 }} />}
                       {dropdown && <span style={{ fontSize: "9px", opacity: 0.6, transition: "transform 0.15s", display: "inline-block", transform: marketDropdownOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>}
                     </button>
                     {dropdown && marketDropdownOpen && (
@@ -9695,6 +9710,10 @@ RULES:
                     user={user}
                     supabase={supabase}
                     showToast={showToast}
+                    onNewListings={(ts) => {
+                      try { localStorage.setItem("rt_tradeboard_newest_ts", ts); } catch {}
+                      if (marketSubTab !== "tradeboard") setHasNewTradeListings(true);
+                    }}
                   />
                 )}
 
