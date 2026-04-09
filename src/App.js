@@ -5050,9 +5050,9 @@ export default function RuneTrader() {
   const [merchantMode, setMerchantMode] = useState(false);
   const [upgradeModal, setUpgradeModal] = useState(null);
   const [isPro, setIsPro] = useState(false);
-  const [isSupporter, setIsSupporter] = useState(false);
+  const [isSupporter, setIsSupporter] = useState(false); // eslint-disable-line no-unused-vars
   const [showSupporterToastState, setShowSupporterToastState] = useState(false);
-  function showSupporterToast() { setShowSupporterToastState(true); setTimeout(() => setShowSupporterToastState(false), 6000); }
+  function showSupporterToast() { setShowSupporterToastState(true); setTimeout(() => setShowSupporterToastState(false), 6000); } // eslint-disable-line no-unused-vars
   const [userRefCode, setUserRefCode] = useState(null);
   const [discordUsername, setDiscordUsername] = useState(null); // linked Discord username from user_profiles
   const [settingsInitialSection, setSettingsInitialSection] = useState(null); // jump to a section on open
