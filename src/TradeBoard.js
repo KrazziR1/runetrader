@@ -149,6 +149,14 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
   });
   const [posting, setPosting] = useState(false);
 
+  // ── Watch system ──
+  const [watches, setWatches] = useState([]);
+  const [watchesLoading, setWatchesLoading] = useState(false);
+  const [showWatches, setShowWatches] = useState(false);
+  const [watchModal, setWatchModal] = useState(null); // item_name string or null
+  const [watchForm, setWatchForm] = useState({ type: "Either", maxPrice: "" });
+  const [savingWatch, setSavingWatch] = useState(false);
+
   useEffect(() => {
     loadListings();
     loadItemNames();
@@ -164,8 +172,65 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
 
   // Reset user-specific state on logout
   useEffect(() => {
-    if (!user) { setMyListings(false); setShowPostForm(false); }
-  }, [user]);
+    if (!user) { setMyListings(false); setShowPostForm(false); setWatches([]); }
+    else loadWatches();
+  }, [user]); // eslint-disable-line
+
+  async function loadWatches() {
+    if (!user) return;
+    setWatchesLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("trade_watches").select("*").eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (!error) {
+        setWatches(data || []);
+        // Sync to localStorage for offline detection
+        try { localStorage.setItem("rt_trade_watches", JSON.stringify(data || [])); } catch {}
+      }
+    } catch (e) { console.error(e); }
+    finally { setWatchesLoading(false); }
+  }
+
+  async function addWatch(itemName) {
+    if (!user) return showToast("Sign in to set up watch alerts", "info");
+    const maxPrice = watchForm.maxPrice ? parseGPInput(watchForm.maxPrice) : null;
+    // Prevent duplicate watch for same item + type
+    if (watches.some(w => w.item_name.toLowerCase() === itemName.toLowerCase() && w.type === watchForm.type)) {
+      return showToast(`You're already watching ${itemName} for ${watchForm.type} listings`, "info");
+    }
+    setSavingWatch(true);
+    try {
+      const { data, error } = await supabase.from("trade_watches").insert({
+        user_id: user.id,
+        item_name: itemName,
+        type: watchForm.type,
+        max_price: maxPrice || null,
+      }).select().single();
+      if (error) throw error;
+      const updated = [data, ...watches];
+      setWatches(updated);
+      try { localStorage.setItem("rt_trade_watches", JSON.stringify(updated)); } catch {}
+      setWatchModal(null);
+      setWatchForm({ type: "Either", maxPrice: "" });
+      showToast(`Watching ${itemName} — you'll be notified when it's listed`, "success");
+    } catch (e) { showToast(e?.message || "Failed to save watch", "error"); }
+    finally { setSavingWatch(false); }
+  }
+
+  async function removeWatch(id) {
+    try {
+      await supabase.from("trade_watches").delete().eq("id", id).eq("user_id", user.id);
+      const updated = watches.filter(w => w.id !== id);
+      setWatches(updated);
+      try { localStorage.setItem("rt_trade_watches", JSON.stringify(updated)); } catch {}
+      showToast("Watch removed", "success");
+    } catch { showToast("Failed to remove watch", "error"); }
+  }
+
+  function isWatching(itemName) {
+    return watches.some(w => w.item_name.toLowerCase() === itemName.toLowerCase());
+  }
 
   // Pre-fill RSN and Discord from profile
   useEffect(() => {
@@ -410,11 +475,19 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
         </div>
         <div style={{ display: "flex", gap: "8px", alignItems: "center", flexShrink: 0 }}>
           {user && (
-            <button onClick={() => setMyListings(m => !m)}
-              style={{ padding: "7px 14px", borderRadius: "8px", border: `1px solid ${myListings ? "var(--gold-dim)" : "var(--border)"}`, background: myListings ? "rgba(201,168,76,0.1)" : "transparent", color: myListings ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
-              My Listings
-              {(() => { const n = listings.filter(l => l.user_id === user?.id).length; return n > 0 ? <span style={{ background: myListings ? "var(--gold)" : "var(--bg4)", color: myListings ? "#000" : "var(--text-dim)", borderRadius: "10px", padding: "0 6px", fontSize: "11px", fontWeight: 700 }}>{n}</span> : null; })()}
-            </button>
+            <>
+              <button onClick={() => setMyListings(m => !m)}
+                style={{ padding: "7px 14px", borderRadius: "8px", border: `1px solid ${myListings ? "var(--gold-dim)" : "var(--border)"}`, background: myListings ? "rgba(201,168,76,0.1)" : "transparent", color: myListings ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                My Listings
+                {(() => { const n = listings.filter(l => l.user_id === user?.id).length; return n > 0 ? <span style={{ background: myListings ? "var(--gold)" : "var(--bg4)", color: myListings ? "#000" : "var(--text-dim)", borderRadius: "10px", padding: "0 6px", fontSize: "11px", fontWeight: 700 }}>{n}</span> : null; })()}
+              </button>
+              <button onClick={() => setShowWatches(w => !w)}
+                style={{ padding: "7px 14px", borderRadius: "8px", border: `1px solid ${showWatches ? "rgba(201,168,76,0.4)" : "var(--border)"}`, background: showWatches ? "rgba(201,168,76,0.1)" : "transparent", color: showWatches ? "var(--gold)" : "var(--text-dim)", fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                My Watches
+                {watches.length > 0 && <span style={{ background: showWatches ? "var(--gold)" : "var(--bg4)", color: showWatches ? "#000" : "var(--text-dim)", borderRadius: "10px", padding: "0 6px", fontSize: "11px", fontWeight: 700 }}>{watches.length}</span>}
+              </button>
+            </>
           )}
           <button onClick={loadListings} title="Refresh"
             style={{ padding: "7px 12px", borderRadius: "8px", border: "1px solid #1c2a3a", background: "transparent", color: "var(--text-dim)", fontSize: "14px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}>
@@ -436,6 +509,44 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
           )}
         </div>
       </div>
+
+      {/* My Watches panel */}
+      {showWatches && user && (
+        <div style={{ background: "#0c1018", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "12px", padding: "16px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span style={{ fontFamily: "'Cinzel', serif", fontSize: "14px", fontWeight: 700, color: "var(--gold)" }}>My Watches</span>
+              <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>— get notified when a watched item is listed</span>
+            </div>
+          </div>
+          {watchesLoading ? (
+            <div style={{ fontSize: "13px", color: "var(--text-dim)", padding: "8px 0" }}>Loading...</div>
+          ) : watches.length === 0 ? (
+            <div style={{ fontSize: "13px", color: "var(--text-dim)", fontStyle: "italic", padding: "8px 0" }}>
+              No watches yet. Search for an item and click the bell icon to get notified when it's listed.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {watches.map(w => (
+                <div key={w.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", background: "#111620", borderRadius: "8px", border: "1px solid #1c2a3a" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--gold-dim)" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)", flex: 1 }}>{w.item_name}</span>
+                  <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "20px", background: w.type === "WTS" ? "rgba(231,76,60,0.12)" : w.type === "WTB" ? "rgba(46,204,113,0.12)" : "rgba(201,168,76,0.1)", color: w.type === "WTS" ? "var(--red)" : w.type === "WTB" ? "var(--green)" : "var(--gold)", border: `1px solid ${w.type === "WTS" ? "rgba(231,76,60,0.3)" : w.type === "WTB" ? "rgba(46,204,113,0.3)" : "rgba(201,168,76,0.3)"}` }}>{w.type}</span>
+                  {w.max_price && <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>under {compactGP(w.max_price)}</span>}
+                  <span style={{ fontSize: "12px", color: "#4a6070" }}>{timeAgo(w.created_at)}</span>
+                  <button onClick={() => removeWatch(w.id)}
+                    style={{ padding: "3px 10px", borderRadius: "5px", border: "1px solid rgba(231,76,60,0.2)", background: "transparent", color: "#c0564a", fontSize: "11px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
+                    onMouseOver={e => { e.currentTarget.style.background = "rgba(231,76,60,0.08)"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.5)"; e.currentTarget.style.color = "var(--red)"; }}
+                    onMouseOut={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(231,76,60,0.2)"; e.currentTarget.style.color = "#c0564a"; }}>
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Search + filter row */}
       <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
@@ -582,6 +693,21 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
               </button>
             ) : user ? "Be the first to post a listing." : "Sign in to post a listing."}
           </div>
+          {search && user && !isWatching(search) && (
+            <button onClick={() => { setWatchModal(search); setWatchForm({ type: "Either", maxPrice: "" }); }}
+              style={{ marginTop: "20px", display: "inline-flex", alignItems: "center", gap: "8px", padding: "10px 20px", borderRadius: "8px", border: "1px solid rgba(201,168,76,0.35)", background: "rgba(201,168,76,0.08)", color: "var(--gold)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}
+              onMouseOver={e => { e.currentTarget.style.background = "rgba(201,168,76,0.14)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.55)"; }}
+              onMouseOut={e => { e.currentTarget.style.background = "rgba(201,168,76,0.08)"; e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)"; }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              Notify me when {search} is listed
+            </button>
+          )}
+          {search && user && isWatching(search) && (
+            <div style={{ marginTop: "20px", display: "inline-flex", alignItems: "center", gap: "8px", padding: "10px 20px", borderRadius: "8px", border: "1px solid rgba(46,204,113,0.3)", background: "rgba(46,204,113,0.06)", color: "var(--green)", fontSize: "13px", fontWeight: 600 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              Watching — you'll be notified when this is listed
+            </div>
+          )}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -616,7 +742,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
 
 
 
-                <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "64px 1fr auto", gap: "16px", alignItems: "start" }}>
+                <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: `64px 1fr auto${!isOwn && user ? " 40px" : ""}`, gap: "16px", alignItems: "start" }}>
 
                   {/* Image */}
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
@@ -745,11 +871,85 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings, o
                     )}
                   </div>
 
+                  {/* Watch bell — for non-own listings */}
+                  {!isOwn && user && (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingLeft: "12px" }}>
+                      <button
+                        onClick={() => isWatching(l.item_name) ? null : (setWatchModal(l.item_name), setWatchForm({ type: l.type === "WTS" ? "WTS" : "WTB", maxPrice: "" }))}
+                        title={isWatching(l.item_name) ? "Already watching this item" : "Get notified when this item is listed again"}
+                        style={{ width: "32px", height: "32px", borderRadius: "8px", border: `1px solid ${isWatching(l.item_name) ? "rgba(201,168,76,0.35)" : "var(--border)"}`, background: isWatching(l.item_name) ? "rgba(201,168,76,0.1)" : "transparent", color: isWatching(l.item_name) ? "var(--gold)" : "var(--text-dim)", cursor: isWatching(l.item_name) ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s", flexShrink: 0 }}
+                        onMouseOver={e => { if (!isWatching(l.item_name)) { e.currentTarget.style.borderColor = "rgba(201,168,76,0.35)"; e.currentTarget.style.color = "var(--gold)"; e.currentTarget.style.background = "rgba(201,168,76,0.06)"; }}}
+                        onMouseOut={e => { if (!isWatching(l.item_name)) { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-dim)"; e.currentTarget.style.background = "transparent"; }}}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill={isWatching(l.item_name) ? "var(--gold)" : "none"} stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                      </button>
+                    </div>
+                  )}
+
                 </div>
               </div>
             );
           })}
         </div>
+      )}
+
+      {/* ── WATCH MODAL ── */}
+      {watchModal && (
+        <>
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000 }} onClick={() => setWatchModal(null)} />
+          <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 1001, width: "calc(100% - 40px)", maxWidth: "420px", background: "#111620", border: "1px solid rgba(201,168,76,0.2)", borderRadius: "16px", padding: "28px", display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "2px", background: "linear-gradient(90deg, transparent, rgba(201,168,76,0.5), transparent)", borderRadius: "16px 16px 0 0" }} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontFamily: "'Cinzel', serif", fontSize: "16px", fontWeight: 700, color: "var(--gold)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  Watch this item
+                </div>
+                <div style={{ fontSize: "13px", color: "var(--text-dim)", marginTop: "3px" }}>Get notified when a listing appears</div>
+              </div>
+              <button onClick={() => setWatchModal(null)} style={{ background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: "18px", lineHeight: 1 }}>✕</button>
+            </div>
+
+            <div style={{ padding: "10px 14px", background: "var(--bg3)", borderRadius: "8px", border: "1px solid #1c2a3a", fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>
+              {watchModal}
+            </div>
+
+            <div>
+              <div style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 700, marginBottom: "8px", fontFamily: "'DM Sans', sans-serif" }}>Notify me for</div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                {["WTS", "WTB", "Either"].map(t => (
+                  <button key={t} onClick={() => setWatchForm(f => ({ ...f, type: t }))}
+                    style={{ flex: 1, padding: "9px", borderRadius: "8px", border: `1px solid ${watchForm.type === t ? (t === "WTS" ? "rgba(231,76,60,0.5)" : t === "WTB" ? "rgba(46,204,113,0.5)" : "rgba(201,168,76,0.4)") : "var(--border)"}`, background: watchForm.type === t ? (t === "WTS" ? "rgba(231,76,60,0.1)" : t === "WTB" ? "rgba(46,204,113,0.1)" : "rgba(201,168,76,0.1)") : "transparent", color: watchForm.type === t ? (t === "WTS" ? "var(--red)" : t === "WTB" ? "var(--green)" : "var(--gold)") : "var(--text-dim)", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", transition: "all 0.15s" }}>
+                    {t === "Either" ? "Either" : t}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                <div style={{ fontSize: "12px", color: "var(--text-dim)", textTransform: "uppercase", letterSpacing: "0.8px", fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>Max price</div>
+                <span style={{ fontSize: "11px", color: "var(--text-dim)", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "20px", padding: "1px 7px" }}>optional</span>
+              </div>
+              <input
+                value={watchForm.maxPrice}
+                onChange={e => setWatchForm(f => ({ ...f, maxPrice: e.target.value }))}
+                placeholder="e.g. 1.5b — leave blank for any price"
+                style={{ width: "100%", background: "var(--bg4)", border: "1px solid #1c2a3a", borderRadius: "8px", padding: "10px 12px", color: "var(--text)", fontSize: "14px", fontFamily: "'DM Sans', sans-serif", outline: "none", boxSizing: "border-box" }}
+                onFocus={e => e.target.style.borderColor = "rgba(201,168,76,0.4)"}
+                onBlur={e => e.target.style.borderColor = "#1c2a3a"}
+              />
+              {watchForm.maxPrice && parseGPInput(watchForm.maxPrice) > 0 && (
+                <div style={{ fontSize: "12px", color: "var(--gold)", marginTop: "4px" }}>= {compactGP(parseGPInput(watchForm.maxPrice))}</div>
+              )}
+              <div style={{ fontSize: "12px", color: "var(--text-dim)", marginTop: "5px" }}>Only notify me if the listing is at or below this price.</div>
+            </div>
+
+            <button onClick={() => addWatch(watchModal)} disabled={savingWatch}
+              style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "none", background: "linear-gradient(135deg, rgba(201,168,76,0.8), var(--gold))", color: "#000", fontSize: "14px", fontWeight: 700, cursor: savingWatch ? "wait" : "pointer", fontFamily: "'Cinzel', serif", letterSpacing: "0.5px", opacity: savingWatch ? 0.7 : 1 }}>
+              {savingWatch ? "Saving..." : "Start watching →"}
+            </button>
+          </div>
+        </>
       )}
 
       {/* ── POST FORM MODAL ── */}
