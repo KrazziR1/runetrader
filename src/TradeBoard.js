@@ -200,7 +200,7 @@ export default function TradeBoard({ user, supabase, showToast, onNewListings })
       }
     } catch (e) { console.error(e); }
     finally { if (showSpinner) setLoading(false); }
-  }, [supabase]);
+  }, [supabase, onNewListings]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleItemSearch(val) {
     setItemSearch(val);
